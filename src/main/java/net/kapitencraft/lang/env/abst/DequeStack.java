@@ -1,0 +1,40 @@
+package net.kapitencraft.lang.env.abst;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.function.UnaryOperator;
+
+public class DequeStack<T> {
+    private final Deque<T> stack;
+    private final UnaryOperator<T> reCreator;
+
+    /**
+     * @param def default value added on creation
+     * @param reCreator used whenever a {@link DequeStack#push()} call is executed; create a new Instance of the given {@code <T>} with the same content as the last value
+     */
+    public DequeStack(T def, UnaryOperator<T> reCreator) {
+        this.stack = new ArrayDeque<>();
+        this.stack.add(def);
+        this.reCreator = reCreator;
+    }
+
+
+    /**
+     * push the stack; use pop to revert changes made after push
+     */
+    public void push() {
+        stack.addLast(reCreator.apply(stack.getLast()));
+    }
+
+    protected T getLast() {
+        return stack.getLast();
+    }
+
+    /**
+     * pop the stack; removes any changes made since the last `'push' call
+     */
+    public void pop() {
+        stack.removeLast();
+        if (stack.isEmpty()) throw new IllegalStateException("leveled has been completely cleared");
+    }
+}
