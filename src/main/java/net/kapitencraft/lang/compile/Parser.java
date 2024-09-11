@@ -1,9 +1,9 @@
 package net.kapitencraft.lang.compile;
 
+import net.kapitencraft.lang.ast.Expr;
 import net.kapitencraft.lang.run.Main;
 import net.kapitencraft.lang.ast.Token;
 import net.kapitencraft.lang.ast.TokenType;
-import net.kapitencraft.lang.ast.Expr;
 import net.kapitencraft.lang.ast.Stmt;
 
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ public class Parser {
     private Stmt declaration() {
         try {
             if (match(VAR)) return varDeclaration();
-            if (match(FUNC)) return function("function");
+            if (match(FUNC)) return funcDecl("function");
 
             return statement();
         } catch (ParseError error) {
@@ -141,7 +141,8 @@ public class Parser {
         return new Stmt.Expression(expr);
     }
 
-    private Stmt.Function function(String kind) {
+    private Stmt.Function funcDecl(String kind) {
+        Token type = consume(VAR_TYPE, "Expected Var type.");
         Token name = consume(IDENTIFIER, "Expected " + kind + " name.");
 
         consumeBracketOpen(kind + " name");
@@ -159,7 +160,7 @@ public class Parser {
 
         consume(C_BRACKET_O, "Expected '{' before " + kind + " body.");
         List<Stmt> body = block();
-        return new Stmt.Function(name, parameters, body);
+        return new Stmt.Function(type, name, parameters, body);
     }
 
     private List<Stmt> block() {

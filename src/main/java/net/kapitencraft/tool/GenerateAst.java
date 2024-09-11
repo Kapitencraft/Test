@@ -24,7 +24,7 @@ public class GenerateAst {
         defineAst("src/main/java/net/kapitencraft/lang/ast", "Stmt", Arrays.asList(
                 "Block            : List<Stmt> statements",
                 "Expression       : Expr expression",
-                "Function         : Token name, List<Token> params, List<Stmt> body",
+                "Function         : Token retType, Token name, List<Token> params, List<Stmt> body",
                 "If               : Expr condition, Stmt thenBranch, Stmt elseBranch",
                 "Return           : Token keyword, Expr value",
                 "Var              : Token name, Expr initializer",
@@ -43,7 +43,7 @@ public class GenerateAst {
         }
         PrintWriter writer = new PrintWriter(path, "UTF-8");
 
-        writer.println("package net.kapitencraft.lang;");
+        writer.println("package net.kapitencraft.lang.ast;");
         writer.println();
         writer.println("import java.util.List;");
         writer.println();

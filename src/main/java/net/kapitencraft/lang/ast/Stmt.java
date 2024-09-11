@@ -43,11 +43,13 @@ public abstract class Stmt {
     }
 
     public static class Function extends Stmt {
+        public final Token retType;
         public final Token name;
         public final List<Token> params;
         public final List<Stmt> body;
 
-        public Function(Token name, List<Token> params, List<Stmt> body) {
+        public Function(Token retType, Token name, List<Token> params, List<Stmt> body) {
+            this.retType = retType;
             this.name = name;
             this.params = params;
             this.body = body;

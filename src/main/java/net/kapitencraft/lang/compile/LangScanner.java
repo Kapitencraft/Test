@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.compile;
 
+import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.run.Main;
 import net.kapitencraft.lang.ast.Token;
 import net.kapitencraft.lang.ast.TokenType;
@@ -195,18 +196,16 @@ public class LangScanner {
             while (isDigit(peek()));
         }
 
-        addToken(NUM, seenDecimal ? Double.parseDouble(source.substring(start, current)) :
-                Integer.parseInt(source.substring(start, current))
-                );
+        String literal = source.substring(start, current);
+        if (seenDecimal) addToken(NUM, Double.parseDouble(literal));
+        else addToken(NUM, Integer.parseInt(literal));
     }
 
     private void identifier() {
         while (isAlphaNumeric(peek())) advance();
 
         String text = source.substring(start, current);
-        TokenType type = keywords.get(text);
-        if (type == null) type = IDENTIFIER;
-        addToken(type);
+        addToken(VarTypeManager.getType(text));
     }
 
     private void string() {

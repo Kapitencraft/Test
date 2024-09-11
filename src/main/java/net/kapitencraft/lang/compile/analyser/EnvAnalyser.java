@@ -44,8 +44,8 @@ public class EnvAnalyser {
         varAnalyser.setHasValue(name);
     }
 
-    public boolean addVar(String name, boolean value) {
-        return varAnalyser.add(name, value);
+    public boolean addVar(String name, String type, boolean value) {
+        return varAnalyser.add(name, type, value);
     }
 
     public boolean hasMethod(String name) {

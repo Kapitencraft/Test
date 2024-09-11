@@ -27,6 +27,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             }
 
             @Override
+            public Class<?> type() {
+                return Integer.class;
+            }
+
+            @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
                 return (double) (System.currentTimeMillis() - millisAtStart);
             }
@@ -43,6 +48,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             }
 
             @Override
+            public Class<?> type() {
+                return Void.class;
+            }
+
+            @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
                 System.out.println(stringify(arguments.get(0)));
                 return null;
@@ -52,6 +62,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             @Override
             public int arity() {
                 return 2;
+            }
+
+            @Override
+            public Class<?> type() {
+                return Integer.class;
             }
 
             @Override
@@ -69,14 +84,24 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             }
 
             @Override
+            public Class<?> type() {
+                return Integer.class;
+            }
+
+            @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
-                return Math.abs((double) arguments.get(0));
+                return Math.abs((int) arguments.get(0));
             }
         });
         globals.defineMethod("input", new LoxCallable() {
             @Override
             public int arity() {
                 return 1;
+            }
+
+            @Override
+            public Class<?> type() {
+                return String.class;
             }
 
             @Override
@@ -253,7 +278,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             case NOT -> !isTruthy(right);
             case SUB -> {
                 checkNumberOperand(expr.operator, right);
-                yield -(double) right;
+                if (right instanceof Double) {
+                    yield -(double) right;
+                } else yield -(int) right;
             }
             default -> null;
         };
@@ -284,7 +311,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 return (double)left > (double)right;
             case GEQUAL:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left >= (double)right;
+                if (left instanceof Integer lI && right instanceof Integer rI) return lI >= rI;
+                if (left instanceof Double lD && right instanceof Double rD) return lD >= rD;
+                if (left instanceof Integer lI && right instanceof Double rD) return lI >= rD;
+                if (left instanceof Double lD && right instanceof Integer rI) return lD >= rI;
+                throw new RuntimeError(expr.operator, "Unknown number");
             case LESSER:
                 checkNumberOperands(expr.operator, left, right);
                 return (double)left < (double)right;
@@ -354,11 +385,15 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     private void checkNumberOperand(Token operator, Object operand) {
         if (operand instanceof Double) return;
+        if (operand instanceof Integer) return;
         throw new RuntimeError(operator, "Operand must be a number.");
     }
 
     private void checkNumberOperands(Token operator, Object left, Object right) {
-        if (left instanceof Double && right instanceof Double) return;
+        boolean leftCheck = left instanceof Double || left instanceof Integer;
+        boolean rightCheck = right instanceof Double || right instanceof Integer;
+
+        if (leftCheck && rightCheck) return;
 
         throw new RuntimeError(operator, "Operands must be numbers.");
     }

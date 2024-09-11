@@ -35,11 +35,11 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
     }
 
-    private void createVar(Token name, boolean hasValue) {
+    private void createVar(Token name, Token type, boolean hasValue) {
         if (analyser.hasVar(name.lexeme)) {
             error(name, "Variable '" + name.lexeme + "' already defined");
         }
-        analyser.addVar(name.lexeme, hasValue);
+        analyser.addVar(name.lexeme, type.lexeme, hasValue);
     }
 
     private void define(Token name) {
@@ -78,7 +78,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
         analyser.push();
         for (Token param : function.params) {
-            createVar(param, true);
+            createVar(param, null, true);
         }
         resolve(function.body);
         analyser.pop();
@@ -137,7 +137,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitVarStmt(Stmt.Var stmt) {
         Token name = stmt.name;
-        if (analyser.addVar(name.lexeme, stmt.initializer != null)) {
+        if (analyser.addVar(name.lexeme, null, stmt.initializer != null)) {
             error(name, "Variable '" + name.lexeme + "' already defined");
         }
 

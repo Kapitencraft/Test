@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.func;
 
+import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.run.Interpreter;
@@ -15,8 +16,7 @@ public class LoxFunction implements LoxCallable {
     }
 
     @Override
-    public Object call(Interpreter interpreter,
-                       List<Object> arguments) {
+    public Object call(Interpreter interpreter, List<Object> arguments) {
         Environment environment = new Environment();
         for (int i = 0; i < declaration.params.size(); i++) {
             environment.defineVar(declaration.params.get(i).lexeme,
@@ -29,6 +29,11 @@ public class LoxFunction implements LoxCallable {
             return returnValue.value;
         }
         return null;
+    }
+
+    @Override
+    public Class<?> type() {
+        return VarTypeManager.getClassForName(declaration.retType.lexeme);
     }
 
     @Override

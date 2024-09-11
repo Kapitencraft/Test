@@ -8,6 +8,7 @@ public enum TokenType {
     NOT, AND, OR, XOR,
     NUM, STR,
     FALSE, TRUE,
+    VAR_TYPE,
     NULL,
     LAMBDA,
     BRACKET_O, BRACKET_C, C_BRACKET_O, C_BRACKET_C, COMMA, DOT,
