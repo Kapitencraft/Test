@@ -1,9 +1,8 @@
 package net.kapitencraft.lang.ast;
 
+import java.util.List;
 import net.kapitencraft.lang.ast.token.Token;
 import net.kapitencraft.tool.Pair;
-
-import java.util.List;
 
 public abstract class Stmt {
 
@@ -48,10 +47,10 @@ public abstract class Stmt {
     public static class Function extends Stmt {
         public final Token retType;
         public final Token name;
-        public final List<Pair<Token, Token>> params;
+        public final List<Pair<Token,Token>> params;
         public final List<Stmt> body;
 
-        public Function(Token retType, Token name, List<Pair<Token, Token>> params, List<Stmt> body) {
+        public Function(Token retType, Token name, List<Pair<Token,Token>> params, List<Stmt> body) {
             this.retType = retType;
             this.name = name;
             this.params = params;
@@ -98,8 +97,8 @@ public abstract class Stmt {
 
     public static class Var extends Stmt {
         public final Token name;
-        public final Expr initializer;
         public final Token type;
+        public final Expr initializer;
 
         public Var(Token name, Token type, Expr initializer) {
             this.name = name;

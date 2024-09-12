@@ -24,7 +24,7 @@ public class GenerateAst {
         defineAst("src/main/java/net/kapitencraft/lang/ast", "Stmt", Arrays.asList(
                 "Block            : List<Stmt> statements",
                 "Expression       : Expr expression",
-                "Function         : Token retType; Token name; List<Pair<Token, Token>> params; List<Stmt> body",
+                "Function         : Token retType; Token name; List<Pair<Token,Token>> params; List<Stmt> body",
                 "If               : Expr condition; Stmt thenBranch; Stmt elseBranch",
                 "Return           : Token keyword; Expr value",
                 "Var              : Token name; Token type; Expr initializer",
@@ -96,7 +96,7 @@ public class GenerateAst {
         writer.print("        public " + className + "(");
         for (int i = 0; i < fields.length - 1; i++) {
             writer.print(fields[i]);
-            writer.print(",");
+            writer.print(", ");
         }
         writer.print(fields[fields.length - 1]);
         writer.println(") {");
