@@ -100,6 +100,7 @@ public class LangScanner {
                 break;
             case '%':
                 addToken(match('=') ? MOD_ASSIGN : MOD);
+                break;
             case '!':
                 addToken(match('=') ? NEQUAL : NOT);
                 break;

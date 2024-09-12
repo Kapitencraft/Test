@@ -1,6 +1,6 @@
 int x = randInt(-200, 200); //zufallszahlen zum testen
 int y = randInt(-200, 200);
-print("" + x + y); //debug: input zahlen
+print(x + "," + y); //debug: input zahlen
 int x1 = x; //Variablen kopieren um die ogs nicht zu verändern
 int y1 = y;
 int ergebnis = 0;

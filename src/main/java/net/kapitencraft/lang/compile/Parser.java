@@ -58,12 +58,13 @@ public class Parser {
     }
 
     private Stmt whileStatement() {
+        Token keyword = previous();
         consumeBracketOpen("while");
         Expr condition = expression();
         consumeBracketClose("while condition");
         Stmt body = statement();
 
-        return new Stmt.While(condition, body);
+        return new Stmt.While(condition, body, keyword);
     }
 
     private Stmt statement() {
@@ -84,6 +85,8 @@ public class Parser {
     }
 
     private Stmt forStatement() {
+        Token keyword = previous();
+
         consumeBracketOpen("for");
 
         Stmt initializer;
@@ -109,10 +112,11 @@ public class Parser {
 
         Stmt body = statement();
 
-        return new Stmt.For(initializer, condition, increment, body);
+        return new Stmt.For(initializer, condition, increment, body, keyword);
     }
 
     private Stmt ifStatement() {
+        Token statement = previous();
         consumeBracketOpen("if");
         Expr condition = expression();
         consumeBracketClose("if condition");
@@ -123,7 +127,7 @@ public class Parser {
             elseBranch = statement();
         }
 
-        return new Stmt.If(condition, thenBranch, elseBranch);
+        return new Stmt.If(condition, thenBranch, elseBranch, statement);
     }
 
     private Stmt returnStatement() {
@@ -336,9 +340,9 @@ public class Parser {
             } while (match(COMMA));
         }
 
-        Token paren = consumeBracketClose("arguments");
+        Token args = consumeBracketClose("arguments");
 
-        return new Expr.Call(callee, paren, arguments);
+        return new Expr.Call(callee, args, arguments);
     }
 
     private Expr call() {
@@ -356,12 +360,12 @@ public class Parser {
     }
 
     private Expr primary() {
-        if (match(FALSE)) return new Expr.Literal(false);
-        if (match(TRUE)) return new Expr.Literal(true);
-        if (match(NULL)) return new Expr.Literal(null);
+        if (match(FALSE)) return get(false);
+        if (match(TRUE)) return get(true);
+        if (match(NULL)) return get(null);
 
         if (match(NUM, STR)) {
-            return new Expr.Literal(previous().literal);
+            return get(previous().literal);
         }
 
         if (match(IDENTIFIER)) {
@@ -380,6 +384,10 @@ public class Parser {
         }
 
         throw error(peek(), "Expression expected.");
+    }
+
+    private Expr get(Object obj) {
+        return new Expr.Literal(previous(), obj);
     }
 
     private Token consume(TokenType type, String message) {

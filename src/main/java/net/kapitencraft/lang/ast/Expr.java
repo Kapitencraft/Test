@@ -30,6 +30,11 @@ public abstract class Expr {
         }
 
         @Override
+        public Token location() {
+            return name;
+        }
+
+        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitAssignExpr(this);
         }
@@ -42,6 +47,11 @@ public abstract class Expr {
         public SpecialAssign(Token name, Token type) {
             this.name = name;
             this.type = type;
+        }
+
+        @Override
+        public Token location() {
+            return name;
         }
 
         @Override
@@ -62,6 +72,11 @@ public abstract class Expr {
         }
 
         @Override
+        public Token location() {
+            return left.location();
+        }
+
+        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitBinaryExpr(this);
         }
@@ -69,13 +84,18 @@ public abstract class Expr {
 
     public static class Call extends Expr {
         public final Expr callee;
-        public final Token paren;
+        public final Token args;
         public final List<Expr> arguments;
 
-        public Call(Expr callee, Token paren, List<Expr> arguments) {
+        public Call(Expr callee, Token args, List<Expr> arguments) {
             this.callee = callee;
-            this.paren = paren;
+            this.args = args;
             this.arguments = arguments;
+        }
+
+        @Override
+        public Token location() {
+            return null;
         }
 
         @Override
@@ -92,16 +112,28 @@ public abstract class Expr {
         }
 
         @Override
+        public Token location() {
+            return expression.location();
+        }
+
+        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitGroupingExpr(this);
         }
     }
 
     public static class Literal extends Expr {
+        private final Token literal;
         public final Object value;
 
-        public Literal(Object value) {
+        public Literal(Token literal, Object value) {
+            this.literal = literal;
             this.value = value;
+        }
+
+        @Override
+        public Token location() {
+            return literal;
         }
 
         @Override
@@ -122,6 +154,11 @@ public abstract class Expr {
         }
 
         @Override
+        public Token location() {
+            return operator;
+        }
+
+        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLogicalExpr(this);
         }
@@ -134,6 +171,11 @@ public abstract class Expr {
         public Unary(Token operator, Expr right) {
             this.operator = operator;
             this.right = right;
+        }
+
+        @Override
+        public Token location() {
+            return operator;
         }
 
         @Override
@@ -150,6 +192,11 @@ public abstract class Expr {
         }
 
         @Override
+        public Token location() {
+            return name;
+        }
+
+        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitVariableExpr(this);
         }
@@ -163,10 +210,16 @@ public abstract class Expr {
         }
 
         @Override
+        public Token location() {
+            return name;
+        }
+
+        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitFunctionExpr(this);
         }
     }
 
-  public abstract <R> R accept(Visitor<R> visitor);
+    public abstract <R> R accept(Visitor<R> visitor);
+    public abstract Token location();
 }

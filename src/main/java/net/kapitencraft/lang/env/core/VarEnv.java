@@ -4,6 +4,9 @@ import net.kapitencraft.lang.run.RuntimeError;
 import net.kapitencraft.lang.ast.token.Token;
 import net.kapitencraft.lang.ast.token.TokenType;
 import net.kapitencraft.lang.env.abst.Leveled;
+import net.kapitencraft.tool.Math;
+
+import static net.kapitencraft.lang.run.Interpreter.checkNumberOperands;
 
 public class VarEnv extends Leveled<String, Object> {
 
@@ -31,36 +34,33 @@ public class VarEnv extends Leveled<String, Object> {
         this.assign(name, switch (type.type) {
             case SUB_ASSIGN:
                 checkNumberOperands(type, current, value);
-                yield (double)current - (double)value;
+                yield Math.mergeSub(current, value);
             case DIV_ASSIGN:
                 checkNumberOperands(type, current, value);
-                yield (double)current / (double)value;
+                yield Math.mergeDiv(current, value);
             case MUL_ASSIGN:
                 checkNumberOperands(type, current, value);
-                yield (double)current * (double)value;
+                yield Math.mergeMul(current, value);
             case MOD_ASSIGN:
                 checkNumberOperands(type, current, value);
-                yield (double)current % (double)value;
+                yield Math.mergeMod(current, value);
             case ADD_ASSIGN:
-                if (current instanceof Double && value instanceof Double) {
-                    yield (double)current + (double)value;
+                if (current instanceof String lS) {
+                    yield lS + value;
+                } else if (value instanceof String vS) {
+                    yield current + vS;
                 }
 
-                if (current instanceof String lS && value instanceof String rS) {
-                    yield lS + rS;
+                try {
+                    yield Math.mergeAdd(current, value);
+                } catch (Exception e) {
+                    throw new RuntimeError(type, "Operands must be two numbers or two strings.");
                 }
 
-                throw new RuntimeError(type, "Operands must be two numbers or two strings.");
             default:
                 throw new RuntimeError(type, "Unknown Operation type");
         });
         return get(name);
-    }
-
-    private void checkNumberOperands(Token operator, Object left, Object right) {
-        if (left instanceof Double && right instanceof Double) return;
-
-        throw new RuntimeError(operator, "Operands must be numbers.");
     }
 
     public Object specialAssign(String name, TokenType type) {

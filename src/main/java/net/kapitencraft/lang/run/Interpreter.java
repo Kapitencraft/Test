@@ -9,6 +9,7 @@ import net.kapitencraft.lang.exception.EscapeLoop;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.func.LoxFunction;
+import net.kapitencraft.tool.Math;
 
 import java.util.*;
 
@@ -90,7 +91,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
             @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
-                return Math.abs((int) arguments.get(0));
+                return java.lang.Math.abs((int) arguments.get(0));
             }
         });
         globals.defineMethod("input", new LoxCallable() {
@@ -326,20 +327,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             case EQUAL: return isEqual(left, right);
             case SUB:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left - (double)right;
+                return Math.mergeSub(left, right);
             case DIV:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left / (double)right;
+                return Math.mergeDiv(left, right);
             case MUL:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left * (double)right;
+                return Math.mergeMul(left, right);
             case MOD:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left % (double)right;
+                return Math.mergeMod(left, right);
             case ADD:
-                if (left instanceof Double && right instanceof Double) {
-                    return (double)left + (double)right;
-                }
 
                 if (left instanceof String lS) {
                     return lS + stringify(right);
@@ -348,8 +346,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                     return stringify(left) + rS;
                 }
 
-                throw new RuntimeError(expr.operator,
-                        "Operands must be two numbers or at least one string.");
+                return Math.mergeAdd(left, right);
         }
         return null;
     }
@@ -365,14 +362,14 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         if (callee instanceof LoxCallable function) {
             if (arguments.size() != function.arity()) {
-                throw new RuntimeError(expr.paren, "Expected " +
+                throw new RuntimeError(expr.args, "Expected " +
                         function.arity() + " arguments but got " +
                         arguments.size() + ".");
             }
 
             return function.call(this, arguments);
         }
-        throw new RuntimeError(expr.paren, "unknown function");
+        throw new RuntimeError(expr.args, "unknown function");
     }
 
     private boolean isEqual(Object a, Object b) {
@@ -383,13 +380,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
 
-    private void checkNumberOperand(Token operator, Object operand) {
+    public static void checkNumberOperand(Token operator, Object operand) {
         if (operand instanceof Double) return;
         if (operand instanceof Integer) return;
         throw new RuntimeError(operator, "Operand must be a number.");
     }
 
-    private void checkNumberOperands(Token operator, Object left, Object right) {
+    public static void checkNumberOperands(Token operator, Object left, Object right) {
         boolean leftCheck = left instanceof Double || left instanceof Integer;
         boolean rightCheck = right instanceof Double || right instanceof Integer;
 

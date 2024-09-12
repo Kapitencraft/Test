@@ -121,7 +121,7 @@ public class Resolver implements Expr.Visitor<Class<?>>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitIfStmt(Stmt.If stmt) {
-        resolve(null, stmt.condition, Boolean.class);
+        resolve(stmt.location(), stmt.condition, Boolean.class);
         resolve(stmt.thenBranch);
         if (stmt.elseBranch != null) resolve(stmt.elseBranch);
         return null;
@@ -209,6 +209,7 @@ public class Resolver implements Expr.Visitor<Class<?>>, Stmt.Visitor<Void> {
             error(expr.operator, "both values must be numbers");
         if (left != right)
             error(expr.operator, "can not combine values of different types");
+        if (type.categories.contains(TokenTypeCategory.COMPARATORS)) return Boolean.class;
         return left;
     }
 

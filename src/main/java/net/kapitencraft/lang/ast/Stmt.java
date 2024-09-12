@@ -26,6 +26,11 @@ public abstract class Stmt {
         }
 
         @Override
+        public Token location() {
+            return statements.get(0).location();
+        }
+
+        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitBlockStmt(this);
         }
@@ -36,6 +41,11 @@ public abstract class Stmt {
 
         public Expression(Expr expression) {
             this.expression = expression;
+        }
+
+        @Override
+        public Token location() {
+            return expression.location();
         }
 
         @Override
@@ -58,6 +68,11 @@ public abstract class Stmt {
         }
 
         @Override
+        public Token location() {
+            return retType;
+        }
+
+        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitFunctionStmt(this);
         }
@@ -67,11 +82,18 @@ public abstract class Stmt {
         public final Expr condition;
         public final Stmt thenBranch;
         public final Stmt elseBranch;
+        private final Token keyword;
 
-        public If(Expr condition, Stmt thenBranch, Stmt elseBranch) {
+        public If(Expr condition, Stmt thenBranch, Stmt elseBranch, Token keyword) {
             this.condition = condition;
             this.thenBranch = thenBranch;
             this.elseBranch = elseBranch;
+            this.keyword = keyword;
+        }
+
+        @Override
+        public Token location() {
+            return keyword;
         }
 
         @Override
@@ -87,6 +109,11 @@ public abstract class Stmt {
         public Return(Token keyword, Expr value) {
             this.keyword = keyword;
             this.value = value;
+        }
+
+        @Override
+        public Token location() {
+            return keyword;
         }
 
         @Override
@@ -107,6 +134,11 @@ public abstract class Stmt {
         }
 
         @Override
+        public Token location() {
+            return type;
+        }
+
+        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitVarStmt(this);
         }
@@ -115,10 +147,17 @@ public abstract class Stmt {
     public static class While extends Stmt {
         public final Expr condition;
         public final Stmt body;
+        private final Token keyword;
 
-        public While(Expr condition, Stmt body) {
+        public While(Expr condition, Stmt body, Token keyword) {
             this.condition = condition;
             this.body = body;
+            this.keyword = keyword;
+        }
+
+        @Override
+        public Token location() {
+            return keyword;
         }
 
         @Override
@@ -132,12 +171,19 @@ public abstract class Stmt {
         public final Expr condition;
         public final Expr increment;
         public final Stmt body;
+        private final Token keyword;
 
-        public For(Stmt init, Expr condition, Expr increment, Stmt body) {
+        public For(Stmt init, Expr condition, Expr increment, Stmt body, Token keyword) {
             this.init = init;
             this.condition = condition;
             this.increment = increment;
             this.body = body;
+            this.keyword = keyword;
+        }
+
+        @Override
+        public Token location() {
+            return null;
         }
 
         @Override
@@ -154,10 +200,16 @@ public abstract class Stmt {
         }
 
         @Override
+        public Token location() {
+            return type;
+        }
+
+        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLoopInterruptionStmt(this);
         }
     }
 
-  public abstract <R> R accept(Visitor<R> visitor);
+    public abstract <R> R accept(Visitor<R> visitor);
+    public abstract Token location();
 }
