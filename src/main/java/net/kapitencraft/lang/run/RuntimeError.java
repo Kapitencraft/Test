@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.run;
 
-import net.kapitencraft.lang.ast.Token;
+import net.kapitencraft.lang.ast.token.Token;
 
 public class RuntimeError extends RuntimeException {
     final Token token;

@@ -1,24 +1,26 @@
 package net.kapitencraft.lang.compile.analyser;
 
 import net.kapitencraft.lang.env.abst.DequeStack;
+import net.kapitencraft.lang.env.abst.Leveled;
+import net.kapitencraft.tool.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MethodAnalyser extends DequeStack<List<String>> {
+public class MethodAnalyser extends Leveled<String, Class<?>> {
 
-    public MethodAnalyser() {
-        super(new ArrayList<>(), ArrayList::new);
-    }
+    public boolean add(String name, Class<?> retType) {
+        if (this.getLast().containsKey(name)) return true;
 
-    public boolean add(String name) {
-        if (this.getLast().contains(name)) return true;
-
-        this.getLast().add(name);
+        this.getLast().put(name, retType);
         return false;
     }
 
     public boolean has(String name) {
-        return this.getLast().contains(name);
+        return this.getLast().containsKey(name);
+    }
+
+    public Class<?> type(String lexeme) {
+        return getValue(lexeme);
     }
 }

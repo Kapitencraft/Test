@@ -2,8 +2,8 @@ package net.kapitencraft.lang.run;
 
 import net.kapitencraft.lang.ast.Expr;
 import net.kapitencraft.lang.ast.Stmt;
-import net.kapitencraft.lang.ast.Token;
-import net.kapitencraft.lang.ast.TokenType;
+import net.kapitencraft.lang.ast.token.Token;
+import net.kapitencraft.lang.ast.token.TokenType;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.exception.EscapeLoop;
 import net.kapitencraft.lang.env.core.Environment;

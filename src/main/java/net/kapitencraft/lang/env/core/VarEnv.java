@@ -1,8 +1,8 @@
 package net.kapitencraft.lang.env.core;
 
 import net.kapitencraft.lang.run.RuntimeError;
-import net.kapitencraft.lang.ast.Token;
-import net.kapitencraft.lang.ast.TokenType;
+import net.kapitencraft.lang.ast.token.Token;
+import net.kapitencraft.lang.ast.token.TokenType;
 import net.kapitencraft.lang.env.abst.Leveled;
 
 public class VarEnv extends Leveled<String, Object> {

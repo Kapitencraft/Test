@@ -2,13 +2,14 @@ package net.kapitencraft.lang.compile;
 
 import net.kapitencraft.lang.ast.Expr;
 import net.kapitencraft.lang.run.Main;
-import net.kapitencraft.lang.ast.Token;
-import net.kapitencraft.lang.ast.TokenType;
+import net.kapitencraft.lang.ast.token.Token;
+import net.kapitencraft.lang.ast.token.TokenType;
 import net.kapitencraft.lang.ast.Stmt;
+import net.kapitencraft.tool.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
-import static net.kapitencraft.lang.ast.TokenType.*;
+import static net.kapitencraft.lang.ast.token.TokenType.*;
 
 @SuppressWarnings({"UnusedReturnValue", "ThrowableNotThrown"})
 public class Parser {
@@ -33,7 +34,7 @@ public class Parser {
 
     private Stmt declaration() {
         try {
-            if (match(VAR)) return varDeclaration();
+            if (match(VAR_TYPE)) return varDeclaration();
             if (match(FUNC)) return funcDecl("function");
 
             return statement();
@@ -44,6 +45,7 @@ public class Parser {
     }
 
     private Stmt varDeclaration() {
+        Token type = previous();
         Token name = consume(IDENTIFIER, "Expected variable name.");
 
         Expr initializer = null;
@@ -52,7 +54,7 @@ public class Parser {
         }
 
         consume(EOA, "Expected ';' after variable declaration.");
-        return new Stmt.Var(name, initializer);
+        return new Stmt.Var(name, type, initializer);
     }
 
     private Stmt whileStatement() {
@@ -87,7 +89,7 @@ public class Parser {
         Stmt initializer;
         if (match(EOA)) {
             initializer = null;
-        } else if (match(VAR)) {
+        } else if (match(VAR_TYPE)) {
             initializer = varDeclaration();
         } else {
             initializer = expressionStatement();
@@ -146,14 +148,16 @@ public class Parser {
         Token name = consume(IDENTIFIER, "Expected " + kind + " name.");
 
         consumeBracketOpen(kind + " name");
-        List<Token> parameters = new ArrayList<>();
+        List<Pair<Token, Token>> parameters = new ArrayList<>();
         if (!check(BRACKET_C)) {
             do {
                 if (parameters.size() >= 255) {
                     error(peek(), "Can't have more than 255 parameters.");
                 }
 
-                parameters.add(consume(IDENTIFIER, "Expected parameter name."));
+                Token pType = consume(VAR_TYPE, "Expected Var type before parameter name");
+                Token pName = consume(IDENTIFIER, "Expected parameter name.");
+                parameters.add(Pair.of(pType, pName));
             } while (match(COMMA));
         }
         consumeBracketClose("parameters");
@@ -408,7 +412,7 @@ public class Parser {
             switch (peek().type) {
                 case CLASS:
                 case FUNC:
-                case VAR:
+                case VAR_TYPE:
                 case FOR:
                 case IF:
                 case WHILE:

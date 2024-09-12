@@ -1,9 +1,9 @@
-var x = randInt(-200, 200); //zufallszahlen zum testen
-var y = randInt(-200, 200);
+int x = randInt(-200, 200); //zufallszahlen zum testen
+int y = randInt(-200, 200);
 print("" + x + y); //debug: input zahlen
-var x1 = x; //Variablen kopieren um die ogs nicht zu verändern
-var y1 = y;
-var ergebnis = 0;
+int x1 = x; //Variablen kopieren um die ogs nicht zu verändern
+int y1 = y;
+int ergebnis = 0;
 while (abs(x1) >= 1) {//(abs(x) = betrag(x))
     if (x1 % 2 == 1) ergebnis += y1; //x1 ist ungerade
     x1=x1/2; //teile x1 / 2 und stelle sicher, dass es immer ein int ist

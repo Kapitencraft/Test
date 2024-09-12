@@ -1,14 +1,17 @@
 package net.kapitencraft.lang.compile.analyser;
 
+import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.ast.Expr;
 import net.kapitencraft.lang.ast.Stmt;
-import net.kapitencraft.lang.ast.Token;
-import net.kapitencraft.lang.ast.TokenType;
+import net.kapitencraft.lang.ast.token.Token;
+import net.kapitencraft.lang.ast.token.TokenType;
+import net.kapitencraft.lang.ast.token.TokenTypeCategory;
 import net.kapitencraft.lang.run.Main;
+import net.kapitencraft.tool.Pair;
 
 import java.util.List;
 
-public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
+public class Resolver implements Expr.Visitor<Class<?>>, Stmt.Visitor<Void> {
 
     private final EnvAnalyser analyser = new EnvAnalyser();
     private FunctionType currentFunction = FunctionType.NONE;
@@ -16,11 +19,11 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     public Resolver(String[] lines) {
         this.lines = lines;
-        analyser.addMethod("clock");
-        analyser.addMethod("print");
-        analyser.addMethod("input");
-        analyser.addMethod("abs");
-        analyser.addMethod("randInt");
+        analyser.addMethod("clock", Integer.class);
+        analyser.addMethod("print", Void.class);
+        analyser.addMethod("input", String.class);
+        analyser.addMethod("abs", Integer.class);
+        analyser.addMethod("randInt", Integer.class);
     }
 
     private void error(Token token, String message) {
@@ -33,6 +36,10 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         } else if (requireValue && !analyser.hasVarValue(name.lexeme)) {
             error(name, "Variable '" + name.lexeme + "' might not have been initialized");
         }
+    }
+
+    private void checkVarType(Token name, Expr value) {
+        resolve(name, value, analyser.getVarType(name.lexeme));
     }
 
     private void createVar(Token name, Token type, boolean hasValue) {
@@ -63,8 +70,13 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
     }
 
-    private void resolve(Expr expr) {
-        expr.accept(this);
+    private Class<?> resolve(Expr expr) {
+        return expr.accept(this);
+    }
+
+    private void resolve(Token errorLoc, Expr expr, Class<?> expected) {
+        Class<?> got = resolve(expr);
+        if (got != expected) error(errorLoc, "Expected " + expected + " but got " + got);
     }
 
     private void resolveFunction(Stmt.Function function, FunctionType type) {
@@ -72,13 +84,13 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         currentFunction = type;
 
         Token name = function.name;
-        if (analyser.addMethod(name.lexeme)) {
+        if (analyser.addMethod(name.lexeme, VarTypeManager.getClassForName(function.retType.lexeme))) {
             error(name, "Method '" + name.lexeme + "' already defined");
         }
 
         analyser.push();
-        for (Token param : function.params) {
-            createVar(param, null, true);
+        for (Pair<Token, Token> pair : function.params) {
+            createVar(pair.right(), null, true);
         }
         resolve(function.body);
         analyser.pop();
@@ -109,7 +121,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitIfStmt(Stmt.If stmt) {
-        resolve(stmt.condition);
+        resolve(null, stmt.condition, Boolean.class);
         resolve(stmt.thenBranch);
         if (stmt.elseBranch != null) resolve(stmt.elseBranch);
         return null;
@@ -137,7 +149,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitVarStmt(Stmt.Var stmt) {
         Token name = stmt.name;
-        if (analyser.addVar(name.lexeme, null, stmt.initializer != null)) {
+        if (analyser.addVar(name.lexeme, stmt.type.lexeme, stmt.initializer != null)) {
             error(name, "Variable '" + name.lexeme + "' already defined");
         }
 
@@ -172,71 +184,78 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitAssignExpr(Expr.Assign expr) {
+    public Class<?> visitAssignExpr(Expr.Assign expr) {
         checkVarExistence(expr.name, expr.type.type != TokenType.ASSIGN);
+        checkVarType(expr.name, expr.value);
         if (expr.type.type == TokenType.ASSIGN) define(expr.name);
-        return null;
+        return analyser.getVarType(expr.name.lexeme);
     }
 
     @Override
-    public Void visitSpecialAssignExpr(Expr.SpecialAssign expr) {
+    public Class<?> visitSpecialAssignExpr(Expr.SpecialAssign expr) {
         checkVarExistence(expr.name, true);
-        return null;
+        return analyser.getVarType(expr.name.lexeme);
     }
 
     @Override
-    public Void visitBinaryExpr(Expr.Binary expr) {
-        resolve(expr.left);
-        resolve(expr.right);
-        return null;
+    public Class<?> visitBinaryExpr(Expr.Binary expr) {
+        Class<?> left = resolve(expr.left);
+        Class<?> right = resolve(expr.right);
+        TokenType type = expr.operator.type;
+        if (type == TokenType.ADD && (left == String.class || right == String.class)) return left; //check if at least one of the values is string
+        if (type.categories.contains(TokenTypeCategory.BOOL_BINARY) && !(left == Boolean.class && right == Boolean.class))
+            error(expr.operator, "both values must be boolean");
+        if (type.categories.contains(TokenTypeCategory.ARITHMETIC_BINARY) && !(left.getSuperclass() == Number.class && right.getSuperclass() == Number.class))
+            error(expr.operator, "both values must be numbers");
+        if (left != right)
+            error(expr.operator, "can not combine values of different types");
+        return left;
     }
 
     @Override
-    public Void visitCallExpr(Expr.Call expr) {
+    public Class<?> visitCallExpr(Expr.Call expr) {
         resolve(expr.callee);
 
         for (Expr argument : expr.arguments) {
             resolve(argument);
         }
 
-        return null;
+        return analyser.getMethodType(((Expr.Function) expr.callee).name.lexeme);
     }
 
     @Override
-    public Void visitGroupingExpr(Expr.Grouping expr) {
-        resolve(expr.expression);
-        return null;
+    public Class<?> visitGroupingExpr(Expr.Grouping expr) {
+        return resolve(expr.expression);
     }
 
     @Override
-    public Void visitLiteralExpr(Expr.Literal expr) {
-        return null; //not really anything to do here
+    public Class<?> visitLiteralExpr(Expr.Literal expr) {
+        return expr.value.getClass();
     }
 
     @Override
-    public Void visitLogicalExpr(Expr.Logical expr) {
+    public Class<?> visitLogicalExpr(Expr.Logical expr) {
         resolve(expr.left);
         resolve(expr.right);
-        return null;
+        return Boolean.class;
     }
 
     @Override
-    public Void visitUnaryExpr(Expr.Unary expr) {
-        resolve(expr.right);
-        return null;
+    public Class<?> visitUnaryExpr(Expr.Unary expr) {
+        return resolve(expr.right);
     }
 
     @Override
-    public Void visitVariableExpr(Expr.Variable expr) {
+    public Class<?> visitVariableExpr(Expr.Variable expr) {
         checkVarExistence(expr.name, true);
 
-        return null;
+        return analyser.getVarType(expr.name.lexeme);
     }
 
     @Override
-    public Void visitFunctionExpr(Expr.Function expr) {
+    public Class<?> visitFunctionExpr(Expr.Function expr) {
         Token name = expr.name;
         if (!analyser.hasMethod(name.lexeme)) error(name, "Method '" + name.lexeme + "' not defined");
-        return null;
+        return analyser.getMethodType(name.lexeme);
     }
 }

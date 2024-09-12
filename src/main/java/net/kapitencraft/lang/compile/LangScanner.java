@@ -2,41 +2,17 @@ package net.kapitencraft.lang.compile;
 
 import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.run.Main;
-import net.kapitencraft.lang.ast.Token;
-import net.kapitencraft.lang.ast.TokenType;
+import net.kapitencraft.lang.ast.token.Token;
+import net.kapitencraft.lang.ast.token.TokenType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static net.kapitencraft.lang.ast.TokenType.*;
+import static net.kapitencraft.lang.ast.token.TokenType.*;
 
 public class LangScanner {
-    private static final Map<String, TokenType> keywords;
-
-    static {
-        keywords = new HashMap<>();
-        keywords.put("class",    CLASS);
-        keywords.put("false",    FALSE);
-        keywords.put("true",     TRUE);
-        keywords.put("and",      AND);
-        keywords.put("or",       OR);
-        keywords.put("xor",      XOR);
-        keywords.put("for",      FOR);
-        keywords.put("def",      FUNC);
-        keywords.put("if",       IF);
-        keywords.put("else",     ELSE);
-        keywords.put("elif",     ELIF);
-        keywords.put("null",     NULL);
-        keywords.put("return",   RETURN);
-        keywords.put("super",    SUPER);
-        keywords.put("this",     THIS);
-        keywords.put("var",      VAR);
-        keywords.put("while",    WHILE);
-        keywords.put("break",    BREAK);
-        keywords.put("continue", CONTINUE);
-    }
 
     private final String source;
     private final List<Token> tokens = new ArrayList<>();

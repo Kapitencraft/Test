@@ -52,7 +52,15 @@ public class EnvAnalyser {
         return methodAnalyser.has(name);
     }
 
-    public boolean addMethod(String name) {
-        return methodAnalyser.add(name);
+    public boolean addMethod(String name, Class<?> retType) {
+        return methodAnalyser.add(name, retType);
+    }
+
+    public Class<?> getVarType(String name) {
+        return varAnalyser.getType(name);
+    }
+
+    public Class<?> getMethodType(String lexeme) {
+        return methodAnalyser.type(lexeme);
     }
 }

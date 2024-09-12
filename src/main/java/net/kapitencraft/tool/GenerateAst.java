@@ -9,27 +9,27 @@ import java.util.List;
 public class GenerateAst {
     public static void main(String[] args) throws IOException {
         defineAst("src/main/java/net/kapitencraft/lang/ast", "Expr", Arrays.asList(
-                "Assign        : Token name, Expr value, Token type",
-                "SpecialAssign : Token name, Token type",
-                "Binary        : Expr left, Token operator, Expr right",
-                "Call          : Expr callee, Token paren, List<Expr> arguments",
+                "Assign        : Token name; Expr value; Token type",
+                "SpecialAssign : Token name; Token type",
+                "Binary        : Expr left; Token operator; Expr right",
+                "Call          : Expr callee; Token paren; List<Expr> arguments",
                 "Grouping      : Expr expression",
                 //"Lambda   : List<Token> params, Stmt body",
                 "Literal       : Object value",
-                "Logical       : Expr left, Token operator, Expr right",
-                "Unary         : Token operator, Expr right",
+                "Logical       : Expr left; Token operator; Expr right",
+                "Unary         : Token operator; Expr right",
                 "Variable      : Token name",
                 "Function      : Token name"
         ));
         defineAst("src/main/java/net/kapitencraft/lang/ast", "Stmt", Arrays.asList(
                 "Block            : List<Stmt> statements",
                 "Expression       : Expr expression",
-                "Function         : Token retType, Token name, List<Token> params, List<Stmt> body",
-                "If               : Expr condition, Stmt thenBranch, Stmt elseBranch",
-                "Return           : Token keyword, Expr value",
-                "Var              : Token name, Expr initializer",
-                "While            : Expr condition, Stmt body",
-                "For              : Stmt init, Expr condition, Expr increment, Stmt body",
+                "Function         : Token retType; Token name; List<Pair<Token, Token>> params; List<Stmt> body",
+                "If               : Expr condition; Stmt thenBranch; Stmt elseBranch",
+                "Return           : Token keyword; Expr value",
+                "Var              : Token name; Token type; Expr initializer",
+                "While            : Expr condition; Stmt body",
+                "For              : Stmt init; Expr condition; Expr increment; Stmt body",
                 "LoopInterruption : Token type"
         ));
     }
@@ -46,6 +46,7 @@ public class GenerateAst {
         writer.println("package net.kapitencraft.lang.ast;");
         writer.println();
         writer.println("import java.util.List;");
+        writer.println("import net.kapitencraft.lang.ast.token.Token;");
         writer.println();
         writer.println("public abstract class " + baseName + " {");
         writer.println();
@@ -78,15 +79,13 @@ public class GenerateAst {
         writer.println("    }");
     }
 
-    private static void defineType(
-            PrintWriter writer, String baseName,
-            String className, String fieldList) {
+    private static void defineType(PrintWriter writer, String baseName, String className, String fieldList) {
         writer.println();
         writer.println("    public static class " + className + " extends " +
                 baseName + " {");
 
         // Fields.
-        String[] fields = fieldList.split(", ");
+        String[] fields = fieldList.split("; ");
         for (String field : fields) {
             writer.println("        public final " + field + ";");
         }
@@ -94,7 +93,13 @@ public class GenerateAst {
 
 
         // Constructor.
-        writer.println("        public " + className + "(" + fieldList + ") {");
+        writer.print("        public " + className + "(");
+        for (int i = 0; i < fields.length - 1; i++) {
+            writer.print(fields[i]);
+            writer.print(",");
+        }
+        writer.print(fields[fields.length - 1]);
+        writer.println(") {");
 
         // Store parameters in fields.
         for (String field : fields) {

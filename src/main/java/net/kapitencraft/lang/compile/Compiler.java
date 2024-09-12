@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.compile;
 
-import net.kapitencraft.lang.ast.Token;
+import net.kapitencraft.lang.ast.token.Token;
 import net.kapitencraft.lang.ast.Stmt;
 import net.kapitencraft.lang.compile.analyser.Resolver;
 
