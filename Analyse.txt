@@ -1,0 +1,15 @@
+Enthält alle Probleme samt lösung
+
+Problem 1:
+    Veränderung für Variablen werden nach ende eines Scopes gelöscht (Status: COMPLETE)
+
+    Lösung 1:
+        Jede Stmt/Expr die eine Var Ref braucht, bekommt eine und reference und benutzt die (Status: REJECTED)
+    Lösung 2:
+        Die Vars in Wrapper Objekten speichern die die Daten zwischen den Scopes synchronizieren (Status: ACCEPTED)
+
+Problem 2:
+    Keine Möglichkeit, Variablen in runtime zu überprüfen (Debugger) (Status: TO_DO)
+
+    Lösung 1:
+        Debugger einprogrammieren (Status: VALIDATING)

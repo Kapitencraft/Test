@@ -1,8 +1,9 @@
 package net.kapitencraft.lang.ast;
 
-import java.util.List;
 import net.kapitencraft.lang.ast.token.Token;
 import net.kapitencraft.tool.Pair;
+
+import java.util.List;
 
 public abstract class Stmt {
 
@@ -12,7 +13,7 @@ public abstract class Stmt {
         R visitFunctionStmt(Function stmt);
         R visitIfStmt(If stmt);
         R visitReturnStmt(Return stmt);
-        R visitVarStmt(Var stmt);
+        R visitVarStmt(VarDecl stmt);
         R visitWhileStmt(While stmt);
         R visitForStmt(For stmt);
         R visitLoopInterruptionStmt(LoopInterruption stmt);
@@ -23,11 +24,6 @@ public abstract class Stmt {
 
         public Block(List<Stmt> statements) {
             this.statements = statements;
-        }
-
-        @Override
-        public Token location() {
-            return statements.get(0).location();
         }
 
         @Override
@@ -44,11 +40,6 @@ public abstract class Stmt {
         }
 
         @Override
-        public Token location() {
-            return expression.location();
-        }
-
-        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitExpressionStmt(this);
         }
@@ -57,19 +48,14 @@ public abstract class Stmt {
     public static class Function extends Stmt {
         public final Token retType;
         public final Token name;
-        public final List<Pair<Token,Token>> params;
-        public final List<Stmt> body;
+        public final List<Pair<Token, Token>> params;
+        public final Stmt body;
 
-        public Function(Token retType, Token name, List<Pair<Token,Token>> params, List<Stmt> body) {
+        public Function(Token retType, Token name, List<Pair<Token, Token>> params, Stmt body) {
             this.retType = retType;
             this.name = name;
             this.params = params;
             this.body = body;
-        }
-
-        @Override
-        public Token location() {
-            return retType;
         }
 
         @Override
@@ -82,18 +68,11 @@ public abstract class Stmt {
         public final Expr condition;
         public final Stmt thenBranch;
         public final Stmt elseBranch;
-        private final Token keyword;
 
-        public If(Expr condition, Stmt thenBranch, Stmt elseBranch, Token keyword) {
+        public If(Expr condition, Stmt thenBranch, Stmt elseBranch) {
             this.condition = condition;
             this.thenBranch = thenBranch;
             this.elseBranch = elseBranch;
-            this.keyword = keyword;
-        }
-
-        @Override
-        public Token location() {
-            return keyword;
         }
 
         @Override
@@ -112,30 +91,20 @@ public abstract class Stmt {
         }
 
         @Override
-        public Token location() {
-            return keyword;
-        }
-
-        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitReturnStmt(this);
         }
     }
 
-    public static class Var extends Stmt {
+    public static class VarDecl extends Stmt {
         public final Token name;
-        public final Token type;
+        public final Var<?> var;
         public final Expr initializer;
 
-        public Var(Token name, Token type, Expr initializer) {
+        public VarDecl(Token name, Var<?> var, Expr initializer) {
             this.name = name;
-            this.type = type;
+            this.var = var;
             this.initializer = initializer;
-        }
-
-        @Override
-        public Token location() {
-            return type;
         }
 
         @Override
@@ -147,17 +116,10 @@ public abstract class Stmt {
     public static class While extends Stmt {
         public final Expr condition;
         public final Stmt body;
-        private final Token keyword;
 
-        public While(Expr condition, Stmt body, Token keyword) {
+        public While(Expr condition, Stmt body) {
             this.condition = condition;
             this.body = body;
-            this.keyword = keyword;
-        }
-
-        @Override
-        public Token location() {
-            return keyword;
         }
 
         @Override
@@ -171,19 +133,12 @@ public abstract class Stmt {
         public final Expr condition;
         public final Expr increment;
         public final Stmt body;
-        private final Token keyword;
 
-        public For(Stmt init, Expr condition, Expr increment, Stmt body, Token keyword) {
+        public For(Stmt init, Expr condition, Expr increment, Stmt body) {
             this.init = init;
             this.condition = condition;
             this.increment = increment;
             this.body = body;
-            this.keyword = keyword;
-        }
-
-        @Override
-        public Token location() {
-            return null;
         }
 
         @Override
@@ -200,16 +155,10 @@ public abstract class Stmt {
         }
 
         @Override
-        public Token location() {
-            return type;
-        }
-
-        @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLoopInterruptionStmt(this);
         }
     }
 
     public abstract <R> R accept(Visitor<R> visitor);
-    public abstract Token location();
 }

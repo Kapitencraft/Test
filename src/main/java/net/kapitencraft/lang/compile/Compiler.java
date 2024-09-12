@@ -2,7 +2,6 @@ package net.kapitencraft.lang.compile;
 
 import net.kapitencraft.lang.ast.token.Token;
 import net.kapitencraft.lang.ast.Stmt;
-import net.kapitencraft.lang.compile.analyser.Resolver;
 
 import java.util.List;
 
@@ -17,12 +16,6 @@ public class Compiler {
         List<Stmt> statements = parser.parse();
 
         // Stop if there was a syntax error.
-        if (hadError) System.exit(65);
-
-        Resolver resolver = new Resolver(lines);
-        System.out.println("Resolving...");
-        resolver.resolve(statements);
-
         if (hadError) System.exit(65);
 
         return statements;

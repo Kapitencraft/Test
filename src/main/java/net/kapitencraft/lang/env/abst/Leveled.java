@@ -6,7 +6,7 @@ import java.util.Map;
 public class Leveled<K, V> extends DequeStack<Map<K, V>> {
 
     protected Leveled() {
-        super(HashMap::new);
+        super(new HashMap<>(), HashMap::new);
     }
 
     protected V getValue(K name) {
@@ -17,10 +17,7 @@ public class Leveled<K, V> extends DequeStack<Map<K, V>> {
         getLast().put(key, value);
     }
 
-    protected int has(K key) {
-        for (int i = 0; i < this.size()) {
-            if (get(i))
-        }
+    protected boolean has(K key) {
         return this.getLast().containsKey(key);
     }
 }

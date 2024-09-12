@@ -61,4 +61,53 @@ public class Math {
             return (int)a + (int)b;
         }
     }
+
+    public static boolean mergeGreater(Object a, Object b) {
+        if (a instanceof Double aD && b instanceof Double bD) {
+            return aD > bD;
+        } else if (a instanceof Integer aI && b instanceof Double bD) {
+            return aI > bD;
+        } else if (a instanceof Double aD && b instanceof Integer bI) {
+            return aD > bI;
+        } else {
+            return (int)a > (int)b;
+        }
+    }
+
+    public static boolean mergeLesser(Object a, Object b) {
+        if (a instanceof Double aD && b instanceof Double bD) {
+            return aD < bD;
+        } else if (a instanceof Integer aI && b instanceof Double bD) {
+            return aI < bD;
+        } else if (a instanceof Double aD && b instanceof Integer bI) {
+            return aD < bI;
+        } else {
+            return (int)a < (int)b;
+        }
+    }
+
+    public static boolean mergeGEqual(Object a, Object b) {
+        if (a instanceof Double aD && b instanceof Double bD) {
+            return aD >= bD;
+        } else if (a instanceof Integer aI && b instanceof Double bD) {
+            return aI >= bD;
+        } else if (a instanceof Double aD && b instanceof Integer bI) {
+            return aD >= bI;
+        } else {
+            return (int)a >= (int)b;
+        }
+    }
+
+    public static boolean mergeLEqual(Object a, Object b) {
+        if (a instanceof Double aD && b instanceof Double bD) {
+            return aD >= bD;
+        } else if (a instanceof Integer aI && b instanceof Double bD) {
+            return aI >= bD;
+        } else if (a instanceof Double aD && b instanceof Integer bI) {
+            return aD >= bI;
+        } else {
+            return (int)a >= (int)b;
+        }
+    }
+
 }

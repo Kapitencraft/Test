@@ -1,6 +1,8 @@
 package net.kapitencraft.lang.compile;
 
+import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.ast.Expr;
+import net.kapitencraft.lang.compile.analyser.EnvAnalyser;
 import net.kapitencraft.lang.run.Main;
 import net.kapitencraft.lang.ast.token.Token;
 import net.kapitencraft.lang.ast.token.TokenType;
@@ -13,13 +15,56 @@ import static net.kapitencraft.lang.ast.token.TokenType.*;
 
 @SuppressWarnings({"UnusedReturnValue", "ThrowableNotThrown"})
 public class Parser {
+    private final EnvAnalyser analyser = new EnvAnalyser();
+    private FunctionType currentFunction = FunctionType.NONE;
     private final List<Token> tokens;
     private final String[] lines;
     private int current = 0;
 
+    private void checkVarExistence(Token name, boolean requireValue) {
+        if (!analyser.hasVar(name.lexeme)) {
+            error(name, "Variable '" + name.lexeme + "' not defined");
+        } else if (requireValue && !analyser.hasVarValue(name.lexeme)) {
+            error(name, "Variable '" + name.lexeme + "' might not have been initialized");
+        }
+    }
+
+    private void createVar(Token name, Token type, boolean hasValue) {
+        if (analyser.hasVar(name.lexeme)) {
+            error(name, "Variable '" + name.lexeme + "' already defined");
+        }
+        analyser.addVar(name.lexeme, type.lexeme, hasValue);
+    }
+
+    private void define(Token name) {
+        checkVarExistence(name, false);
+        analyser.setHasVarValue(name.lexeme);
+    }
+
     Parser(List<Token> tokens, String[] lines) {
         this.tokens = tokens;
         this.lines = lines;
+
+        analyser.addMethod("clock", Integer.class);
+        analyser.addMethod("print", Void.class);
+        analyser.addMethod("input", String.class);
+        analyser.addMethod("abs", Integer.class);
+        analyser.addMethod("randInt", Integer.class);
+    }
+
+    private enum FunctionType {
+        NONE("none"),
+        FUNCTION("function");
+
+        private final String name;
+
+        FunctionType(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 
     List<Stmt> parse() {
@@ -35,7 +80,7 @@ public class Parser {
     private Stmt declaration() {
         try {
             if (match(VAR_TYPE)) return varDeclaration();
-            if (match(FUNC)) return funcDecl("function");
+            if (match(FUNC)) return funcDecl(FunctionType.FUNCTION);
 
             return statement();
         } catch (ParseError error) {
@@ -45,26 +90,34 @@ public class Parser {
     }
 
     private Stmt varDeclaration() {
-        Token type = previous();
         Token name = consume(IDENTIFIER, "Expected variable name.");
+
 
         Expr initializer = null;
         if (match(ASSIGN)) {
             initializer = expression();
         }
 
+        if (analyser.addVar(name.lexeme, null, initializer != null)) {
+            error(name, "Variable '" + name.lexeme + "' already defined");
+        }
+
         consume(EOA, "Expected ';' after variable declaration.");
-        return new Stmt.Var(name, type, initializer);
+        return new Stmt.VarDecl(name, analyser.getVarRef(name.lexeme), initializer);
     }
 
     private Stmt whileStatement() {
-        Token keyword = previous();
         consumeBracketOpen("while");
         Expr condition = expression();
         consumeBracketClose("while condition");
+
+        analyser.pushLoop();
+
         Stmt body = statement();
 
-        return new Stmt.While(condition, body, keyword);
+        analyser.popLoop();
+
+        return new Stmt.While(condition, body);
     }
 
     private Stmt statement() {
@@ -80,14 +133,16 @@ public class Parser {
 
     private Stmt loopInterruptionStatement() {
         Token token = previous();
+        if (!analyser.inLoop()) error(token, "'" + token.lexeme + "' can only be used inside loops");
         consume(EOA, "Expected ';' after " + token.lexeme + " statement");
         return new Stmt.LoopInterruption(token);
     }
 
     private Stmt forStatement() {
-        Token keyword = previous();
-
         consumeBracketOpen("for");
+
+        analyser.push();
+        analyser.pushLoop();
 
         Stmt initializer;
         if (match(EOA)) {
@@ -112,11 +167,13 @@ public class Parser {
 
         Stmt body = statement();
 
-        return new Stmt.For(initializer, condition, increment, body, keyword);
+        analyser.popLoop();
+        analyser.pop();
+
+        return new Stmt.For(initializer, condition, increment, body);
     }
 
     private Stmt ifStatement() {
-        Token statement = previous();
         consumeBracketOpen("if");
         Expr condition = expression();
         consumeBracketClose("if condition");
@@ -127,11 +184,16 @@ public class Parser {
             elseBranch = statement();
         }
 
-        return new Stmt.If(condition, thenBranch, elseBranch, statement);
+        return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
     private Stmt returnStatement() {
+
         Token keyword = previous();
+        if (currentFunction == FunctionType.NONE) {
+            error(keyword, "Can't return from top-level code.");
+        }
+
         Expr value = null;
         if (!check(EOA)) {
             value = expression();
@@ -147,36 +209,53 @@ public class Parser {
         return new Stmt.Expression(expr);
     }
 
-    private Stmt.Function funcDecl(String kind) {
+    private Stmt.Function funcDecl(FunctionType funcType) {
+        String kind = funcType.name;
         Token type = consume(VAR_TYPE, "Expected Var type.");
         Token name = consume(IDENTIFIER, "Expected " + kind + " name.");
 
+        if (analyser.addMethod(name.lexeme, VarTypeManager.getClassForName(type.lexeme))) {
+            error(name, "Method '" + name.lexeme + "' already defined");
+        }
+
         consumeBracketOpen(kind + " name");
         List<Pair<Token, Token>> parameters = new ArrayList<>();
+        FunctionType oldFunc = currentFunction;
+        currentFunction = funcType;
+
+        analyser.push();
+
         if (!check(BRACKET_C)) {
             do {
                 if (parameters.size() >= 255) {
                     error(peek(), "Can't have more than 255 parameters.");
                 }
-
-                Token pType = consume(VAR_TYPE, "Expected Var type before parameter name");
-                Token pName = consume(IDENTIFIER, "Expected parameter name.");
-                parameters.add(Pair.of(pType, pName));
+                Token paramType = consume(VAR_TYPE, "Expected parameter type");
+                Token paramName = consume(IDENTIFIER, "Expected parameter name");
+                createVar(paramName, paramType, true);
+                parameters.add(Pair.of(paramType, paramName));
             } while (match(COMMA));
         }
         consumeBracketClose("parameters");
 
         consume(C_BRACKET_O, "Expected '{' before " + kind + " body.");
-        List<Stmt> body = block();
+        Stmt body = statement();
+
+        analyser.pop();
+        currentFunction = oldFunc;
         return new Stmt.Function(type, name, parameters, body);
     }
 
     private List<Stmt> block() {
         List<Stmt> statements = new ArrayList<>();
 
+        analyser.push();
+
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             statements.add(declaration());
         }
+
+        analyser.pop();
 
         consume(C_BRACKET_C, "Expected '}' after block.");
         return statements;
@@ -226,8 +305,11 @@ public class Parser {
             Token assign = previous();
             Expr value = assignment();
 
-            if (expr instanceof Expr.Variable variable) {
-                Token name = variable.name;
+            if (expr instanceof Expr.VarRef varRef) {
+                Token name = varRef.name;
+
+                checkVarExistence(name, assign.type != TokenType.ASSIGN);
+                if (assign.type == TokenType.ASSIGN) define(name); //expecting it to already been applied otherwise
 
                 return new Expr.Assign(name, value, assign);
             }
@@ -238,9 +320,10 @@ public class Parser {
         if (match(GROW, SHRINK)) {
             Token assign = previous();
 
-            if (expr instanceof Expr.Variable variable) {
-                Token name = variable.name;
+            if (expr instanceof Expr.VarRef varRef) {
+                Token name = varRef.name;
 
+                checkVarExistence(name, true);
                 return new Expr.SpecialAssign(name, assign);
             }
 
@@ -340,9 +423,9 @@ public class Parser {
             } while (match(COMMA));
         }
 
-        Token args = consumeBracketClose("arguments");
+        Token paren = consumeBracketClose("arguments");
 
-        return new Expr.Call(callee, args, arguments);
+        return new Expr.Call(callee, paren, arguments);
     }
 
     private Expr call() {
@@ -360,20 +443,22 @@ public class Parser {
     }
 
     private Expr primary() {
-        if (match(FALSE)) return get(false);
-        if (match(TRUE)) return get(true);
-        if (match(NULL)) return get(null);
+        if (match(FALSE)) return new Expr.Literal(false);
+        if (match(TRUE)) return new Expr.Literal(true);
+        if (match(NULL)) return new Expr.Literal(null);
 
         if (match(NUM, STR)) {
-            return get(previous().literal);
+            return new Expr.Literal(previous().literal);
         }
 
         if (match(IDENTIFIER)) {
             Token previous = previous();
             if (peek().type == BRACKET_O) {
-                return new Expr.Function(previous);
+                if (!analyser.hasMethod(previous.lexeme)) error(previous, "Method '" + previous.lexeme + "' not defined");
+                return new Expr.FuncRef(previous);
             } else {
-                return new Expr.Variable(previous);
+                checkVarExistence(previous, true);
+                return new Expr.VarRef(previous);
             }
         }
 
@@ -384,10 +469,6 @@ public class Parser {
         }
 
         throw error(peek(), "Expression expected.");
-    }
-
-    private Expr get(Object obj) {
-        return new Expr.Literal(previous(), obj);
     }
 
     private Token consume(TokenType type, String message) {

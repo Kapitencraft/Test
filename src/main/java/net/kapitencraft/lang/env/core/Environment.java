@@ -41,7 +41,7 @@ public class Environment {
     }
 
     public boolean hasVar(String name) {
-        return vars.has(name);
+        return vars.hasVar(name);
     }
 
     //method

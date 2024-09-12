@@ -1,5 +1,7 @@
 package net.kapitencraft.lang.compile.analyser;
 
+import net.kapitencraft.lang.ast.Var;
+
 public class EnvAnalyser {
     private final MethodAnalyser methodAnalyser;
     private final VarAnalyser varAnalyser;
@@ -33,11 +35,11 @@ public class EnvAnalyser {
     }
 
     public boolean hasVar(String name) {
-        return varAnalyser.has(name);
+        return varAnalyser.hasVar(name);
     }
 
     public boolean hasVarValue(String name) {
-        return varAnalyser.has(name) && varAnalyser.hasValue(name);
+        return varAnalyser.hasVar(name) && varAnalyser.hasValue(name);
     }
 
     public void setHasVarValue(String name) {
@@ -54,6 +56,10 @@ public class EnvAnalyser {
 
     public boolean addMethod(String name, Class<?> retType) {
         return methodAnalyser.add(name, retType);
+    }
+
+    public Var<?> getVarRef(String name) {
+        return varAnalyser.getVarRef(name);
     }
 
     public Class<?> getVarType(String name) {

@@ -140,12 +140,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
     }
 
-    private void execute(Stmt stmt) {
+    public void execute(Stmt stmt) {
         stmt.accept(this);
     }
 
     @Override
-    public Void visitVarStmt(Stmt.Var stmt) {
+    public Void visitVarStmt(Stmt.VarDecl stmt) {
         Object value = null;
         if (stmt.initializer != null) {
             value = evaluate(stmt.initializer);
@@ -251,12 +251,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitVariableExpr(Expr.Variable expr) {
+    public Object visitVariableExpr(Expr.VarRef expr) {
         return environment.getVar(expr.name.lexeme);
     }
 
     @Override
-    public Object visitFunctionExpr(Expr.Function expr) {
+    public Object visitFunctionExpr(Expr.FuncRef expr) {
         return environment.getMethod(expr.name.lexeme);
     }
 
@@ -297,7 +297,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitSpecialAssignExpr(Expr.SpecialAssign expr) {
-
         return environment.specialVarAssign(expr.name.lexeme, expr.type.type);
     }
 
@@ -309,20 +308,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         switch (expr.operator.type) {
             case GREATER:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left > (double)right;
+                return Math.mergeGreater(left, right);
             case GEQUAL:
                 checkNumberOperands(expr.operator, left, right);
-                if (left instanceof Integer lI && right instanceof Integer rI) return lI >= rI;
-                if (left instanceof Double lD && right instanceof Double rD) return lD >= rD;
-                if (left instanceof Integer lI && right instanceof Double rD) return lI >= rD;
-                if (left instanceof Double lD && right instanceof Integer rI) return lD >= rI;
-                throw new RuntimeError(expr.operator, "Unknown number");
+                return Math.mergeGEqual(left, right);
             case LESSER:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left < (double)right;
+                return Math.mergeLesser(left, right);
             case LEQUAL:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left <= (double)right;
+                return Math.mergeLEqual(left, right);
             case NEQUAL: return !isEqual(left, right);
             case EQUAL: return isEqual(left, right);
             case SUB:
@@ -345,11 +340,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 if (right instanceof String rS) {
                     return stringify(left) + rS;
                 }
-
                 return Math.mergeAdd(left, right);
         }
         return null;
     }
+
+    //TODO add VarTypes
 
     @Override
     public Object visitCallExpr(Expr.Call expr) {
@@ -378,7 +374,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         return a.equals(b);
     }
-
 
     public static void checkNumberOperand(Token operator, Object operand) {
         if (operand instanceof Double) return;

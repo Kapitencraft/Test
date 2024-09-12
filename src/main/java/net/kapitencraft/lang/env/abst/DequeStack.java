@@ -1,28 +1,26 @@
 package net.kapitencraft.lang.env.abst;
 
 import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 public class DequeStack<T> {
     private final ArrayDeque<T> stack;
-    private final Supplier<T> def;
+    private final UnaryOperator<T> reCreator;
 
     /**
      * @param def default value added on creation
      */
-    public DequeStack(Supplier<T> def) {
+    public DequeStack(T def, UnaryOperator<T> reCreator) {
+        this.reCreator = reCreator;
         this.stack = new ArrayDeque<>();
-        this.stack.add(def.get());
-        this.def = def;
+        this.stack.add(def);
     }
 
     /**
      * push the stack; use pop to revert changes made after push
      */
     public void push() {
-        stack.addLast(def.get());
+        stack.addLast(reCreator.apply(getLast()));
     }
 
     protected T getLast() {
@@ -35,14 +33,5 @@ public class DequeStack<T> {
     public void pop() {
         stack.removeLast();
         if (stack.isEmpty()) throw new IllegalStateException("leveled has been completely cleared");
-    }
-
-    protected int size() {
-        return stack.size();
-    }
-
-    //TODO use arraylist (pain!)
-    protected T get(int i) {
-        return stack.
     }
 }
