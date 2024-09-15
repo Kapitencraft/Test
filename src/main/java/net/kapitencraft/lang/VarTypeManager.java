@@ -1,11 +1,11 @@
 package net.kapitencraft.lang;
 
-import net.kapitencraft.lang.ast.token.TokenType;
+import net.kapitencraft.lang.holder.token.TokenType;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.kapitencraft.lang.ast.token.TokenType.*;
+import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 public class VarTypeManager {
     private static final Map<String, TokenType> keywords = new HashMap<>();
@@ -32,6 +32,8 @@ public class VarTypeManager {
         keywords.put("while",    WHILE);
         keywords.put("break",    BREAK);
         keywords.put("continue", CONTINUE);
+        keywords.put("switch",   SWITCH);
+        keywords.put("case",     CASE);
         initialize();
     }
 

@@ -2,17 +2,16 @@ package net.kapitencraft.lang.compile;
 
 import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.run.Main;
-import net.kapitencraft.lang.ast.token.Token;
-import net.kapitencraft.lang.ast.token.TokenType;
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import static net.kapitencraft.lang.ast.token.TokenType.*;
+import static net.kapitencraft.lang.holder.token.TokenType.*;
 
-public class LangScanner {
+public class Lexer {
 
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
@@ -24,10 +23,10 @@ public class LangScanner {
 
     private void nextLine() {
         line++;
-        indexAtLineStart = current + 1;
+        indexAtLineStart = current;
     }
 
-    public LangScanner(String source) {
+    public Lexer(String source) {
         this.source = source;
         this.lines = source.split("\n", Integer.MAX_VALUE);
     }
@@ -59,12 +58,12 @@ public class LangScanner {
     }
 
     private void addToken(TokenType type) {
-        addToken(type, null);
+        addToken(type, type == TRUE ? Boolean.TRUE : type == FALSE ? false : null);
     }
 
     private void addToken(TokenType type, Object literal) {
         String text = source.substring(start, current);
-        tokens.add(new Token(type, text, literal, line, start - indexAtLineStart + 1));
+        tokens.add(new Token(type, text, literal, line, start - indexAtLineStart));
     }
 
     public List<Token> scanTokens() {
@@ -131,6 +130,12 @@ public class LangScanner {
                 nextLine();
                 break;
             case '"': string(); break;
+            case ':':
+                addToken(WHEN_FALSE);
+                break;
+            case '?':
+                addToken(WHEN_CONDITION);
+                break;
 
             default:
                 if (isDigit(c)) {

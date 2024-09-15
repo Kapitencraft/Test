@@ -1,121 +1,34 @@
 package net.kapitencraft.lang.run;
 
-import net.kapitencraft.lang.ast.Expr;
-import net.kapitencraft.lang.ast.Stmt;
-import net.kapitencraft.lang.ast.token.Token;
-import net.kapitencraft.lang.ast.token.TokenType;
+import net.kapitencraft.lang.holder.LoxClass;
+import net.kapitencraft.lang.holder.ast.Expr;
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.exception.EscapeLoop;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.func.LoxFunction;
 import net.kapitencraft.tool.Math;
+import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.tool.Pair;
 
 import java.util.*;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final Environment globals = new Environment();
     private final Environment environment = globals;
-    private final Scanner in = new Scanner(System.in);
+    public static final Scanner in = new Scanner(System.in);
 
-    private final long millisAtStart;
+    public static long millisAtStart;
 
     public Interpreter() {
-        globals.defineMethod("clock", new LoxCallable() {
-            @Override
-            public int arity() {
-                return 0;
-            }
-
-            @Override
-            public Class<?> type() {
-                return Integer.class;
-            }
-
-            @Override
-            public Object call(Interpreter interpreter, List<Object> arguments) {
-                return (double) (System.currentTimeMillis() - millisAtStart);
-            }
-
-            @Override
-            public String toString() {
-                return "<native fn#clock>";
-            }
-        });
-        globals.defineMethod("print", new LoxCallable() {
-            @Override
-            public int arity() {
-                return 1;
-            }
-
-            @Override
-            public Class<?> type() {
-                return Void.class;
-            }
-
-            @Override
-            public Object call(Interpreter interpreter, List<Object> arguments) {
-                System.out.println(stringify(arguments.get(0)));
-                return null;
-            }
-        });
-        globals.defineMethod("randInt", new LoxCallable() {
-            @Override
-            public int arity() {
-                return 2;
-            }
-
-            @Override
-            public Class<?> type() {
-                return Integer.class;
-            }
-
-            @Override
-            public Object call(Interpreter interpreter, List<Object> arguments) {
-                Random random = new Random();
-                int min = (int) arguments.get(0);
-                int max = (int) arguments.get(1);
-                return random.nextInt((max - min) + 1) + min;
-            }
-        });
-        globals.defineMethod("abs", new LoxCallable() {
-            @Override
-            public int arity() {
-                return 1;
-            }
-
-            @Override
-            public Class<?> type() {
-                return Integer.class;
-            }
-
-            @Override
-            public Object call(Interpreter interpreter, List<Object> arguments) {
-                return java.lang.Math.abs((int) arguments.get(0));
-            }
-        });
-        globals.defineMethod("input", new LoxCallable() {
-            @Override
-            public int arity() {
-                return 1;
-            }
-
-            @Override
-            public Class<?> type() {
-                return String.class;
-            }
-
-            @Override
-            public Object call(Interpreter interpreter, List<Object> arguments) {
-                System.out.print(stringify(arguments.get(0)));
-                return in.nextLine();
-            }
-        });
+        Main.natives.forEach(globals::defineMethod);
         millisAtStart = System.currentTimeMillis();
     }
 
 
-    private String stringify(Object object) {
+    public static String stringify(Object object) {
         if (object == null) return "null";
 
         if (object instanceof Double) {
@@ -141,11 +54,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     public void execute(Stmt stmt) {
+        if (stmt == null) return;
         stmt.accept(this);
     }
 
     @Override
-    public Void visitVarStmt(Stmt.VarDecl stmt) {
+    public Void visitVarDeclStmt(Stmt.VarDecl stmt) {
         Object value = null;
         if (stmt.initializer != null) {
             value = evaluate(stmt.initializer);
@@ -162,7 +76,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitFunctionStmt(Stmt.Function stmt) {
+    public Void visitFuncDeclStmt(Stmt.FuncDecl stmt) {
         LoxFunction function = new LoxFunction(stmt);
         environment.defineMethod(stmt.name.lexeme, function);
         return null;
@@ -180,7 +94,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Void visitIfStmt(Stmt.If stmt) {
         if (isTruthy(evaluate(stmt.condition))) {
             execute(stmt.thenBranch);
-        } else if (stmt.elseBranch != null) {
+            return null;
+        }
+
+        for (Pair<Expr, Stmt> elif : stmt.elifs) {
+            if (isTruthy(evaluate(elif.left()))) {
+                execute(elif.right());
+                return null;
+            }
+        }
+
+        if (stmt.elseBranch != null) {
             execute(stmt.elseBranch);
         }
         return null;
@@ -189,6 +113,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitBlockStmt(Stmt.Block stmt) {
         executeBlock(stmt.statements);
+        return null;
+    }
+
+    @Override
+    public Void visitClassStmt(Stmt.Class stmt) {
+        LoxClass klass = new LoxClass(stmt.name.lexeme);
         return null;
     }
 
@@ -234,7 +164,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitLiteralExpr(Expr.Literal expr) {
-        return expr.value;
+        return expr.value.literal;
     }
 
     @Override
@@ -251,12 +181,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitVariableExpr(Expr.VarRef expr) {
+    public Object visitVarRefExpr(Expr.VarRef expr) {
         return environment.getVar(expr.name.lexeme);
     }
 
     @Override
-    public Object visitFunctionExpr(Expr.FuncRef expr) {
+    public Object visitFuncRefExpr(Expr.FuncRef expr) {
         return environment.getMethod(expr.name.lexeme);
     }
 
@@ -297,6 +227,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitSpecialAssignExpr(Expr.SpecialAssign expr) {
+
         return environment.specialVarAssign(expr.name.lexeme, expr.type.type);
     }
 
@@ -340,32 +271,43 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 if (right instanceof String rS) {
                     return stringify(left) + rS;
                 }
+
                 return Math.mergeAdd(left, right);
         }
         return null;
     }
 
-    //TODO add VarTypes
+    @Override
+    public Object visitWhenExpr(Expr.When expr) {
+        return isTruthy(evaluate(expr.condition)) ? evaluate(expr.ifTrue) : evaluate(expr.ifFalse);
+    }
+
+    @Override
+    public Object visitSwitchExpr(Expr.Switch stmt) {
+        Object o = evaluate(stmt.provider);
+        return stmt.params.containsKey(o) ? evaluate(stmt.params.get(o)) : evaluate(stmt.defaulted);
+    }
+
 
     @Override
     public Object visitCallExpr(Expr.Call expr) {
         Object callee = evaluate(expr.callee);
 
         List<Object> arguments = new ArrayList<>();
-        for (Expr argument : expr.arguments) {
+        for (Expr argument : expr.args) {
             arguments.add(evaluate(argument));
         }
 
         if (callee instanceof LoxCallable function) {
             if (arguments.size() != function.arity()) {
-                throw new RuntimeError(expr.args, "Expected " +
+                throw new RuntimeError(expr.paren, "Expected " +
                         function.arity() + " arguments but got " +
                         arguments.size() + ".");
             }
 
             return function.call(this, arguments);
         }
-        throw new RuntimeError(expr.args, "unknown function");
+        throw new RuntimeError(expr.paren, "unknown function");
     }
 
     private boolean isEqual(Object a, Object b) {
@@ -374,6 +316,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         return a.equals(b);
     }
+
 
     public static void checkNumberOperand(Token operator, Object operand) {
         if (operand instanceof Double) return;

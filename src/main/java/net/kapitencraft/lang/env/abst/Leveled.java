@@ -17,7 +17,7 @@ public class Leveled<K, V> extends DequeStack<Map<K, V>> {
         getLast().put(key, value);
     }
 
-    protected boolean has(K key) {
+    public boolean has(K key) {
         return this.getLast().containsKey(key);
     }
 }

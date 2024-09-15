@@ -9,5 +9,7 @@ public interface LoxCallable {
 
     Class<?> type();
 
+    List<? extends Class<?>> argTypes();
+
     Object call(Interpreter interpreter, List<Object> arguments);
 }

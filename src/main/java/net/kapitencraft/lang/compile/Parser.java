@@ -1,70 +1,26 @@
 package net.kapitencraft.lang.compile;
 
-import net.kapitencraft.lang.VarTypeManager;
-import net.kapitencraft.lang.ast.Expr;
-import net.kapitencraft.lang.compile.analyser.EnvAnalyser;
-import net.kapitencraft.lang.run.Main;
-import net.kapitencraft.lang.ast.token.Token;
-import net.kapitencraft.lang.ast.token.TokenType;
-import net.kapitencraft.lang.ast.Stmt;
+import net.kapitencraft.lang.holder.ast.Expr;
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
+import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.Pair;
 
-import java.util.ArrayList;
-import java.util.List;
-import static net.kapitencraft.lang.ast.token.TokenType.*;
+import java.util.*;
+
+import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 @SuppressWarnings({"UnusedReturnValue", "ThrowableNotThrown"})
 public class Parser {
-    private final EnvAnalyser analyser = new EnvAnalyser();
-    private FunctionType currentFunction = FunctionType.NONE;
     private final List<Token> tokens;
     private final String[] lines;
     private int current = 0;
+    private final Compiler.ErrorConsumer errorConsumer;
 
-    private void checkVarExistence(Token name, boolean requireValue) {
-        if (!analyser.hasVar(name.lexeme)) {
-            error(name, "Variable '" + name.lexeme + "' not defined");
-        } else if (requireValue && !analyser.hasVarValue(name.lexeme)) {
-            error(name, "Variable '" + name.lexeme + "' might not have been initialized");
-        }
-    }
-
-    private void createVar(Token name, Token type, boolean hasValue) {
-        if (analyser.hasVar(name.lexeme)) {
-            error(name, "Variable '" + name.lexeme + "' already defined");
-        }
-        analyser.addVar(name.lexeme, type.lexeme, hasValue);
-    }
-
-    private void define(Token name) {
-        checkVarExistence(name, false);
-        analyser.setHasVarValue(name.lexeme);
-    }
-
-    Parser(List<Token> tokens, String[] lines) {
+    Parser(List<Token> tokens, String[] lines, Compiler.ErrorConsumer errorConsumer) {
         this.tokens = tokens;
         this.lines = lines;
-
-        analyser.addMethod("clock", Integer.class);
-        analyser.addMethod("print", Void.class);
-        analyser.addMethod("input", String.class);
-        analyser.addMethod("abs", Integer.class);
-        analyser.addMethod("randInt", Integer.class);
-    }
-
-    private enum FunctionType {
-        NONE("none"),
-        FUNCTION("function");
-
-        private final String name;
-
-        FunctionType(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
+        this.errorConsumer = errorConsumer;
     }
 
     List<Stmt> parse() {
@@ -74,13 +30,14 @@ public class Parser {
             statements.add(declaration());
         }
 
-        return statements;
+        return statements.stream().filter(Objects::nonNull).toList(); //clear null elements
     }
 
     private Stmt declaration() {
         try {
             if (match(VAR_TYPE)) return varDeclaration();
-            if (match(FUNC)) return funcDecl(FunctionType.FUNCTION);
+            if (match(CLASS)) return classDeclaration();
+            if (match(FUNC)) return funcDecl("function");
 
             return statement();
         } catch (ParseError error) {
@@ -89,35 +46,41 @@ public class Parser {
         }
     }
 
-    private Stmt varDeclaration() {
-        Token name = consume(IDENTIFIER, "Expected variable name.");
+    private Stmt classDeclaration() {
+        Token name = consume(IDENTIFIER, "Expect class name.");
+        consume(C_BRACKET_O, "Expect '{' before class body.");
 
+        List<Stmt.FuncDecl> methods = new ArrayList<>();
+        while (!check(C_BRACKET_C) && !isAtEnd()) {
+            methods.add(funcDecl("method"));
+        }
+
+        consumeCurlyClose("class body");
+
+        return new Stmt.Class(name, methods);
+    }
+
+    private Stmt varDeclaration() {
+        Token type = previous();
+        Token name = consume(IDENTIFIER, "Expected variable name.");
 
         Expr initializer = null;
         if (match(ASSIGN)) {
             initializer = expression();
         }
 
-        if (analyser.addVar(name.lexeme, null, initializer != null)) {
-            error(name, "Variable '" + name.lexeme + "' already defined");
-        }
-
-        consume(EOA, "Expected ';' after variable declaration.");
-        return new Stmt.VarDecl(name, analyser.getVarRef(name.lexeme), initializer);
+        consumeEndOfArg();
+        return new Stmt.VarDecl(name, type, initializer);
     }
 
     private Stmt whileStatement() {
+        Token keyword = previous();
         consumeBracketOpen("while");
         Expr condition = expression();
         consumeBracketClose("while condition");
-
-        analyser.pushLoop();
-
         Stmt body = statement();
 
-        analyser.popLoop();
-
-        return new Stmt.While(condition, body);
+        return new Stmt.While(condition, body, keyword);
     }
 
     private Stmt statement() {
@@ -133,16 +96,14 @@ public class Parser {
 
     private Stmt loopInterruptionStatement() {
         Token token = previous();
-        if (!analyser.inLoop()) error(token, "'" + token.lexeme + "' can only be used inside loops");
-        consume(EOA, "Expected ';' after " + token.lexeme + " statement");
+        consumeEndOfArg();
         return new Stmt.LoopInterruption(token);
     }
 
     private Stmt forStatement() {
-        consumeBracketOpen("for");
+        Token keyword = previous();
 
-        analyser.push();
-        analyser.pushLoop();
+        consumeBracketOpen("for");
 
         Stmt initializer;
         if (match(EOA)) {
@@ -157,7 +118,7 @@ public class Parser {
         if (!check(EOA)) {
             condition = expression();
         }
-        consume(EOA, "Expected ';' after loop condition.");
+        consumeEndOfArg();
 
         Expr increment = null;
         if (!check(BRACKET_C)) {
@@ -167,149 +128,111 @@ public class Parser {
 
         Stmt body = statement();
 
-        analyser.popLoop();
-        analyser.pop();
-
-        return new Stmt.For(initializer, condition, increment, body);
+        return new Stmt.For(initializer, condition, increment, body, keyword);
     }
 
     private Stmt ifStatement() {
+        Token statement = previous();
         consumeBracketOpen("if");
         Expr condition = expression();
         consumeBracketClose("if condition");
 
         Stmt thenBranch = statement();
         Stmt elseBranch = null;
+        List<Pair<Expr, Stmt>> elifs = new ArrayList<>();
+        while (match(ELIF)) {
+            consumeBracketOpen("elif");
+            Expr elifCondition = expression();
+            consumeBracketClose("elif condition");
+            Stmt elifStmt = statement();
+            elifs.add(Pair.of(elifCondition, elifStmt));
+        }
+
         if (match(ELSE)) {
             elseBranch = statement();
         }
 
-        return new Stmt.If(condition, thenBranch, elseBranch);
+        return new Stmt.If(condition, thenBranch, elseBranch, elifs, statement);
     }
 
     private Stmt returnStatement() {
-
         Token keyword = previous();
-        if (currentFunction == FunctionType.NONE) {
-            error(keyword, "Can't return from top-level code.");
-        }
-
         Expr value = null;
         if (!check(EOA)) {
             value = expression();
         }
 
-        consume(EOA, "Expect ';' after return value.");
+        consumeEndOfArg();
         return new Stmt.Return(keyword, value);
     }
 
     private Stmt expressionStatement() {
         Expr expr = expression();
-        consume(EOA, "Expected ';' after expression.");
+        consumeEndOfArg();
         return new Stmt.Expression(expr);
     }
 
-    private Stmt.Function funcDecl(FunctionType funcType) {
-        String kind = funcType.name;
+    private Stmt.FuncDecl funcDecl(String kind) {
         Token type = consume(VAR_TYPE, "Expected Var type.");
         Token name = consume(IDENTIFIER, "Expected " + kind + " name.");
 
-        if (analyser.addMethod(name.lexeme, VarTypeManager.getClassForName(type.lexeme))) {
-            error(name, "Method '" + name.lexeme + "' already defined");
-        }
-
         consumeBracketOpen(kind + " name");
         List<Pair<Token, Token>> parameters = new ArrayList<>();
-        FunctionType oldFunc = currentFunction;
-        currentFunction = funcType;
-
-        analyser.push();
-
         if (!check(BRACKET_C)) {
             do {
                 if (parameters.size() >= 255) {
                     error(peek(), "Can't have more than 255 parameters.");
                 }
-                Token paramType = consume(VAR_TYPE, "Expected parameter type");
-                Token paramName = consume(IDENTIFIER, "Expected parameter name");
-                createVar(paramName, paramType, true);
-                parameters.add(Pair.of(paramType, paramName));
+
+                Token pType = consume(VAR_TYPE, "Expected Var type before parameter name");
+                Token pName = consume(IDENTIFIER, "Expected parameter name.");
+                parameters.add(Pair.of(pType, pName));
             } while (match(COMMA));
         }
         consumeBracketClose("parameters");
 
-        consume(C_BRACKET_O, "Expected '{' before " + kind + " body.");
+        consumeCurlyOpen(kind + " body");
         Stmt body = statement();
-
-        analyser.pop();
-        currentFunction = oldFunc;
-        return new Stmt.Function(type, name, parameters, body);
+        consumeCurlyClose(kind + " body");
+        return new Stmt.FuncDecl(type, name, parameters, body);
     }
 
     private List<Stmt> block() {
         List<Stmt> statements = new ArrayList<>();
 
-        analyser.push();
-
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             statements.add(declaration());
         }
 
-        analyser.pop();
-
-        consume(C_BRACKET_C, "Expected '}' after block.");
+        consumeCurlyClose("block");
         return statements;
     }
 
-    private boolean check(TokenType type) {
-        if (isAtEnd()) return false;
-        return peek().type == type;
+    private Expr expression() {
+        return when();
     }
 
-    private boolean match(TokenType... types) {
-        for (TokenType type : types) {
-            if (check(type)) {
-                advance();
-                return true;
-            }
+    private Expr when() {
+        Expr expr = assignment();
+        if (match(WHEN_CONDITION)) {
+            Expr ifTrue = expression();
+            consume(WHEN_FALSE, "':' expected");
+            Expr ifFalse = expression();
+            expr = new Expr.When(expr, ifTrue, ifFalse);
         }
 
-        return false;
-    }
-
-    private boolean isAtEnd() {
-        return peek().type == EOF;
-    }
-
-    private Token advance() {
-        if (!isAtEnd()) current++;
-        return previous();
-    }
-
-    private Token peek() {
-        return tokens.get(current);
-    }
-
-    private Token previous() {
-        return tokens.get(current - 1);
-    }
-
-    private Expr expression() {
-        return assignment();
+        return expr;
     }
 
     private Expr assignment() {
         Expr expr = or();
 
-        if (match(ASSIGN, ADD_ASSIGN, SUB_ASSIGN, MUL_ASSIGN, DIV_ASSIGN, MOD)) {
+        if (match(ASSIGN, ADD_ASSIGN, SUB_ASSIGN, MUL_ASSIGN, DIV_ASSIGN, MOD_ASSIGN)) {
             Token assign = previous();
             Expr value = assignment();
 
-            if (expr instanceof Expr.VarRef varRef) {
-                Token name = varRef.name;
-
-                checkVarExistence(name, assign.type != TokenType.ASSIGN);
-                if (assign.type == TokenType.ASSIGN) define(name); //expecting it to already been applied otherwise
+            if (expr instanceof Expr.VarRef variable) {
+                Token name = variable.name;
 
                 return new Expr.Assign(name, value, assign);
             }
@@ -320,10 +243,9 @@ public class Parser {
         if (match(GROW, SHRINK)) {
             Token assign = previous();
 
-            if (expr instanceof Expr.VarRef varRef) {
-                Token name = varRef.name;
+            if (expr instanceof Expr.VarRef ref) {
+                Token name = ref.name;
 
-                checkVarExistence(name, true);
                 return new Expr.SpecialAssign(name, assign);
             }
 
@@ -411,7 +333,44 @@ public class Parser {
             return new Expr.Unary(operator, right);
         }
 
+        if (match(SWITCH)) {
+            return switchExpr();
+        }
+
         return call();
+    }
+
+    private Expr switchExpr() {
+        Token keyword = previous();
+        consumeBracketOpen("switch");
+
+        Expr provider = expression();
+
+        consumeBracketClose("switch");
+
+
+        consumeCurlyOpen("switch body");
+        Map<Object, Expr> params = new HashMap<>();
+        Expr def = null;
+
+        while (!check(C_BRACKET_C)) {
+            if (match(CASE)) {
+                Object key = literal();
+                if (params.containsKey(key)) error(previous(), "Duplicate case key '" + previous().lexeme + "'");
+                consume(LAMBDA, "not a statement");
+                Expr expr = expression();
+                consumeEndOfArg();
+                params.put(key, expr);
+            } else if (match(DEFAULT)) {
+                if (def != null) error(previous(), "Duplicate default key");
+                consume(LAMBDA, "not a statement");
+                def = expression();
+                consumeEndOfArg();
+            }
+        }
+
+        consumeCurlyClose("switch body");
+        return new Expr.Switch(provider, params, def, keyword);
     }
 
     private Expr finishCall(Expr callee) {
@@ -423,9 +382,9 @@ public class Parser {
             } while (match(COMMA));
         }
 
-        Token paren = consumeBracketClose("arguments");
+        Token args = consumeBracketClose("arguments");
 
-        return new Expr.Call(callee, paren, arguments);
+        return new Expr.Call(callee, args, arguments);
     }
 
     private Expr call() {
@@ -442,22 +401,28 @@ public class Parser {
         return expr;
     }
 
-    private Expr primary() {
-        if (match(FALSE)) return new Expr.Literal(false);
-        if (match(TRUE)) return new Expr.Literal(true);
-        if (match(NULL)) return new Expr.Literal(null);
+    private Object literal() {
+        if (match(FALSE)) return false;
+        if (match(TRUE)) return true;
+        if (match(NULL)) return null;
 
         if (match(NUM, STR)) {
-            return new Expr.Literal(previous().literal);
+            return previous().literal;
+        }
+        throw error(peek(), "Expected literal");
+    }
+
+    private Expr primary() {
+
+        if (match(FALSE, TRUE, NULL, NUM, STR)) {
+            return new Expr.Literal(previous());
         }
 
         if (match(IDENTIFIER)) {
             Token previous = previous();
             if (peek().type == BRACKET_O) {
-                if (!analyser.hasMethod(previous.lexeme)) error(previous, "Method '" + previous.lexeme + "' not defined");
                 return new Expr.FuncRef(previous);
             } else {
-                checkVarExistence(previous, true);
                 return new Expr.VarRef(previous);
             }
         }
@@ -471,6 +436,40 @@ public class Parser {
         throw error(peek(), "Expression expected.");
     }
 
+    private boolean check(TokenType type) {
+        if (isAtEnd()) return false;
+        return peek().type == type;
+    }
+
+    private boolean match(TokenType... types) {
+        for (TokenType type : types) {
+            if (check(type)) {
+                advance();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isAtEnd() {
+        return peek().type == EOF;
+    }
+
+    private Token advance() {
+        if (!isAtEnd()) current++;
+        return previous();
+    }
+
+    private Token peek() {
+        return tokens.get(current);
+    }
+
+    private Token previous() {
+        return tokens.get(current - 1);
+    }
+
+
     private Token consume(TokenType type, String message) {
         if (check(type)) return advance();
 
@@ -481,14 +480,26 @@ public class Parser {
         return this.consume(BRACKET_O, "Expected '(' after '" + method + "'.");
     }
 
+    private Token consumeCurlyOpen(String method) {
+        return this.consume(C_BRACKET_O, "Expected '{' after '" + method + "'.");
+    }
+
+    private Token consumeCurlyClose(String method) {
+        return this.consume(C_BRACKET_C, "Expected '}' after " + method + ".");
+    }
+
     private Token consumeBracketClose(String method) {
         return this.consume(BRACKET_C, "Expected ')' after " + method + ".");
+    }
+
+    private Token consumeEndOfArg() {
+        return this.consume(EOA, "';' expected");
     }
 
     private static class ParseError extends RuntimeException {}
 
     private ParseError error(Token token, String message) {
-        Main.error(token, message, lines[token.line - 1]);
+        errorConsumer.error(token, message, lines[token.line - 1]);
         return new ParseError();
     }
 

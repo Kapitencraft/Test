@@ -1,8 +1,8 @@
 package net.kapitencraft.lang.env.core;
 
 import net.kapitencraft.lang.run.RuntimeError;
-import net.kapitencraft.lang.ast.token.Token;
-import net.kapitencraft.lang.ast.token.TokenType;
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.env.abst.Leveled;
 import net.kapitencraft.tool.Math;
 
@@ -18,15 +18,11 @@ public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
     }
 
     public Object get(String name) {
-        return getValue(name).object;
+        return getValue(name).val;
     }
 
     public void assign(String name, Object value) {
-        getValue(name).object = value;
-    }
-
-    public boolean hasVar(String name) {
-        return this.getLast().containsKey(name);
+        getValue(name).val = value;
     }
 
     public Object assignWithOperator(Token type, String name, Object value) {
@@ -64,22 +60,19 @@ public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
     }
 
     public Object specialAssign(String name, TokenType type) {
-        Object o = get(name);
-        if (o instanceof Integer) {
-            this.assign(name, (int)o + (type == TokenType.GROW ? 1 : -1));
+        Object value = get(name);
+        if (value instanceof Integer) {
+            this.assign(name, (int) value + (type == TokenType.GROW ? 1 : -1));
         } else
-            this.assign(name, ((double) get(name)) + (type == TokenType.GROW ? 1 : -1));
+            this.assign(name, (double) value + (type == TokenType.GROW ? 1 : -1));
         return get(name);
     }
 
-    /**
-     * wrapper required to sync values between scopes
-     */
-    public static class Wrapper {
-        private Object object;
+    static class Wrapper {
+        Object val;
 
-        public Wrapper(Object o) {
-            object = o;
+        public Wrapper(Object in) {
+            val = in;
         }
     }
 }

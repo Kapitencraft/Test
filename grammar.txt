@@ -8,12 +8,14 @@ varDecl     -> VAR_TYPE IDENTIFIER ( "=" expression )? ";"
 statement   -> exprStmt | forStmt | ifStmt | printStmt | returnStmt | whileStmt | block
 exprStmt    -> expression ";"
 forStmt     -> "for" "(" ( varDecl | exprStmt)? ";" expression? ";" expression? ")" statement
-ifStmt      -> "if" "(" expression ")" statement
+ifStmt      -> "if" "(" expression ")" statement ( "elif" "(" expression ")" statement )* ( "else" statement )?
 returnStmt  -> "return" expression? ";"
 whileStmt   -> "while" "(" expression ")" statement
 block       -> "{" declaration* "}"
 
-expression  -> assignment;
+expression  -> when;
+
+when        -> assignment ( "?" expression ":" expression)?
 
 assignment  -> ( call "." )? IDENTIFIER "=" assignment | logic_or
 
@@ -24,8 +26,11 @@ comparison  -> term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term        -> factor ( ( "-" | "+" ) factor )*
 factor      -> unary ( ( "/" | "*" ) unary )*
 
-unary       -> ( "!" | "-" ) unary | call
+unary       -> ( "!" | "-" ) unary | call | when
+switch      -> "switch" "(" expression ")" "{" ( "case" primary "->" expression ";")* ("default" "->" expression ";")? "}"
+
 call        -> primary ( "(" arguments? ")" | "." IDENTIFIER )*
+
 primary     -> "true" | "false" | "null" | "this" | NUMBER | STRING | IDENTIFIER | "(" expression ")" | "super"
 
 //util

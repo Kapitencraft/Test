@@ -4,14 +4,15 @@ import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.run.Interpreter;
-import net.kapitencraft.lang.ast.Stmt;
+import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.tool.Pair;
 
 import java.util.List;
 
 public class LoxFunction implements LoxCallable {
-    private final Stmt.Function declaration;
+    private final Stmt.FuncDecl declaration;
 
-    public LoxFunction(Stmt.Function declaration) {
+    public LoxFunction(Stmt.FuncDecl declaration) {
         this.declaration = declaration;
     }
 
@@ -34,6 +35,11 @@ public class LoxFunction implements LoxCallable {
     @Override
     public Class<?> type() {
         return VarTypeManager.getClassForName(declaration.retType.lexeme);
+    }
+
+    @Override
+    public List<? extends Class<?>> argTypes() {
+        return declaration.params.stream().map(Pair::left).map(token -> VarTypeManager.getClassForName(token.lexeme)).toList();
     }
 
     @Override

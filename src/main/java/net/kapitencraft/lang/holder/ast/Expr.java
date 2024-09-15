@@ -1,7 +1,8 @@
-package net.kapitencraft.lang.ast;
+package net.kapitencraft.lang.holder.ast;
 
+import java.util.Map;
 import java.util.List;
-import net.kapitencraft.lang.ast.token.Token;
+import net.kapitencraft.lang.holder.token.Token;
 
 public abstract class Expr {
 
@@ -9,13 +10,15 @@ public abstract class Expr {
         R visitAssignExpr(Assign expr);
         R visitSpecialAssignExpr(SpecialAssign expr);
         R visitBinaryExpr(Binary expr);
+        R visitWhenExpr(When expr);
         R visitCallExpr(Call expr);
+        R visitSwitchExpr(Switch expr);
         R visitGroupingExpr(Grouping expr);
         R visitLiteralExpr(Literal expr);
         R visitLogicalExpr(Logical expr);
         R visitUnaryExpr(Unary expr);
-        R visitVariableExpr(VarRef expr);
-        R visitFunctionExpr(FuncRef expr);
+        R visitVarRefExpr(VarRef expr);
+        R visitFuncRefExpr(FuncRef expr);
     }
 
     public static class Assign extends Expr {
@@ -67,20 +70,56 @@ public abstract class Expr {
         }
     }
 
+    public static class When extends Expr {
+        public final Expr condition;
+        public final Expr ifTrue;
+        public final Expr ifFalse;
+
+        public When(Expr condition, Expr ifTrue, Expr ifFalse) {
+            this.condition = condition;
+            this.ifTrue = ifTrue;
+            this.ifFalse = ifFalse;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitWhenExpr(this);
+        }
+    }
+
     public static class Call extends Expr {
         public final Expr callee;
-        public final Token args;
-        public final List<Expr> arguments;
+        public final Token paren;
+        public final List<Expr> args;
 
-        public Call(Expr callee, Token args, List<Expr> arguments) {
+        public Call(Expr callee, Token paren, List<Expr> args) {
             this.callee = callee;
+            this.paren = paren;
             this.args = args;
-            this.arguments = arguments;
         }
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitCallExpr(this);
+        }
+    }
+
+    public static class Switch extends Expr {
+        public final Expr provider;
+        public final Map<Object,Expr> params;
+        public final Expr defaulted;
+        public final Token keyword;
+
+        public Switch(Expr provider, Map<Object,Expr> params, Expr defaulted, Token keyword) {
+            this.provider = provider;
+            this.params = params;
+            this.defaulted = defaulted;
+            this.keyword = keyword;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitSwitchExpr(this);
         }
     }
 
@@ -98,9 +137,9 @@ public abstract class Expr {
     }
 
     public static class Literal extends Expr {
-        public final Object value;
+        public final Token value;
 
-        public Literal(Object value) {
+        public Literal(Token value) {
             this.value = value;
         }
 
@@ -151,7 +190,7 @@ public abstract class Expr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitVariableExpr(this);
+            return visitor.visitVarRefExpr(this);
         }
     }
 
@@ -164,9 +203,9 @@ public abstract class Expr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitFunctionExpr(this);
+            return visitor.visitFuncRefExpr(this);
         }
     }
 
-    public abstract <R> R accept(Visitor<R> visitor);
+  public abstract <R> R accept(Visitor<R> visitor);
 }

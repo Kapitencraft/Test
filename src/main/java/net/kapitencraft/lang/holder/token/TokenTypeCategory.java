@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.ast.token;
+package net.kapitencraft.lang.holder.token;
 
 public enum TokenTypeCategory {
     ARITHMETIC_BINARY,

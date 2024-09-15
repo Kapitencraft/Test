@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.ast.token;
+package net.kapitencraft.lang.holder.token;
 
 @SuppressWarnings("ClassCanBeRecord") //stfu intellij
 public class Token {

@@ -1,8 +1,9 @@
 package net.kapitencraft.lang.run;
 
-import net.kapitencraft.lang.ast.Stmt;
-import net.kapitencraft.lang.ast.token.Token;
-import net.kapitencraft.lang.ast.token.TokenType;
+import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.compile.Compiler;
 
 import java.io.IOException;
@@ -10,16 +11,141 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
+    public static Map<String, LoxCallable> natives = Map.of(
+            "clock", new LoxCallable() {
+                @Override
+                public int arity() {
+                    return 0;
+                }
+
+                @Override
+                public Class<?> type() {
+                    return Integer.class;
+                }
+
+                @Override
+                public List<Class<?>> argTypes() {
+                    return List.of();
+                }
+
+                @Override
+                public Object call(Interpreter interpreter, List<Object> arguments) {
+                    return (double) (System.currentTimeMillis() - Interpreter.millisAtStart);
+                }
+
+                @Override
+                public String toString() {
+                    return "<native fn#clock>";
+                }
+            },
+            "print", new LoxCallable() {
+                @Override
+                public int arity() {
+                    return 1;
+                }
+
+                @Override
+                public Class<?> type() {
+                    return Void.class;
+                }
+
+                @Override
+                public List<Class<?>> argTypes() {
+                    return List.of(Object.class);
+                }
+
+                @Override
+                public Object call(Interpreter interpreter, List<Object> arguments) {
+                    System.out.println(Interpreter.stringify(arguments.get(0)));
+                    return null;
+                }
+            },
+            "randInt", new LoxCallable() {
+                @Override
+                public int arity() {
+                    return 2;
+                }
+
+                @Override
+                public Class<?> type() {
+                    return Integer.class;
+                }
+
+                @Override
+                public List<Class<?>> argTypes() {
+                    return List.of(Integer.class, Integer.class);
+                }
+
+                @Override
+                public Object call(Interpreter interpreter, List<Object> arguments) {
+                    Random random = new Random();
+                    int min = (int) arguments.get(0);
+                    int max = (int) arguments.get(1);
+                    return random.nextInt((max - min) + 1) + min;
+                }
+            },
+            "abs", new LoxCallable() {
+                @Override
+                public int arity() {
+                    return 1;
+                }
+
+                @Override
+                public Class<?> type() {
+                    return Integer.class;
+                }
+
+                @Override
+                public List<Class<?>> argTypes() {
+                    return List.of(Number.class);
+                }
+
+                @Override
+                public Object call(Interpreter interpreter, List<Object> arguments) {
+                    Number num = (Number) arguments.get(0);
+                    if (num instanceof Integer i) return java.lang.Math.abs(i);
+                    else if (num instanceof Double d) return java.lang.Math.abs(d);
+                    else return java.lang.Math.abs((float) num);
+                }
+            },
+            "input", new LoxCallable() {
+                @Override
+                public int arity() {
+                    return 1;
+                }
+
+                @Override
+                public Class<?> type() {
+                    return String.class;
+                }
+
+                @Override
+                public List<Class<?>> argTypes() {
+                    return List.of(String.class);
+                }
+
+                @Override
+                public Object call(Interpreter interpreter, List<Object> arguments) {
+                    System.out.print(Interpreter.stringify(arguments.get(0)));
+                    return Interpreter.in.nextLine();
+                }
+            }
+    );
+
     private static final Interpreter interpreter = new Interpreter();
     static boolean hadError = false;
     static boolean hadRuntimeError = false;
 
+
     public static void main(String[] args) throws IOException {
         runFile(args[0]);
         if (hadError) System.exit(65);
+
 
         if (hadRuntimeError) System.exit(70);
     }
@@ -29,12 +155,10 @@ public class Main {
         run(new String(bytes, Charset.defaultCharset()));
     }
 
+
+
     public static void error(Token token, String message, String line) {
-        if (token.type == TokenType.EOF) {
-            report(token.line, message, token.lineStartIndex, line);
-        } else {
-            report(token.line, message, token.lineStartIndex, line);
-        }
+        report(token.line, message, token.lineStartIndex, line);
     }
 
     private static void runPrompt() {

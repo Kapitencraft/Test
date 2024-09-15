@@ -1,6 +1,8 @@
 package net.kapitencraft.lang.env.abst;
 
 import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 public class DequeStack<T> {
@@ -11,16 +13,16 @@ public class DequeStack<T> {
      * @param def default value added on creation
      */
     public DequeStack(T def, UnaryOperator<T> reCreator) {
-        this.reCreator = reCreator;
         this.stack = new ArrayDeque<>();
         this.stack.add(def);
+        this.reCreator = reCreator;
     }
 
     /**
      * push the stack; use pop to revert changes made after push
      */
     public void push() {
-        stack.addLast(reCreator.apply(getLast()));
+        stack.addLast(reCreator.apply(stack.getLast()));
     }
 
     protected T getLast() {
@@ -33,5 +35,9 @@ public class DequeStack<T> {
     public void pop() {
         stack.removeLast();
         if (stack.isEmpty()) throw new IllegalStateException("leveled has been completely cleared");
+    }
+
+    protected int size() {
+        return stack.size();
     }
 }

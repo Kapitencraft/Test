@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.env.core;
 
-import net.kapitencraft.lang.ast.token.Token;
-import net.kapitencraft.lang.ast.token.TokenType;
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.func.LoxCallable;
 
 public class Environment {
@@ -41,7 +41,7 @@ public class Environment {
     }
 
     public boolean hasVar(String name) {
-        return vars.hasVar(name);
+        return vars.has(name);
     }
 
     //method
