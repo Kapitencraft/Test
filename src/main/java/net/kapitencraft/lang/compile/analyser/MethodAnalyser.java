@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compile.analyser;
 
 import net.kapitencraft.lang.env.abst.Leveled;
 import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.oop.LoxClass;
 
 import java.util.List;
 
@@ -14,11 +15,11 @@ public class MethodAnalyser extends Leveled<String, LoxCallable> {
         return false;
     }
 
-    public Class<?> type(String lexeme) {
+    public LoxClass type(String lexeme) {
         return getValue(lexeme).type();
     }
 
-    public List<? extends Class<?>> args(String lexeme) {
+    public List<? extends LoxClass> args(String lexeme) {
         return getValue(lexeme).argTypes();
     }
 

@@ -1,16 +1,22 @@
-package net.kapitencraft.lang.compile;
+package net.kapitencraft.lang.compile.visitor;
 
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 
 public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> {
+
     public Token find(Stmt stmt) {
         return stmt.accept(this);
     }
 
     public Token find(Expr expr) {
         return expr.accept(this);
+    }
+
+    @Override
+    public Token visitClassRefExpr(Expr.ClassRef expr) {
+        return null;
     }
 
     @Override
@@ -36,6 +42,16 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
     @Override
     public Token visitCallExpr(Expr.Call expr) {
         return find(expr.callee);
+    }
+
+    @Override
+    public Token visitGetExpr(Expr.Get expr) {
+        return expr.name;
+    }
+
+    @Override
+    public Token visitSetExpr(Expr.Set expr) {
+        return null;
     }
 
     @Override
@@ -71,6 +87,11 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
     @Override
     public Token visitFuncRefExpr(Expr.FuncRef expr) {
         return expr.name;
+    }
+
+    @Override
+    public Token visitImportStmt(Stmt.Import stmt) {
+        return null;
     }
 
     @Override

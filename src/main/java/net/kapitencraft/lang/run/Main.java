@@ -1,10 +1,13 @@
 package net.kapitencraft.lang.run;
 
+import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.compile.Compiler;
+import net.kapitencraft.lang.oop.LoxClass;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -24,17 +27,17 @@ public class Main {
                 }
 
                 @Override
-                public Class<?> type() {
-                    return Integer.class;
+                public LoxClass type() {
+                    return VarTypeManager.INTEGER;
                 }
 
                 @Override
-                public List<Class<?>> argTypes() {
+                public List<LoxClass> argTypes() {
                     return List.of();
                 }
 
                 @Override
-                public Object call(Interpreter interpreter, List<Object> arguments) {
+                public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                     return (double) (System.currentTimeMillis() - Interpreter.millisAtStart);
                 }
 
@@ -50,17 +53,17 @@ public class Main {
                 }
 
                 @Override
-                public Class<?> type() {
-                    return Void.class;
+                public LoxClass type() {
+                    return VarTypeManager.VOID;
                 }
 
                 @Override
-                public List<Class<?>> argTypes() {
-                    return List.of(Object.class);
+                public List<LoxClass> argTypes() {
+                    return List.of(VarTypeManager.OBJECT);
                 }
 
                 @Override
-                public Object call(Interpreter interpreter, List<Object> arguments) {
+                public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                     System.out.println(Interpreter.stringify(arguments.get(0)));
                     return null;
                 }
@@ -72,17 +75,17 @@ public class Main {
                 }
 
                 @Override
-                public Class<?> type() {
-                    return Integer.class;
+                public LoxClass type() {
+                    return VarTypeManager.INTEGER;
                 }
 
                 @Override
-                public List<Class<?>> argTypes() {
-                    return List.of(Integer.class, Integer.class);
+                public List<LoxClass> argTypes() {
+                    return List.of(VarTypeManager.INTEGER, VarTypeManager.INTEGER);
                 }
 
                 @Override
-                public Object call(Interpreter interpreter, List<Object> arguments) {
+                public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                     Random random = new Random();
                     int min = (int) arguments.get(0);
                     int max = (int) arguments.get(1);
@@ -96,17 +99,17 @@ public class Main {
                 }
 
                 @Override
-                public Class<?> type() {
-                    return Integer.class;
+                public LoxClass type() {
+                    return VarTypeManager.INTEGER;
                 }
 
                 @Override
-                public List<Class<?>> argTypes() {
-                    return List.of(Number.class);
+                public List<LoxClass> argTypes() {
+                    return List.of(VarTypeManager.NUMBER);
                 }
 
                 @Override
-                public Object call(Interpreter interpreter, List<Object> arguments) {
+                public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                     Number num = (Number) arguments.get(0);
                     if (num instanceof Integer i) return java.lang.Math.abs(i);
                     else if (num instanceof Double d) return java.lang.Math.abs(d);
@@ -120,17 +123,17 @@ public class Main {
                 }
 
                 @Override
-                public Class<?> type() {
-                    return String.class;
+                public LoxClass type() {
+                    return VarTypeManager.STRING;
                 }
 
                 @Override
-                public List<Class<?>> argTypes() {
-                    return List.of(String.class);
+                public List<LoxClass> argTypes() {
+                    return List.of(VarTypeManager.STRING);
                 }
 
                 @Override
-                public Object call(Interpreter interpreter, List<Object> arguments) {
+                public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                     System.out.print(Interpreter.stringify(arguments.get(0)));
                     return Interpreter.in.nextLine();
                 }
@@ -155,8 +158,6 @@ public class Main {
         run(new String(bytes, Charset.defaultCharset()));
     }
 
-
-
     public static void error(Token token, String message, String line) {
         report(token.line, message, token.lineStartIndex, line);
     }
@@ -175,9 +176,9 @@ public class Main {
     private static void run(String source) {
         String[] lines = source.split("\n", Integer.MAX_VALUE);
 
-        List<Stmt> statements = Compiler.compile(source, lines);
+        Stmt statements = Compiler.compile(source, lines);
 
-        interpreter.interpret(statements);
+        interpreter.interpret(List.of(statements));
     }
 
     static void runtimeError(RuntimeError error) {

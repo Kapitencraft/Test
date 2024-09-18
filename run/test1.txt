@@ -1,5 +1,5 @@
-def int test() {
-    return randInt(0, 1);
+class Main {
+    static void main() {
+        String input = input("AAAAA");
+    }
 }
-
-print(test());

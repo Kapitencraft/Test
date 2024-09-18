@@ -3,6 +3,7 @@ package net.kapitencraft.lang.env.core;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.run.Main;
 
 public class Environment {
     private final VarEnv vars;
@@ -11,6 +12,7 @@ public class Environment {
     public Environment() {
         this.vars = new VarEnv();
         this.methods = new MethodEnv();
+        Main.natives.forEach(this::defineMethod);
     }
 
     public void push() {
@@ -53,7 +55,7 @@ public class Environment {
         return this.methods.get(name);
     }
 
-    public Object specialVarAssign(String name, TokenType type) {
+    public Object specialVarAssign(String name, Token type) {
         return vars.specialAssign(name, type);
     }
 }

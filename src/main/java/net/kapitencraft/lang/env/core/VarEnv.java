@@ -6,6 +6,7 @@ import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.env.abst.Leveled;
 import net.kapitencraft.tool.Math;
 
+import static net.kapitencraft.lang.run.Interpreter.checkNumberOperand;
 import static net.kapitencraft.lang.run.Interpreter.checkNumberOperands;
 
 public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
@@ -27,44 +28,17 @@ public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
 
     public Object assignWithOperator(Token type, String name, Object value) {
         Object current = get(name);
-        this.assign(name, switch (type.type) {
-            case SUB_ASSIGN:
-                checkNumberOperands(type, current, value);
-                yield Math.mergeSub(current, value);
-            case DIV_ASSIGN:
-                checkNumberOperands(type, current, value);
-                yield Math.mergeDiv(current, value);
-            case MUL_ASSIGN:
-                checkNumberOperands(type, current, value);
-                yield Math.mergeMul(current, value);
-            case MOD_ASSIGN:
-                checkNumberOperands(type, current, value);
-                yield Math.mergeMod(current, value);
-            case ADD_ASSIGN:
-                if (current instanceof String lS) {
-                    yield lS + value;
-                } else if (value instanceof String vS) {
-                    yield current + vS;
-                }
-
-                try {
-                    yield Math.mergeAdd(current, value);
-                } catch (Exception e) {
-                    throw new RuntimeError(type, "Operands must be two numbers or two strings.");
-                }
-
-            default:
-                throw new RuntimeError(type, "Unknown Operation type");
-        });
+        this.assign(name, Math.merge(current, value, type));
         return get(name);
     }
 
-    public Object specialAssign(String name, TokenType type) {
+    public Object specialAssign(String name, Token type) {
         Object value = get(name);
+        checkNumberOperand(type, value);
         if (value instanceof Integer) {
-            this.assign(name, (int) value + (type == TokenType.GROW ? 1 : -1));
-        } else
-            this.assign(name, (double) value + (type == TokenType.GROW ? 1 : -1));
+            this.assign(name, (int) value + (type.type == TokenType.GROW ? 1 : -1));
+        } else if (value instanceof Double)
+            this.assign(name, (double) value + (type.type == TokenType.GROW ? 1 : -1));
         return get(name);
     }
 

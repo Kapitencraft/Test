@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compile.analyser;
 
 import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.oop.LoxClass;
 
 public class EnvAnalyser {
     private final MethodAnalyser methodAnalyser;
@@ -35,19 +36,23 @@ public class EnvAnalyser {
     }
 
     public boolean hasVar(String name) {
-        return varAnalyser.hasVar(name);
+        return varAnalyser.has(name);
     }
 
     public boolean hasVarValue(String name) {
-        return varAnalyser.hasVar(name) && varAnalyser.hasValue(name);
+        return varAnalyser.hasValue(name);
+    }
+
+    public boolean isFinal(String name) {
+        return varAnalyser.isFinal(name);
     }
 
     public void setHasVarValue(String name) {
         varAnalyser.setHasValue(name);
     }
 
-    public boolean addVar(String name, String type, boolean value) {
-        return varAnalyser.add(name, type, value);
+    public void addVar(String name, String type, boolean value, boolean isFinal) {
+        varAnalyser.add(name, type, value, isFinal);
     }
 
     public boolean hasMethod(String name) {
@@ -58,11 +63,11 @@ public class EnvAnalyser {
         return methodAnalyser.add(name, callable);
     }
 
-    public Class<?> getVarType(String name) {
+    public LoxClass getVarType(String name) {
         return varAnalyser.getType(name);
     }
 
-    public Class<?> getMethodType(String lexeme) {
+    public LoxClass getMethodType(String lexeme) {
         return methodAnalyser.type(lexeme);
     }
 

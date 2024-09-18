@@ -1,6 +1,8 @@
 package net.kapitencraft.lang.compile;
 
 import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.holder.LiteralHolder;
+import net.kapitencraft.lang.oop.LoxClass;
 import net.kapitencraft.lang.run.Main;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
@@ -58,12 +60,14 @@ public class Lexer {
     }
 
     private void addToken(TokenType type) {
-        addToken(type, type == TRUE ? Boolean.TRUE : type == FALSE ? false : null);
+        if (type == TRUE) addToken(type, true, VarTypeManager.BOOLEAN);
+        else if (type == FALSE) addToken(type, false, VarTypeManager.BOOLEAN);
+        else addToken(type, null, null);
     }
 
-    private void addToken(TokenType type, Object literal) {
+    private void addToken(TokenType type, Object literal, LoxClass literalClass) {
         String text = source.substring(start, current);
-        tokens.add(new Token(type, text, literal, line, start - indexAtLineStart));
+        tokens.add(new Token(type, text, new LiteralHolder(literal, literalClass), line, start - indexAtLineStart));
     }
 
     public List<Token> scanTokens() {
@@ -95,7 +99,7 @@ public class Lexer {
                 addToken(match('+') ? GROW : match('=') ? ADD_ASSIGN : ADD);
                 break;
             case '*':
-                addToken(match('=') ? MUL_ASSIGN : MUL);
+                addToken(match('*') ? POW : match('=') ? MUL_ASSIGN : MUL);
                 break;
             case '%':
                 addToken(match('=') ? MOD_ASSIGN : MOD);
@@ -163,7 +167,7 @@ public class Lexer {
     }
 
     private boolean isDigit(char c) {
-        return c >= '0' && c <= '9' || c == '.';
+        return c >= '0' && c <= '9';
     }
 
     private void number() {
@@ -173,14 +177,18 @@ public class Lexer {
 
         // Look for a fractional part.
         if (!seenDecimal && peek() == '.' && isDigit(peekNext())) {
-
+            seenDecimal = true;
             do advance();
             while (isDigit(peek()));
         }
-
         String literal = source.substring(start, current);
-        if (seenDecimal) addToken(NUM, Double.parseDouble(literal));
-        else addToken(NUM, Integer.parseInt(literal));
+        if (peek() == 'f' || peek() == 'F') { //float :hypers:
+            advance();
+            addToken(NUM, Float.parseFloat(literal), VarTypeManager.FLOAT);
+        }
+
+        if (seenDecimal) addToken(NUM, Double.parseDouble(literal), VarTypeManager.DOUBLE);
+        else addToken(NUM, Integer.parseInt(literal), VarTypeManager.INTEGER);
     }
 
     private void identifier() {
@@ -206,7 +214,7 @@ public class Lexer {
 
         // Trim the surrounding quotes.
         String value = source.substring(start + 1, current - 1);
-        addToken(STR, value);
+        addToken(STR, value, VarTypeManager.STRING);
     }
 
     private void error(String msg) {

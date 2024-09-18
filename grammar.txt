@@ -1,9 +1,10 @@
-program     -> declaration* EOF
+program     -> import* classDecl
 
-declaration -> classDecl | funcDecl | varDecl | statement
-classDecl   -> "class" IDENTIFIER ( "<" IDENTIFIER )? "{" function* "}"
+declaration -> classDecl | funcDecl | varDecl
+
+classDecl   -> "class" IDENTIFIER ( "extends" IDENTIFIER )? "{" declaration* "}"
 funcDecl    -> "def" VAR_TYPE function
-varDecl     -> VAR_TYPE IDENTIFIER ( "=" expression )? ";"
+varDecl     -> "final"? VAR_TYPE IDENTIFIER ( "=" expression )? ";"
 
 statement   -> exprStmt | forStmt | ifStmt | printStmt | returnStmt | whileStmt | block
 exprStmt    -> expression ";"

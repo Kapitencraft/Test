@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.compile;
 
+import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
@@ -7,35 +8,54 @@ import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.Pair;
 
 import java.util.*;
+import java.util.function.LongUnaryOperator;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 @SuppressWarnings({"UnusedReturnValue", "ThrowableNotThrown"})
 public class Parser {
     private final List<Token> tokens;
-    private final String[] lines;
     private int current = 0;
-    private final Compiler.ErrorConsumer errorConsumer;
+    private final Compiler.ErrorLogger errorLogger;
 
-    Parser(List<Token> tokens, String[] lines, Compiler.ErrorConsumer errorConsumer) {
+    Parser(List<Token> tokens, Compiler.ErrorLogger errorLogger) {
         this.tokens = tokens;
-        this.lines = lines;
-        this.errorConsumer = errorConsumer;
+        this.errorLogger = errorLogger;
     }
 
-    List<Stmt> parse() {
+    Stmt.Class parse() {
         System.out.println("Parsing...");
-        List<Stmt> statements = new ArrayList<>();
-        while (!isAtEnd()) {
-            statements.add(declaration());
+        List<Stmt.Import> imports = new ArrayList<>();
+        while (!check(CLASS) && !check(EOF)) {
+            imports.add(importStmt());
         }
 
-        return statements.stream().filter(Objects::nonNull).toList(); //clear null elements
+        consume(CLASS, "expected class");
+        return classDeclaration();
+    }
+
+    private Stmt.Import importStmt() {
+        consume(IMPORT, "Expected import or class");
+        Stmt.Import im = new Stmt.Import(classRef());
+        consumeEndOfArg();
+        return im;
+    }
+
+    private Expr.ClassRef classRef() {
+        List<Token> packages = new ArrayList<>();
+        packages.add(consumeIdentifier());
+        while (!check(EOA)) {
+            consume(DOT, "unexpected token");
+            packages.add(consumeIdentifier());
+        }
+        return new Expr.ClassRef(packages);
     }
 
     private Stmt declaration() {
+
         try {
-            if (match(VAR_TYPE)) return varDeclaration();
+            if (match(FINAL)) return varDeclaration(true, consumeVarType());
+            if (match(VAR_TYPE)) return varDeclaration(false, previous());
             if (match(CLASS)) return classDeclaration();
             if (match(FUNC)) return funcDecl("function");
 
@@ -46,23 +66,31 @@ public class Parser {
         }
     }
 
-    private Stmt classDeclaration() {
+    private Stmt.Class classDeclaration() {
         Token name = consume(IDENTIFIER, "Expect class name.");
         consume(C_BRACKET_O, "Expect '{' before class body.");
 
         List<Stmt.FuncDecl> methods = new ArrayList<>();
+        List<Stmt.VarDecl> fields = new ArrayList<>();
         while (!check(C_BRACKET_C) && !isAtEnd()) {
+            boolean isFinal = match(FINAL);
+            Token type = consumeVarType();
+            Token elementName = consumeIdentifier();
+            if (match(BRACKET_O)) {
+                methods.add(funcDecl("method", type, elementName, isFinal));
+            } else {
+                fields.add(varDecl(isFinal, type, elementName));
+            }
+
             methods.add(funcDecl("method"));
         }
 
         consumeCurlyClose("class body");
 
-        return new Stmt.Class(name, methods);
+        return new Stmt.Class(name, methods, fields);
     }
 
-    private Stmt varDeclaration() {
-        Token type = previous();
-        Token name = consume(IDENTIFIER, "Expected variable name.");
+    private Stmt.VarDecl varDecl(boolean isFinal, Token type, Token name) {
 
         Expr initializer = null;
         if (match(ASSIGN)) {
@@ -70,7 +98,13 @@ public class Parser {
         }
 
         consumeEndOfArg();
-        return new Stmt.VarDecl(name, type, initializer);
+        return new Stmt.VarDecl(name, type, initializer, isFinal);
+    }
+
+    private Stmt varDeclaration(boolean isFinal, Token type) {
+        Token name = consume(IDENTIFIER, "Expected variable name.");
+
+        return varDecl(isFinal, type, name);
     }
 
     private Stmt whileStatement() {
@@ -109,7 +143,7 @@ public class Parser {
         if (match(EOA)) {
             initializer = null;
         } else if (match(VAR_TYPE)) {
-            initializer = varDeclaration();
+            initializer = varDeclaration(false, previous());
         } else {
             initializer = expressionStatement();
         }
@@ -172,11 +206,7 @@ public class Parser {
         return new Stmt.Expression(expr);
     }
 
-    private Stmt.FuncDecl funcDecl(String kind) {
-        Token type = consume(VAR_TYPE, "Expected Var type.");
-        Token name = consume(IDENTIFIER, "Expected " + kind + " name.");
-
-        consumeBracketOpen(kind + " name");
+    private Stmt.FuncDecl funcDecl(String kind, Token type, Token name, boolean isFinal) {
         List<Pair<Token, Token>> parameters = new ArrayList<>();
         if (!check(BRACKET_C)) {
             do {
@@ -184,7 +214,7 @@ public class Parser {
                     error(peek(), "Can't have more than 255 parameters.");
                 }
 
-                Token pType = consume(VAR_TYPE, "Expected Var type before parameter name");
+                Token pType = consumeVarType();
                 Token pName = consume(IDENTIFIER, "Expected parameter name.");
                 parameters.add(Pair.of(pType, pName));
             } while (match(COMMA));
@@ -192,9 +222,19 @@ public class Parser {
         consumeBracketClose("parameters");
 
         consumeCurlyOpen(kind + " body");
+        if (check(C_BRACKET_C)) error(peek(), "empty method body");
         Stmt body = statement();
-        consumeCurlyClose(kind + " body");
-        return new Stmt.FuncDecl(type, name, parameters, body);
+        Token end = consumeCurlyClose(kind + " body");
+        return new Stmt.FuncDecl(type, name, end, parameters, body, isFinal);
+    }
+
+    private Stmt.FuncDecl funcDecl(String kind) {
+        boolean isFinal = match(FINAL);
+        Token type = consumeVarType();
+        Token name = consume(IDENTIFIER, "Expected " + kind + " name.");
+
+        consumeBracketOpen(kind + " name");
+        return funcDecl(kind, type, name, isFinal);
     }
 
     private List<Stmt> block() {
@@ -235,7 +275,10 @@ public class Parser {
                 Token name = variable.name;
 
                 return new Expr.Assign(name, value, assign);
+            } else if (expr instanceof Expr.Get get) {
+                return new Expr.Set(get.object, get.name, value, assign);
             }
+
 
             error(assign, "Invalid assignment target.");
         }
@@ -305,7 +348,7 @@ public class Parser {
     private Expr term() {
         Expr expr = factor();
 
-        while (match(SUB, ADD)) {
+        while (match(SUB, ADD, POW)) {
             Token operator = previous();
             Expr right = factor();
             expr = new Expr.Binary(expr, operator, right);
@@ -393,6 +436,10 @@ public class Parser {
         while (true) {
             if (match(BRACKET_O)) {
                 expr = finishCall(expr);
+            } else if (match(DOT)) {
+                Token name = consume(IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name);
+
             } else {
                 break;
             }
@@ -476,6 +523,14 @@ public class Parser {
         throw error(peek(), message);
     }
 
+    private Token consumeVarType() {
+        return consume(VAR_TYPE, "<identifier> expected");
+    }
+
+    private Token consumeIdentifier() {
+        return consume(IDENTIFIER, "<identifier> expected");
+    }
+
     private Token consumeBracketOpen(String method) {
         return this.consume(BRACKET_O, "Expected '(' after '" + method + "'.");
     }
@@ -499,7 +554,7 @@ public class Parser {
     private static class ParseError extends RuntimeException {}
 
     private ParseError error(Token token, String message) {
-        errorConsumer.error(token, message, lines[token.line - 1]);
+        errorLogger.error(token, message);
         return new ParseError();
     }
 

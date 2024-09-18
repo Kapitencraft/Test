@@ -1,14 +1,17 @@
 package net.kapitencraft.lang.holder.token;
 
+import net.kapitencraft.lang.holder.LiteralHolder;
+import net.kapitencraft.lang.holder.ast.Expr;
+
 @SuppressWarnings("ClassCanBeRecord") //stfu intellij
 public class Token {
     public final TokenType type;
-    public final Object literal;
+    public final LiteralHolder literal;
     public final int line;
     public final int lineStartIndex;
     public final String lexeme;
 
-    public Token(TokenType type, String lexeme, Object literal, int line, int lineStartIndex) {
+    public Token(TokenType type, String lexeme, LiteralHolder literal, int line, int lineStartIndex) {
         this.type = type;
         this.literal = literal;
         this.line = line;

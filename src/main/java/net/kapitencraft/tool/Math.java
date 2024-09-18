@@ -1,5 +1,10 @@
 package net.kapitencraft.tool;
 
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.run.RuntimeError;
+
+import static net.kapitencraft.lang.run.Interpreter.checkNumberOperands;
+
 public class Math {
 
     public static Number mergeSub(Object a, Object b) {
@@ -108,5 +113,49 @@ public class Math {
         } else {
             return (int)a >= (int)b;
         }
+    }
+
+    public static Object mergePow(Object a, Object b) {
+        if (a instanceof Double aD && b instanceof Double bD) {
+            return java.lang.Math.pow(aD, bD);
+        } else if (a instanceof Integer aI && b instanceof Double bD) {
+            return java.lang.Math.pow(aI, bD);
+        } else if (a instanceof Double aD && b instanceof Integer bI) {
+            return java.lang.Math.pow(aD, bI);
+        } else {
+            return java.lang.Math.pow((int)a, (int)b);
+        }
+    }
+
+    public static Object merge(Object activeVal, Object exprVal, Token type) {
+        return switch (type.type) {
+            case SUB_ASSIGN:
+                checkNumberOperands(type, activeVal, exprVal);
+                yield Math.mergeSub(activeVal, exprVal);
+            case DIV_ASSIGN:
+                checkNumberOperands(type, activeVal, exprVal);
+                yield Math.mergeDiv(activeVal, exprVal);
+            case MUL_ASSIGN:
+                checkNumberOperands(type, activeVal, exprVal);
+                yield Math.mergeMul(activeVal, exprVal);
+            case MOD_ASSIGN:
+                checkNumberOperands(type, activeVal, exprVal);
+                yield Math.mergeMod(activeVal, exprVal);
+            case ADD_ASSIGN:
+                if (activeVal instanceof String lS) {
+                    yield lS + exprVal;
+                } else if (exprVal instanceof String vS) {
+                    yield activeVal + vS;
+                }
+
+                try {
+                    yield Math.mergeAdd(activeVal, exprVal);
+                } catch (Exception e) {
+                    throw new RuntimeError(type, "Operands must be two numbers or two strings.");
+                }
+
+            default:
+                throw new RuntimeError(type, "Unknown Operation type");
+        };
     }
 }

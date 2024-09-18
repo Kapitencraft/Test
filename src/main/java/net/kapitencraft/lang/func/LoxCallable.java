@@ -1,5 +1,7 @@
 package net.kapitencraft.lang.func;
 
+import net.kapitencraft.lang.env.core.Environment;
+import net.kapitencraft.lang.oop.LoxClass;
 import net.kapitencraft.lang.run.Interpreter;
 
 import java.util.List;
@@ -7,9 +9,9 @@ import java.util.List;
 public interface LoxCallable {
     int arity();
 
-    Class<?> type();
+    LoxClass type();
 
-    List<? extends Class<?>> argTypes();
+    List<? extends LoxClass> argTypes();
 
-    Object call(Interpreter interpreter, List<Object> arguments);
+    Object call(Environment environment, Interpreter interpreter, List<Object> arguments);
 }

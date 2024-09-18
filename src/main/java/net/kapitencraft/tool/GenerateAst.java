@@ -12,11 +12,14 @@ public class GenerateAst {
 
     public static void main(String[] args) throws IOException {
         defineAst("Expr", Arrays.asList(
+                "ClassRef      : List<Token> packages",
                 "Assign        : Token name; Expr value; Token type",
                 "SpecialAssign : Token name; Token type",
                 "Binary        : Expr left; Token operator; Expr right",
                 "When          : Expr condition; Expr ifTrue; Expr ifFalse",
                 "Call          : Expr callee; Token paren; List<Expr> args",
+                "Get           : Expr object; Token name",
+                "Set           : Expr object; Token name; Expr value; Token assignType",
                 "Switch        : Expr provider; Map<Object,Expr> params; Expr defaulted; Token keyword",
                 "Grouping      : Expr expression",
                 //"Lambda   : List<Token> params, Stmt body",
@@ -27,13 +30,14 @@ public class GenerateAst {
                 "FuncRef       : Token name"
         ));
         defineAst("Stmt", Arrays.asList(
+                "Import           : Expr.ClassRef ref",
                 "Block            : List<Stmt> statements",
-                "Class            : Token name; List<Stmt.FuncDecl> methods",
+                "Class            : Token name; List<Stmt.FuncDecl> methods; List<Stmt.VarDecl> fields",
                 "Expression       : Expr expression",
-                "FuncDecl         : Token retType; Token name; List<Pair<Token,Token>> params; Stmt body",
+                "FuncDecl         : Token retType; Token name; Token end; List<Pair<Token,Token>> params; Stmt body; boolean isFinal",
                 "If               : Expr condition; Stmt thenBranch; Stmt elseBranch; List<Pair<Expr,Stmt>> elifs; Token keyword",
                 "Return           : Token keyword; Expr value",
-                "VarDecl          : Token name; Token type; Expr initializer",
+                "VarDecl          : Token name; Token type; Expr initializer; boolean isFinal",
                 "While            : Expr condition; Stmt body; Token keyword",
                 "For              : Stmt init; Expr condition; Expr increment; Stmt body; Token keyword",
                 "LoopInterruption : Token type"

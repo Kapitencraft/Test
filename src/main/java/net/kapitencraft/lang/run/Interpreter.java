@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.run;
 
-import net.kapitencraft.lang.holder.LoxClass;
+import net.kapitencraft.lang.oop.ClassInstance;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
@@ -17,16 +17,15 @@ import java.util.*;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final Environment globals = new Environment();
-    private final Environment environment = globals;
+    private Environment environment = globals;
     public static final Scanner in = new Scanner(System.in);
 
     public static long millisAtStart;
 
     public Interpreter() {
-        Main.natives.forEach(globals::defineMethod);
+
         millisAtStart = System.currentTimeMillis();
     }
-
 
     public static String stringify(Object object) {
         if (object == null) return "null";
@@ -53,9 +52,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
     }
 
-    public void execute(Stmt stmt) {
+    private void execute(Stmt stmt) {
         if (stmt == null) return;
         stmt.accept(this);
+    }
+
+    public void execute(Stmt stmt, Environment active) {
+        Environment shadowed = environment;
+        environment = active;
+        execute(stmt);
+        environment = shadowed;
     }
 
     @Override
@@ -111,6 +117,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitImportStmt(Stmt.Import stmt) {
+        return null;
+    }
+
+    @Override
     public Void visitBlockStmt(Stmt.Block stmt) {
         executeBlock(stmt.statements);
         return null;
@@ -118,7 +129,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
-        LoxClass klass = new LoxClass(stmt.name.lexeme);
+        //do nothing; classes are loaded inside class loader
         return null;
     }
 
@@ -218,6 +229,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitClassRefExpr(Expr.ClassRef expr) {
+        return null;
+    }
+
+    @Override
     public Object visitAssignExpr(Expr.Assign expr) {
         Object value = evaluate(expr.value);
         if (expr.type.type == TokenType.ASSIGN) environment.assignVar(expr.name.lexeme, value);
@@ -227,8 +243,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitSpecialAssignExpr(Expr.SpecialAssign expr) {
-
-        return environment.specialVarAssign(expr.name.lexeme, expr.type.type);
+        return environment.specialVarAssign(expr.name.lexeme, expr.type);
     }
 
     @Override
@@ -251,6 +266,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 return Math.mergeLEqual(left, right);
             case NEQUAL: return !isEqual(left, right);
             case EQUAL: return isEqual(left, right);
+            case POW:
+                checkNumberOperands(expr.operator, left, right);
+                return Math.mergePow(left, right);
             case SUB:
                 checkNumberOperands(expr.operator, left, right);
                 return Math.mergeSub(left, right);
@@ -305,9 +323,25 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                         arguments.size() + ".");
             }
 
-            return function.call(this, arguments);
+            return function.call( this.environment, this, arguments);
         }
         throw new RuntimeError(expr.paren, "unknown function");
+    }
+
+    @Override
+    public Object visitGetExpr(Expr.Get expr) {
+        return ((ClassInstance) evaluate(expr.object)).getField(expr.name.lexeme);
+    }
+
+    @Override
+    public Object visitSetExpr(Expr.Set expr) {
+        Object val = evaluate(expr.value);
+        ClassInstance instance = (ClassInstance) evaluate(expr.object);
+        if (expr.assignType.type == TokenType.ASSIGN) {
+            return instance.assignField(expr.name.lexeme, val);
+        } else {
+            return instance.assignFieldWithOperator(expr.name.lexeme, val, expr.assignType);
+        }
     }
 
     private boolean isEqual(Object a, Object b) {

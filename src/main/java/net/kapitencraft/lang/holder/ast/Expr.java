@@ -3,15 +3,19 @@ package net.kapitencraft.lang.holder.ast;
 import java.util.Map;
 import java.util.List;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.tool.Pair;
 
 public abstract class Expr {
 
     public interface Visitor<R> {
+        R visitClassRefExpr(ClassRef expr);
         R visitAssignExpr(Assign expr);
         R visitSpecialAssignExpr(SpecialAssign expr);
         R visitBinaryExpr(Binary expr);
         R visitWhenExpr(When expr);
         R visitCallExpr(Call expr);
+        R visitGetExpr(Get expr);
+        R visitSetExpr(Set expr);
         R visitSwitchExpr(Switch expr);
         R visitGroupingExpr(Grouping expr);
         R visitLiteralExpr(Literal expr);
@@ -19,6 +23,19 @@ public abstract class Expr {
         R visitUnaryExpr(Unary expr);
         R visitVarRefExpr(VarRef expr);
         R visitFuncRefExpr(FuncRef expr);
+    }
+
+    public static class ClassRef extends Expr {
+        public final List<Token> packages;
+
+        public ClassRef(List<Token> packages) {
+            this.packages = packages;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitClassRefExpr(this);
+        }
     }
 
     public static class Assign extends Expr {
@@ -101,6 +118,40 @@ public abstract class Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitCallExpr(this);
+        }
+    }
+
+    public static class Get extends Expr {
+        public final Expr object;
+        public final Token name;
+
+        public Get(Expr object, Token name) {
+            this.object = object;
+            this.name = name;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitGetExpr(this);
+        }
+    }
+
+    public static class Set extends Expr {
+        public final Expr object;
+        public final Token name;
+        public final Expr value;
+        public final Token assignType;
+
+        public Set(Expr object, Token name, Expr value, Token assignType) {
+            this.object = object;
+            this.name = name;
+            this.value = value;
+            this.assignType = assignType;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitSetExpr(this);
         }
     }
 

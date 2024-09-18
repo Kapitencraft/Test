@@ -1,35 +1,55 @@
 package net.kapitencraft.lang.compile;
 
+import net.kapitencraft.lang.compile.visitor.LocationFinder;
+import net.kapitencraft.lang.compile.visitor.Resolver;
+import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.ast.Stmt;
-import net.kapitencraft.lang.compile.analyser.Resolver;
 
 import java.util.List;
 
 public class Compiler {
     static boolean hadError = false;
 
-    @FunctionalInterface
-    public interface ErrorConsumer {
-        void error(Token loc, String msg, String line);
+    public static class ErrorLogger {
+        private final String[] lines;
+        private final LocationFinder finder;
+
+        public ErrorLogger(String[] lines) {
+            this.lines = lines;
+            finder = new LocationFinder();
+        }
+
+        public void error(Token loc, String msg) {
+            Compiler.error(loc, msg, lines[loc.line - 1]);
+        }
+
+        public void error(Stmt loc, String msg) {
+            error(finder.find(loc), msg);
+        }
+
+        public void error(Expr loc, String msg) {
+            error(finder.find(loc), msg);
+        }
     }
 
-    public static List<Stmt> compile(String source, String[] lines) {
+    public static Stmt compile(String source, String[] lines) {
+        ErrorLogger consumer = new ErrorLogger(lines);
         Lexer scanner = new Lexer(source);
         List<Token> tokens = scanner.scanTokens();
-        Parser parser = new Parser(tokens, lines, Compiler::error);
-        List<Stmt> statements = parser.parse();
+        Parser parser = new Parser(tokens, consumer);
+        Stmt.Class stmt = parser.parse();
 
         // Stop if there was a syntax error.
         if (hadError) System.exit(65);
 
-        Resolver resolver = new Resolver(Compiler::error, lines);
+        Resolver resolver = new Resolver(consumer);
         System.out.println("Resolving...");
-        resolver.resolve(statements);
+        resolver.resolve(stmt);
 
         if (hadError) System.exit(65);
 
-        return statements;
+        return stmt;
     }
 
     public static void error(Token token, String message, String line) {

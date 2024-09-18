@@ -8,6 +8,7 @@ import net.kapitencraft.tool.Pair;
 public abstract class Stmt {
 
     public interface Visitor<R> {
+        R visitImportStmt(Import stmt);
         R visitBlockStmt(Block stmt);
         R visitClassStmt(Class stmt);
         R visitExpressionStmt(Expression stmt);
@@ -18,6 +19,19 @@ public abstract class Stmt {
         R visitWhileStmt(While stmt);
         R visitForStmt(For stmt);
         R visitLoopInterruptionStmt(LoopInterruption stmt);
+    }
+
+    public static class Import extends Stmt {
+        public final Expr.ClassRef ref;
+
+        public Import(Expr.ClassRef ref) {
+            this.ref = ref;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitImportStmt(this);
+        }
     }
 
     public static class Block extends Stmt {
@@ -36,10 +50,12 @@ public abstract class Stmt {
     public static class Class extends Stmt {
         public final Token name;
         public final List<Stmt.FuncDecl> methods;
+        public final List<Stmt.VarDecl> fields;
 
-        public Class(Token name, List<Stmt.FuncDecl> methods) {
+        public Class(Token name, List<Stmt.FuncDecl> methods, List<Stmt.VarDecl> fields) {
             this.name = name;
             this.methods = methods;
+            this.fields = fields;
         }
 
         @Override
@@ -64,14 +80,18 @@ public abstract class Stmt {
     public static class FuncDecl extends Stmt {
         public final Token retType;
         public final Token name;
+        public final Token end;
         public final List<Pair<Token,Token>> params;
         public final Stmt body;
+        public final boolean isFinal;
 
-        public FuncDecl(Token retType, Token name, List<Pair<Token,Token>> params, Stmt body) {
+        public FuncDecl(Token retType, Token name, Token end, List<Pair<Token,Token>> params, Stmt body, boolean isFinal) {
             this.retType = retType;
             this.name = name;
+            this.end = end;
             this.params = params;
             this.body = body;
+            this.isFinal = isFinal;
         }
 
         @Override
@@ -120,11 +140,13 @@ public abstract class Stmt {
         public final Token name;
         public final Token type;
         public final Expr initializer;
+        public final boolean isFinal;
 
-        public VarDecl(Token name, Token type, Expr initializer) {
+        public VarDecl(Token name, Token type, Expr initializer, boolean isFinal) {
             this.name = name;
             this.type = type;
             this.initializer = initializer;
+            this.isFinal = isFinal;
         }
 
         @Override
