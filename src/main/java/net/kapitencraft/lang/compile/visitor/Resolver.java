@@ -2,7 +2,6 @@ package net.kapitencraft.lang.compile.visitor;
 
 import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.compile.Compiler;
-import net.kapitencraft.lang.compile.VarTypeParser;
 import net.kapitencraft.lang.compile.analyser.EnvAnalyser;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.func.LoxFunction;
@@ -11,7 +10,6 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.LoxClass;
-import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.run.Main;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -116,10 +114,10 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
             funcRetType = null;
             return;
         }
-        if (funcRetType != null && !returnScanner.scanReturn(function.body)) {
+        if (funcRetType != null && !returnScanner.scanList(function.body)) {
             error(function.end, "missing return statement");
         }
-        resolve(function.body);
+        function.body.forEach(this::resolve);
         analyser.pop();
         currentFunction = enclosingFunction;
         funcRetType = null;
@@ -319,7 +317,7 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
 
     @Override
     public LoxClass visitLiteralExpr(Expr.Literal expr) {
-        return expr.value.literal.getType();
+        return expr.value.literal.type();
     }
 
     @Override
@@ -346,6 +344,12 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
         Token name = expr.name;
         if (!analyser.hasMethod(name.lexeme)) error(name, "Method '" + name.lexeme + "' not defined");
         return analyser.getMethodType(name.lexeme);
+    }
+
+    @Override
+    public LoxClass visitConstructorExpr(Expr.Constructor expr) {
+        expr.params.forEach(this::resolve);
+        return expr.target;
     }
 
     @Override

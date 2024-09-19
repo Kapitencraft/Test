@@ -55,14 +55,16 @@ public abstract class Stmt {
         public final LoxClass superclass;
         public final List<Stmt.FuncDecl> staticMethods;
         public final List<Stmt.VarDecl> staticFields;
+        public final Stmt.FuncDecl constructor;
 
-        public Class(Token name, List<Stmt.FuncDecl> methods, List<Stmt.VarDecl> fields, LoxClass superclass, List<Stmt.FuncDecl> staticMethods, List<Stmt.VarDecl> staticFields) {
+        public Class(Token name, List<Stmt.FuncDecl> methods, List<Stmt.VarDecl> fields, LoxClass superclass, List<Stmt.FuncDecl> staticMethods, List<Stmt.VarDecl> staticFields, Stmt.FuncDecl constructor) {
             this.name = name;
             this.methods = methods;
             this.fields = fields;
             this.superclass = superclass;
             this.staticMethods = staticMethods;
             this.staticFields = staticFields;
+            this.constructor = constructor;
         }
 
         @Override
@@ -89,10 +91,10 @@ public abstract class Stmt {
         public final Token name;
         public final Token end;
         public final List<Pair<LoxClass,Token>> params;
-        public final Stmt body;
+        public final List<Stmt> body;
         public final boolean isFinal;
 
-        public FuncDecl(LoxClass retType, Token name, Token end, List<Pair<LoxClass,Token>> params, Stmt body, boolean isFinal) {
+        public FuncDecl(LoxClass retType, Token name, Token end, List<Pair<LoxClass,Token>> params, List<Stmt> body, boolean isFinal) {
             this.retType = retType;
             this.name = name;
             this.end = end;

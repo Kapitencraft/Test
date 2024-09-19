@@ -27,15 +27,16 @@ public class GenerateAst {
                 "Logical       : Expr left; Token operator; Expr right",
                 "Unary         : Token operator; Expr right",
                 "VarRef        : Token name",
-                "FuncRef       : Token name"
+                "FuncRef       : Token name",
+                "Constructor   : LoxClass target; List<Expr> params"
         ));
         defineAst("Stmt", Arrays.asList(
                 "Import           : Expr.ClassRef ref",
                 "Block            : List<Stmt> statements",
                 "Class            : Token name; List<Stmt.FuncDecl> methods; List<Stmt.VarDecl> fields; LoxClass superclass; " +
-                        "List<Stmt.FuncDecl> staticMethods; List<Stmt.VarDecl> staticFields",
+                        "List<Stmt.FuncDecl> staticMethods; List<Stmt.VarDecl> staticFields; Stmt.FuncDecl constructor",
                 "Expression       : Expr expression",
-                "FuncDecl         : LoxClass retType; Token name; Token end; List<Pair<LoxClass,Token>> params; Stmt body; boolean isFinal",
+                "FuncDecl         : LoxClass retType; Token name; Token end; List<Pair<LoxClass,Token>> params; List<Stmt> body; boolean isFinal",
                 "If               : Expr condition; Stmt thenBranch; Stmt elseBranch; List<Pair<Expr,Stmt>> elifs; Token keyword",
                 "Return           : Token keyword; Expr value",
                 "VarDecl          : Token name; LoxClass type; Expr initializer; boolean isFinal",

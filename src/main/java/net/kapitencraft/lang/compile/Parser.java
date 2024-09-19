@@ -26,6 +26,8 @@ public class Parser {
         this.parser = new VarTypeParser();
     }
 
+    //TODO load methods after registering
+
     Stmt.Class parse() {
         System.out.println("Parsing...");
         try {
@@ -80,6 +82,7 @@ public class Parser {
 
     private Stmt.Class classDeclaration() {
         Token name = consume(IDENTIFIER, "Expect class name.");
+
         LoxClass superclass = VarTypeManager.OBJECT;
         if (match(EXTENDS)) superclass = parser.getClass(consume(IDENTIFIER, "Expected class name").lexeme);
         consume(C_BRACKET_O, "Expect '{' before class body.");
@@ -88,6 +91,7 @@ public class Parser {
         List<Stmt.VarDecl> fields = new ArrayList<>();
         List<Stmt.FuncDecl> staticMethods = new ArrayList<>();
         List<Stmt.VarDecl> staticFields = new ArrayList<>();
+        Stmt.FuncDecl constructor = null;
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             boolean isStatic = false;
             boolean isFinal = false;
@@ -105,6 +109,10 @@ public class Parser {
             Token elementName = consumeIdentifier();
             if (match(BRACKET_O)) {
                 Stmt.FuncDecl decl = funcDecl("method", type, elementName, isFinal);
+                if (Objects.equals(elementName.lexeme, name.lexeme)) {
+                    if (constructor != null) error(elementName, "duplicate constructor");
+                    constructor = decl;
+                }
                 if (isStatic) staticMethods.add(decl);
                 else methods.add(decl);
             } else {
@@ -116,7 +124,7 @@ public class Parser {
 
         consumeCurlyClose("class body");
 
-        return new Stmt.Class(name, methods, fields, superclass, staticMethods, staticFields);
+        return new Stmt.Class(name, methods, fields, superclass, staticMethods, staticFields, constructor);
     }
 
     private Stmt.VarDecl varDecl(boolean isFinal, LoxClass type, Token name) {
@@ -252,20 +260,13 @@ public class Parser {
         consumeBracketClose("parameters");
 
         consumeCurlyOpen(kind + " body");
-        if (check(C_BRACKET_C)) error(peek(), "empty method body");
-        Stmt body = declaration();
+        List<Stmt> stmts = new ArrayList<>();
+        while (!check(C_BRACKET_C)) {
+            stmts.add(declaration());
+        }
         Token end = consumeCurlyClose(kind + " body");
-        return new Stmt.FuncDecl(type, name, end, parameters,
-                body, isFinal);
-    }
-
-    private Stmt.FuncDecl funcDecl(String kind) {
-        boolean isFinal = match(FINAL);
-        LoxClass type = consumeVarType();
-        Token name = consume(IDENTIFIER, "Expected " + kind + " name.");
-
-        consumeBracketOpen(kind + " name");
-        return funcDecl(kind, type, name, isFinal);
+        if (stmts.isEmpty()) error(end, "empty method body");
+        return new Stmt.FuncDecl(type, name, end, parameters, stmts, isFinal);
     }
 
     private List<Stmt> block() {
@@ -449,6 +450,14 @@ public class Parser {
     }
 
     private Expr finishCall(Expr callee) {
+        List<Expr> arguments = args();
+
+        Token args = consumeBracketClose("arguments");
+
+        return new Expr.Call(callee, args, arguments);
+    }
+
+    private List<Expr> args() {
         List<Expr> arguments = new ArrayList<>();
         if (!check(BRACKET_C)) {
             do {
@@ -457,9 +466,7 @@ public class Parser {
             } while (match(COMMA));
         }
 
-        Token args = consumeBracketClose("arguments");
-
-        return new Expr.Call(callee, args, arguments);
+        return arguments;
     }
 
     private Expr call() {
@@ -488,10 +495,17 @@ public class Parser {
         if (match(NUM, STR)) {
             return previous().literal;
         }
+
         throw error(peek(), "Expected literal");
     }
 
     private Expr primary() {
+        if (match(NEW)) {
+            LoxClass loxClass = consumeVarType();
+            List<Expr> args = args();
+
+            return new Expr.Constructor(loxClass, args);
+        }
 
         if (match(FALSE, TRUE, NULL, NUM, STR)) {
             return new Expr.Literal(previous());

@@ -2,6 +2,7 @@ package net.kapitencraft.lang.oop;
 
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
@@ -57,5 +58,9 @@ public class ClassInstance {
 
     public Object getField(String name) {
         return this.fields.get(name);
+    }
+
+    public void construct(List<Expr> params, Interpreter interpreter) {
+        type.constructor.call(this.environment, interpreter, interpreter.visitArgs(params));
     }
 }

@@ -14,6 +14,7 @@ public class GeneratedLoxClass extends LoxClass {
         super(
                 getMethods(stmt.methods),
                 getMethods(stmt.staticMethods),
+                null,
                 List.of(),
                 getFields(stmt.fields),
                 getFields(stmt.staticFields),

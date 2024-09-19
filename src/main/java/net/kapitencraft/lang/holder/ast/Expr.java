@@ -24,6 +24,7 @@ public abstract class Expr {
         R visitUnaryExpr(Unary expr);
         R visitVarRefExpr(VarRef expr);
         R visitFuncRefExpr(FuncRef expr);
+        R visitConstructorExpr(Constructor expr);
     }
 
     public static class ClassRef extends Expr {
@@ -256,6 +257,21 @@ public abstract class Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitFuncRefExpr(this);
+        }
+    }
+
+    public static class Constructor extends Expr {
+        public final LoxClass target;
+        public final List<Expr> params;
+
+        public Constructor(LoxClass target, List<Expr> params) {
+            this.target = target;
+            this.params = params;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitConstructorExpr(this);
         }
     }
 

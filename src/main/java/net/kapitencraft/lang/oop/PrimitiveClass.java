@@ -8,10 +8,10 @@ import java.util.Map;
 public class PrimitiveClass extends LoxClass {
 
     public PrimitiveClass(LoxClass superclass, String name) {
-        super(Map.of(), Map.of(), List.of(), Map.of(), Map.of(), superclass, name);
+        super(Map.of(), Map.of(), null, List.of(), Map.of(), Map.of(), superclass, name);
     }
 
     public PrimitiveClass(String name) {
-        super(Map.of(), Map.of(), List.of(), Map.of(), Map.of(), null, name);
+        super(Map.of(), Map.of(), null, List.of(), Map.of(), Map.of(), null, name);
     }
 }

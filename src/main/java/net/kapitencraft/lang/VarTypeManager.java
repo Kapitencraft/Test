@@ -32,6 +32,7 @@ public class VarTypeManager {
 
     static {
         keywords.put("class",    CLASS);
+        keywords.put("new",      NEW);
         keywords.put("extends",  EXTENDS);
         keywords.put("false",    FALSE);
         keywords.put("true",     TRUE);

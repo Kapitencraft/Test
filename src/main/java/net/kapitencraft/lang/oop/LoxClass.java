@@ -2,6 +2,8 @@ package net.kapitencraft.lang.oop;
 
 import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.holder.ast.Expr;
+import net.kapitencraft.lang.run.Interpreter;
 
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,7 @@ import java.util.Map;
 public class LoxClass {
     final Map<String, LoxCallable> methods;
     final Map<String, LoxCallable> staticMethods;
+    final LoxCallable constructor;
     final List<LoxClass> capsuled;
 
     final Map<String, LoxField> fields;
@@ -18,9 +21,10 @@ public class LoxClass {
 
     final String name;
 
-    public LoxClass(Map<String, LoxCallable> methods, Map<String, LoxCallable> staticMethods, List<LoxClass> capsuled, Map<String, LoxField> fields, Map<String, LoxField> staticFields, LoxClass superclass, String name) {
+    public LoxClass(Map<String, LoxCallable> methods, Map<String, LoxCallable> staticMethods, LoxCallable constructor, List<LoxClass> capsuled, Map<String, LoxField> fields, Map<String, LoxField> staticFields, LoxClass superclass, String name) {
         this.methods = methods;
         this.staticMethods = staticMethods;
+        this.constructor = constructor;
         this.capsuled = capsuled;
         this.fields = fields;
         this.staticFields = staticFields;
@@ -55,5 +59,11 @@ public class LoxClass {
 
     public boolean hasStaticMethod(String name) {
         return staticMethods.containsKey(name);
+    }
+
+    public ClassInstance createInst(List<Expr> params, Interpreter interpreter) {
+        ClassInstance instance = new ClassInstance(this, interpreter);
+        instance.construct(params, interpreter);
+        return null;
     }
 }

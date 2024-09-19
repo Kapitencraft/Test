@@ -90,6 +90,11 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
     }
 
     @Override
+    public Token visitConstructorExpr(Expr.Constructor expr) {
+        return null;
+    }
+
+    @Override
     public Token visitImportStmt(Stmt.Import stmt) {
         return null;
     }

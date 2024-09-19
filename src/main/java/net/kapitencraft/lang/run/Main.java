@@ -178,7 +178,7 @@ public class Main {
 
         Stmt statements = Compiler.compile(source, lines);
 
-        interpreter.interpret(List.of(statements));
+        interpreter.interpret(List.of(statements), null);
     }
 
     static void runtimeError(RuntimeError error) {

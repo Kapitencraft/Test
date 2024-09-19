@@ -4,11 +4,24 @@ import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.Pair;
 
+import java.util.List;
+
 public class ReturnScanner implements Stmt.Visitor<Boolean> {
     private final Compiler.ErrorLogger errorLogger;
 
     public ReturnScanner(Compiler.ErrorLogger errorLogger) {
         this.errorLogger = errorLogger;
+    }
+
+    public boolean scanList(List<Stmt> stmts) {
+        boolean seenReturn = false;
+        for (Stmt stmt1 : stmts) {
+            if (seenReturn) errorLogger.error(stmt1, "unreachable statement");
+            if (scanReturn(stmt1)) {
+                seenReturn = true;
+            }
+        }
+        return seenReturn;
     }
 
     public boolean scanReturn(Stmt stmt) {
@@ -22,15 +35,7 @@ public class ReturnScanner implements Stmt.Visitor<Boolean> {
 
     @Override
     public Boolean visitBlockStmt(Stmt.Block stmt) {
-        boolean seenReturn = false;
-        for (int i = 0; i < stmt.statements.size(); i++) {
-            Stmt stmt1 = stmt.statements.get(i);
-            if (seenReturn) errorLogger.error(stmt1, "unreachable statement");
-            if (scanReturn(stmt1)) {
-                seenReturn = true;
-            }
-        }
-        return seenReturn;
+        return scanList(stmt.statements);
     }
 
     @Override

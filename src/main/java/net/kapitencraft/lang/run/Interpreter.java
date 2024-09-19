@@ -43,27 +43,24 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return object.toString();
     }
 
-    void interpret(List<Stmt> statements) {
+    public void interpret(List<Stmt> statements, Environment active) {
         System.out.println("Executing...");
+        Environment shadowed = environment;
         try {
+            environment = active == null ? environment : active;
             for (Stmt statement : statements) {
                 execute(statement);
             }
         } catch (RuntimeError error) {
             Main.runtimeError(error);
+        } finally {
+            environment = shadowed;
         }
     }
 
     private void execute(Stmt stmt) {
         if (stmt == null) return;
         stmt.accept(this);
-    }
-
-    public void execute(Stmt stmt, Environment active) {
-        Environment shadowed = environment;
-        environment = active;
-        execute(stmt);
-        environment = shadowed;
     }
 
     @Override
@@ -183,7 +180,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitLiteralExpr(Expr.Literal expr) {
-        return expr.value.literal;
+        return expr.value.literal.value();
     }
 
     @Override
@@ -319,10 +316,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Object visitCallExpr(Expr.Call expr) {
         Object callee = evaluate(expr.callee);
 
-        List<Object> arguments = new ArrayList<>();
-        for (Expr argument : expr.args) {
-            arguments.add(evaluate(argument));
-        }
+        List<Object> arguments = visitArgs(expr.args);
 
         if (callee instanceof LoxCallable function) {
             if (arguments.size() != function.arity()) {
@@ -334,6 +328,15 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             return function.call( this.environment, this, arguments);
         }
         throw new RuntimeError(expr.paren, "unknown function");
+    }
+
+    public List<Object> visitArgs(List<Expr> args) {
+        return args.stream().map(this::evaluate).toList();
+    }
+
+    @Override
+    public Object visitConstructorExpr(Expr.Constructor expr) {
+        return expr.target.createInst(expr.params, this);
     }
 
     @Override
