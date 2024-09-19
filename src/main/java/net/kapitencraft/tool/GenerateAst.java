@@ -32,12 +32,13 @@ public class GenerateAst {
         defineAst("Stmt", Arrays.asList(
                 "Import           : Expr.ClassRef ref",
                 "Block            : List<Stmt> statements",
-                "Class            : Token name; List<Stmt.FuncDecl> methods; List<Stmt.VarDecl> fields",
+                "Class            : Token name; List<Stmt.FuncDecl> methods; List<Stmt.VarDecl> fields; LoxClass superclass; " +
+                        "List<Stmt.FuncDecl> staticMethods; List<Stmt.VarDecl> staticFields",
                 "Expression       : Expr expression",
-                "FuncDecl         : Token retType; Token name; Token end; List<Pair<Token,Token>> params; Stmt body; boolean isFinal",
+                "FuncDecl         : LoxClass retType; Token name; Token end; List<Pair<LoxClass,Token>> params; Stmt body; boolean isFinal",
                 "If               : Expr condition; Stmt thenBranch; Stmt elseBranch; List<Pair<Expr,Stmt>> elifs; Token keyword",
                 "Return           : Token keyword; Expr value",
-                "VarDecl          : Token name; Token type; Expr initializer; boolean isFinal",
+                "VarDecl          : Token name; LoxClass type; Expr initializer; boolean isFinal",
                 "While            : Expr condition; Stmt body; Token keyword",
                 "For              : Stmt init; Expr condition; Expr increment; Stmt body; Token keyword",
                 "LoopInterruption : Token type"
@@ -59,6 +60,7 @@ public class GenerateAst {
         writer.println("import java.util.List;");
         writer.println("import net.kapitencraft.lang.holder.token.Token;");
         writer.println("import net.kapitencraft.tool.Pair;");
+        writer.println("import net.kapitencraft.lang.oop.LoxClass;");
         writer.println();
         writer.println("public abstract class " + baseName + " {");
         writer.println();

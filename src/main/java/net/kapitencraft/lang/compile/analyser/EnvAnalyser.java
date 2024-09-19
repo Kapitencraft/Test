@@ -51,7 +51,7 @@ public class EnvAnalyser {
         varAnalyser.setHasValue(name);
     }
 
-    public void addVar(String name, String type, boolean value, boolean isFinal) {
+    public void addVar(String name, LoxClass type, boolean value, boolean isFinal) {
         varAnalyser.add(name, type, value, isFinal);
     }
 

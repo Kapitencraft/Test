@@ -8,16 +8,22 @@ import java.util.Map;
 
 public class LoxClass {
     final Map<String, LoxCallable> methods;
+    final Map<String, LoxCallable> staticMethods;
     final List<LoxClass> capsuled;
+
     final Map<String, LoxField> fields;
+    final Map<String, LoxField> staticFields;
+
     final LoxClass superclass;
 
     final String name;
 
-    public LoxClass(Map<String, LoxCallable> methods, List<LoxClass> capsuled, Map<String, LoxField> fields, LoxClass superclass, String name) {
+    public LoxClass(Map<String, LoxCallable> methods, Map<String, LoxCallable> staticMethods, List<LoxClass> capsuled, Map<String, LoxField> fields, Map<String, LoxField> staticFields, LoxClass superclass, String name) {
         this.methods = methods;
+        this.staticMethods = staticMethods;
         this.capsuled = capsuled;
         this.fields = fields;
+        this.staticFields = staticFields;
         this.superclass = superclass == null && this != VarTypeManager.OBJECT ? VarTypeManager.OBJECT : superclass;
         this.name = name;
     }
@@ -41,5 +47,13 @@ public class LoxClass {
 
     public boolean hasField(String name) {
         return fields.containsKey(name);
+    }
+
+    public LoxCallable getStaticMethod(String name) {
+        return staticMethods.get(name);
+    }
+
+    public boolean hasStaticMethod(String name) {
+        return staticMethods.containsKey(name);
     }
 }

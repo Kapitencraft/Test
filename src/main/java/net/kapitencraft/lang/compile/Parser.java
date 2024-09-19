@@ -68,7 +68,7 @@ public class Parser {
             if (match(IDENTIFIER)) {
                 Token id = previous();
                 LoxClass loxClass = parser.getClass(id.lexeme);
-                if (loxClass != null) return varDeclaration(false, id);
+                if (loxClass != null) return varDeclaration(false, loxClass);
             }
 
             return statement();
@@ -86,6 +86,8 @@ public class Parser {
 
         List<Stmt.FuncDecl> methods = new ArrayList<>();
         List<Stmt.VarDecl> fields = new ArrayList<>();
+        List<Stmt.FuncDecl> staticMethods = new ArrayList<>();
+        List<Stmt.VarDecl> staticFields = new ArrayList<>();
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             boolean isStatic = false;
             boolean isFinal = false;
@@ -99,21 +101,25 @@ public class Parser {
                     isFinal = true;
                 }
             }
-            Token type = consumeVarType();
+            LoxClass type = consumeVarType();
             Token elementName = consumeIdentifier();
             if (match(BRACKET_O)) {
-                methods.add(funcDecl("method", type, elementName, isFinal));
+                Stmt.FuncDecl decl = funcDecl("method", type, elementName, isFinal);
+                if (isStatic) staticMethods.add(decl);
+                else methods.add(decl);
             } else {
-                fields.add(varDecl(isFinal, type, elementName));
+                Stmt.VarDecl decl = varDecl(isFinal, type, elementName);
+                if (isStatic) staticFields.add(decl);
+                else fields.add(decl);
             }
         }
 
         consumeCurlyClose("class body");
 
-        return new Stmt.Class(name, methods, fields);
+        return new Stmt.Class(name, methods, fields, superclass, staticMethods, staticFields);
     }
 
-    private Stmt.VarDecl varDecl(boolean isFinal, Token type, Token name) {
+    private Stmt.VarDecl varDecl(boolean isFinal, LoxClass type, Token name) {
 
         Expr initializer = null;
         if (match(ASSIGN)) {
@@ -124,7 +130,7 @@ public class Parser {
         return new Stmt.VarDecl(name, type, initializer, isFinal);
     }
 
-    private Stmt varDeclaration(boolean isFinal, Token type) {
+    private Stmt varDeclaration(boolean isFinal, LoxClass type) {
         Token name = consume(IDENTIFIER, "Expected variable name.");
 
         return varDecl(isFinal, type, name);
@@ -165,8 +171,8 @@ public class Parser {
         Stmt initializer;
         if (match(EOA)) {
             initializer = null;
-        } else if (match(IDENTIFIER)) {
-            initializer = varDeclaration(false, previous());
+        } else if (match(IDENTIFIER) && parser.hasClass(previous().lexeme)) {
+            initializer = varDeclaration(false, parser.getClass(previous().lexeme));
         } else {
             initializer = expressionStatement();
         }
@@ -229,15 +235,16 @@ public class Parser {
         return new Stmt.Expression(expr);
     }
 
-    private Stmt.FuncDecl funcDecl(String kind, Token type, Token name, boolean isFinal) {
-        List<Pair<Token, Token>> parameters = new ArrayList<>();
+    private Stmt.FuncDecl funcDecl(String kind, LoxClass type, Token name, boolean isFinal) {
+
+        List<Pair<LoxClass, Token>> parameters = new ArrayList<>();
         if (!check(BRACKET_C)) {
             do {
                 if (parameters.size() >= 255) {
                     error(peek(), "Can't have more than 255 parameters.");
                 }
 
-                Token pType = consumeVarType();
+                LoxClass pType = consumeVarType();
                 Token pName = consume(IDENTIFIER, "Expected parameter name.");
                 parameters.add(Pair.of(pType, pName));
             } while (match(COMMA));
@@ -248,12 +255,13 @@ public class Parser {
         if (check(C_BRACKET_C)) error(peek(), "empty method body");
         Stmt body = declaration();
         Token end = consumeCurlyClose(kind + " body");
-        return new Stmt.FuncDecl(type, name, end, parameters, body, isFinal);
+        return new Stmt.FuncDecl(type, name, end, parameters,
+                body, isFinal);
     }
 
     private Stmt.FuncDecl funcDecl(String kind) {
         boolean isFinal = match(FINAL);
-        Token type = consumeVarType();
+        LoxClass type = consumeVarType();
         Token name = consume(IDENTIFIER, "Expected " + kind + " name.");
 
         consumeBracketOpen(kind + " name");
@@ -307,6 +315,7 @@ public class Parser {
         }
 
         if (match(GROW, SHRINK)) {
+
             Token assign = previous();
 
             if (expr instanceof Expr.VarRef ref) {
@@ -546,8 +555,11 @@ public class Parser {
         throw error(peek(), message);
     }
 
-    private Token consumeVarType() {
-        return consume(IDENTIFIER, "<identifier> expected");
+    private LoxClass consumeVarType() {
+        Token token = consume(IDENTIFIER, "<identifier> expected");
+        LoxClass loxClass = parser.getClass(token.lexeme);
+        if (loxClass == null) error(token, "unknown symbol");
+        return loxClass;
     }
 
     private Token consumeIdentifier() {

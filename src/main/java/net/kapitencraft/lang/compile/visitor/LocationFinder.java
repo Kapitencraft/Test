@@ -126,7 +126,7 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
 
     @Override
     public Token visitVarDeclStmt(Stmt.VarDecl stmt) {
-        return stmt.type;
+        return stmt.name;
     }
 
     @Override

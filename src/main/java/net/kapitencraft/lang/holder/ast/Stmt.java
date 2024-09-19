@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.List;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
+import net.kapitencraft.lang.oop.LoxClass;
 
 public abstract class Stmt {
 
@@ -51,11 +52,17 @@ public abstract class Stmt {
         public final Token name;
         public final List<Stmt.FuncDecl> methods;
         public final List<Stmt.VarDecl> fields;
+        public final LoxClass superclass;
+        public final List<Stmt.FuncDecl> staticMethods;
+        public final List<Stmt.VarDecl> staticFields;
 
-        public Class(Token name, List<Stmt.FuncDecl> methods, List<Stmt.VarDecl> fields) {
+        public Class(Token name, List<Stmt.FuncDecl> methods, List<Stmt.VarDecl> fields, LoxClass superclass, List<Stmt.FuncDecl> staticMethods, List<Stmt.VarDecl> staticFields) {
             this.name = name;
             this.methods = methods;
             this.fields = fields;
+            this.superclass = superclass;
+            this.staticMethods = staticMethods;
+            this.staticFields = staticFields;
         }
 
         @Override
@@ -78,14 +85,14 @@ public abstract class Stmt {
     }
 
     public static class FuncDecl extends Stmt {
-        public final Token retType;
+        public final LoxClass retType;
         public final Token name;
         public final Token end;
-        public final List<Pair<Token,Token>> params;
+        public final List<Pair<LoxClass,Token>> params;
         public final Stmt body;
         public final boolean isFinal;
 
-        public FuncDecl(Token retType, Token name, Token end, List<Pair<Token,Token>> params, Stmt body, boolean isFinal) {
+        public FuncDecl(LoxClass retType, Token name, Token end, List<Pair<LoxClass,Token>> params, Stmt body, boolean isFinal) {
             this.retType = retType;
             this.name = name;
             this.end = end;
@@ -138,11 +145,11 @@ public abstract class Stmt {
 
     public static class VarDecl extends Stmt {
         public final Token name;
-        public final Token type;
+        public final LoxClass type;
         public final Expr initializer;
         public final boolean isFinal;
 
-        public VarDecl(Token name, Token type, Expr initializer, boolean isFinal) {
+        public VarDecl(Token name, LoxClass type, Expr initializer, boolean isFinal) {
             this.name = name;
             this.type = type;
             this.initializer = initializer;

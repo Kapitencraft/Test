@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.List;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
+import net.kapitencraft.lang.oop.LoxClass;
 
 public abstract class Expr {
 

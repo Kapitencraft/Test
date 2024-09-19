@@ -9,12 +9,10 @@ import java.util.Objects;
 
 public class VarAnalyser extends Leveled<String, VarAnalyser.Wrapper> {
 
-    public boolean add(String name, String type, boolean value, boolean isFinal) {
+    public boolean add(String name, LoxClass type, boolean value, boolean isFinal) {
         if (this.getLast().containsKey(name)) return true;
 
-        LoxClass clazz = VarTypeManager.getClassForName(type);
-
-        this.getLast().put(name, new Wrapper(clazz, value, isFinal)); //TODO implement final
+        this.getLast().put(name, new Wrapper(type, value, isFinal));
         return false;
     }
 

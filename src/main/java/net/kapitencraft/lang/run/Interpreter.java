@@ -132,6 +132,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
         LoxClass loxClass = new GeneratedLoxClass(stmt);
+        if (!loxClass.hasStaticMethod("main")) return null;
+        LoxCallable callable = loxClass.getStaticMethod("main");
+        if (callable.arity() == 0) {
+            callable.call(new Environment(), this, List.of());
+        }
         //do nothing; classes are loaded inside class loader
         return null;
     }

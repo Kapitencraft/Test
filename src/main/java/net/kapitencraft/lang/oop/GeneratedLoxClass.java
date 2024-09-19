@@ -12,11 +12,21 @@ public class GeneratedLoxClass extends LoxClass {
 
     public GeneratedLoxClass(Stmt.Class stmt) {
         super(
-                stmt.methods.stream().collect(Collectors.toMap(dec -> dec.name.lexeme, LoxFunction::new)),
+                getMethods(stmt.methods),
+                getMethods(stmt.staticMethods),
                 List.of(),
-                stmt.fields.stream().collect(Collectors.toMap(dec -> dec.name.lexeme, GeneratedField::new)),
-                stmt.superClass,
+                getFields(stmt.fields),
+                getFields(stmt.staticFields),
+                stmt.superclass,
                 stmt.name.lexeme
         );
+    }
+
+    private static Map<String, LoxCallable> getMethods(List<Stmt.FuncDecl> methods) {
+        return methods.stream().collect(Collectors.toMap(dec -> dec.name.lexeme, LoxFunction::new));
+    }
+
+    private static Map<String, LoxField> getFields(List<Stmt.VarDecl> fields) {
+        return fields.stream().collect(Collectors.toMap(dec -> dec.name.lexeme, GeneratedField::new));
     }
 }

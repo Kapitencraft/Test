@@ -18,6 +18,6 @@ public class GeneratedField extends LoxField {
 
     @Override
     public LoxClass getType() {
-        return decl.type.;
+        return decl.type;
     }
 }

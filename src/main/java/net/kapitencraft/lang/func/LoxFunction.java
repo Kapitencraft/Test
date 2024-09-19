@@ -33,12 +33,12 @@ public class LoxFunction implements LoxCallable {
 
     @Override
     public LoxClass type() {
-        return VarTypeManager.getClassForName(declaration.retType.lexeme);
+        return declaration.retType;
     }
 
     @Override
     public List<? extends LoxClass> argTypes() {
-        return declaration.params.stream().map(Pair::left).map(token -> VarTypeManager.getClassForName(token.lexeme)).toList();
+        return declaration.params.stream().map(Pair::left).toList();
     }
 
     @Override

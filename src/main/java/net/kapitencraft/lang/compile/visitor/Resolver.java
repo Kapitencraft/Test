@@ -54,11 +54,11 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
         resolve(name, value, analyser.getVarType(name.lexeme));
     }
 
-    private void createVar(Token name, Token type, boolean hasValue, boolean isFinal) {
+    private void createVar(Token name, LoxClass type, boolean hasValue, boolean isFinal) {
         if (analyser.hasVar(name.lexeme)) {
             error(name, "Variable '" + name.lexeme + "' already defined");
         }
-        analyser.addVar(name.lexeme, type.lexeme, hasValue, isFinal);
+        analyser.addVar(name.lexeme, type, hasValue, isFinal);
     }
 
     private enum FunctionType {
@@ -102,10 +102,10 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
         if (analyser.addMethod(name.lexeme, new LoxFunction(function))) {
             error(name, "Method '" + name.lexeme + "' already defined");
         }
-        funcRetType = VarTypeManager.getClassForName(function.retType.lexeme);
+        funcRetType = function.retType;
 
         analyser.push();
-        for (Pair<Token, Token> pair : function.params) {
+        for (Pair<LoxClass, Token> pair : function.params) {
             createVar(pair.right(), pair.left(), true, false);
         }
 
@@ -235,10 +235,12 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
 
     @Override
     public LoxClass visitAssignExpr(Expr.Assign expr) {
-        checkVarExistence(expr.name, expr.type.type != TokenType.ASSIGN, false);
+        checkVarExistence(expr.name, false, // expr.type.type != TokenType.ASSIGN,
+                false);
         if (!analyser.hasVar(expr.name.lexeme)) return null;
         checkVarType(expr.name, expr.value);
-        if (expr.type.type == TokenType.ASSIGN) analyser.hasVarValue(expr.name.lexeme);
+        if (false )// expr.type.type == TokenType.ASSIGN)
+            analyser.hasVarValue(expr.name.lexeme);
         return analyser.getVarType(expr.name.lexeme);
     }
 
