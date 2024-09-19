@@ -230,25 +230,7 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
 
     @Override
     public LoxClass visitClassRefExpr(Expr.ClassRef expr) {
-        Package pg = VarTypeManager.rootPackage();
-        for (int i = 0; i < expr.packages.size(); i++) {
-            Token token = expr.packages.get(i);
-            String lexeme = token.lexeme;
-            if (i == expr.packages.size() - 1) {
-                if (!pg.hasClass(lexeme)) {
-                    error(token, "unknown symbol");
-                    return null;
-                }
-                return pg.getClass(lexeme);
-            } else {
-                if (!pg.hasPackage(lexeme)) {
-                    error(token, "unknown symbol");
-                    return null;
-                }
-                pg = pg.getPackage(lexeme);
-            }
-        }
-        return null;
+        return VarTypeManager.getClass(expr.packages, this::error);
     }
 
     @Override

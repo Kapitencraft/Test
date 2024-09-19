@@ -5,6 +5,7 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.oop.LoxClass;
 import net.kapitencraft.tool.Pair;
 
 import java.util.*;
@@ -17,21 +18,30 @@ public class Parser {
     private final List<Token> tokens;
     private int current = 0;
     private final Compiler.ErrorLogger errorLogger;
+    private final VarTypeParser parser;
 
     Parser(List<Token> tokens, Compiler.ErrorLogger errorLogger) {
         this.tokens = tokens;
         this.errorLogger = errorLogger;
+        this.parser = new VarTypeParser();
     }
 
     Stmt.Class parse() {
         System.out.println("Parsing...");
-        List<Stmt.Import> imports = new ArrayList<>();
-        while (!check(CLASS) && !check(EOF)) {
-            imports.add(importStmt());
-        }
+        try {
+            List<Stmt.Import> imports = new ArrayList<>();
+            while (!check(CLASS) && !check(EOF)) {
+                Stmt.Import i = importStmt();
+                imports.add(i);
+                this.parser.addClass(VarTypeManager.getClass(i.ref.packages, this::error));
+            }
 
-        consume(CLASS, "expected class");
-        return classDeclaration();
+            consume(CLASS, "expected class");
+            return classDeclaration();
+        } catch (ParseError error) {
+            synchronize();
+            return null;
+        }
     }
 
     private Stmt.Import importStmt() {
@@ -55,9 +65,11 @@ public class Parser {
 
         try {
             if (match(FINAL)) return varDeclaration(true, consumeVarType());
-            if (match(VAR_TYPE)) return varDeclaration(false, previous());
-            if (match(CLASS)) return classDeclaration();
-            if (match(FUNC)) return funcDecl("function");
+            if (match(IDENTIFIER)) {
+                Token id = previous();
+                LoxClass loxClass = parser.getClass(id.lexeme);
+                if (loxClass != null) return varDeclaration(false, id);
+            }
 
             return statement();
         } catch (ParseError error) {
@@ -68,12 +80,25 @@ public class Parser {
 
     private Stmt.Class classDeclaration() {
         Token name = consume(IDENTIFIER, "Expect class name.");
+        LoxClass superclass = VarTypeManager.OBJECT;
+        if (match(EXTENDS)) superclass = parser.getClass(consume(IDENTIFIER, "Expected class name").lexeme);
         consume(C_BRACKET_O, "Expect '{' before class body.");
 
         List<Stmt.FuncDecl> methods = new ArrayList<>();
         List<Stmt.VarDecl> fields = new ArrayList<>();
         while (!check(C_BRACKET_C) && !isAtEnd()) {
-            boolean isFinal = match(FINAL);
+            boolean isStatic = false;
+            boolean isFinal = false;
+            while (!check(IDENTIFIER)) {
+                if (match(STATIC)) {
+                    if (isStatic) error(previous(), "duplicate static keyword");
+                    isStatic = true;
+                }
+                if (match(FINAL)) {
+                    if (isFinal) error(previous(), "duplicate final keyword");
+                    isFinal = true;
+                }
+            }
             Token type = consumeVarType();
             Token elementName = consumeIdentifier();
             if (match(BRACKET_O)) {
@@ -81,8 +106,6 @@ public class Parser {
             } else {
                 fields.add(varDecl(isFinal, type, elementName));
             }
-
-            methods.add(funcDecl("method"));
         }
 
         consumeCurlyClose("class body");
@@ -142,7 +165,7 @@ public class Parser {
         Stmt initializer;
         if (match(EOA)) {
             initializer = null;
-        } else if (match(VAR_TYPE)) {
+        } else if (match(IDENTIFIER)) {
             initializer = varDeclaration(false, previous());
         } else {
             initializer = expressionStatement();
@@ -223,7 +246,7 @@ public class Parser {
 
         consumeCurlyOpen(kind + " body");
         if (check(C_BRACKET_C)) error(peek(), "empty method body");
-        Stmt body = statement();
+        Stmt body = declaration();
         Token end = consumeCurlyClose(kind + " body");
         return new Stmt.FuncDecl(type, name, end, parameters, body, isFinal);
     }
@@ -524,7 +547,7 @@ public class Parser {
     }
 
     private Token consumeVarType() {
-        return consume(VAR_TYPE, "<identifier> expected");
+        return consume(IDENTIFIER, "<identifier> expected");
     }
 
     private Token consumeIdentifier() {
@@ -567,7 +590,6 @@ public class Parser {
             switch (peek().type) {
                 case CLASS:
                 case FUNC:
-                case VAR_TYPE:
                 case FOR:
                 case IF:
                 case WHILE:

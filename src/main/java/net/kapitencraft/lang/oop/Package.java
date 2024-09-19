@@ -1,6 +1,8 @@
 package net.kapitencraft.lang.oop;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Package {
@@ -36,5 +38,9 @@ public class Package {
             addPackage(name, new Package());
         }
         return getPackage(name);
+    }
+
+    public Collection<LoxClass> allClasses() {
+        return classes.values();
     }
 }

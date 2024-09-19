@@ -1,10 +1,10 @@
 program     -> import* classDecl
 
-declaration -> classDecl | funcDecl | varDecl
+declaration -> varDecl | statement
 
-classDecl   -> "class" IDENTIFIER ( "extends" IDENTIFIER )? "{" declaration* "}"
+classDecl   -> "class" IDENTIFIER ( "extends" IDENTIFIER )? "{" (funcDecl | varDecl)* "}"
 funcDecl    -> "def" VAR_TYPE function
-varDecl     -> "final"? VAR_TYPE IDENTIFIER ( "=" expression )? ";"
+varDecl     -> "final"? "static"? VAR_TYPE IDENTIFIER ( "=" expression )? ";"
 
 statement   -> exprStmt | forStmt | ifStmt | printStmt | returnStmt | whileStmt | block
 exprStmt    -> expression ";"

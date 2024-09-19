@@ -9,6 +9,8 @@ import net.kapitencraft.lang.exception.EscapeLoop;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.func.LoxFunction;
+import net.kapitencraft.lang.oop.GeneratedLoxClass;
+import net.kapitencraft.lang.oop.LoxClass;
 import net.kapitencraft.tool.Math;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.Pair;
@@ -129,6 +131,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
+        LoxClass loxClass = new GeneratedLoxClass(stmt);
         //do nothing; classes are loaded inside class loader
         return null;
     }
@@ -367,7 +370,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         throw new RuntimeError(operator, "Operands must be numbers.");
     }
 
-    private Object evaluate(Expr expr) {
+    public Object evaluate(Expr expr) {
         return expr.accept(this);
     }
 

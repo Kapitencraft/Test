@@ -20,6 +20,6 @@ public class Token {
     }
 
     public String toString() {
-        return type + " " + lexeme + " " + literal;
+        return String.format("Token{type=%s, lexeme=%s, literal=%s}@line%s", type, lexeme, literal, line);
     }
 }
