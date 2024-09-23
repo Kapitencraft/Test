@@ -2,7 +2,7 @@ package net.kapitencraft.lang.compile.analyser;
 
 import net.kapitencraft.lang.env.abst.Leveled;
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.oop.LoxClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 import java.util.List;
 

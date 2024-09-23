@@ -1,60 +1,37 @@
 package net.kapitencraft.lang;
 
-import com.sun.jdi.VirtualMachine;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
-import net.kapitencraft.lang.oop.LoxClass;
+import net.kapitencraft.lang.holder.token.TokenTypeCategory;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.Package;
-import net.kapitencraft.lang.oop.PrimitiveClass;
+import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 
-import javax.swing.plaf.synth.SynthTextAreaUI;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 public class VarTypeManager {
     private static final Package root = new Package();
-    private static final Map<String, TokenType> keywords = new HashMap<>();
+    private static final Map<String, TokenType> keywords;
 
-    public static final LoxClass NUMBER = new PrimitiveClass("num");
-    public static final LoxClass INTEGER = new PrimitiveClass(NUMBER, "int");
-    public static final LoxClass FLOAT = new PrimitiveClass(NUMBER, "float");
-    public static final LoxClass DOUBLE = new PrimitiveClass(NUMBER, "double");
-    public static final LoxClass BOOLEAN = new PrimitiveClass("bool");
-    public static final LoxClass CHAR = new PrimitiveClass("char");
-    public static final LoxClass STRING = new PrimitiveClass("String");
+    public static final LoxClass NUMBER = new PrimitiveClass("num" , null);
+    public static final LoxClass INTEGER = new PrimitiveClass(NUMBER, "int", 0);
+    public static final LoxClass FLOAT = new PrimitiveClass(NUMBER, "float", 0f);
+    public static final LoxClass DOUBLE = new PrimitiveClass(NUMBER, "double", 0d);
+    public static final LoxClass BOOLEAN = new PrimitiveClass("bool", false);
+    public static final LoxClass CHAR = new PrimitiveClass("char", ' ');
+    public static final LoxClass STRING = new PrimitiveClass("String", "");
 
-    public static final LoxClass VOID = new PrimitiveClass("void");
-    public static final LoxClass OBJECT = new PrimitiveClass("Object");
+    public static final LoxClass VOID = new PrimitiveClass("void", null);
+    //TODO move Object away from primitive class given that it isn't actually one
+    public static final LoxClass OBJECT = new PrimitiveClass("Object", null);
 
     static {
-        keywords.put("class",    CLASS);
-        keywords.put("new",      NEW);
-        keywords.put("extends",  EXTENDS);
-        keywords.put("false",    FALSE);
-        keywords.put("true",     TRUE);
-        keywords.put("and",      AND);
-        keywords.put("or",       OR);
-        keywords.put("xor",      XOR);
-        keywords.put("for",      FOR);
-        keywords.put("def",      FUNC);
-        keywords.put("final",    FINAL);
-        keywords.put("static",   STATIC); //TODO implement static
-        keywords.put("if",       IF);
-        keywords.put("else",     ELSE);
-        keywords.put("elif",     ELIF);
-        keywords.put("null",     NULL);
-        keywords.put("return",   RETURN);
-        keywords.put("super",    SUPER);
-        keywords.put("this",     THIS);
-        keywords.put("while",    WHILE);
-        keywords.put("break",    BREAK);
-        keywords.put("continue", CONTINUE);
-        keywords.put("switch",   SWITCH);
-        keywords.put("case",     CASE);
+        keywords = Arrays.stream(values()).filter(tokenType -> tokenType.categories.contains(TokenTypeCategory.KEY_WORD)).collect(Collectors.toMap(tokenType -> tokenType.name().toLowerCase(Locale.ROOT), Function.identity()));
         initialize();
     }
 

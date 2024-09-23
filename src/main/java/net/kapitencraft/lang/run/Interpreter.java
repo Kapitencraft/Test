@@ -9,8 +9,7 @@ import net.kapitencraft.lang.exception.EscapeLoop;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.func.LoxFunction;
-import net.kapitencraft.lang.oop.GeneratedLoxClass;
-import net.kapitencraft.lang.oop.LoxClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.tool.Math;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.Pair;
@@ -44,7 +43,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     public void interpret(List<Stmt> statements, Environment active) {
-        System.out.println("Executing...");
         Environment shadowed = environment;
         try {
             environment = active == null ? environment : active;
@@ -116,25 +114,8 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitImportStmt(Stmt.Import stmt) {
-        return null;
-    }
-
-    @Override
     public Void visitBlockStmt(Stmt.Block stmt) {
         executeBlock(stmt.statements);
-        return null;
-    }
-
-    @Override
-    public Void visitClassStmt(Stmt.Class stmt) {
-        LoxClass loxClass = new GeneratedLoxClass(stmt);
-        if (!loxClass.hasStaticMethod("main")) return null;
-        LoxCallable callable = loxClass.getStaticMethod("main");
-        if (callable.arity() == 0) {
-            callable.call(new Environment(), this, List.of());
-        }
-        //do nothing; classes are loaded inside class loader
         return null;
     }
 
@@ -166,8 +147,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return null;
     }
 
-    //TODO ensure vars are first initialized
-
     @Override
     public Void visitLoopInterruptionStmt(Stmt.LoopInterruption stmt) {
         throw new EscapeLoop(stmt.type);
@@ -189,6 +168,8 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         if (expr.operator.type == TokenType.OR) {
             if (isTruthy(left)) return left;
+        } else if (expr.operator.type == TokenType.XOR) {
+            return isTruthy(left) ^ isTruthy(evaluate(expr.right));
         } else {
             if (!isTruthy(left)) return left;
         }
@@ -234,11 +215,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitClassRefExpr(Expr.ClassRef expr) {
-        return null;
-    }
-
-    @Override
     public Object visitAssignExpr(Expr.Assign expr) {
         Object value = evaluate(expr.value);
         if (expr.type.type == TokenType.ASSIGN) environment.assignVar(expr.name.lexeme, value);
@@ -248,7 +224,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitSpecialAssignExpr(Expr.SpecialAssign expr) {
-        return environment.specialVarAssign(expr.name.lexeme, expr.type);
+        return environment.specialVarAssign(expr.name.lexeme, expr.assignType);
     }
 
     @Override
@@ -320,14 +296,19 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         if (callee instanceof LoxCallable function) {
             if (arguments.size() != function.arity()) {
-                throw new RuntimeError(expr.paren, "Expected " +
+                throw new RuntimeError(expr.bracket, "Expected " +
                         function.arity() + " arguments but got " +
                         arguments.size() + ".");
             }
 
             return function.call( this.environment, this, arguments);
         }
-        throw new RuntimeError(expr.paren, "unknown function");
+        throw new RuntimeError(expr.bracket, "unknown function");
+    }
+
+    @Override
+    public Object visitInstCallExpr(Expr.InstCall expr) {
+        return ((ClassInstance) evaluate(expr.callee)).executeMethod(expr.name.lexeme, this.visitArgs(expr.args), this);
     }
 
     public List<Object> visitArgs(List<Expr> args) {
@@ -353,6 +334,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         } else {
             return instance.assignFieldWithOperator(expr.name.lexeme, val, expr.assignType);
         }
+    }
+
+    @Override
+    public Object visitSpecialSetExpr(Expr.SpecialSet expr) {
+        return ((ClassInstance) evaluate(expr.callee)).specialAssign(expr.name.lexeme, expr.assignType);
     }
 
     private boolean isEqual(Object a, Object b) {
@@ -386,5 +372,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (object == null) return false;
         if (object instanceof Boolean) return (boolean)object;
         return true;
+    }
+
+    public void tryInterpret(LoxClass clazz) {
+        if (!clazz.hasStaticMethod("main")) return;
+        LoxCallable callable = clazz.getStaticMethod("main");
+        if (callable.arity() == 0) {
+            callable.call(new Environment(), this, List.of());
+        }
     }
 }

@@ -4,5 +4,6 @@ public enum TokenTypeCategory {
     ARITHMETIC_BINARY,
     BOOL_BINARY,
     COMPARATORS,
-    OPERATION_ASSIGN
+    OPERATION_ASSIGN,
+    KEY_WORD
 }

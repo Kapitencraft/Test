@@ -2,8 +2,22 @@ class Main {
     int x;
 
     static void main() {
-        Main main = new Main();
-        main.x = 5;
-        print(x);
+        Main main = new A();
+        for (int i = 0; i < 1000; i++) {
+            main.test();
+        }
+        print(main.x);
+        main.test2();
+    }
+
+    void test() {
+        this.x++;
+    }
+
+    class A extends Main {
+
+        void test2() {
+            this.x = 0;
+        }
     }
 }

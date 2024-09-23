@@ -4,19 +4,20 @@ import java.util.Map;
 import java.util.List;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
-import net.kapitencraft.lang.oop.LoxClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 public abstract class Expr {
 
     public interface Visitor<R> {
-        R visitClassRefExpr(ClassRef expr);
         R visitAssignExpr(Assign expr);
         R visitSpecialAssignExpr(SpecialAssign expr);
         R visitBinaryExpr(Binary expr);
         R visitWhenExpr(When expr);
         R visitCallExpr(Call expr);
+        R visitInstCallExpr(InstCall expr);
         R visitGetExpr(Get expr);
         R visitSetExpr(Set expr);
+        R visitSpecialSetExpr(SpecialSet expr);
         R visitSwitchExpr(Switch expr);
         R visitGroupingExpr(Grouping expr);
         R visitLiteralExpr(Literal expr);
@@ -25,19 +26,6 @@ public abstract class Expr {
         R visitVarRefExpr(VarRef expr);
         R visitFuncRefExpr(FuncRef expr);
         R visitConstructorExpr(Constructor expr);
-    }
-
-    public static class ClassRef extends Expr {
-        public final List<Token> packages;
-
-        public ClassRef(List<Token> packages) {
-            this.packages = packages;
-        }
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitClassRefExpr(this);
-        }
     }
 
     public static class Assign extends Expr {
@@ -59,11 +47,11 @@ public abstract class Expr {
 
     public static class SpecialAssign extends Expr {
         public final Token name;
-        public final Token type;
+        public final Token assignType;
 
-        public SpecialAssign(Token name, Token type) {
+        public SpecialAssign(Token name, Token assignType) {
             this.name = name;
-            this.type = type;
+            this.assignType = assignType;
         }
 
         @Override
@@ -108,18 +96,37 @@ public abstract class Expr {
 
     public static class Call extends Expr {
         public final Expr callee;
-        public final Token paren;
+        public final Token bracket;
         public final List<Expr> args;
 
-        public Call(Expr callee, Token paren, List<Expr> args) {
+        public Call(Expr callee, Token bracket, List<Expr> args) {
             this.callee = callee;
-            this.paren = paren;
+            this.bracket = bracket;
             this.args = args;
         }
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitCallExpr(this);
+        }
+    }
+
+    public static class InstCall extends Expr {
+        public final Expr callee;
+        public final Token name;
+        public final Token bracket;
+        public final List<Expr> args;
+
+        public InstCall(Expr callee, Token name, Token bracket, List<Expr> args) {
+            this.callee = callee;
+            this.name = name;
+            this.bracket = bracket;
+            this.args = args;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitInstCallExpr(this);
         }
     }
 
@@ -154,6 +161,23 @@ public abstract class Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSetExpr(this);
+        }
+    }
+
+    public static class SpecialSet extends Expr {
+        public final Expr callee;
+        public final Token name;
+        public final Token assignType;
+
+        public SpecialSet(Expr callee, Token name, Token assignType) {
+            this.callee = callee;
+            this.name = name;
+            this.assignType = assignType;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitSpecialSetExpr(this);
         }
     }
 

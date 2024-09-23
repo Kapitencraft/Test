@@ -15,11 +15,6 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
     }
 
     @Override
-    public Token visitClassRefExpr(Expr.ClassRef expr) {
-        return null;
-    }
-
-    @Override
     public Token visitAssignExpr(Expr.Assign expr) {
         return expr.name;
     }
@@ -45,6 +40,11 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
     }
 
     @Override
+    public Token visitInstCallExpr(Expr.InstCall expr) {
+        return expr.name;
+    }
+
+    @Override
     public Token visitGetExpr(Expr.Get expr) {
         return expr.name;
     }
@@ -52,6 +52,11 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
     @Override
     public Token visitSetExpr(Expr.Set expr) {
         return null;
+    }
+
+    @Override
+    public Token visitSpecialSetExpr(Expr.SpecialSet expr) {
+        return expr.name;
     }
 
     @Override
@@ -95,18 +100,8 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
     }
 
     @Override
-    public Token visitImportStmt(Stmt.Import stmt) {
-        return null;
-    }
-
-    @Override
     public Token visitBlockStmt(Stmt.Block stmt) {
         return null; //don't return anything
-    }
-
-    @Override
-    public Token visitClassStmt(Stmt.Class stmt) {
-        return stmt.name;
     }
 
     @Override

@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.compile;
 
 import net.kapitencraft.lang.VarTypeManager;
-import net.kapitencraft.lang.oop.LoxClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 import java.util.HashMap;
 import java.util.Map;

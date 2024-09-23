@@ -11,15 +11,16 @@ public class GenerateAst {
     public static final String DIRECTORY = "src/main/java/net/kapitencraft/lang/holder/ast";
 
     public static void main(String[] args) throws IOException {
-        defineAst("Expr", Arrays.asList(
-                "ClassRef      : List<Token> packages",
+        defineAst("Expr", List.of(
                 "Assign        : Token name; Expr value; Token type",
-                "SpecialAssign : Token name; Token type",
+                "SpecialAssign : Token name; Token assignType",
                 "Binary        : Expr left; Token operator; Expr right",
                 "When          : Expr condition; Expr ifTrue; Expr ifFalse",
-                "Call          : Expr callee; Token paren; List<Expr> args",
+                "Call          : Expr callee; Token bracket; List<Expr> args",
+                "InstCall      : Expr callee; Token name; Token bracket; List<Expr> args",
                 "Get           : Expr object; Token name",
                 "Set           : Expr object; Token name; Expr value; Token assignType",
+                "SpecialSet    : Expr callee; Token name; Token assignType",
                 "Switch        : Expr provider; Map<Object,Expr> params; Expr defaulted; Token keyword",
                 "Grouping      : Expr expression",
                 //"Lambda   : List<Token> params, Stmt body",
@@ -30,11 +31,8 @@ public class GenerateAst {
                 "FuncRef       : Token name",
                 "Constructor   : LoxClass target; List<Expr> params"
         ));
-        defineAst("Stmt", Arrays.asList(
-                "Import           : Expr.ClassRef ref",
+        defineAst("Stmt", List.of(
                 "Block            : List<Stmt> statements",
-                "Class            : Token name; List<Stmt.FuncDecl> methods; List<Stmt.VarDecl> fields; LoxClass superclass; " +
-                        "List<Stmt.FuncDecl> staticMethods; List<Stmt.VarDecl> staticFields; Stmt.FuncDecl constructor",
                 "Expression       : Expr expression",
                 "FuncDecl         : LoxClass retType; Token name; Token end; List<Pair<LoxClass,Token>> params; List<Stmt> body; boolean isFinal",
                 "If               : Expr condition; Stmt thenBranch; Stmt elseBranch; List<Pair<Expr,Stmt>> elifs; Token keyword",
@@ -61,7 +59,7 @@ public class GenerateAst {
         writer.println("import java.util.List;");
         writer.println("import net.kapitencraft.lang.holder.token.Token;");
         writer.println("import net.kapitencraft.tool.Pair;");
-        writer.println("import net.kapitencraft.lang.oop.LoxClass;");
+        writer.println("import net.kapitencraft.lang.oop.clazz.LoxClass;");
         writer.println();
         writer.println("public abstract class " + baseName + " {");
         writer.println();

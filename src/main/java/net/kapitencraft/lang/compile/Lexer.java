@@ -2,12 +2,11 @@ package net.kapitencraft.lang.compile;
 
 import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.holder.LiteralHolder;
-import net.kapitencraft.lang.oop.LoxClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.Main;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 

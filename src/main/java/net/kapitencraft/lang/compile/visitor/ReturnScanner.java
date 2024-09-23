@@ -29,18 +29,8 @@ public class ReturnScanner implements Stmt.Visitor<Boolean> {
     }
 
     @Override
-    public Boolean visitImportStmt(Stmt.Import stmt) {
-        return false;
-    }
-
-    @Override
     public Boolean visitBlockStmt(Stmt.Block stmt) {
         return scanList(stmt.statements);
-    }
-
-    @Override
-    public Boolean visitClassStmt(Stmt.Class stmt) {
-        return false;
     }
 
     @Override

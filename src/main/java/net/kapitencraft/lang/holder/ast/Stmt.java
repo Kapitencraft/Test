@@ -4,14 +4,12 @@ import java.util.Map;
 import java.util.List;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
-import net.kapitencraft.lang.oop.LoxClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 public abstract class Stmt {
 
     public interface Visitor<R> {
-        R visitImportStmt(Import stmt);
         R visitBlockStmt(Block stmt);
-        R visitClassStmt(Class stmt);
         R visitExpressionStmt(Expression stmt);
         R visitFuncDeclStmt(FuncDecl stmt);
         R visitIfStmt(If stmt);
@@ -20,19 +18,6 @@ public abstract class Stmt {
         R visitWhileStmt(While stmt);
         R visitForStmt(For stmt);
         R visitLoopInterruptionStmt(LoopInterruption stmt);
-    }
-
-    public static class Import extends Stmt {
-        public final Expr.ClassRef ref;
-
-        public Import(Expr.ClassRef ref) {
-            this.ref = ref;
-        }
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitImportStmt(this);
-        }
     }
 
     public static class Block extends Stmt {
@@ -45,31 +30,6 @@ public abstract class Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitBlockStmt(this);
-        }
-    }
-
-    public static class Class extends Stmt {
-        public final Token name;
-        public final List<Stmt.FuncDecl> methods;
-        public final List<Stmt.VarDecl> fields;
-        public final LoxClass superclass;
-        public final List<Stmt.FuncDecl> staticMethods;
-        public final List<Stmt.VarDecl> staticFields;
-        public final Stmt.FuncDecl constructor;
-
-        public Class(Token name, List<Stmt.FuncDecl> methods, List<Stmt.VarDecl> fields, LoxClass superclass, List<Stmt.FuncDecl> staticMethods, List<Stmt.VarDecl> staticFields, Stmt.FuncDecl constructor) {
-            this.name = name;
-            this.methods = methods;
-            this.fields = fields;
-            this.superclass = superclass;
-            this.staticMethods = staticMethods;
-            this.staticFields = staticFields;
-            this.constructor = constructor;
-        }
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitClassStmt(this);
         }
     }
 

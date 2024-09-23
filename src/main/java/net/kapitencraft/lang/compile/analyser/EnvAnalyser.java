@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.compile.analyser;
 
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.oop.LoxClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 public class EnvAnalyser {
     private final MethodAnalyser methodAnalyser;

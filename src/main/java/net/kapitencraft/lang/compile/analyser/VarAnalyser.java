@@ -1,11 +1,7 @@
 package net.kapitencraft.lang.compile.analyser;
 
-import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.env.abst.Leveled;
-import net.kapitencraft.lang.oop.LoxClass;
-import net.kapitencraft.tool.Pair;
-
-import java.util.Objects;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 public class VarAnalyser extends Leveled<String, VarAnalyser.Wrapper> {
 

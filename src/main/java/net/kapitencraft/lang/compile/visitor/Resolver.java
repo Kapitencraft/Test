@@ -9,7 +9,8 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
-import net.kapitencraft.lang.oop.LoxClass;
+import net.kapitencraft.lang.oop.clazz.GeneratedLoxClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.Main;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -59,6 +60,19 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
         analyser.addVar(name.lexeme, type, hasValue, isFinal);
     }
 
+    public void resolve(GeneratedLoxClass generated) {
+        generated.enclosing().forEach(this::resolve);
+
+        this.analyser.push();
+        this.analyser.addVar("this", generated, true, true);
+        generated.methods().forEach(this::resolve);
+        generated.fields().forEach(this::resolve);
+        this.analyser.pop();
+
+        generated.staticMethods().forEach(this::resolve);
+        generated.staticFields().forEach(this::resolve);
+    }
+
     private enum FunctionType {
         NONE,
         FUNCTION
@@ -66,10 +80,6 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
 
     private void resolve(Stmt stmt) {
         stmt.accept(this);
-    }
-
-    public void resolve(Stmt.Class stmt) {
-        this.resolve((Stmt) stmt);
     }
 
     private LoxClass resolve(Expr expr) {
@@ -82,10 +92,10 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
 
     private LoxClass resolve(Token errorLoc, Expr expr, LoxClass expected) {
         LoxClass got = resolve(expr);
-        if (expected == null) return got;
+        if (expected == VarTypeManager.OBJECT) return got;
         if (expected == VarTypeManager.NUMBER && (got == VarTypeManager.INTEGER || got == VarTypeManager.FLOAT || got == VarTypeManager.DOUBLE)) return got;
-        if (got != expected) error(errorLoc, "incompatible types: " + got.name() + " cannot be converted to " + expected.name());
-        return got;
+        if (!expected.isParentOf(got)) error(errorLoc, "incompatible types: " + got.name() + " cannot be converted to " + expected.name());
+        return expected;
     }
 
     private LoxClass resolve(Expr expr, LoxClass expected) {
@@ -111,22 +121,16 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
             error(function.end, "empty method");
             analyser.pop();
             currentFunction = enclosingFunction;
-            funcRetType = null;
+            funcRetType = VarTypeManager.VOID;
             return;
         }
-        if (funcRetType != null && !returnScanner.scanList(function.body)) {
+        if (funcRetType != VarTypeManager.VOID && !returnScanner.scanList(function.body)) {
             error(function.end, "missing return statement");
         }
         function.body.forEach(this::resolve);
         analyser.pop();
         currentFunction = enclosingFunction;
-        funcRetType = null;
-    }
-
-    @Override
-    public Void visitImportStmt(Stmt.Import stmt) {
-        resolve(stmt.ref);
-        return null;
+        funcRetType = VarTypeManager.VOID;
     }
 
     @Override
@@ -134,11 +138,6 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
         analyser.push();
         stmt.statements.forEach(this::resolve);
         analyser.pop();
-        return null;
-    }
-
-    @Override
-    public Void visitClassStmt(Stmt.Class stmt) {
         return null;
     }
 
@@ -227,11 +226,6 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public LoxClass visitClassRefExpr(Expr.ClassRef expr) {
-        return VarTypeManager.getClass(expr.packages, this::error);
-    }
-
-    @Override
     public LoxClass visitAssignExpr(Expr.Assign expr) {
         checkVarExistence(expr.name, false, // expr.type.type != TokenType.ASSIGN,
                 false);
@@ -256,7 +250,7 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
         if (type == TokenType.ADD && (left == VarTypeManager.STRING || right == VarTypeManager.STRING)) return VarTypeManager.STRING; //check if at least one of the values is string
         if (type.categories.contains(TokenTypeCategory.BOOL_BINARY) && !(left == VarTypeManager.BOOLEAN && right == VarTypeManager.BOOLEAN))
             error(expr.operator, "both values must be boolean");
-        if (type.categories.contains(TokenTypeCategory.ARITHMETIC_BINARY) && !(left.getSuperclass() == VarTypeManager.NUMBER && right.getSuperclass() == VarTypeManager.NUMBER))
+        if (type.categories.contains(TokenTypeCategory.ARITHMETIC_BINARY) && !(left.superclass() == VarTypeManager.NUMBER && right.superclass() == VarTypeManager.NUMBER))
             error(expr.operator, "both values must be numbers");
         if (left != right)
             error(expr.operator, "can not combine values of different types");
@@ -295,6 +289,17 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public LoxClass visitInstCallExpr(Expr.InstCall expr) {
+        LoxClass target = resolve(expr.callee);
+        if (!target.hasMethod(expr.name.lexeme)) {
+            error(expr.name, "unknown symbol");
+            return VarTypeManager.VOID;
+        }
+
+        return target.getMethodType(expr.name.lexeme);
+    }
+
+    @Override
     public LoxClass visitGetExpr(Expr.Get expr) {
         return resolve(expr.object).getFieldType(expr.name.lexeme);
     }
@@ -304,10 +309,16 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
         LoxClass objClass = resolve(expr.object);
         if (!objClass.hasField(expr.name.lexeme)) {
             error(expr.name, "unknown symbol");
+            return VarTypeManager.VOID;
         }
 
         LoxClass expectedType = objClass.getFieldType(expr.name.lexeme);
         return resolve(expr.value, expectedType);
+    }
+
+    @Override
+    public LoxClass visitSpecialSetExpr(Expr.SpecialSet expr) {
+        return resolve(expr.callee).getFieldType(expr.name.lexeme);
     }
 
     @Override

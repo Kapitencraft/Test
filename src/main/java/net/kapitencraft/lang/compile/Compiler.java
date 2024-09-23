@@ -1,11 +1,18 @@
 package net.kapitencraft.lang.compile;
 
+import net.kapitencraft.lang.compile.parser.ExprParser;
+import net.kapitencraft.lang.compile.parser.SkeletonParser;
+import net.kapitencraft.lang.compile.parser.StmtParser;
 import net.kapitencraft.lang.compile.visitor.LocationFinder;
 import net.kapitencraft.lang.compile.visitor.Resolver;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.oop.clazz.GeneratedLoxClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.PreviewClass;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Compiler {
@@ -33,23 +40,70 @@ public class Compiler {
         }
     }
 
-    public static Stmt compile(String source, String[] lines) {
-        ErrorLogger consumer = new ErrorLogger(lines);
-        Lexer scanner = new Lexer(source);
-        List<Token> tokens = scanner.scanTokens();
-        Parser parser = new Parser(tokens, consumer);
-        Stmt.Class stmt = parser.parse();
+    public static LoxClass compile(String source, String[] lines) {
+        ErrorLogger logger = new ErrorLogger(lines);
+        Lexer lexer = new Lexer(source);
+        List<Token> tokens = lexer.scanTokens();
+
+
+        System.out.println("Parsing...");
+        SkeletonParser parser = new SkeletonParser(logger);
+        VarTypeParser varTypeParser = new VarTypeParser();
+
+        parser.apply(tokens.toArray(new Token[0]), varTypeParser);
+
+        SkeletonParser.ClassDecl decl = parser.parse();
+
+        GeneratedLoxClass generated = compileClass(logger, decl, varTypeParser);
 
         // Stop if there was a syntax error.
         if (hadError) System.exit(65);
 
-        Resolver resolver = new Resolver(consumer);
+        Resolver resolver = new Resolver(logger);
         System.out.println("Resolving...");
-        resolver.resolve(stmt);
+        resolver.resolve(generated);
 
         if (hadError) System.exit(65);
 
-        return stmt;
+        return generated;
+    }
+
+    private static GeneratedLoxClass compileClass(ErrorLogger logger, SkeletonParser.ClassDecl decl, VarTypeParser varTypeParser) {
+        StmtParser stmtParser = new StmtParser(logger);
+        ExprParser exprParser = new ExprParser(logger);
+
+        List<Stmt.VarDecl> fields = new ArrayList<>();
+        List<Stmt.VarDecl> staticFields = new ArrayList<>();
+        for (SkeletonParser.FieldDecl field : decl.fields()) {
+            Expr initializer = null;
+            if (field.body() != null) {
+                exprParser.apply(field.body(), varTypeParser);
+                initializer = exprParser.expression();
+            }
+            Stmt.VarDecl fieldDecl = new Stmt.VarDecl(field.name(), field.type(), initializer, field.isFinal());
+            if (field.isStatic()) staticFields.add(fieldDecl);
+            else fields.add(fieldDecl);
+        }
+
+        List<GeneratedLoxClass> enclosed = new ArrayList<>();
+        for (SkeletonParser.ClassDecl classDecl : decl.enclosed()) {
+            GeneratedLoxClass loxClass = compileClass(logger, classDecl, varTypeParser);
+            classDecl.target().apply(loxClass);
+            enclosed.add(loxClass);
+        }
+
+        List<Stmt.FuncDecl> methods = new ArrayList<>();
+        List<Stmt.FuncDecl> staticMethods = new ArrayList<>();
+        for (SkeletonParser.MethodDecl method : decl.methods()) {
+            stmtParser.apply(method.body(), varTypeParser);
+            List<Stmt> body = stmtParser.parse();
+            Stmt.FuncDecl methodDecl = new Stmt.FuncDecl(method.loxClass(), method.name(), method.end(), method.params(), body, method.isFinal());
+            if (method.isStatic()) staticMethods.add(methodDecl);
+            else methods.add(methodDecl);
+        }
+        GeneratedLoxClass generated = new GeneratedLoxClass(methods, staticMethods, fields, staticFields, decl.superclass(), decl.name().lexeme, enclosed);
+        decl.target().apply(generated);
+        return generated;
     }
 
     public static void error(Token token, String message, String line) {

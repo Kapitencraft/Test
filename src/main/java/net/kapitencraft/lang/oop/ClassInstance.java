@@ -5,7 +5,7 @@ import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
-import net.kapitencraft.lang.holder.token.TokenTypeCategory;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.tool.Math;
 
@@ -20,30 +20,13 @@ public class ClassInstance {
 
     public ClassInstance(LoxClass type, Interpreter interpreter) {
         this.environment = new Environment();
-        environment.assignVar("this", this); //oh, wow
+        environment.defineVar("this", this);
         this.type = type;
         this.executeConstructor(interpreter);
-
     }
 
     private void executeConstructor(Interpreter interpreter) {
-        this.type.fields.forEach((string, loxField) -> this.fields.put(string, loxField.initialize(this.environment, interpreter)));
-    }
-
-    public boolean hasMethod(String name) {
-        return type.methods.containsKey(name);
-    }
-
-    public boolean hasField(String name) {
-        return type.fields.containsKey(name);
-    }
-
-    public Object runMethod(Interpreter interpreter, String name, List<Object> args) {
-        LoxCallable callable = type.methods.get(name);
-        this.environment.push();
-        Object val = callable.call(this.environment, interpreter, args);
-        this.environment.pop();
-        return val;
+        this.type.getFields().forEach((string, loxField) -> this.fields.put(string, loxField.initialize(this.environment, interpreter)));
     }
 
     public Object assignField(String name, Object val) {
@@ -52,15 +35,33 @@ public class ClassInstance {
     }
 
     public Object assignFieldWithOperator(String name, Object val, Token type) {
-        this.assignField(name, Math.merge(getField(name), val, type));
+        return this.assignField(name, Math.merge(getField(name), val, type));
+    }
+
+    public Object specialAssign(String name, Token assignType) {
+        Object val = this.fields.get(name);
+        if (val instanceof Integer) {
+            this.assignField(name, (int)val + (assignType.type == TokenType.GROW ? 1 : -1));
+        } else {
+            this.assignField(name, (double)val + (assignType.type == TokenType.GROW ? 1 : -1));
+        }
         return getField(name);
     }
+
 
     public Object getField(String name) {
         return this.fields.get(name);
     }
 
     public void construct(List<Expr> params, Interpreter interpreter) {
-        type.constructor.call(this.environment, interpreter, interpreter.visitArgs(params));
+        type.callConstructor(this.environment, interpreter, interpreter.visitArgs(params));
+    }
+
+    public Object executeMethod(String name, List<Object> arguments, Interpreter interpreter) {
+        LoxCallable callable = type.getMethod(name);
+        this.environment.push();
+        Object val = callable.call(this.environment, interpreter, arguments);
+        this.environment.pop();
+        return val;
     }
 }

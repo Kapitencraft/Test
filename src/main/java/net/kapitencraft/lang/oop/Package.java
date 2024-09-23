@@ -1,8 +1,9 @@
 package net.kapitencraft.lang.oop;
 
+import net.kapitencraft.lang.oop.clazz.LoxClass;
+
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Package {

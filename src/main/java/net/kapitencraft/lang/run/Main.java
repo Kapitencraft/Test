@@ -3,11 +3,9 @@ package net.kapitencraft.lang.run;
 import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.compile.Compiler;
-import net.kapitencraft.lang.oop.LoxClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -176,9 +174,10 @@ public class Main {
     private static void run(String source) {
         String[] lines = source.split("\n", Integer.MAX_VALUE);
 
-        Stmt statements = Compiler.compile(source, lines);
+        LoxClass clazz = Compiler.compile(source, lines);
 
-        interpreter.interpret(List.of(statements), null);
+        System.out.println("Executing...");
+        interpreter.tryInterpret(clazz);
     }
 
     static void runtimeError(RuntimeError error) {

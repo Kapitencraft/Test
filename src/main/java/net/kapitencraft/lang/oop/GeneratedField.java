@@ -2,6 +2,8 @@ package net.kapitencraft.lang.oop;
 
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.run.Interpreter;
 
 public class GeneratedField extends LoxField {
@@ -13,7 +15,13 @@ public class GeneratedField extends LoxField {
 
     @Override
     public Object initialize(Environment environment, Interpreter interpreter) {
-        return decl.initializer != null ? interpreter.evaluate(decl.initializer) : null;
+        if (decl.initializer == null) {
+            if (decl.type instanceof PrimitiveClass prim) {
+                return prim.defaultValue();
+            }
+            return null;
+        }
+        return interpreter.evaluate(decl.initializer);
     }
 
     @Override
