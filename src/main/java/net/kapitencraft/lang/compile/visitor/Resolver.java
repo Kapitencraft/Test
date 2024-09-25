@@ -15,7 +15,10 @@ import net.kapitencraft.lang.run.Main;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.holder.ast.Stmt;
 
+import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
+
 import java.util.List;
+import java.util.Map;
 
 public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
 
@@ -62,6 +65,16 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
 
     public void resolve(GeneratedLoxClass generated) {
         generated.enclosing().forEach(this::resolve);
+
+        if (!generated.isAbstract()) {
+            Map<String, LoxCallable> methods = generated.getMethods();
+
+            for (Map.Entry<String, LoxCallable> entry : methods.entrySet()) {
+                if (entry.getValue().isAbstract()) {
+                    error(generated.getNameToken(), String.format("class %s is not declared abstract and does not override abstract method %s", generated.name(), entry.getKey()));
+                }
+            }
+        }
 
         this.analyser.push();
         this.analyser.addVar("this", generated, true, true);
@@ -227,12 +240,11 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
 
     @Override
     public LoxClass visitAssignExpr(Expr.Assign expr) {
-        checkVarExistence(expr.name, false, // expr.type.type != TokenType.ASSIGN,
+        checkVarExistence(expr.name, expr.type.type != TokenType.ASSIGN,
                 false);
         if (!analyser.hasVar(expr.name.lexeme)) return null;
         checkVarType(expr.name, expr.value);
-        if (false )// expr.type.type == TokenType.ASSIGN)
-            analyser.hasVarValue(expr.name.lexeme);
+        if (expr.type.type == TokenType.ASSIGN) analyser.setHasVarValue(expr.name.lexeme);
         return analyser.getVarType(expr.name.lexeme);
     }
 
@@ -248,13 +260,13 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
         LoxClass right = resolve(expr.right);
         TokenType type = expr.operator.type;
         if (type == TokenType.ADD && (left == VarTypeManager.STRING || right == VarTypeManager.STRING)) return VarTypeManager.STRING; //check if at least one of the values is string
-        if (type.categories.contains(TokenTypeCategory.BOOL_BINARY) && !(left == VarTypeManager.BOOLEAN && right == VarTypeManager.BOOLEAN))
+        if (type.isCategory(BOOL_BINARY) && !(left == VarTypeManager.BOOLEAN && right == VarTypeManager.BOOLEAN))
             error(expr.operator, "both values must be boolean");
-        if (type.categories.contains(TokenTypeCategory.ARITHMETIC_BINARY) && !(left.superclass() == VarTypeManager.NUMBER && right.superclass() == VarTypeManager.NUMBER))
+        if (type.isCategory(ARITHMETIC_BINARY) && !(left.superclass() == VarTypeManager.NUMBER && right.superclass() == VarTypeManager.NUMBER))
             error(expr.operator, "both values must be numbers");
         if (left != right)
             error(expr.operator, "can not combine values of different types");
-        if (type.categories.contains(TokenTypeCategory.COMPARATORS)) return VarTypeManager.BOOLEAN;
+        if (type.isCategory(COMPARATORS) || type.isCategory(EQUALITY)) return VarTypeManager.BOOLEAN;
         return left;
     }
 
@@ -266,6 +278,8 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
         if (left != right) errorLogger.error(expr.ifFalse, "When does not return the same type on both sides");
         return left;
     }
+
+    //TODO remove as soon as all functions move to classes
 
     @Override
     public LoxClass visitCallExpr(Expr.Call expr) {
@@ -380,4 +394,14 @@ public class Resolver implements Expr.Visitor<LoxClass>, Stmt.Visitor<Void> {
         return ret;
     }
 
+    @Override
+    public LoxClass visitCastCheckExpr(Expr.CastCheck expr) {
+        LoxClass providedType = resolve(expr.object);
+        if (!providedType.isParentOf(expr.targetType)) error(finder.find(expr.object), expr.targetType.name() + " is no subtype of " + providedType.name());
+        if (expr.patternVarName != null) {
+            //TODO fix it being active inside the entire scope
+            analyser.addVar(expr.patternVarName.lexeme, expr.targetType, true, true);
+        }
+        return VarTypeManager.BOOLEAN;
+    }
 }

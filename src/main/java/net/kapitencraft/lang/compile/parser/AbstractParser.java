@@ -4,13 +4,27 @@ import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.compile.VarTypeParser;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
+import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 import static net.kapitencraft.lang.holder.token.TokenType.*;
-import static net.kapitencraft.lang.holder.token.TokenType.EOA;
 
 @SuppressWarnings("ThrowableNotThrown")
 public class AbstractParser {
+    private final Map<TokenTypeCategory, TokenType[]> categoryLookup = createCategoryLookup();
+
+    private static Map<TokenTypeCategory, TokenType[]> createCategoryLookup() {
+        Map<TokenTypeCategory, TokenType[]> lookup = new HashMap<>();
+        for (TokenTypeCategory category : TokenTypeCategory.values()) {
+            lookup.put(category, Arrays.stream(values()).filter(tokenType -> tokenType.isCategory(category)).toArray(TokenType[]::new));
+        }
+        return lookup;
+    }
+
     protected int current;
     protected Token[] tokens;
     protected VarTypeParser parser;
@@ -29,6 +43,10 @@ public class AbstractParser {
     protected boolean check(TokenType type) {
         if (isAtEnd()) return false;
         return peek().type == type;
+    }
+
+    protected boolean match(TokenTypeCategory category) {
+        return match(categoryLookup.get(category));
     }
 
     protected boolean match(TokenType... types) {

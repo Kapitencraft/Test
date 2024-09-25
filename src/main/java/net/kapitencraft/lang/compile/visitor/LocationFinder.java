@@ -65,6 +65,11 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
     }
 
     @Override
+    public Token visitCastCheckExpr(Expr.CastCheck expr) {
+        return find(expr.object);
+    }
+
+    @Override
     public Token visitGroupingExpr(Expr.Grouping expr) {
         return find(expr.expression);
     }

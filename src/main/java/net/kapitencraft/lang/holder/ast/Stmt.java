@@ -53,14 +53,16 @@ public abstract class Stmt {
         public final List<Pair<LoxClass,Token>> params;
         public final List<Stmt> body;
         public final boolean isFinal;
+        public final boolean isAbstract;
 
-        public FuncDecl(LoxClass retType, Token name, Token end, List<Pair<LoxClass,Token>> params, List<Stmt> body, boolean isFinal) {
+        public FuncDecl(LoxClass retType, Token name, Token end, List<Pair<LoxClass,Token>> params, List<Stmt> body, boolean isFinal, boolean isAbstract) {
             this.retType = retType;
             this.name = name;
             this.end = end;
             this.params = params;
             this.body = body;
             this.isFinal = isFinal;
+            this.isAbstract = isAbstract;
         }
 
         @Override

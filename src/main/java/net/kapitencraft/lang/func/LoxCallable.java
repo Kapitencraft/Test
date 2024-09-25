@@ -14,4 +14,6 @@ public interface LoxCallable {
     List<? extends LoxClass> argTypes();
 
     Object call(Environment environment, Interpreter interpreter, List<Object> arguments);
+
+    boolean isAbstract();
 }

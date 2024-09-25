@@ -18,6 +18,10 @@ public class LoxFunction implements LoxCallable {
 
     @Override
     public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+        if (declaration.body == null) {
+            throw new IllegalAccessError("abstract method called directly! this shouldn't happen...");
+        }
+
         for (int i = 0; i < declaration.params.size(); i++) {
             environment.defineVar(declaration.params.get(i).right().lexeme, arguments.get(i));
         }
@@ -28,6 +32,11 @@ public class LoxFunction implements LoxCallable {
             return returnValue.value;
         }
         return null;
+    }
+
+    @Override
+    public boolean isAbstract() {
+        return declaration.body == null;
     }
 
     @Override

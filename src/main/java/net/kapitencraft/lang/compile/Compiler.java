@@ -92,16 +92,22 @@ public class Compiler {
             enclosed.add(loxClass);
         }
 
+        //TODO check abstract method impl
         List<Stmt.FuncDecl> methods = new ArrayList<>();
         List<Stmt.FuncDecl> staticMethods = new ArrayList<>();
+        List<Stmt.FuncDecl> abstracts = new ArrayList<>();
         for (SkeletonParser.MethodDecl method : decl.methods()) {
-            stmtParser.apply(method.body(), varTypeParser);
-            List<Stmt> body = stmtParser.parse();
-            Stmt.FuncDecl methodDecl = new Stmt.FuncDecl(method.loxClass(), method.name(), method.end(), method.params(), body, method.isFinal());
+            List<Stmt> body = null;
+            if (!method.isAbstract()) {
+                stmtParser.apply(method.body(), varTypeParser);
+                body = stmtParser.parse();
+            }
+            Stmt.FuncDecl methodDecl = new Stmt.FuncDecl(method.loxClass(), method.name(), method.end(), method.params(), body, method.isFinal(), method.isAbstract());
             if (method.isStatic()) staticMethods.add(methodDecl);
+            else if (method.isAbstract()) abstracts.add(methodDecl);
             else methods.add(methodDecl);
         }
-        GeneratedLoxClass generated = new GeneratedLoxClass(methods, staticMethods, fields, staticFields, decl.superclass(), decl.name().lexeme, enclosed);
+        GeneratedLoxClass generated = new GeneratedLoxClass(abstracts, methods, staticMethods, fields, staticFields, decl.superclass(), decl.name(), enclosed, decl.isAbstract());
         decl.target().apply(generated);
         return generated;
     }

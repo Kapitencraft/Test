@@ -31,7 +31,7 @@ public class VarTypeManager {
     public static final LoxClass OBJECT = new PrimitiveClass("Object", null);
 
     static {
-        keywords = Arrays.stream(values()).filter(tokenType -> tokenType.categories.contains(TokenTypeCategory.KEY_WORD)).collect(Collectors.toMap(tokenType -> tokenType.name().toLowerCase(Locale.ROOT), Function.identity()));
+        keywords = Arrays.stream(values()).filter(tokenType -> tokenType.isCategory(TokenTypeCategory.KEY_WORD)).collect(Collectors.toMap(tokenType -> tokenType.name().toLowerCase(Locale.ROOT), Function.identity()));
         initialize();
     }
 

@@ -78,9 +78,11 @@ public class SkeletonParser extends AbstractParser {
                 LoxClass type = consumeVarType(parser);
                 Token elementName = consumeIdentifier();
                 if (match(BRACKET_O)) {
+                    if (isAbstract && isStatic) error(elementName, "illegal combination of modifiers abstract and static");
                     MethodDecl decl = funcDecl(parser, type, elementName, isFinal, isStatic, isAbstract);
                     methods.add(decl);
                 } else {
+                    if (isAbstract) error(elementName, "fields may not be abstract");
                     FieldDecl decl = fieldDecl(type, elementName, isFinal, isStatic);
                     fields.add(decl);
                 }
@@ -124,11 +126,16 @@ public class SkeletonParser extends AbstractParser {
         }
         consumeBracketClose("parameters");
 
-        consumeCurlyOpen("method body");
+        Token[] code = null;
+        Token end;
 
-        Token[] code = getMethodCode();
+        if (!isAbstract) { //body only if method isn't abstract
+            consumeCurlyOpen("method body");
 
-        Token end = consumeCurlyClose("method body");
+            code = getMethodCode();
+
+            end = consumeCurlyClose("method body");
+        } else end = consumeEndOfArg();
         return new MethodDecl(code, name, end, parameters, type, isFinal, isStatic, isAbstract);
     }
 

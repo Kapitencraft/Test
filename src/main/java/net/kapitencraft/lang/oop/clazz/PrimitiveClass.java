@@ -64,6 +64,11 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
+    public Map<String, LoxCallable> getAbstractMethods() {
+        return Map.of();
+    }
+
+    @Override
     public LoxCallable getMethod(String name) {
         return null;
     }
@@ -84,8 +89,18 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
+    public Map<String, LoxCallable> getMethods() {
+        return Map.of();
+    }
+
+    @Override
     public void callConstructor(Environment environment, Interpreter interpreter, List<Object> args) {
 
+    }
+
+    @Override
+    public boolean isAbstract() {
+        return false;
     }
 
     public Object defaultValue() {

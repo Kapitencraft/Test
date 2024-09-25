@@ -30,6 +30,12 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
+    public Map<String, LoxCallable> getAbstractMethods() {
+        assertApplied();
+        return target.getAbstractMethods();
+    }
+
+    @Override
     public LoxCallable getMethod(String name) {
         assertApplied();
         return target.getMethod(name);
@@ -101,9 +107,20 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
+    public Map<String, LoxCallable> getMethods() {
+        assertApplied();
+        return target.getMethods();
+    }
+
+    @Override
     public void callConstructor(Environment environment, Interpreter interpreter, List<Object> args) {
         assertApplied();
         target.callConstructor(environment, interpreter, args);
+    }
+
+    @Override
+    public boolean isAbstract() {
+        return false;
     }
 
     private void assertApplied() {

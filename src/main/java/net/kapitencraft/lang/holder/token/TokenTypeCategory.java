@@ -1,9 +1,12 @@
 package net.kapitencraft.lang.holder.token;
 
 public enum TokenTypeCategory {
+    PRIMITIVE,
     ARITHMETIC_BINARY,
-    BOOL_BINARY,
+    POINT_ARITHMETIC,
+    LINE_ARITHMETIC,
+    EQUALITY,
     COMPARATORS,
     OPERATION_ASSIGN,
-    KEY_WORD
+    BOOL_BINARY, KEY_WORD
 }

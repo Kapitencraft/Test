@@ -18,6 +18,10 @@ public class ClassInstance {
     private final Map<String, Object> fields = new HashMap<>();
     private final LoxClass type;
 
+    public LoxClass getType() {
+        return type;
+    }
+
     public ClassInstance(LoxClass type, Interpreter interpreter) {
         this.environment = new Environment();
         environment.defineVar("this", this);
@@ -64,4 +68,5 @@ public class ClassInstance {
         this.environment.pop();
         return val;
     }
+
 }

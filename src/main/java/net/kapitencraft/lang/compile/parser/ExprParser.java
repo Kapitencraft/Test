@@ -3,6 +3,7 @@ package net.kapitencraft.lang.compile.parser;
 import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
-import static net.kapitencraft.lang.holder.token.TokenType.BRACKET_O;
+import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
 
 @SuppressWarnings("ThrowableNotThrown")
 public class ExprParser extends AbstractParser {
@@ -21,11 +22,15 @@ public class ExprParser extends AbstractParser {
     }
 
     public Expr expression() {
+        if (match(SWITCH)) {
+            return switchExpr();
+        }
+
         return when();
     }
 
     private Expr when() {
-        Expr expr = assignment();
+        Expr expr = castCheck();
         if (match(WHEN_CONDITION)) {
             Expr ifTrue = expression();
             consume(WHEN_FALSE, "':' expected");
@@ -36,10 +41,24 @@ public class ExprParser extends AbstractParser {
         return expr;
     }
 
+    private Expr castCheck() {
+        Expr expr = assignment();
+        if (match(INSTANCEOF)) {
+            LoxClass loxClass = consumeVarType();
+            Token patternVar = null;
+            if (match(IDENTIFIER)) {
+                patternVar = previous();
+            }
+            return new Expr.CastCheck(expr, loxClass, patternVar);
+        }
+
+        return expr;
+    }
+
     private Expr assignment() {
         Expr expr = or();
 
-        if (match(ASSIGN, ADD_ASSIGN, SUB_ASSIGN, MUL_ASSIGN, DIV_ASSIGN, MOD_ASSIGN)) {
+        if (match(ASSIGN) || match(OPERATION_ASSIGN)) {
             Token assign = previous();
             Expr value = assignment();
 
@@ -101,7 +120,7 @@ public class ExprParser extends AbstractParser {
     private Expr equality() {
         Expr expr = comparison();
 
-        while (match(NEQUAL, EQUAL)) {
+        while (match(EQUALITY)) {
             Token operator = previous();
             Expr right = comparison();
             expr = new Expr.Binary(expr, operator, right);
@@ -113,7 +132,7 @@ public class ExprParser extends AbstractParser {
     private Expr comparison() {
         Expr expr = term();
 
-        while (match(GREATER, GEQUAL, LESSER, LEQUAL)) {
+        while (match(COMPARATORS)) {
             Token operator = previous();
             Expr right = term();
             expr = new Expr.Binary(expr, operator, right);
@@ -151,10 +170,6 @@ public class ExprParser extends AbstractParser {
             Token operator = previous();
             Expr right = unary();
             return new Expr.Unary(operator, right);
-        }
-
-        if (match(SWITCH)) {
-            return switchExpr();
         }
 
         return call();
@@ -262,7 +277,7 @@ public class ExprParser extends AbstractParser {
             return new Expr.Constructor(loxClass, args);
         }
 
-        if (match(FALSE, TRUE, NULL, NUM, STR)) {
+        if (match(PRIMITIVE)) {
             return new Expr.Literal(previous());
         }
 

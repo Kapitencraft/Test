@@ -19,6 +19,7 @@ public abstract class Expr {
         R visitSetExpr(Set expr);
         R visitSpecialSetExpr(SpecialSet expr);
         R visitSwitchExpr(Switch expr);
+        R visitCastCheckExpr(CastCheck expr);
         R visitGroupingExpr(Grouping expr);
         R visitLiteralExpr(Literal expr);
         R visitLogicalExpr(Logical expr);
@@ -197,6 +198,23 @@ public abstract class Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSwitchExpr(this);
+        }
+    }
+
+    public static class CastCheck extends Expr {
+        public final Expr object;
+        public final LoxClass targetType;
+        public final Token patternVarName;
+
+        public CastCheck(Expr object, LoxClass targetType, Token patternVarName) {
+            this.object = object;
+            this.targetType = targetType;
+            this.patternVarName = patternVarName;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitCastCheckExpr(this);
         }
     }
 

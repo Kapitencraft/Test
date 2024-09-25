@@ -16,7 +16,6 @@ public interface LoxClass {
 
     String name();
 
-
     LoxClass superclass();
 
     default LoxClass getFieldType(String name) {
@@ -27,7 +26,7 @@ public interface LoxClass {
 
     default boolean hasField(String name) {
         return superclass().hasField(name);
-    } //TODO check for subtypes
+    }
 
     LoxClass getStaticMethodType(String name);
 
@@ -39,6 +38,14 @@ public interface LoxClass {
 
     default LoxCallable getMethod(String name) {
         return superclass().getMethod(name);
+    }
+
+    default Map<String, LoxCallable> getAbstractMethods() {
+        return superclass().getAbstractMethods();
+    }
+
+    default Map<String, LoxCallable> getMethods() {
+        return superclass().getMethods();
     }
 
     boolean hasStaticMethod(String name);
@@ -53,9 +60,13 @@ public interface LoxClass {
         return instance;
     }
 
-    Map<String, LoxField> getFields();
+    default Map<String, LoxField> getFields() {
+        return superclass().getFields();
+    }
 
     void callConstructor(Environment environment, Interpreter interpreter, List<Object> args);
+
+    boolean isAbstract();
 
     default boolean is(LoxClass other) {
         return other == this;

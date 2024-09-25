@@ -1,6 +1,7 @@
 package net.kapitencraft.tool;
 
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.RuntimeError;
 
 import static net.kapitencraft.lang.run.Interpreter.checkNumberOperands;
@@ -129,6 +130,12 @@ public class Math {
 
     public static Object merge(Object activeVal, Object exprVal, Token type) {
         return switch (type.type) {
+            case AND_ASSIGN:
+                yield Interpreter.isTruthy(activeVal) && Interpreter.isTruthy(exprVal);
+            case OR_ASSIGN:
+                yield Interpreter.isTruthy(activeVal) || Interpreter.isTruthy(exprVal);
+            case XOR_ASSIGN:
+                yield Interpreter.isTruthy(activeVal) ^ Interpreter.isTruthy(exprVal);
             case SUB_ASSIGN:
                 checkNumberOperands(type, activeVal, exprVal);
                 yield Math.mergeSub(activeVal, exprVal);

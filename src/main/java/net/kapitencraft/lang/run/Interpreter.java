@@ -19,6 +19,7 @@ import java.util.*;
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final Environment globals = new Environment();
     private Environment environment = globals;
+    private final List<Pair<String, Object>> patterns = new ArrayList<>();
     public static final Scanner in = new Scanner(System.in);
 
     public static long millisAtStart;
@@ -287,6 +288,21 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return stmt.params.containsKey(o) ? evaluate(stmt.params.get(o)) : evaluate(stmt.defaulted);
     }
 
+    @Override
+    public Object visitCastCheckExpr(Expr.CastCheck expr) {
+        Object object = evaluate(expr.object);
+        if (object instanceof ClassInstance instance) {
+            LoxClass type = instance.getType();
+            if (type.isParentOf(expr.targetType)) {
+                if (expr.patternVarName != null) {
+                    environment.defineVar(expr.patternVarName.lexeme, instance);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     @Override
     public Object visitCallExpr(Expr.Call expr) {
@@ -368,7 +384,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return expr.accept(this);
     }
 
-    private boolean isTruthy(Object object) {
+    public static boolean isTruthy(Object object) {
         if (object == null) return false;
         if (object instanceof Boolean) return (boolean)object;
         return true;

@@ -43,6 +43,11 @@ public class Main {
                 public String toString() {
                     return "<native fn#clock>";
                 }
+
+                @Override
+                public boolean isAbstract() {
+                    return false;
+                }
             },
             "print", new LoxCallable() {
                 @Override
@@ -64,6 +69,11 @@ public class Main {
                 public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                     System.out.println(Interpreter.stringify(arguments.get(0)));
                     return null;
+                }
+
+                @Override
+                public boolean isAbstract() {
+                    return false;
                 }
             },
             "randInt", new LoxCallable() {
@@ -89,6 +99,11 @@ public class Main {
                     int max = (int) arguments.get(1);
                     return random.nextInt((max - min) + 1) + min;
                 }
+
+                @Override
+                public boolean isAbstract() {
+                    return false;
+                }
             },
             "abs", new LoxCallable() {
                 @Override
@@ -113,6 +128,11 @@ public class Main {
                     else if (num instanceof Double d) return java.lang.Math.abs(d);
                     else return java.lang.Math.abs((float) num);
                 }
+
+                @Override
+                public boolean isAbstract() {
+                    return false;
+                }
             },
             "input", new LoxCallable() {
                 @Override
@@ -134,6 +154,11 @@ public class Main {
                 public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                     System.out.print(Interpreter.stringify(arguments.get(0)));
                     return Interpreter.in.nextLine();
+                }
+
+                @Override
+                public boolean isAbstract() {
+                    return false;
                 }
             }
     );

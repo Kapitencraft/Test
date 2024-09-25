@@ -91,7 +91,6 @@ public class Lexer {
             case '.': addToken(DOT); break;
             case ';': addToken(EOA); break;
             case '-':
-
                 addToken(match('>') ? LAMBDA : match('-') ? SHRINK : match('=') ? SUB_ASSIGN : SUB);
                 break;
             case '+':
@@ -123,6 +122,23 @@ public class Lexer {
                     addToken(match('=') ? DIV_ASSIGN : DIV);
                 }
                 break;
+            case '&':
+                if (match('&'))
+                    addToken(AND);
+                else if (match('='))
+                    addToken(AND_ASSIGN);
+                else error("unexpected token");
+            case '|':
+                if (match('|'))
+                    addToken(OR);
+                else if (match('='))
+                    addToken(OR_ASSIGN);
+                else error("unexpected token");
+            case '^':
+                if (match('='))
+                    addToken(XOR_ASSIGN);
+                else
+                    addToken(XOR);
             case ' ':
             case '\t':
                 //addToken(IN_LINE);

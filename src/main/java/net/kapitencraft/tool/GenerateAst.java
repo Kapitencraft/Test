@@ -22,6 +22,7 @@ public class GenerateAst {
                 "Set           : Expr object; Token name; Expr value; Token assignType",
                 "SpecialSet    : Expr callee; Token name; Token assignType",
                 "Switch        : Expr provider; Map<Object,Expr> params; Expr defaulted; Token keyword",
+                "CastCheck     : Expr object; LoxClass targetType; Token patternVarName",
                 "Grouping      : Expr expression",
                 //"Lambda   : List<Token> params, Stmt body",
                 "Literal       : Token value",
@@ -34,7 +35,7 @@ public class GenerateAst {
         defineAst("Stmt", List.of(
                 "Block            : List<Stmt> statements",
                 "Expression       : Expr expression",
-                "FuncDecl         : LoxClass retType; Token name; Token end; List<Pair<LoxClass,Token>> params; List<Stmt> body; boolean isFinal",
+                "FuncDecl         : LoxClass retType; Token name; Token end; List<Pair<LoxClass,Token>> params; List<Stmt> body; boolean isFinal; boolean isAbstract",
                 "If               : Expr condition; Stmt thenBranch; Stmt elseBranch; List<Pair<Expr,Stmt>> elifs; Token keyword",
                 "Return           : Token keyword; Expr value",
                 "VarDecl          : Token name; LoxClass type; Expr initializer; boolean isFinal",
