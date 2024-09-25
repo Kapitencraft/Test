@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface LoxClass {
-    //TODO abstract as interface and save all data in each subtype
 
     String name();
 

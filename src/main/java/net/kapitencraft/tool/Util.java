@@ -1,6 +1,8 @@
 package net.kapitencraft.tool;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Util {
@@ -15,4 +17,13 @@ public class Util {
     public static <K> K nonNullElse(K main, K other) {
         return main != null ? main : other;
     }
+
+    /**
+     * get all elements of a Map containing a Map
+     * @see DoubleMap DoubleMap
+     */
+    static <T, K, L, J extends Map<K, L>> List<L> values(Map<T, J> map) {
+        return map.values().stream().map(Map::values).flatMap(Collection::stream).toList();
+    }
+
 }

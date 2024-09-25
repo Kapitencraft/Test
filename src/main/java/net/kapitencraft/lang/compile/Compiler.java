@@ -92,7 +92,6 @@ public class Compiler {
             enclosed.add(loxClass);
         }
 
-        //TODO check abstract method impl
         List<Stmt.FuncDecl> methods = new ArrayList<>();
         List<Stmt.FuncDecl> staticMethods = new ArrayList<>();
         List<Stmt.FuncDecl> abstracts = new ArrayList<>();
