@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.holder.token;
 
-import javax.xml.stream.events.ProcessingInstruction;
 import java.util.List;
 
 import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;

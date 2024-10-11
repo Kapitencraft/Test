@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.holder.ast;
 
-import java.util.Map;
 import java.util.List;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
