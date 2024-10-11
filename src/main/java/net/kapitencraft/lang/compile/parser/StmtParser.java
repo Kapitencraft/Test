@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.compile.parser;
 
+import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -13,12 +14,15 @@ import java.util.List;
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 import static net.kapitencraft.lang.holder.token.TokenType.C_BRACKET_C;
 
+@SuppressWarnings("ThrowableNotThrown")
 public class StmtParser extends ExprParser {
 
     public StmtParser(Compiler.ErrorLogger errorLogger) {
         super(errorLogger);
     }
 
+    private LoxClass funcRetType = VarTypeManager.VOID;
+    private int loopIndex = 0;
 
     private Stmt declaration() {
 
@@ -26,7 +30,7 @@ public class StmtParser extends ExprParser {
             if (match(FINAL)) return varDeclaration(true, consumeVarType());
             if (check(IDENTIFIER)) {
                 Token id = peek();
-                LoxClass loxClass = parser.getClass(id.lexeme);
+                LoxClass loxClass = parser.getClass(id.lexeme());
                 if (loxClass != null) return varDeclaration(false, loxClass);
             }
 
@@ -44,13 +48,18 @@ public class StmtParser extends ExprParser {
             initializer = expression();
         }
 
+        createVar(name, type, initializer != null, isFinal);
+
+        if (initializer != null) {
+            checkVarType(name, initializer);
+        }
+
         consumeEndOfArg();
         return new Stmt.VarDecl(name, type, initializer, isFinal);
     }
 
     private Stmt varDeclaration(boolean isFinal, LoxClass type) {
         Token name = consume(IDENTIFIER, "Expected variable name.");
-
         return varDecl(isFinal, type, name);
     }
 
@@ -63,7 +72,7 @@ public class StmtParser extends ExprParser {
             if (match(WHILE)) return whileStatement();
             if (match(C_BRACKET_O)) return new Stmt.Block(block());
             if (check(IDENTIFIER)) {
-                LoxClass loxClass = parser.getClass(peek().lexeme);
+                LoxClass loxClass = parser.getClass(peek().lexeme());
                 if (loxClass != null) {
                     advance();
                     return varDeclaration(false, loxClass);
@@ -84,12 +93,17 @@ public class StmtParser extends ExprParser {
             value = expression();
         }
 
+        if (funcRetType == VarTypeManager.VOID && value != null) error(keyword, "incompatible types: unexpected return value.");
+        else if (value != null) expectType(value, funcRetType);
+        else if (funcRetType != VarTypeManager.VOID) error(keyword, "incompatible types: missing return value.");
+
         consumeEndOfArg();
         return new Stmt.Return(keyword, value);
     }
 
     private Stmt loopInterruptionStatement() {
         Token token = previous();
+        if (loopIndex <= 0) error(token, "'" + token.lexeme() + "' can only be used inside loops");
         consumeEndOfArg();
         return new Stmt.LoopInterruption(token);
     }
@@ -98,12 +112,14 @@ public class StmtParser extends ExprParser {
         Token keyword = previous();
 
         consumeBracketOpen("for");
+        varAnalyser.push();
+        loopIndex++;
 
         Stmt initializer;
         if (match(EOA)) {
             initializer = null;
-        } else if (match(IDENTIFIER) && parser.hasClass(previous().lexeme)) {
-            initializer = varDeclaration(false, parser.getClass(previous().lexeme));
+        } else if (match(IDENTIFIER) && parser.hasClass(previous().lexeme())) {
+            initializer = varDeclaration(false, parser.getClass(previous().lexeme()));
         } else {
             initializer = expressionStatement();
         }
@@ -112,6 +128,7 @@ public class StmtParser extends ExprParser {
         if (!check(EOA)) {
             condition = expression();
         }
+        expectCondition(condition);
         consumeEndOfArg();
 
         Expr increment = null;
@@ -122,6 +139,9 @@ public class StmtParser extends ExprParser {
 
         Stmt body = statement();
 
+        varAnalyser.pop();
+        loopIndex--;
+
         return new Stmt.For(initializer, condition, increment, body, keyword);
     }
 
@@ -129,6 +149,7 @@ public class StmtParser extends ExprParser {
         Token statement = previous();
         consumeBracketOpen("if");
         Expr condition = expression();
+        this.expectCondition(condition);
         consumeBracketClose("if condition");
 
         Stmt thenBranch = statement();
@@ -137,6 +158,7 @@ public class StmtParser extends ExprParser {
         while (match(ELIF)) {
             consumeBracketOpen("elif");
             Expr elifCondition = expression();
+            this.expectCondition(elifCondition);
             consumeBracketClose("elif condition");
             Stmt elifStmt = statement();
             elifs.add(Pair.of(elifCondition, elifStmt));
@@ -153,8 +175,13 @@ public class StmtParser extends ExprParser {
         Token keyword = previous();
         consumeBracketOpen("while");
         Expr condition = expression();
+        this.expectCondition(condition);
         consumeBracketClose("while condition");
+        this.loopIndex++;
+        this.varAnalyser.push();
         Stmt body = statement();
+        this.varAnalyser.pop();
+        this.loopIndex--;
 
         return new Stmt.While(condition, body, keyword);
     }
@@ -180,5 +207,19 @@ public class StmtParser extends ExprParser {
         List<Stmt> stmts = new ArrayList<>();
         while (!isAtEnd()) stmts.add(statement());
         return stmts;
+    }
+
+    public void applyMethod(List<Pair<LoxClass, Token>> params, LoxClass targetClass, LoxClass funcRetType) {
+        this.varAnalyser.push();
+        this.funcRetType = funcRetType;
+        if (targetClass != null) this.varAnalyser.add("this", targetClass, true, true);
+        for (Pair<LoxClass, Token> param : params) {
+            varAnalyser.add(param.right().lexeme(), param.left(), true, false);
+        }
+    }
+
+    public void popMethod() {
+        this.varAnalyser.pop();
+        funcRetType = VarTypeManager.VOID;
     }
 }

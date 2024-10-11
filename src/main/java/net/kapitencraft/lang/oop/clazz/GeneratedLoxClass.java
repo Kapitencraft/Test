@@ -1,76 +1,114 @@
 package net.kapitencraft.lang.oop.clazz;
 
-import net.kapitencraft.lang.env.core.Environment;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compile.CacheBuilder;
+import net.kapitencraft.lang.func.method_builder.ConstructorContainer;
+import net.kapitencraft.lang.func.method_builder.DataMethodContainer;
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.func.LoxFunction;
-import net.kapitencraft.lang.holder.ast.Stmt;
-import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.func.method_builder.MethodContainer;
 import net.kapitencraft.lang.oop.GeneratedField;
 import net.kapitencraft.lang.oop.LoxField;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.tool.Util;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public final class GeneratedLoxClass implements LoxClass {
-    private final Map<String, LoxCallable> allAbstractMethods;
-    private final Map<String, LoxCallable> allMethods;
-    private final Map<String, LoxCallable> allStaticMethods;
-    private final Map<String, LoxField> allFields;
-    private final Map<String, LoxField> allStaticFields;
-    private final List<Stmt.FuncDecl> abstractMethods;
-    private final List<Stmt.FuncDecl> methods;
-    private final List<Stmt.FuncDecl> staticMethods;
-    private final List<Stmt.VarDecl> fields;
-    private final List<Stmt.VarDecl> staticFields;
+    private final Map<String, DataMethodContainer> allMethods;
+    private final Map<String, DataMethodContainer> allStaticMethods;
+
+    private final ConstructorContainer constructor;
+
+    private final Map<String, GeneratedField> allFields;
+    private final Map<String, GeneratedField> allStaticFields;
+
+    private final Map<String, GeneratedLoxClass> enclosing;
+
     private final LoxClass superclass;
-    private final Token name;
-    private final List<GeneratedLoxClass> enclosing;
+    private final String name;
+    private final String packageRepresentation;
 
-    private final boolean isAbstract;
+    private final boolean isAbstract, isFinal;
 
-    public GeneratedLoxClass(List<Stmt.FuncDecl> abstractMethods, List<Stmt.FuncDecl> methods, List<Stmt.FuncDecl> staticMethods,
-                             List<Stmt.VarDecl> fields, List<Stmt.VarDecl> staticFields,
-                             LoxClass superclass, Token name, List<GeneratedLoxClass> enclosing, boolean isAbstract) {
-        this.allAbstractMethods = getMethods(abstractMethods);
-        this.isAbstract = isAbstract;
-        Map<String, LoxCallable> abstracts = new HashMap<>(allAbstractMethods);
-        abstracts.putAll(getMethods(methods));
-        this.allMethods = abstracts;
-        this.allStaticMethods = getMethods(staticMethods);
-        this.allFields = getFields(fields);
-        this.allStaticFields = getFields(staticFields);
-        this.abstractMethods = abstractMethods;
-        this.methods = methods;
-        this.staticMethods = staticMethods;
-        this.fields = fields;
-        this.staticFields = staticFields;
+    public GeneratedLoxClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor,
+                             Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
+                             LoxClass superclass, String name, Map<String, GeneratedLoxClass> enclosing, String packageRepresentation, boolean isAbstract, boolean isFinal) {
+        this.allMethods = methods;
+        this.allStaticMethods = staticMethods;
+        this.constructor = constructor.build(this);
+        this.allFields = fields;
+        this.allStaticFields = staticFields;
         this.superclass = superclass;
         this.name = name;
         this.enclosing = enclosing;
+        this.packageRepresentation = packageRepresentation;
+        this.isAbstract = isAbstract;
+        this.isFinal = isFinal;
     }
 
-    private static Map<String, LoxCallable> getMethods(List<Stmt.FuncDecl> methods) {
-        return methods.stream().collect(Collectors.toMap(dec -> dec.name.lexeme, LoxFunction::new));
+    public GeneratedLoxClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, List<LoxCallable> constructorData,
+                             Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
+                             LoxClass superclass, String name, String packageRepresentation,
+                             Map<String, GeneratedLoxClass> enclosing,
+                             boolean isAbstract, boolean isFinal) {
+        this.allMethods = methods;
+        this.allStaticMethods = staticMethods;
+        this.constructor = ConstructorContainer.fromCache(constructorData, this);
+        this.allFields = fields;
+        this.allStaticFields = staticFields;
+        this.superclass = superclass;
+        this.name = name;
+        this.enclosing = enclosing;
+        this.packageRepresentation = packageRepresentation;
+        this.isAbstract = isAbstract;
+        this.isFinal = isFinal;
     }
 
-    private static Map<String, LoxField> getFields(List<Stmt.VarDecl> fields) {
-        return fields.stream().collect(Collectors.toMap(dec -> dec.name.lexeme, GeneratedField::new));
+    public JsonObject save(CacheBuilder cacheBuilder) {
+        JsonObject object = new JsonObject();
+        object.addProperty("name", name);
+        object.addProperty("superclass", superclass.absoluteName());
+        {
+            JsonObject methods = new JsonObject();
+            this.allMethods.forEach((name, container) -> methods.add(name, container.cache(cacheBuilder)));
+            object.add("methods", methods);
+        }
+        {
+            JsonObject staticMethods = new JsonObject();
+            this.allStaticMethods.forEach((name, container) -> staticMethods.add(name, container.cache(cacheBuilder)));
+            object.add("staticMethods", staticMethods);
+        }
+        object.add("constructor", constructor.cache(cacheBuilder));
+        {
+            JsonObject fields = new JsonObject();
+            allFields.forEach((name, field) -> fields.add(name, field.cache(cacheBuilder)));
+            object.add("fields", fields);
+        }
+        {
+            JsonObject staticFields = new JsonObject();
+            allStaticFields.forEach((name, field) -> staticFields.add(name, field.cache(cacheBuilder)));
+            object.add("staticFields", staticFields);
+        }
+
+
+        {
+            JsonArray flags = new JsonArray();
+            if (isAbstract) flags.add("isAbstract");
+            if (isFinal) flags.add("isFinal");
+            object.add("flags", flags);
+        }
+
+        return object;
     }
 
-    public Map<String, LoxCallable> getMethods() {
+
+    public Map<String, MethodContainer> getMethods() {
         return Util.mergeMaps(LoxClass.super.getMethods(), allMethods);
     }
 
     @Override
     public LoxClass getFieldType(String name) {
         return Optional.ofNullable(getFields().get(name)).map(LoxField::getType).orElse(LoxClass.super.getFieldType(name));
-    }
-
-    @Override
-    public Map<String, LoxCallable> getAbstractMethods() {
-        return Util.mergeMaps(LoxClass.super.getAbstractMethods(), allAbstractMethods);
     }
 
     @Override
@@ -84,23 +122,13 @@ public final class GeneratedLoxClass implements LoxClass {
     }
 
     @Override
-    public LoxClass getStaticMethodType(String name) {
-        return allStaticMethods.get(name).type();
+    public LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
+        return allStaticMethods.get(name).getMethod(args);
     }
 
     @Override
-    public LoxClass getMethodType(String name) {
-        return allMethods.get(name).type();
-    }
-
-    @Override
-    public LoxCallable getStaticMethod(String name) {
-        return allStaticMethods.get(name);
-    }
-
-    @Override
-    public LoxCallable getMethod(String name) {
-        return Util.nonNullElse(allMethods.get(name), LoxClass.super.getMethod(name));
+    public LoxCallable getMethod(String name, List<LoxClass> args) {
+        return Optional.ofNullable(allMethods.get(name)).map(container -> container.getMethod(args)).orElse(LoxClass.super.getMethod(name, args));
     }
 
     @Override
@@ -119,29 +147,37 @@ public final class GeneratedLoxClass implements LoxClass {
     }
 
     @Override
-    public void callConstructor(Environment environment, Interpreter interpreter, List<Object> args) {
-
+    public MethodContainer getConstructor() {
+        return constructor;
     }
-
     @Override
     public boolean isAbstract() {
         return isAbstract;
     }
 
-    public List<Stmt.FuncDecl> methods() {
-        return methods;
+    @Override
+    public boolean isFinal() {
+        return isFinal;
     }
 
-    public List<Stmt.FuncDecl> staticMethods() {
-        return staticMethods;
+    @Override
+    public LoxCallable getMethodByOrdinal(String name, int ordinal) {
+        return getMethods().get(name).getMethodByOrdinal(ordinal);
     }
 
-    public List<Stmt.VarDecl> fields() {
-        return fields;
+    @Override
+    public int getMethodOrdinal(String name, List<LoxClass> types) {
+        return getMethods().get(name).getMethodOrdinal(types);
     }
 
-    public List<Stmt.VarDecl> staticFields() {
-        return staticFields;
+    @Override
+    public boolean hasEnclosing(String lexeme) {
+        return false;
+    }
+
+    @Override
+    public LoxClass getEnclosing(String lexeme) {
+        return null;
     }
 
     @Override
@@ -151,31 +187,30 @@ public final class GeneratedLoxClass implements LoxClass {
 
     @Override
     public String name() {
-        return name.lexeme;
-    }
-
-    public Token getNameToken() {
         return name;
     }
 
-    public List<GeneratedLoxClass> enclosing() {
-        return enclosing;
+    @Override
+    public String packageRepresentation() {
+        return packageRepresentation;
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(abstractMethods, methods, staticMethods, fields, staticFields, superclass, name, enclosing);
+    public String absoluteName() {
+        return packageRepresentation() + "." + name();
+    }
+
+    public GeneratedLoxClass[] enclosing() {
+        return enclosing.values().toArray(new GeneratedLoxClass[0]);
     }
 
     @Override
     public String toString() { //jesus
-        return "GeneratedLoxClass{" + name.lexeme + "}[" +
-                "abstractMethods=" + allAbstractMethods + ", " +
+        return "GeneratedLoxClass{" + name + "}[" +
                 "methods=" + allMethods + ", " +
                 "staticMethods=" + allStaticMethods + ", " +
                 "fields=" + allFields + ", " +
                 "staticFields=" + allStaticFields + ", " +
-                "superclass=" + superclass + ", " +
-                "enclosing=" + enclosing + ']';
+                "superclass=" + superclass + ']';
     }
 }

@@ -1,0 +1,174 @@
+{
+  "name": "OverflowTest",
+  "superclass": "scripted.lang.Object",
+  "methods": {
+    "test": [
+      {
+        "retType": "scripted.lang.void",
+        "name": {
+          "type": "IDENTIFIER",
+          "lexeme": "test",
+          "literal": {},
+          "line": 4,
+          "lineStartIndex": 9
+        },
+        "params": [],
+        "body": [
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "instCall",
+              "callee": {
+                "TYPE": "varRef",
+                "name": {
+                  "type": "THIS",
+                  "lexeme": "this",
+                  "literal": {},
+                  "line": 5,
+                  "lineStartIndex": 8
+                }
+              },
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "test1",
+                "literal": {},
+                "line": 5,
+                "lineStartIndex": 13
+              },
+              "ordinal": 0,
+              "bracket": {
+                "type": "BRACKET_C",
+                "lexeme": ")",
+                "literal": {},
+                "line": 5,
+                "lineStartIndex": 19
+              },
+              "args": []
+            }
+          }
+        ],
+        "flags": []
+      }
+    ],
+    "test1": [
+      {
+        "retType": "scripted.lang.void",
+        "name": {
+          "type": "IDENTIFIER",
+          "lexeme": "test1",
+          "literal": {},
+          "line": 8,
+          "lineStartIndex": 9
+        },
+        "params": [],
+        "body": [
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "instCall",
+              "callee": {
+                "TYPE": "varRef",
+                "name": {
+                  "type": "THIS",
+                  "lexeme": "this",
+                  "literal": {},
+                  "line": 9,
+                  "lineStartIndex": 8
+                }
+              },
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "test",
+                "literal": {},
+                "line": 9,
+                "lineStartIndex": 13
+              },
+              "ordinal": 0,
+              "bracket": {
+                "type": "BRACKET_C",
+                "lexeme": ")",
+                "literal": {},
+                "line": 9,
+                "lineStartIndex": 18
+              },
+              "args": []
+            }
+          }
+        ],
+        "flags": []
+      }
+    ]
+  },
+  "staticMethods": {
+    "main": [
+      {
+        "retType": "scripted.lang.void",
+        "name": {
+          "type": "IDENTIFIER",
+          "lexeme": "main",
+          "literal": {},
+          "line": 12,
+          "lineStartIndex": 16
+        },
+        "params": [],
+        "body": [
+          {
+            "TYPE": "varDecl",
+            "name": {
+              "type": "IDENTIFIER",
+              "lexeme": "test",
+              "literal": {},
+              "line": 13,
+              "lineStartIndex": 21
+            },
+            "targetType": "main.OverflowTest",
+            "initializer": {
+              "TYPE": "constructor",
+              "target": "main.OverflowTest",
+              "args": [],
+              "ordinal": 0
+            },
+            "isFinal": false
+          },
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "instCall",
+              "callee": {
+                "TYPE": "varRef",
+                "name": {
+                  "type": "IDENTIFIER",
+                  "lexeme": "test",
+                  "literal": {},
+                  "line": 14,
+                  "lineStartIndex": 8
+                }
+              },
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "test",
+                "literal": {},
+                "line": 14,
+                "lineStartIndex": 13
+              },
+              "ordinal": 0,
+              "bracket": {
+                "type": "BRACKET_C",
+                "lexeme": ")",
+                "literal": {},
+                "line": 14,
+                "lineStartIndex": 18
+              },
+              "args": []
+            }
+          }
+        ],
+        "flags": []
+      }
+    ]
+  },
+  "constructor": [],
+  "fields": {},
+  "staticFields": {},
+  "flags": []
+}

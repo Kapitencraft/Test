@@ -9,4 +9,6 @@ public abstract class LoxField {
     public abstract Object initialize(Environment environment, Interpreter interpreter);
 
     public abstract LoxClass getType();
+
+    public abstract boolean isFinal();
 }

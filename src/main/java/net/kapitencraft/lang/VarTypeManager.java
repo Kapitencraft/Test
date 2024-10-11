@@ -3,6 +3,8 @@ package net.kapitencraft.lang;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
+import net.kapitencraft.lang.native_classes.StackOverflowExceptionClass;
+import net.kapitencraft.lang.native_classes.ThrowableClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
@@ -30,6 +32,9 @@ public class VarTypeManager {
     //TODO move Object away from primitive class given that it isn't actually one
     public static final LoxClass OBJECT = new PrimitiveClass("Object", null);
 
+    public static final LoxClass THROWABLE = new ThrowableClass();
+    public static final LoxClass STACK_OVERFLOW = new StackOverflowExceptionClass();
+
     static {
         keywords = Arrays.stream(values()).filter(tokenType -> tokenType.isCategory(TokenTypeCategory.KEY_WORD)).collect(Collectors.toMap(tokenType -> tokenType.name().toLowerCase(Locale.ROOT), Function.identity()));
         initialize();
@@ -45,6 +50,8 @@ public class VarTypeManager {
         registerMain(CHAR);
         registerMain(STRING);
         registerMain(VOID);
+        registerMain(THROWABLE);
+        registerMain(STACK_OVERFLOW);
     }
 
     public static void registerMain(LoxClass clazz) {
@@ -61,17 +68,19 @@ public class VarTypeManager {
         String[] packages = type.split("\\.");
         Package pg = rootPackage();
         for (int i = 0; i < packages.length; i++) {
-            String lexeme = packages[i];
+            String name = packages[i];
             if (i == packages.length - 1) {
-                if (!pg.hasClass(lexeme)) {
-                    return null;
+                String[] subClasses = name.split("\\$");
+                if (!pg.hasClass(subClasses[0])) return null;
+                LoxClass loxClass = pg.getClass(subClasses[0]);
+                for (int j = 1; j < subClasses.length; j++) {
+                    if (!loxClass.hasEnclosing(subClasses[j])) return null;
+                    loxClass = loxClass.getEnclosing(subClasses[j]);
                 }
-                return pg.getClass(lexeme);
+                return loxClass;
             } else {
-                if (!pg.hasPackage(lexeme)) {
-                    return null;
-                }
-                pg = pg.getPackage(lexeme);
+                if (!pg.hasPackage(name)) return null;
+                pg = pg.getPackage(name);
             }
         }
         return null;
@@ -100,16 +109,16 @@ public class VarTypeManager {
         Package pg = VarTypeManager.rootPackage();
         for (int i = 0; i < s.size(); i++) {
             Token token = s.get(i);
-            String lexeme = token.lexeme;
+            String lexeme = token.lexeme();
             if (i == s.size() - 1) {
                 if (!pg.hasClass(lexeme)) {
-                    error.accept(token, "unknown symbol");
+                    error.accept(token, "unknown class '" + lexeme + "'");
                     return null;
                 }
                 return pg.getClass(lexeme);
             } else {
                 if (!pg.hasPackage(lexeme)) {
-                    error.accept(token, "unknown symbol");
+                    error.accept(token, "unknown package '" + lexeme + "'");
                     return null;
                 }
                 pg = pg.getPackage(lexeme);

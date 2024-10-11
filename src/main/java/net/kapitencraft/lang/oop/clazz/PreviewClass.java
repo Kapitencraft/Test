@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.oop.clazz;
 
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.method_builder.MethodContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.oop.ClassInstance;
 import net.kapitencraft.lang.oop.LoxField;
@@ -24,21 +24,15 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getStaticMethod(String name) {
+    public LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
         assertApplied();
-        return target.getStaticMethod(name);
+        return target.getStaticMethod(name, args);
     }
 
     @Override
-    public Map<String, LoxCallable> getAbstractMethods() {
+    public LoxCallable getMethod(String name, List<LoxClass> args) {
         assertApplied();
-        return target.getAbstractMethods();
-    }
-
-    @Override
-    public LoxCallable getMethod(String name) {
-        assertApplied();
-        return target.getMethod(name);
+        return target.getMethod(name, args);
     }
 
     @Override
@@ -59,6 +53,18 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
+    public String packageRepresentation() {
+        assertApplied();
+        return target.packageRepresentation();
+    }
+
+    @Override
+    public String absoluteName() {
+        assertApplied();
+        return target.absoluteName();
+    }
+
+    @Override
     public LoxClass superclass() {
         assertApplied();
         return target.superclass();
@@ -68,18 +74,6 @@ public class PreviewClass implements LoxClass {
     public boolean hasField(String name) {
         assertApplied();
         return target.hasField(name);
-    }
-
-    @Override
-    public LoxClass getStaticMethodType(String name) {
-        assertApplied();
-        return target.getStaticMethodType(name);
-    }
-
-    @Override
-    public LoxClass getMethodType(String name) {
-        assertApplied();
-        return target.getMethodType(name);
     }
 
     @Override
@@ -95,9 +89,9 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
-    public ClassInstance createInst(List<Expr> params, Interpreter interpreter) {
+    public ClassInstance createInst(List<Expr> params, int ordinal, Interpreter interpreter) {
         assertApplied();
-        return target.createInst(params, interpreter);
+        return target.createInst(params, ordinal, interpreter);
     }
 
     @Override
@@ -107,20 +101,27 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
-    public Map<String, LoxCallable> getMethods() {
+    public MethodContainer getConstructor() {
+        assertApplied();
+        return target.getConstructor();
+    }
+
+    @Override
+    public Map<String, MethodContainer> getMethods() {
         assertApplied();
         return target.getMethods();
     }
 
     @Override
-    public void callConstructor(Environment environment, Interpreter interpreter, List<Object> args) {
+    public boolean isAbstract() {
         assertApplied();
-        target.callConstructor(environment, interpreter, args);
+        return target.isAbstract();
     }
 
     @Override
-    public boolean isAbstract() {
-        return false;
+    public boolean isFinal() {
+        assertApplied();
+        return target.isFinal();
     }
 
     private void assertApplied() {
@@ -147,5 +148,29 @@ public class PreviewClass implements LoxClass {
     public LoxClass getTarget() {
         assertApplied();
         return target;
+    }
+
+    @Override
+    public int getMethodOrdinal(String name, List<LoxClass> types) {
+        assertApplied();
+        return target.getMethodOrdinal(name, types);
+    }
+
+    @Override
+    public boolean hasEnclosing(String lexeme) {
+        assertApplied();
+        return target.hasEnclosing(lexeme);
+    }
+
+    @Override
+    public LoxClass getEnclosing(String lexeme) {
+        assertApplied();
+        return target.getEnclosing(lexeme);
+    }
+
+    @Override
+    public LoxCallable getMethodByOrdinal(String name, int ordinal) {
+        assertApplied();
+        return target.getMethodByOrdinal(name, ordinal);
     }
 }

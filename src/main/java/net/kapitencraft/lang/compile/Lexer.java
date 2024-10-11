@@ -16,7 +16,7 @@ public class Lexer {
 
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
-    private final String[] lines;
+    private final Compiler.ErrorLogger logger;
     private int start = 0;
     private int current = 0;
     private int line = 1;
@@ -27,9 +27,9 @@ public class Lexer {
         indexAtLineStart = current;
     }
 
-    public Lexer(String source) {
+    public Lexer(String source, Compiler.ErrorLogger logger) {
         this.source = source;
-        this.lines = source.split("\n", Integer.MAX_VALUE);
+        this.logger = logger;
     }
 
     private boolean isAtEnd() {
@@ -173,10 +173,6 @@ public class Lexer {
                 c == '_';
     }
 
-    private String getCurrentLine() {
-        return this.lines[line - 1];
-    }
-
     private boolean isAlphaNumeric(char c) {
         return isAlpha(c) || isDigit(c);
     }
@@ -233,10 +229,6 @@ public class Lexer {
     }
 
     private void error(String msg) {
-        Main.error(line, msg, getCurrentLine());
-    }
-
-    public String[] getLines() {
-        return this.lines;
+        logger.error(line, indexAtLineStart, msg);
     }
 }

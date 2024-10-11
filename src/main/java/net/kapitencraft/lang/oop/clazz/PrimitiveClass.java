@@ -1,9 +1,8 @@
 package net.kapitencraft.lang.oop.clazz;
 
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.method_builder.MethodContainer;
 import net.kapitencraft.lang.oop.LoxField;
-import net.kapitencraft.lang.run.Interpreter;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +28,16 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
+    public String toString() {
+        return "Primitive$" + name;
+    }
+
+    @Override
+    public String packageRepresentation() {
+        return "scripted.lang."; //TODO perhaps add package field?
+    }
+
+    @Override
     public LoxClass superclass() {
         return superclass;
     }
@@ -49,27 +58,12 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public LoxClass getStaticMethodType(String name) {
+    public LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
         return null;
     }
 
     @Override
-    public LoxClass getMethodType(String name) {
-        return null;
-    }
-
-    @Override
-    public LoxCallable getStaticMethod(String name) {
-        return null;
-    }
-
-    @Override
-    public Map<String, LoxCallable> getAbstractMethods() {
-        return Map.of();
-    }
-
-    @Override
-    public LoxCallable getMethod(String name) {
+    public LoxCallable getMethod(String name, List<LoxClass> args) {
         return null;
     }
 
@@ -89,18 +83,43 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public Map<String, LoxCallable> getMethods() {
-        return Map.of();
+    public MethodContainer getConstructor() {
+        return null;
     }
 
     @Override
-    public void callConstructor(Environment environment, Interpreter interpreter, List<Object> args) {
-
+    public Map<String, MethodContainer> getMethods() {
+        return Map.of();
     }
 
     @Override
     public boolean isAbstract() {
         return false;
+    }
+
+    @Override
+    public boolean isFinal() {
+        return true;
+    }
+
+    @Override
+    public LoxCallable getMethodByOrdinal(String name, int ordinal) {
+        return null;
+    }
+
+    @Override
+    public int getMethodOrdinal(String name, List<LoxClass> types) {
+        return -1;
+    }
+
+    @Override
+    public boolean hasEnclosing(String lexeme) {
+        return false;
+    }
+
+    @Override
+    public LoxClass getEnclosing(String lexeme) {
+        return null;
     }
 
     public Object defaultValue() {

@@ -45,9 +45,9 @@ public class ClassInstance {
     public Object specialAssign(String name, Token assignType) {
         Object val = this.fields.get(name);
         if (val instanceof Integer) {
-            this.assignField(name, (int)val + (assignType.type == TokenType.GROW ? 1 : -1));
+            this.assignField(name, (int)val + (assignType.type() == TokenType.GROW ? 1 : -1));
         } else {
-            this.assignField(name, (double)val + (assignType.type == TokenType.GROW ? 1 : -1));
+            this.assignField(name, (double)val + (assignType.type() == TokenType.GROW ? 1 : -1));
         }
         return getField(name);
     }
@@ -57,16 +57,17 @@ public class ClassInstance {
         return this.fields.get(name);
     }
 
-    public void construct(List<Expr> params, Interpreter interpreter) {
-        type.callConstructor(this.environment, interpreter, interpreter.visitArgs(params));
+    public void construct(List<Object> params, int ordinal, Interpreter interpreter) {
+        type.getConstructor().getMethodByOrdinal(ordinal).call(this.environment, interpreter, params);
     }
 
-    public Object executeMethod(String name, List<Object> arguments, Interpreter interpreter) {
-        LoxCallable callable = type.getMethod(name);
+    public Object executeMethod(String name, int ordinal, List<Object> arguments, Interpreter interpreter) {
+        LoxCallable callable = type.getMethodByOrdinal(name, ordinal);
         this.environment.push();
-        Object val = callable.call(this.environment, interpreter, arguments);
-        this.environment.pop();
-        return val;
+        try {
+            return callable.call(this.environment, interpreter, arguments);
+        } finally {
+            this.environment.pop();
+        }
     }
-
 }

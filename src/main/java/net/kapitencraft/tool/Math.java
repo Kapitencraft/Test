@@ -129,7 +129,7 @@ public class Math {
     }
 
     public static Object merge(Object activeVal, Object exprVal, Token type) {
-        return switch (type.type) {
+        return switch (type.type()) {
             case AND_ASSIGN:
                 yield Interpreter.isTruthy(activeVal) && Interpreter.isTruthy(exprVal);
             case OR_ASSIGN:

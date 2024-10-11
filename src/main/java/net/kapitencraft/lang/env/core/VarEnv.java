@@ -1,10 +1,13 @@
 package net.kapitencraft.lang.env.core;
 
+import net.kapitencraft.lang.exception.runtime.MissingVarException;
 import net.kapitencraft.lang.run.RuntimeError;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.env.abst.Leveled;
 import net.kapitencraft.tool.Math;
+
+import java.util.concurrent.ExecutionException;
 
 import static net.kapitencraft.lang.run.Interpreter.checkNumberOperand;
 import static net.kapitencraft.lang.run.Interpreter.checkNumberOperands;
@@ -19,7 +22,11 @@ public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
     }
 
     public Object get(String name) {
-        return getValue(name).val;
+        try {
+            return getValue(name).val;
+        } catch (NullPointerException e) {
+            throw new MissingVarException(name);
+        }
     }
 
     public void assign(String name, Object value) {
@@ -36,9 +43,9 @@ public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
         Object value = get(name);
         checkNumberOperand(type, value);
         if (value instanceof Integer) {
-            this.assign(name, (int) value + (type.type == TokenType.GROW ? 1 : -1));
+            this.assign(name, (int) value + (type.type() == TokenType.GROW ? 1 : -1));
         } else if (value instanceof Double)
-            this.assign(name, (double) value + (type.type == TokenType.GROW ? 1 : -1));
+            this.assign(name, (double) value + (type.type() == TokenType.GROW ? 1 : -1));
         return get(name);
     }
 

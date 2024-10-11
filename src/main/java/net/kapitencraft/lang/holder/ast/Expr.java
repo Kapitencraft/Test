@@ -115,12 +115,14 @@ public abstract class Expr {
     public static class InstCall extends Expr {
         public final Expr callee;
         public final Token name;
+        public final int methodOrdinal;
         public final Token bracket;
         public final List<Expr> args;
 
-        public InstCall(Expr callee, Token name, Token bracket, List<Expr> args) {
+        public InstCall(Expr callee, Token name, int methodOrdinal, Token bracket, List<Expr> args) {
             this.callee = callee;
             this.name = name;
+            this.methodOrdinal = methodOrdinal;
             this.bracket = bracket;
             this.args = args;
         }
@@ -305,10 +307,12 @@ public abstract class Expr {
     public static class Constructor extends Expr {
         public final LoxClass target;
         public final List<Expr> params;
+        public final int ordinal;
 
-        public Constructor(LoxClass target, List<Expr> params) {
+        public Constructor(LoxClass target, List<Expr> params, int ordinal) {
             this.target = target;
             this.params = params;
+            this.ordinal = ordinal;
         }
 
         @Override

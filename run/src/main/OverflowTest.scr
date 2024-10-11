@@ -1,0 +1,16 @@
+package main;
+
+class OverflowTest {
+    void test() {
+        this.test1();
+    }
+
+    void test1() {
+        this.test();
+    }
+
+    static void main(String args) {
+        OverflowTest test = new OverflowTest();
+        test.test();
+    }
+}

@@ -6,6 +6,7 @@ import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 import java.util.List;
 
+@Deprecated
 public class MethodAnalyser extends Leveled<String, LoxCallable> {
 
     public boolean add(String name, LoxCallable callable) {

@@ -1,3 +1,5 @@
+package main;
+
 abstract class A {
     abstract int test(int in);
 
@@ -13,7 +15,7 @@ abstract class A {
         }
     }
 
-    static void main() {
+    static void main(String args) {
         A a = new B();
         print(a.test(5));
         a = new C();

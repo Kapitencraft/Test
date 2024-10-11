@@ -1,8 +1,8 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.VarTypeManager;
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.method_builder.MethodContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.oop.ClassInstance;
 import net.kapitencraft.lang.oop.LoxField;
@@ -14,6 +14,12 @@ import java.util.Map;
 public interface LoxClass {
 
     String name();
+
+    String packageRepresentation(); //stupid keyword :agony:
+
+    default String absoluteName() {
+        return packageRepresentation() + name();
+    }
 
     LoxClass superclass();
 
@@ -27,23 +33,13 @@ public interface LoxClass {
         return superclass().hasField(name);
     }
 
-    LoxClass getStaticMethodType(String name);
+    LoxCallable getStaticMethod(String name, List<? extends LoxClass> args);
 
-    default LoxClass getMethodType(String name) {
-        return superclass().getMethodType(name);
+    default LoxCallable getMethod(String name, List<LoxClass> args) {
+        return superclass().getMethod(name, args);
     }
 
-    LoxCallable getStaticMethod(String name);
-
-    default LoxCallable getMethod(String name) {
-        return superclass().getMethod(name);
-    }
-
-    default Map<String, LoxCallable> getAbstractMethods() {
-        return superclass().getAbstractMethods();
-    }
-
-    default Map<String, LoxCallable> getMethods() {
+    default Map<String, MethodContainer> getMethods() {
         return superclass().getMethods();
     }
 
@@ -53,9 +49,13 @@ public interface LoxClass {
         return superclass().hasMethod(name);
     }
 
-    default ClassInstance createInst(List<Expr> params, Interpreter interpreter) {
+    default ClassInstance createInst(List<Expr> params, int ordinal, Interpreter interpreter) {
+        return createNativeInst(interpreter.visitArgs(params), ordinal, interpreter);
+    }
+
+    default ClassInstance createNativeInst(List<Object> params, int ordinal, Interpreter interpreter) {
         ClassInstance instance = new ClassInstance(this, interpreter);
-        instance.construct(params, interpreter);
+        instance.construct(params, ordinal, interpreter);
         return instance;
     }
 
@@ -63,9 +63,11 @@ public interface LoxClass {
         return superclass().getFields();
     }
 
-    void callConstructor(Environment environment, Interpreter interpreter, List<Object> args);
+    MethodContainer getConstructor();
 
     boolean isAbstract();
+
+    boolean isFinal();
 
     default boolean is(LoxClass other) {
         return other == this;
@@ -74,13 +76,32 @@ public interface LoxClass {
     default boolean isParentOf(LoxClass suspectedChild) {
         if (suspectedChild instanceof PreviewClass previewClass) suspectedChild = previewClass.getTarget();
         if (suspectedChild.is(this) || suspectedChild == VarTypeManager.OBJECT) return true;
-        while (suspectedChild != VarTypeManager.OBJECT && !suspectedChild.is(this)) {
+        while (suspectedChild != null && suspectedChild != VarTypeManager.OBJECT  && !suspectedChild.is(this)) {
             suspectedChild = suspectedChild.superclass();
         }
-        return suspectedChild.is(this);
+        return suspectedChild != null && suspectedChild.is(this);
     }
 
     default boolean isChildOf(LoxClass suspectedParent) {
         return suspectedParent.isParentOf(this);
     }
+
+
+    /**
+     * @param name name of the method
+     * @param ordinal ID of the given method name generated at step COMPILE
+     * @return the method that corresponds to the given ID
+     */
+    LoxCallable getMethodByOrdinal(String name, int ordinal);
+
+    /**
+     * @param name name of the method
+     * @param types argument types
+     * @return the ID of the given method name and argument types; -1 if none could be found
+     */
+    int getMethodOrdinal(String name, List<LoxClass> types);
+
+    boolean hasEnclosing(String lexeme);
+
+    LoxClass getEnclosing(String lexeme);
 }

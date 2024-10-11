@@ -1,8 +1,10 @@
+package main;
+
 class Main {
     int x;
 
-    static void main() {
-        Main main = new A();
+    static void main(String args) {
+        Main main = new Main.A();
         main.x = 10;
         if (main instanceof A a) {
             a.test2();

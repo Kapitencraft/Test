@@ -3,30 +3,33 @@ package net.kapitencraft.lang.compile.parser;
 import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.compile.VarTypeParser;
-import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.tool.Pair;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 @SuppressWarnings("ThrowableNotThrown")
 public class SkeletonParser extends AbstractParser {
+    private final String fileName;
 
     private LoxClass consumeVarType(VarTypeParser parser) {
-        Token token = consume(IDENTIFIER, "<identifier> expected");
-        LoxClass loxClass = parser.getClass(token.lexeme);
+        Token token = consumeIdentifier();
+        LoxClass loxClass = parser.getClass(token.lexeme());
         if (loxClass == null) error(token, "unknown symbol");
         return loxClass;
     }
 
-    public SkeletonParser(Compiler.ErrorLogger errorLogger) {
+    public SkeletonParser(Compiler.ErrorLogger errorLogger, String fileName) {
         super(errorLogger);
+        this.fileName = fileName;
     }
 
     public void parseImports() {
@@ -35,13 +38,17 @@ public class SkeletonParser extends AbstractParser {
         }
     }
 
-    public ClassDecl classDecl(boolean classAbstract, boolean classFinal) {
+    public ClassDecl classDecl(boolean classAbstract, boolean classFinal, String pckID, @Nullable String fileId) {
 
         consume(CLASS, "'class' expected");
 
         Token name = consume(IDENTIFIER, "class name expected");
 
-        PreviewClass previewClass = new PreviewClass(name.lexeme);
+        if (fileId != null && !Objects.equals(name.lexeme(), fileId)) {
+            error(name, "file and class name must match");
+        }
+
+        PreviewClass previewClass = new PreviewClass(name.lexeme());
         parser.addClass(previewClass);
         LoxClass superClass = VarTypeManager.OBJECT;
         if (match(EXTENDS)) superClass = consumeVarType(parser);
@@ -49,15 +56,15 @@ public class SkeletonParser extends AbstractParser {
         consumeCurlyOpen("class");
 
         List<MethodDecl> methods = new ArrayList<>();
+        List<MethodDecl> constructors = new ArrayList<>();
         List<FieldDecl> fields = new ArrayList<>();
         List<ClassDecl> enclosed = new ArrayList<>();
-        //MethodDecl constructor = null; TODO add constructor
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             boolean isStatic = false;
             boolean isFinal = false;
             boolean isAbstract = false;
-            while (!check(IDENTIFIER) && !check(CLASS)) {
+            while (!check(IDENTIFIER) && !check(CLASS) && !check(EOF)) {
                 if (match(STATIC)) {
                     if (isStatic) error(previous(), "duplicate static keyword");
                     isStatic = true;
@@ -73,30 +80,50 @@ public class SkeletonParser extends AbstractParser {
                 }
             }
             if (check(CLASS)) {
-                enclosed.add(classDecl(isAbstract, isFinal));
+                enclosed.add(classDecl(isAbstract, isFinal, pckID, null));
             } else {
-                LoxClass type = consumeVarType(parser);
-                Token elementName = consumeIdentifier();
-                if (match(BRACKET_O)) {
-                    if (isAbstract && isStatic) error(elementName, "illegal combination of modifiers abstract and static");
-                    MethodDecl decl = funcDecl(parser, type, elementName, isFinal, isStatic, isAbstract);
-                    methods.add(decl);
+                if (Objects.equals(peek().lexeme(), name.lexeme())) {
+                    Token constName = consume(IDENTIFIER, "that shouldn't have happened...");
+                    consumeBracketOpen("constructor");
+                    MethodDecl decl = funcDecl(parser, VarTypeManager.VOID, constName, false, false, false);
+                    constructors.add(decl);
                 } else {
-                    if (isAbstract) error(elementName, "fields may not be abstract");
-                    FieldDecl decl = fieldDecl(type, elementName, isFinal, isStatic);
-                    fields.add(decl);
+                    LoxClass type = consumeVarType(parser);
+                    Token elementName = consumeIdentifier();
+                    if (match(BRACKET_O)) {
+                        if (isAbstract && isStatic) error(elementName, "illegal combination of modifiers abstract and static");
+                        MethodDecl decl = funcDecl(parser, type, elementName, isFinal, isStatic, isAbstract);
+                        methods.add(decl);
+                    } else {
+                        if (isAbstract) error(elementName, "fields may not be abstract");
+                        FieldDecl decl = fieldDecl(type, elementName, isFinal, isStatic);
+                        fields.add(decl);
+                    }
                 }
             }
         }
         consumeCurlyClose("class");
-        return new ClassDecl(classAbstract, classFinal, previewClass, name, superClass, methods.toArray(new MethodDecl[0]), fields.toArray(new FieldDecl[0]), enclosed.toArray(new ClassDecl[0]));
+        return new ClassDecl(classAbstract, classFinal, previewClass, name, pckID, superClass, constructors.toArray(new MethodDecl[0]), methods.toArray(new MethodDecl[0]), fields.toArray(new FieldDecl[0]), enclosed.toArray(new ClassDecl[0]));
     }
 
     public ClassDecl parse() {
+        List<Token> pck = new ArrayList<>();
+        try {
+            consume(PACKAGE, "package expected!");
+            pck.add(consumeIdentifier());
+            while (!check(EOA)) {
+                consume(DOT, "unexpected token");
+                pck.add(consumeIdentifier());
+            }
+            consumeEndOfArg();
+        } catch (ParseError error) {
+            synchronize();
+        }
+
         parseImports();
         boolean isFinal = false;
         boolean isAbstract = false;
-        while (!check(CLASS)) {
+        while (!check(CLASS) && !check(EOF)) {
             if (match(FINAL)) {
                 if (isFinal) error(previous(), "duplicate final keyword");
                 isFinal = true;
@@ -104,10 +131,11 @@ public class SkeletonParser extends AbstractParser {
                 if (isAbstract) error(previous(), "duplicate abstract keyword");
                 isAbstract = true;
             } else {
-                error(peek(), "<identifier> expected");
+                error(advance(), "<identifier> expected");
             }
         }
-        return classDecl(isAbstract, isFinal);
+        String pckId = pck.stream().map(Token::lexeme).collect(Collectors.joining("."));
+        return classDecl(isAbstract, isFinal, pckId, fileName);
     }
 
     private MethodDecl funcDecl(VarTypeParser parser, LoxClass type, Token name, boolean isFinal, boolean isStatic, boolean isAbstract) {
@@ -127,16 +155,15 @@ public class SkeletonParser extends AbstractParser {
         consumeBracketClose("parameters");
 
         Token[] code = null;
-        Token end;
 
         if (!isAbstract) { //body only if method isn't abstract
             consumeCurlyOpen("method body");
 
             code = getMethodCode();
 
-            end = consumeCurlyClose("method body");
-        } else end = consumeEndOfArg();
-        return new MethodDecl(code, name, end, parameters, type, isFinal, isStatic, isAbstract);
+            consumeCurlyClose("method body");
+        } else consumeEndOfArg();
+        return new MethodDecl(code, name, parameters, type, isFinal, isStatic, isAbstract);
     }
 
     private FieldDecl fieldDecl(LoxClass type, Token name, boolean isFinal, boolean isStatic) {
@@ -152,7 +179,8 @@ public class SkeletonParser extends AbstractParser {
         consume(IMPORT, "Expected import or class");
         List<Token> packages = readPackage();
         consumeEndOfArg();
-        parser.addClass(VarTypeManager.getClass(packages, this::error));
+        LoxClass target = VarTypeManager.getClass(packages, this::error);
+        if (target != null) parser.addClass(target);
     }
 
     private List<Token> readPackage() {
@@ -172,8 +200,8 @@ public class SkeletonParser extends AbstractParser {
         do {
             advance();
             tokens.add(peek());
-            if (peek().type == C_BRACKET_O) i++;
-            else if (peek().type == C_BRACKET_C) i--;
+            if (peek().type() == C_BRACKET_O) i++;
+            else if (peek().type() == C_BRACKET_C) i--;
         } while (i > 0);
         return tokens.toArray(Token[]::new);
     }
@@ -190,7 +218,7 @@ public class SkeletonParser extends AbstractParser {
     }
 
 
-    public record MethodDecl(Token[] body, Token name, Token end, List<Pair<LoxClass, Token>> params, LoxClass loxClass, boolean isFinal, boolean isStatic, boolean isAbstract) {
+    public record MethodDecl(Token[] body, Token name, List<Pair<LoxClass, Token>> params, LoxClass type, boolean isFinal, boolean isStatic, boolean isAbstract) {
 
     }
 
@@ -198,7 +226,7 @@ public class SkeletonParser extends AbstractParser {
 
     }
 
-    public record ClassDecl(boolean isAbstract, boolean isFinal, PreviewClass target, Token name, LoxClass superclass, MethodDecl[] methods, FieldDecl[] fields, ClassDecl[] enclosed) {
+    public record ClassDecl(boolean isAbstract, boolean isFinal, PreviewClass target, Token name, String pck, LoxClass superclass, MethodDecl[] constructors, MethodDecl[] methods, FieldDecl[] fields, ClassDecl[] enclosed) {
 
     }
 }

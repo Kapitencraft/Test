@@ -1,0 +1,260 @@
+{
+  "name": "Main",
+  "superclass": "scripted.lang.Object",
+  "methods": {
+    "test": [
+      {
+        "retType": "scripted.lang.void",
+        "name": {
+          "type": "IDENTIFIER",
+          "lexeme": "test",
+          "literal": {},
+          "line": 16,
+          "lineStartIndex": 9
+        },
+        "params": [],
+        "body": [
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "specialSet",
+              "callee": {
+                "TYPE": "varRef",
+                "name": {
+                  "type": "THIS",
+                  "lexeme": "this",
+                  "literal": {},
+                  "line": 17,
+                  "lineStartIndex": 8
+                }
+              },
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "x",
+                "literal": {},
+                "line": 17,
+                "lineStartIndex": 13
+              },
+              "assignType": {
+                "type": "GROW",
+                "lexeme": "++",
+                "literal": {},
+                "line": 17,
+                "lineStartIndex": 14
+              }
+            }
+          }
+        ],
+        "flags": []
+      }
+    ]
+  },
+  "staticMethods": {
+    "main": [
+      {
+        "retType": "scripted.lang.void",
+        "name": {
+          "type": "IDENTIFIER",
+          "lexeme": "main",
+          "literal": {},
+          "line": 6,
+          "lineStartIndex": 16
+        },
+        "params": [],
+        "body": [
+          {
+            "TYPE": "varDecl",
+            "name": {
+              "type": "IDENTIFIER",
+              "lexeme": "main",
+              "literal": {},
+              "line": 7,
+              "lineStartIndex": 13
+            },
+            "targetType": "main.Main",
+            "initializer": {
+              "TYPE": "constructor",
+              "target": "main.Main$A",
+              "args": [],
+              "ordinal": 0
+            },
+            "isFinal": false
+          },
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "set",
+              "callee": {
+                "TYPE": "varRef",
+                "name": {
+                  "type": "IDENTIFIER",
+                  "lexeme": "main",
+                  "literal": {},
+                  "line": 8,
+                  "lineStartIndex": 8
+                }
+              },
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "x",
+                "literal": {},
+                "line": 8,
+                "lineStartIndex": 13
+              },
+              "value": {
+                "TYPE": "literal",
+                "value": {
+                  "type": "NUM",
+                  "lexeme": "10",
+                  "literal": {
+                    "type": "int",
+                    "value": 10
+                  },
+                  "line": 8,
+                  "lineStartIndex": 17
+                }
+              },
+              "assignType": {
+                "type": "ASSIGN",
+                "lexeme": "\u003d",
+                "literal": {},
+                "line": 8,
+                "lineStartIndex": 15
+              }
+            }
+          },
+          {
+            "TYPE": "if",
+            "condition": {
+              "TYPE": "castCheck",
+              "object": {
+                "TYPE": "varRef",
+                "name": {
+                  "type": "IDENTIFIER",
+                  "lexeme": "main",
+                  "literal": {},
+                  "line": 9,
+                  "lineStartIndex": 12
+                }
+              },
+              "patternVarName": {
+                "type": "IDENTIFIER",
+                "lexeme": "a",
+                "literal": {},
+                "line": 9,
+                "lineStartIndex": 30
+              },
+              "target": "main.Main$A"
+            },
+            "then": {
+              "TYPE": "block",
+              "statements": [
+                {
+                  "TYPE": "expression",
+                  "expr": {
+                    "TYPE": "instCall",
+                    "callee": {
+                      "TYPE": "varRef",
+                      "name": {
+                        "type": "IDENTIFIER",
+                        "lexeme": "a",
+                        "literal": {},
+                        "line": 10,
+                        "lineStartIndex": 12
+                      }
+                    },
+                    "name": {
+                      "type": "IDENTIFIER",
+                      "lexeme": "test2",
+                      "literal": {},
+                      "line": 10,
+                      "lineStartIndex": 14
+                    },
+                    "ordinal": 0,
+                    "bracket": {
+                      "type": "BRACKET_C",
+                      "lexeme": ")",
+                      "literal": {},
+                      "line": 10,
+                      "lineStartIndex": 20
+                    },
+                    "args": []
+                  }
+                }
+              ]
+            },
+            "elifs": [],
+            "keyword": {
+              "type": "IF",
+              "lexeme": "if",
+              "literal": {},
+              "line": 9,
+              "lineStartIndex": 8
+            }
+          },
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "call",
+              "callee": {
+                "TYPE": "funcRef",
+                "name": {
+                  "type": "IDENTIFIER",
+                  "lexeme": "print",
+                  "literal": {},
+                  "line": 13,
+                  "lineStartIndex": 8
+                }
+              },
+              "bracket": {
+                "type": "BRACKET_C",
+                "lexeme": ")",
+                "literal": {},
+                "line": 13,
+                "lineStartIndex": 20
+              },
+              "args": [
+                {
+                  "TYPE": "get",
+                  "callee": {
+                    "TYPE": "varRef",
+                    "name": {
+                      "type": "IDENTIFIER",
+                      "lexeme": "main",
+                      "literal": {},
+                      "line": 13,
+                      "lineStartIndex": 14
+                    }
+                  },
+                  "name": {
+                    "type": "IDENTIFIER",
+                    "lexeme": "x",
+                    "literal": {},
+                    "line": 13,
+                    "lineStartIndex": 19
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "flags": []
+      }
+    ]
+  },
+  "constructor": [],
+  "fields": {
+    "x": {
+      "name": {
+        "type": "IDENTIFIER",
+        "lexeme": "x",
+        "literal": {},
+        "line": 4,
+        "lineStartIndex": 8
+      },
+      "type": "scripted.lang.int"
+    }
+  },
+  "staticFields": {},
+  "flags": []
+}

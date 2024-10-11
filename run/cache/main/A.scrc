@@ -1,0 +1,209 @@
+{
+  "name": "A",
+  "superclass": "scripted.lang.Object",
+  "methods": {},
+  "staticMethods": {
+    "main": [
+      {
+        "retType": "scripted.lang.void",
+        "name": {
+          "type": "IDENTIFIER",
+          "lexeme": "main",
+          "literal": {},
+          "line": 18,
+          "lineStartIndex": 16
+        },
+        "params": [],
+        "body": [
+          {
+            "TYPE": "varDecl",
+            "name": {
+              "type": "IDENTIFIER",
+              "lexeme": "a",
+              "literal": {},
+              "line": 19,
+              "lineStartIndex": 10
+            },
+            "targetType": "main.A",
+            "initializer": {
+              "TYPE": "constructor",
+              "target": "main.A$B",
+              "args": [],
+              "ordinal": 0
+            },
+            "isFinal": false
+          },
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "call",
+              "callee": {
+                "TYPE": "funcRef",
+                "name": {
+                  "type": "IDENTIFIER",
+                  "lexeme": "print",
+                  "literal": {},
+                  "line": 20,
+                  "lineStartIndex": 8
+                }
+              },
+              "bracket": {
+                "type": "BRACKET_C",
+                "lexeme": ")",
+                "literal": {},
+                "line": 20,
+                "lineStartIndex": 23
+              },
+              "args": [
+                {
+                  "TYPE": "instCall",
+                  "callee": {
+                    "TYPE": "varRef",
+                    "name": {
+                      "type": "IDENTIFIER",
+                      "lexeme": "a",
+                      "literal": {},
+                      "line": 20,
+                      "lineStartIndex": 14
+                    }
+                  },
+                  "name": {
+                    "type": "IDENTIFIER",
+                    "lexeme": "test",
+                    "literal": {},
+                    "line": 20,
+                    "lineStartIndex": 16
+                  },
+                  "ordinal": 0,
+                  "bracket": {
+                    "type": "BRACKET_C",
+                    "lexeme": ")",
+                    "literal": {},
+                    "line": 20,
+                    "lineStartIndex": 22
+                  },
+                  "args": [
+                    {
+                      "TYPE": "literal",
+                      "value": {
+                        "type": "NUM",
+                        "lexeme": "5",
+                        "literal": {
+                          "type": "int",
+                          "value": 5
+                        },
+                        "line": 20,
+                        "lineStartIndex": 21
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "assign",
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "a",
+                "literal": {},
+                "line": 21,
+                "lineStartIndex": 8
+              },
+              "value": {
+                "TYPE": "constructor",
+                "target": "main.A$C",
+                "args": [],
+                "ordinal": 0
+              },
+              "type": {
+                "type": "ASSIGN",
+                "lexeme": "\u003d",
+                "literal": {},
+                "line": 21,
+                "lineStartIndex": 10
+              }
+            }
+          },
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "call",
+              "callee": {
+                "TYPE": "funcRef",
+                "name": {
+                  "type": "IDENTIFIER",
+                  "lexeme": "print",
+                  "literal": {},
+                  "line": 22,
+                  "lineStartIndex": 8
+                }
+              },
+              "bracket": {
+                "type": "BRACKET_C",
+                "lexeme": ")",
+                "literal": {},
+                "line": 22,
+                "lineStartIndex": 23
+              },
+              "args": [
+                {
+                  "TYPE": "instCall",
+                  "callee": {
+                    "TYPE": "varRef",
+                    "name": {
+                      "type": "IDENTIFIER",
+                      "lexeme": "a",
+                      "literal": {},
+                      "line": 22,
+                      "lineStartIndex": 14
+                    }
+                  },
+                  "name": {
+                    "type": "IDENTIFIER",
+                    "lexeme": "test",
+                    "literal": {},
+                    "line": 22,
+                    "lineStartIndex": 16
+                  },
+                  "ordinal": 0,
+                  "bracket": {
+                    "type": "BRACKET_C",
+                    "lexeme": ")",
+                    "literal": {},
+                    "line": 22,
+                    "lineStartIndex": 22
+                  },
+                  "args": [
+                    {
+                      "TYPE": "literal",
+                      "value": {
+                        "type": "NUM",
+                        "lexeme": "5",
+                        "literal": {
+                          "type": "int",
+                          "value": 5
+                        },
+                        "line": 22,
+                        "lineStartIndex": 21
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "flags": []
+      }
+    ]
+  },
+  "constructor": [],
+  "fields": {},
+  "staticFields": {},
+  "flags": [
+    "isAbstract"
+  ]
+}

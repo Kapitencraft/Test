@@ -163,66 +163,15 @@ public class Main {
             }
     );
 
-    private static final Interpreter interpreter = new Interpreter();
-    static boolean hadError = false;
     static boolean hadRuntimeError = false;
-
-
-    public static void main(String[] args) throws IOException {
-        runFile(args[0]);
-        if (hadError) System.exit(65);
-
-
-        if (hadRuntimeError) System.exit(70);
-    }
-
-    private static void runFile(String path) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get(path));
-        run(new String(bytes, Charset.defaultCharset()));
-    }
-
-    public static void error(Token token, String message, String line) {
-        report(token.line, message, token.lineStartIndex, line);
-    }
-
-    private static void runPrompt() {
-        Scanner scanner = new Scanner(System.in);
-
-        for (;;) {
-            System.out.print("> ");
-            String line = scanner.nextLine();
-            if (line == null) break;
-            run(line);
-        }
-    }
-
-    private static void run(String source) {
-        String[] lines = source.split("\n", Integer.MAX_VALUE);
-
-        LoxClass clazz = Compiler.compile(source, lines);
-
-        System.out.println("Executing...");
-        interpreter.tryInterpret(clazz);
-    }
 
     static void runtimeError(RuntimeError error) {
         System.err.println(error.getMessage() +
-                "\n[line " + error.token.line + "]");
+                "\n[line " + error.token.line() + "]");
         hadRuntimeError = true;
     }
 
-    public static void error(int lineIndex, String message, String line) {
-        report(lineIndex, message, line.length(), line);
-    }
-
-    private static void report(int lineIndex, String message, int startIndex, String line) {
-        System.err.println("Error in line " + lineIndex + ": " + message);
-        System.err.println(line);
-        for (int i = 0; i < startIndex; i++) {
-            System.err.print(" ");
-        }
-        System.err.println("^");
-
-        hadError = true;
+    public static void error(int lineIndex, String message, String fileId, String line) {
+        Compiler.report(lineIndex, message, fileId, line.length(), line);
     }
 }
