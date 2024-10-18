@@ -1,16 +1,12 @@
 package net.kapitencraft.lang.env.core;
 
-import net.kapitencraft.lang.exception.runtime.MissingVarException;
-import net.kapitencraft.lang.run.RuntimeError;
+import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.env.abst.Leveled;
+import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.tool.Math;
-
-import java.util.concurrent.ExecutionException;
-
-import static net.kapitencraft.lang.run.Interpreter.checkNumberOperand;
-import static net.kapitencraft.lang.run.Interpreter.checkNumberOperands;
 
 public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
 
@@ -21,27 +17,32 @@ public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
         this.addValue(name, new Wrapper(value));
     }
 
-    public Object get(String name) {
+    public Object get(Token name) {
         try {
-            return getValue(name).val;
+            return getValue(name.lexeme()).val;
         } catch (NullPointerException e) {
-            throw new MissingVarException(name);
+            Interpreter.INSTANCE.pushCallIndex(name.line());
+            throw AbstractScriptedException.createException(VarTypeManager.MISSING_VAR_EXCEPTION, "Variable '" + name + "' not found in current scope");
         }
     }
 
-    public void assign(String name, Object value) {
-        getValue(name).val = value;
+    public void assign(Token name, Object value) {
+        try {
+            getValue(name.lexeme()).val = value;
+        } catch (NullPointerException e) {
+            Interpreter.INSTANCE.pushCallIndex(name.line());
+            throw AbstractScriptedException.createException(VarTypeManager.MISSING_VAR_EXCEPTION, "Variable '" + name + "' not found in current scope");
+        }
     }
 
-    public Object assignWithOperator(Token type, String name, Object value) {
+    public Object assignWithOperator(Token type, Token name, Object value) {
         Object current = get(name);
         this.assign(name, Math.merge(current, value, type));
         return get(name);
     }
 
-    public Object specialAssign(String name, Token type) {
+    public Object specialAssign(Token name, Token type) {
         Object value = get(name);
-        checkNumberOperand(type, value);
         if (value instanceof Integer) {
             this.assign(name, (int) value + (type.type() == TokenType.GROW ? 1 : -1));
         } else if (value instanceof Double)

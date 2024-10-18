@@ -9,7 +9,7 @@
           "type": "IDENTIFIER",
           "lexeme": "test",
           "literal": {},
-          "line": 16,
+          "line": 10,
           "lineStartIndex": 9
         },
         "params": [],
@@ -24,7 +24,7 @@
                   "type": "THIS",
                   "lexeme": "this",
                   "literal": {},
-                  "line": 17,
+                  "line": 11,
                   "lineStartIndex": 8
                 }
               },
@@ -32,14 +32,14 @@
                 "type": "IDENTIFIER",
                 "lexeme": "x",
                 "literal": {},
-                "line": 17,
+                "line": 11,
                 "lineStartIndex": 13
               },
               "assignType": {
                 "type": "GROW",
                 "lexeme": "++",
                 "literal": {},
-                "line": 17,
+                "line": 11,
                 "lineStartIndex": 14
               }
             }
@@ -63,175 +63,135 @@
         "params": [],
         "body": [
           {
-            "TYPE": "varDecl",
-            "name": {
-              "type": "IDENTIFIER",
-              "lexeme": "main",
-              "literal": {},
-              "line": 7,
-              "lineStartIndex": 13
-            },
-            "targetType": "main.Main",
-            "initializer": {
-              "TYPE": "constructor",
-              "target": "main.Main$A",
-              "args": [],
-              "ordinal": 0
-            },
-            "isFinal": false
-          },
-          {
             "TYPE": "expression",
             "expr": {
-              "TYPE": "set",
-              "callee": {
-                "TYPE": "varRef",
-                "name": {
-                  "type": "IDENTIFIER",
-                  "lexeme": "main",
-                  "literal": {},
-                  "line": 8,
-                  "lineStartIndex": 8
-                }
-              },
+              "TYPE": "staticCall",
+              "target": "scripted.lang.System",
               "name": {
                 "type": "IDENTIFIER",
-                "lexeme": "x",
+                "lexeme": "print",
                 "literal": {},
-                "line": 8,
-                "lineStartIndex": 13
-              },
-              "value": {
-                "TYPE": "literal",
-                "value": {
-                  "type": "NUM",
-                  "lexeme": "10",
-                  "literal": {
-                    "type": "int",
-                    "value": 10
-                  },
-                  "line": 8,
-                  "lineStartIndex": 17
-                }
-              },
-              "assignType": {
-                "type": "ASSIGN",
-                "lexeme": "\u003d",
-                "literal": {},
-                "line": 8,
+                "line": 7,
                 "lineStartIndex": 15
-              }
-            }
-          },
-          {
-            "TYPE": "if",
-            "condition": {
-              "TYPE": "castCheck",
-              "object": {
-                "TYPE": "varRef",
-                "name": {
-                  "type": "IDENTIFIER",
-                  "lexeme": "main",
-                  "literal": {},
-                  "line": 9,
-                  "lineStartIndex": 12
-                }
               },
-              "patternVarName": {
-                "type": "IDENTIFIER",
-                "lexeme": "a",
-                "literal": {},
-                "line": 9,
-                "lineStartIndex": 30
-              },
-              "target": "main.Main$A"
-            },
-            "then": {
-              "TYPE": "block",
-              "statements": [
-                {
-                  "TYPE": "expression",
-                  "expr": {
-                    "TYPE": "instCall",
-                    "callee": {
-                      "TYPE": "varRef",
-                      "name": {
-                        "type": "IDENTIFIER",
-                        "lexeme": "a",
-                        "literal": {},
-                        "line": 10,
-                        "lineStartIndex": 12
-                      }
-                    },
-                    "name": {
-                      "type": "IDENTIFIER",
-                      "lexeme": "test2",
-                      "literal": {},
-                      "line": 10,
-                      "lineStartIndex": 14
-                    },
-                    "ordinal": 0,
-                    "bracket": {
-                      "type": "BRACKET_C",
-                      "lexeme": ")",
-                      "literal": {},
-                      "line": 10,
-                      "lineStartIndex": 20
-                    },
-                    "args": []
-                  }
-                }
-              ]
-            },
-            "elifs": [],
-            "keyword": {
-              "type": "IF",
-              "lexeme": "if",
-              "literal": {},
-              "line": 9,
-              "lineStartIndex": 8
-            }
-          },
-          {
-            "TYPE": "expression",
-            "expr": {
-              "TYPE": "call",
-              "callee": {
-                "TYPE": "funcRef",
-                "name": {
-                  "type": "IDENTIFIER",
-                  "lexeme": "print",
-                  "literal": {},
-                  "line": 13,
-                  "lineStartIndex": 8
-                }
-              },
-              "bracket": {
-                "type": "BRACKET_C",
-                "lexeme": ")",
-                "literal": {},
-                "line": 13,
-                "lineStartIndex": 20
-              },
+              "ordinal": 0,
               "args": [
                 {
-                  "TYPE": "get",
-                  "callee": {
-                    "TYPE": "varRef",
-                    "name": {
-                      "type": "IDENTIFIER",
-                      "lexeme": "main",
-                      "literal": {},
-                      "line": 13,
-                      "lineStartIndex": 14
+                  "TYPE": "binary",
+                  "left": {
+                    "TYPE": "grouping",
+                    "expr": {
+                      "TYPE": "binary",
+                      "left": {
+                        "TYPE": "binary",
+                        "left": {
+                          "TYPE": "literal",
+                          "value": {
+                            "type": "NUM",
+                            "lexeme": "4",
+                            "literal": {
+                              "type": "int",
+                              "value": 4
+                            },
+                            "line": 7,
+                            "lineStartIndex": 22
+                          }
+                        },
+                        "operator": {
+                          "type": "POW",
+                          "lexeme": "**",
+                          "literal": {},
+                          "line": 7,
+                          "lineStartIndex": 23
+                        },
+                        "right": {
+                          "TYPE": "literal",
+                          "value": {
+                            "type": "NUM",
+                            "lexeme": "0",
+                            "literal": {
+                              "type": "int",
+                              "value": 0
+                            },
+                            "line": 7,
+                            "lineStartIndex": 25
+                          }
+                        }
+                      },
+                      "operator": {
+                        "type": "ADD",
+                        "lexeme": "+",
+                        "literal": {},
+                        "line": 7,
+                        "lineStartIndex": 27
+                      },
+                      "right": {
+                        "TYPE": "binary",
+                        "left": {
+                          "TYPE": "literal",
+                          "value": {
+                            "type": "NUM",
+                            "lexeme": "64",
+                            "literal": {
+                              "type": "int",
+                              "value": 64
+                            },
+                            "line": 7,
+                            "lineStartIndex": 29
+                          }
+                        },
+                        "operator": {
+                          "type": "POW",
+                          "lexeme": "**",
+                          "literal": {},
+                          "line": 7,
+                          "lineStartIndex": 31
+                        },
+                        "right": {
+                          "TYPE": "literal",
+                          "value": {
+                            "type": "NUM",
+                            "lexeme": "0.5",
+                            "literal": {
+                              "type": "double",
+                              "value": 0.5
+                            },
+                            "line": 7,
+                            "lineStartIndex": 33
+                          }
+                        }
+                      }
                     }
                   },
-                  "name": {
-                    "type": "IDENTIFIER",
-                    "lexeme": "x",
+                  "operator": {
+                    "type": "POW",
+                    "lexeme": "**",
                     "literal": {},
-                    "line": 13,
-                    "lineStartIndex": 19
+                    "line": 7,
+                    "lineStartIndex": 37
+                  },
+                  "right": {
+                    "TYPE": "unary",
+                    "operator": {
+                      "type": "SUB",
+                      "lexeme": "-",
+                      "literal": {},
+                      "line": 7,
+                      "lineStartIndex": 39
+                    },
+                    "arg": {
+                      "TYPE": "literal",
+                      "value": {
+                        "type": "NUM",
+                        "lexeme": "2",
+                        "literal": {
+                          "type": "int",
+                          "value": 2
+                        },
+                        "line": 7,
+                        "lineStartIndex": 40
+                      }
+                    }
                   }
                 }
               ]

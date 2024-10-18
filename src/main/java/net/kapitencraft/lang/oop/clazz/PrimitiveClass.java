@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.func.method_builder.MethodContainer;
+import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.LoxField;
 
 import java.util.List;
@@ -20,6 +20,16 @@ public class PrimitiveClass implements LoxClass {
 
     public PrimitiveClass(String name, Object defaultValue) {
         this(null, name, defaultValue);
+    }
+
+    @Override
+    public Object getStaticField(String name) {
+        return null;
+    }
+
+    @Override
+    public Object assignStaticField(String name, Object val) {
+        return null;
     }
 
     @Override
@@ -60,6 +70,16 @@ public class PrimitiveClass implements LoxClass {
     @Override
     public LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
         return null;
+    }
+
+    @Override
+    public LoxCallable getStaticMethodByOrdinal(String name, int ordinal) {
+        return null;
+    }
+
+    @Override
+    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+        return 0;
     }
 
     @Override
@@ -113,12 +133,12 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public boolean hasEnclosing(String lexeme) {
+    public boolean hasEnclosing(String name) {
         return false;
     }
 
     @Override
-    public LoxClass getEnclosing(String lexeme) {
+    public LoxClass getEnclosing(String name) {
         return null;
     }
 

@@ -1,0 +1,10 @@
+package main;
+
+class TimeTest {
+    static void main(String args) {
+        for (int i = 0; i < 1000; i++) {
+            System.print(i);
+        }
+        System.print("counting to 1000 took " + System.time() + "ms");
+    }
+}

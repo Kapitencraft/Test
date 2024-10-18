@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.func.method_builder;
+package net.kapitencraft.lang.oop.method.builder;
 
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
@@ -11,5 +11,5 @@ public interface MethodContainer {
 
     LoxCallable getMethodByOrdinal(int ordinal);
 
-    int getMethodOrdinal(List<LoxClass> types);
+    int getMethodOrdinal(List<? extends LoxClass> types);
 }

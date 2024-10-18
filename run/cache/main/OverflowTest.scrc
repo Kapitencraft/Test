@@ -121,11 +121,18 @@
               "line": 13,
               "lineStartIndex": 21
             },
-            "targetType": "main.OverflowTest",
+            "targetType": "main..OverflowTest",
             "initializer": {
               "TYPE": "constructor",
-              "target": "main.OverflowTest",
+              "target": "main..OverflowTest",
               "args": [],
+              "keyword": {
+                "type": "IDENTIFIER",
+                "lexeme": "OverflowTest",
+                "literal": {},
+                "line": 13,
+                "lineStartIndex": 32
+              },
               "ordinal": 0
             },
             "isFinal": false

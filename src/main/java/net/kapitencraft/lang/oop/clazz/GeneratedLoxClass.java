@@ -3,10 +3,10 @@ package net.kapitencraft.lang.oop.clazz;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compile.CacheBuilder;
-import net.kapitencraft.lang.func.method_builder.ConstructorContainer;
-import net.kapitencraft.lang.func.method_builder.DataMethodContainer;
+import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
+import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.func.method_builder.MethodContainer;
+import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.GeneratedField;
 import net.kapitencraft.lang.oop.LoxField;
 import net.kapitencraft.tool.Util;
@@ -16,6 +16,8 @@ import java.util.*;
 public final class GeneratedLoxClass implements LoxClass {
     private final Map<String, DataMethodContainer> allMethods;
     private final Map<String, DataMethodContainer> allStaticMethods;
+
+    private final Map<String, Object> staticFieldData = new HashMap<>();
 
     private final ConstructorContainer constructor;
 
@@ -122,8 +124,13 @@ public final class GeneratedLoxClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
-        return allStaticMethods.get(name).getMethod(args);
+    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+        return allStaticMethods.get(name).getMethodOrdinal(args);
+    }
+
+    @Override
+    public LoxCallable getStaticMethodByOrdinal(String name, int ordinal) {
+        return allStaticMethods.get(name).getMethodByOrdinal(ordinal);
     }
 
     @Override
@@ -171,18 +178,29 @@ public final class GeneratedLoxClass implements LoxClass {
     }
 
     @Override
-    public boolean hasEnclosing(String lexeme) {
+    public boolean hasEnclosing(String name) {
         return false;
     }
 
     @Override
-    public LoxClass getEnclosing(String lexeme) {
+    public LoxClass getEnclosing(String name) {
         return null;
     }
 
     @Override
     public LoxClass superclass() {
         return superclass;
+    }
+
+    @Override
+    public Object getStaticField(String name) {
+        return staticFieldData.get(name);
+    }
+
+    @Override
+    public Object assignStaticField(String name, Object val) {
+        staticFieldData.put(name, val);
+        return getStaticField(name);
     }
 
     @Override

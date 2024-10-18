@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.holder.ast;
 
+import java.util.Map;
 import java.util.List;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
@@ -13,6 +14,7 @@ public abstract class Stmt {
         R visitFuncDeclStmt(FuncDecl stmt);
         R visitIfStmt(If stmt);
         R visitReturnStmt(Return stmt);
+        R visitThrowStmt(Throw stmt);
         R visitVarDeclStmt(VarDecl stmt);
         R visitWhileStmt(While stmt);
         R visitForStmt(For stmt);
@@ -101,6 +103,21 @@ public abstract class Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitReturnStmt(this);
+        }
+    }
+
+    public static class Throw extends Stmt {
+        public final Token keyword;
+        public final Expr value;
+
+        public Throw(Token keyword, Expr value) {
+            this.keyword = keyword;
+            this.value = value;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitThrowStmt(this);
         }
     }
 

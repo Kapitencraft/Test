@@ -1,9 +1,9 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.func.method_builder.MethodContainer;
+import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.oop.ClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.LoxField;
 import net.kapitencraft.lang.run.Interpreter;
 
@@ -30,6 +30,18 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
+    public LoxCallable getStaticMethodByOrdinal(String name, int ordinal) {
+        assertApplied();
+        return target.getStaticMethodByOrdinal(name, ordinal);
+    }
+
+    @Override
+    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+        assertApplied();
+        return target.getStaticMethodOrdinal(name, args);
+    }
+
+    @Override
     public LoxCallable getMethod(String name, List<LoxClass> args) {
         assertApplied();
         return target.getMethod(name, args);
@@ -45,6 +57,18 @@ public class PreviewClass implements LoxClass {
     public LoxClass getStaticFieldType(String name) {
         assertApplied();
         return target.getStaticFieldType(name);
+    }
+
+    @Override
+    public Object getStaticField(String name) {
+        assertApplied();
+        return target.getStaticField(name);
+    }
+
+    @Override
+    public Object assignStaticField(String name, Object val) {
+        assertApplied();
+        return target.assignStaticField(name, val);
     }
 
     @Override
@@ -140,6 +164,11 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        return obj instanceof LoxClass cl && this.is(cl);
+    }
+
+    @Override
     public boolean isParentOf(LoxClass suspectedChild) {
         assertApplied();
         return target.isParentOf(suspectedChild);
@@ -157,15 +186,15 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
-    public boolean hasEnclosing(String lexeme) {
+    public boolean hasEnclosing(String name) {
         assertApplied();
-        return target.hasEnclosing(lexeme);
+        return target.hasEnclosing(name);
     }
 
     @Override
-    public LoxClass getEnclosing(String lexeme) {
+    public LoxClass getEnclosing(String name) {
         assertApplied();
-        return target.getEnclosing(lexeme);
+        return target.getEnclosing(name);
     }
 
     @Override

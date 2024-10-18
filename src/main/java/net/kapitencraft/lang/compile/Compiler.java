@@ -2,14 +2,14 @@ package net.kapitencraft.lang.compile;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compile.parser.ExprParser;
 import net.kapitencraft.lang.compile.parser.SkeletonParser;
 import net.kapitencraft.lang.compile.parser.StmtParser;
 import net.kapitencraft.lang.compile.visitor.LocationFinder;
-import net.kapitencraft.lang.func.method_builder.ConstructorContainer;
-import net.kapitencraft.lang.func.method_builder.DataMethodContainer;
-import net.kapitencraft.lang.func.GeneratedCallable;
+import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
+import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.ast.Stmt;

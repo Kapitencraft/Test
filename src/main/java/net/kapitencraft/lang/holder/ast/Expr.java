@@ -13,11 +13,14 @@ public abstract class Expr {
         R visitSpecialAssignExpr(SpecialAssign expr);
         R visitBinaryExpr(Binary expr);
         R visitWhenExpr(When expr);
-        R visitCallExpr(Call expr);
         R visitInstCallExpr(InstCall expr);
+        R visitStaticCallExpr(StaticCall expr);
         R visitGetExpr(Get expr);
+        R visitStaticGetExpr(StaticGet expr);
         R visitSetExpr(Set expr);
+        R visitStaticSetExpr(StaticSet expr);
         R visitSpecialSetExpr(SpecialSet expr);
+        R visitStaticSpecialExpr(StaticSpecial expr);
         R visitSwitchExpr(Switch expr);
         R visitCastCheckExpr(CastCheck expr);
         R visitGroupingExpr(Grouping expr);
@@ -25,7 +28,6 @@ public abstract class Expr {
         R visitLogicalExpr(Logical expr);
         R visitUnaryExpr(Unary expr);
         R visitVarRefExpr(VarRef expr);
-        R visitFuncRefExpr(FuncRef expr);
         R visitConstructorExpr(Constructor expr);
     }
 
@@ -95,23 +97,6 @@ public abstract class Expr {
         }
     }
 
-    public static class Call extends Expr {
-        public final Expr callee;
-        public final Token bracket;
-        public final List<Expr> args;
-
-        public Call(Expr callee, Token bracket, List<Expr> args) {
-            this.callee = callee;
-            this.bracket = bracket;
-            this.args = args;
-        }
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitCallExpr(this);
-        }
-    }
-
     public static class InstCall extends Expr {
         public final Expr callee;
         public final Token name;
@@ -133,6 +118,25 @@ public abstract class Expr {
         }
     }
 
+    public static class StaticCall extends Expr {
+        public final LoxClass target;
+        public final Token name;
+        public final int methodOrdinal;
+        public final List<Expr> args;
+
+        public StaticCall(LoxClass target, Token name, int methodOrdinal, List<Expr> args) {
+            this.target = target;
+            this.name = name;
+            this.methodOrdinal = methodOrdinal;
+            this.args = args;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitStaticCallExpr(this);
+        }
+    }
+
     public static class Get extends Expr {
         public final Expr object;
         public final Token name;
@@ -145,6 +149,21 @@ public abstract class Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitGetExpr(this);
+        }
+    }
+
+    public static class StaticGet extends Expr {
+        public final LoxClass target;
+        public final Token name;
+
+        public StaticGet(LoxClass target, Token name) {
+            this.target = target;
+            this.name = name;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitStaticGetExpr(this);
         }
     }
 
@@ -167,6 +186,25 @@ public abstract class Expr {
         }
     }
 
+    public static class StaticSet extends Expr {
+        public final LoxClass target;
+        public final Token name;
+        public final Expr value;
+        public final Token assignType;
+
+        public StaticSet(LoxClass target, Token name, Expr value, Token assignType) {
+            this.target = target;
+            this.name = name;
+            this.value = value;
+            this.assignType = assignType;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitStaticSetExpr(this);
+        }
+    }
+
     public static class SpecialSet extends Expr {
         public final Expr callee;
         public final Token name;
@@ -181,6 +219,23 @@ public abstract class Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSpecialSetExpr(this);
+        }
+    }
+
+    public static class StaticSpecial extends Expr {
+        public final LoxClass target;
+        public final Token name;
+        public final Token assignType;
+
+        public StaticSpecial(LoxClass target, Token name, Token assignType) {
+            this.target = target;
+            this.name = name;
+            this.assignType = assignType;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitStaticSpecialExpr(this);
         }
     }
 
@@ -291,25 +346,14 @@ public abstract class Expr {
         }
     }
 
-    public static class FuncRef extends Expr {
-        public final Token name;
-
-        public FuncRef(Token name) {
-            this.name = name;
-        }
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitFuncRefExpr(this);
-        }
-    }
-
     public static class Constructor extends Expr {
+        public final Token keyword;
         public final LoxClass target;
         public final List<Expr> params;
         public final int ordinal;
 
-        public Constructor(LoxClass target, List<Expr> params, int ordinal) {
+        public Constructor(Token keyword, LoxClass target, List<Expr> params, int ordinal) {
+            this.keyword = keyword;
             this.target = target;
             this.params = params;
             this.ordinal = ordinal;

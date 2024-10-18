@@ -1,10 +1,8 @@
 package net.kapitencraft.math;
 
-import net.kapitencraft.lang.env.abst.DequeStack;
-
 import java.util.*;
 
-public class Main {
+public class MathMain {
     static Map<Integer, List<Integer>> cache = new HashMap<>();
 
     private static List<Integer> alleTeiler(int x) {
@@ -39,7 +37,8 @@ public class Main {
     }
 
     public static void main(String[] args) {
-
+        System.out.println("\u001B[32mE");
+        System.exit(0);
         Scanner scanner = new Scanner(System.in);
 
         int i;

@@ -70,17 +70,6 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     }
 
     @Override
-    public JsonElement visitCallExpr(Expr.Call expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "call");
-        object.add("callee", cache(expr.callee));
-        object.add("bracket", expr.bracket.toJson());
-
-        object.add("args", saveArgs(expr.args));
-        return object;
-    }
-
-    @Override
     public JsonElement visitInstCallExpr(Expr.InstCall expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "instCall");
@@ -93,10 +82,29 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     }
 
     @Override
+    public JsonElement visitStaticCallExpr(Expr.StaticCall expr) {
+        JsonObject object = new JsonObject();
+        object.addProperty("TYPE", "staticCall");
+        object.addProperty("target", expr.target.absoluteName());
+        object.add("name", expr.name.toJson());
+        object.addProperty("ordinal", expr.methodOrdinal);
+        object.add("args", saveArgs(expr.args));
+        return object;
+    }
+
+    @Override
     public JsonElement visitGetExpr(Expr.Get expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "get");
         object.add("callee", cache(expr.object));
+        object.add("name", expr.name.toJson());
+        return object;
+    }
+
+    @Override
+    public JsonElement visitStaticGetExpr(Expr.StaticGet expr) {
+        JsonObject object = new JsonObject();
+        object.addProperty("target", expr.target.absoluteName());
         object.add("name", expr.name.toJson());
         return object;
     }
@@ -113,10 +121,30 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     }
 
     @Override
+    public JsonElement visitStaticSetExpr(Expr.StaticSet expr) {
+        JsonObject object = new JsonObject();
+        object.addProperty("TYPE", "staticSet");
+        object.addProperty("target", expr.target.absoluteName());
+        object.add("name", expr.name.toJson());
+        object.add("value", cache(expr.value));
+        object.add("assignType", expr.assignType.toJson());
+        return object;
+    }
+
+    @Override
     public JsonElement visitSpecialSetExpr(Expr.SpecialSet expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "specialSet");
         object.add("callee", cache(expr.callee));
+        object.add("name", expr.name.toJson());
+        object.add("assignType", expr.assignType.toJson());
+        return object;
+    }
+
+    @Override
+    public JsonElement visitStaticSpecialExpr(Expr.StaticSpecial expr) {
+        JsonObject object = new JsonObject();
+        object.addProperty("target", expr.target.absoluteName());
         object.add("name", expr.name.toJson());
         object.add("assignType", expr.assignType.toJson());
         return object;
@@ -191,19 +219,12 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     }
 
     @Override
-    public JsonElement visitFuncRefExpr(Expr.FuncRef expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "funcRef");
-        object.add("name", expr.name.toJson());
-        return object;
-    }
-
-    @Override
     public JsonElement visitConstructorExpr(Expr.Constructor expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "constructor");
         object.addProperty("target", expr.target.absoluteName());
         object.add("args", saveArgs(expr.params));
+        object.add("keyword", expr.keyword.toJson());
         object.addProperty("ordinal", expr.ordinal);
         return object;
     }
@@ -257,6 +278,15 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         object.addProperty("TYPE", "return");
         object.add("keyword", stmt.keyword.toJson());
         if (stmt.value != null) object.add("value", cache(stmt.value));
+        return object;
+    }
+
+    @Override
+    public JsonElement visitThrowStmt(Stmt.Throw stmt) {
+        JsonObject object = new JsonObject();
+        object.addProperty("TYPE", "throw");
+        object.add("keyword", stmt.keyword.toJson());
+        object.add("value", cache(stmt.value));
         return object;
     }
 

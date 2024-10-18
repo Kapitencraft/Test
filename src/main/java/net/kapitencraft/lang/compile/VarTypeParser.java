@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.compile;
 
-import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 import java.util.HashMap;
@@ -23,7 +23,7 @@ public class VarTypeParser {
         return implemented.get(clazz);
     }
 
-    public void addClass(LoxClass clazz) {
-        implemented.put(clazz.name(), clazz);
+    public void addClass(LoxClass clazz, String nameOverride) {
+        implemented.put(nameOverride != null ? nameOverride : clazz.name(), clazz);
     }
 }

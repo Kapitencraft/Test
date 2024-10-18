@@ -1,19 +1,16 @@
-package net.kapitencraft.lang.func.method_builder;
+package net.kapitencraft.lang.oop.method.builder;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
 import net.kapitencraft.lang.compile.CacheBuilder;
 import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.func.GeneratedCallable;
+import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.tool.Util;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DataMethodContainer implements MethodContainer {
     private final LoxCallable[] methods;
@@ -41,16 +38,12 @@ public class DataMethodContainer implements MethodContainer {
         return array;
     }
 
-    public static DataMethodContainer readFromCache(JsonArray in) {
-        return null;
-    }
-
     public LoxCallable getMethodByOrdinal(int ordinal) {
         if (ordinal == -1) return methods[0]; //default
         return methods[ordinal];
     }
 
-    public int getMethodOrdinal(List<LoxClass> types) {
+    public int getMethodOrdinal(List<? extends LoxClass> types) {
         for (int i = 0; i < methods.length; i++) {
             if (Util.matchArgs(methods[i].argTypes(), types)) return i;
         }
@@ -85,6 +78,6 @@ public class DataMethodContainer implements MethodContainer {
     public static Map<String, DataMethodContainer> bakeBuilders(Map<String, DataMethodContainer.Builder> builders) {
         Map<String, DataMethodContainer> map = new HashMap<>();
         builders.forEach((name, builder) -> map.put(name, builder.create()));
-        return new ImmutableMap.Builder<String, DataMethodContainer>().putAll(map).build();
+        return ImmutableMap.copyOf(map);
     }
 }

@@ -1,15 +1,21 @@
-program     -> import* classDecl
+program     -> pck import* classDecl
+
+pck         -> "package" VAR_TYPE ";"
+import      -> "import" VAR_TYPE ("as" IDENTIFIER)? ";"
+
+classDecl   -> "class" IDENTIFIER ( "extends" IDENTIFIER )? "{" (funcDecl | varDecl)* "}"
 
 declaration -> varDecl | statement
 
-classDecl   -> "class" IDENTIFIER ( "extends" IDENTIFIER )? "{" (funcDecl | varDecl)* "}"
-funcDecl    -> "def" VAR_TYPE function
-varDecl     -> "final"? "static"? VAR_TYPE IDENTIFIER ( "=" expression )? ";"
+funcDecl    -> VAR_TYPE IDENTIFIER "(" parameters? ")" block
+fieldDecl   -> "static"? varDecl;
+varDecl     -> "final"? VAR_TYPE IDENTIFIER ( "=" expression )? ";"
 
 statement   -> exprStmt | forStmt | ifStmt | printStmt | returnStmt | whileStmt | block
-exprStmt    -> expression ";"
+exprStmt    -> switch | call | assignment ";"
 forStmt     -> "for" "(" ( varDecl | exprStmt)? ";" expression? ";" expression? ")" statement
 ifStmt      -> "if" "(" expression ")" statement ( "elif" "(" expression ")" statement )* ( "else" statement )?
+thrStmt     -> "throw" expression ";"
 returnStmt  -> "return" expression? ";"
 whileStmt   -> "while" "(" expression ")" statement
 block       -> "{" declaration* "}"
@@ -31,14 +37,14 @@ comparison  -> term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term        -> factor ( ( "-" | "+" ) factor )*
 factor      -> unary ( ( "/" | "*" ) unary )*
 
-unary       -> ( "!" | "-" ) unary | call | switch
+unary       -> ( "!" | "-" ) unary | call | switch | constructor
 
 call        -> primary ( "(" arguments? ")" | "." IDENTIFIER )*
+constructor -> "new" VAR_TYPE "(" arguments? ")"
 
 primary     -> "true" | "false" | "null" | "this" | NUMBER | STRING | IDENTIFIER | "(" expression ")" | "super"
 
 //util
-function    -> IDENTIFIER "(" parameters? ")" block
 parameters  -> VAR_TYPE IDENTIFIER ( "," IDENTIFIER )*
 arguments   -> expression ( "," expression )*
 
@@ -48,4 +54,4 @@ STRING      -> "\"" <any char except "\"">* "\""
 IDENTIFIER  -> ALPHA ( ALPHA | DIGIT )*
 ALPHA       -> [a-zA-Z_]
 DIGIT       -> [0-9]
-VAR_TYPE    -> <ALPHA> #only registered
+VAR_TYPE    -> IDENTIFIER ("." IDENTIFIER)*

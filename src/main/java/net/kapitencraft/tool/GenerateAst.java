@@ -16,11 +16,14 @@ public class GenerateAst {
                 "SpecialAssign : Token name; Token assignType",
                 "Binary        : Expr left; Token operator; Expr right",
                 "When          : Expr condition; Expr ifTrue; Expr ifFalse",
-                "Call          : Expr callee; Token bracket; List<Expr> args",
                 "InstCall      : Expr callee; Token name; int methodOrdinal; Token bracket; List<Expr> args",
+                "StaticCall    : LoxClass target; Token name; int methodOrdinal; List<Expr> args",
                 "Get           : Expr object; Token name",
+                "StaticGet     : LoxClass target; Token name",
                 "Set           : Expr object; Token name; Expr value; Token assignType",
+                "StaticSet     : LoxClass target; Token name; Expr value; Token assignType",
                 "SpecialSet    : Expr callee; Token name; Token assignType",
+                "StaticSpecial : LoxClass target; Token name; Token assignType",
                 "Switch        : Expr provider; Map<Object,Expr> params; Expr defaulted; Token keyword",
                 "CastCheck     : Expr object; LoxClass targetType; Token patternVarName",
                 "Grouping      : Expr expression",
@@ -29,8 +32,7 @@ public class GenerateAst {
                 "Logical       : Expr left; Token operator; Expr right",
                 "Unary         : Token operator; Expr right",
                 "VarRef        : Token name",
-                "FuncRef       : Token name",
-                "Constructor   : LoxClass target; List<Expr> params; int ordinal"
+                "Constructor   : Token keyword; LoxClass target; List<Expr> params; int ordinal"
         ));
         defineAst("Stmt", List.of(
                 "Block            : List<Stmt> statements",
@@ -38,6 +40,7 @@ public class GenerateAst {
                 "FuncDecl         : LoxClass retType; Token name; List<Pair<LoxClass,Token>> params; List<Stmt> body; boolean isFinal; boolean isAbstract",
                 "If               : Expr condition; Stmt thenBranch; Stmt elseBranch; List<Pair<Expr,Stmt>> elifs; Token keyword",
                 "Return           : Token keyword; Expr value",
+                "Throw            : Token keyword; Expr value",
                 "VarDecl          : Token name; LoxClass type; Expr initializer; boolean isFinal",
                 "While            : Expr condition; Stmt body; Token keyword",
                 "For              : Stmt init; Expr condition; Expr increment; Stmt body; Token keyword",

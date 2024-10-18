@@ -1,16 +1,13 @@
 package net.kapitencraft.lang.run;
 
-import net.kapitencraft.lang.VarTypeManager;
-import net.kapitencraft.lang.exception.runtime.AbstractRuntimeException;
-import net.kapitencraft.lang.oop.ClassInstance;
+import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
+import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.exception.EscapeLoop;
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.func.GeneratedCallable;
+import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.tool.Math;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -24,13 +21,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final Environment globals = new Environment();
     private Environment environment = globals;
     private final CallStack callStack = new CallStack();
+
     public static final Scanner in = new Scanner(System.in);
 
     public static long millisAtStart;
 
     public Interpreter() {
-
-        millisAtStart = System.currentTimeMillis();
     }
 
     public static String stringify(Object object) {
@@ -50,16 +46,19 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public void runMainMethod(LoxClass target, String data) {
         if (!target.hasStaticMethod("main")) return;
         Optional.ofNullable(target.getStaticMethod("main", List.of(VarTypeManager.STRING)))
-                .ifPresent(method -> {
+                .ifPresentOrElse(method -> {
                     this.pushCall(target.absoluteName(), "main", target.name());
                     try {
+                        millisAtStart = System.currentTimeMillis();
                         method.call(null, this, List.of(data));
-                    } catch (AbstractRuntimeException e) {
+                    } catch (AbstractScriptedException e) {
                         System.err.println("Caused by: " + e.exceptionType.getType().absoluteName() + ": " + e.exceptionType.getField("message"));
                         this.callStack.printStackTrace(System.err::println);
+                        System.exit(65);
+                    } finally {
+                        this.callStack.clear();
                     }
-                });
-
+                }, () -> System.err.printf("could not find executable main method inside class '%s'", target.absoluteName()));
     }
 
     public void interpret(List<Stmt> statements, Environment active) {
@@ -69,8 +68,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             for (Stmt statement : statements) {
                 execute(statement);
             }
-        } catch (RuntimeError error) {
-            Main.runtimeError(error);
         } finally {
             environment = shadowed;
         }
@@ -111,6 +108,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (stmt.value != null) value = evaluate(stmt.value);
 
         throw new CancelBlock(value);
+    }
+
+    @Override
+    public Void visitThrowStmt(Stmt.Throw stmt) {
+        AbstractScriptedException exception = new AbstractScriptedException((ClassInstance) evaluate(stmt.value));
+        pushCallIndex(stmt.keyword.line());
+        throw exception;
     }
 
     @Override
@@ -199,12 +203,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitVarRefExpr(Expr.VarRef expr) {
-        return environment.getVar(expr.name.lexeme());
-    }
-
-    @Override
-    public Object visitFuncRefExpr(Expr.FuncRef expr) {
-        return environment.getMethod(expr.name.lexeme());
+        return environment.getVar(expr.name);
     }
 
     public void executeBlock(List<Stmt> statements) {
@@ -225,10 +224,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return switch (expr.operator.type()) {
             case NOT -> !isTruthy(right);
             case SUB -> {
-                checkNumberOperand(expr.operator, right);
-                if (right instanceof Double) {
+                if (right instanceof Double)
                     yield -(double) right;
-                } else yield -(int) right;
+                else if (right instanceof Float)
+                    yield -(float) right;
+                else
+                    yield -(int) right;
             }
             default -> null;
         };
@@ -237,61 +238,58 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {
         Object value = evaluate(expr.value);
-        if (expr.type.type() == TokenType.ASSIGN) environment.assignVar(expr.name.lexeme(), value);
-        else value = environment.assignVarWithOperator(expr.type, expr.name.lexeme(), value);
+        if (expr.type.type() == TokenType.ASSIGN) environment.assignVar(expr.name, value);
+        else value = environment.assignVarWithOperator(expr.type, expr.name, value);
         return value;
     }
 
     @Override
     public Object visitSpecialAssignExpr(Expr.SpecialAssign expr) {
-        return environment.specialVarAssign(expr.name.lexeme(), expr.assignType);
+        return environment.specialVarAssign(expr.name, expr.assignType);
     }
 
     @Override
     public Object visitBinaryExpr(Expr.Binary expr) {
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
+        try {
+            switch (expr.operator.type()) {
+                case GREATER:
+                    return Math.mergeGreater(left, right);
+                case GEQUAL:
+                    return Math.mergeGEqual(left, right);
+                case LESSER:
+                    return Math.mergeLesser(left, right);
+                case LEQUAL:
+                    return Math.mergeLEqual(left, right);
+                case NEQUAL:
+                    return !isEqual(left, right);
+                case EQUAL:
+                    return isEqual(left, right);
+                case POW:
+                    return Math.mergePow(left, right);
+                case SUB:
+                    return Math.mergeSub(left, right);
+                case DIV:
+                    return Math.mergeDiv(left, right);
+                case MUL:
+                    return Math.mergeMul(left, right);
+                case MOD:
+                    return Math.mergeMod(left, right);
+                case ADD:
 
-        switch (expr.operator.type()) {
-            case GREATER:
-                checkNumberOperands(expr.operator, left, right);
-                return Math.mergeGreater(left, right);
-            case GEQUAL:
-                checkNumberOperands(expr.operator, left, right);
-                return Math.mergeGEqual(left, right);
-            case LESSER:
-                checkNumberOperands(expr.operator, left, right);
-                return Math.mergeLesser(left, right);
-            case LEQUAL:
-                checkNumberOperands(expr.operator, left, right);
-                return Math.mergeLEqual(left, right);
-            case NEQUAL: return !isEqual(left, right);
-            case EQUAL: return isEqual(left, right);
-            case POW:
-                checkNumberOperands(expr.operator, left, right);
-                return Math.mergePow(left, right);
-            case SUB:
-                checkNumberOperands(expr.operator, left, right);
-                return Math.mergeSub(left, right);
-            case DIV:
-                checkNumberOperands(expr.operator, left, right);
-                return Math.mergeDiv(left, right);
-            case MUL:
-                checkNumberOperands(expr.operator, left, right);
-                return Math.mergeMul(left, right);
-            case MOD:
-                checkNumberOperands(expr.operator, left, right);
-                return Math.mergeMod(left, right);
-            case ADD:
+                    if (left instanceof String lS) {
+                        return lS + stringify(right);
+                    }
+                    if (right instanceof String rS) {
+                        return stringify(left) + rS;
+                    }
 
-                if (left instanceof String lS) {
-                    return lS + stringify(right);
-                }
-                if (right instanceof String rS) {
-                    return stringify(left) + rS;
-                }
-
-                return Math.mergeAdd(left, right);
+                    return Math.mergeAdd(left, right);
+            }
+        } catch (ArithmeticException e) {
+            pushCallIndex(expr.operator.line());
+            throw AbstractScriptedException.createException(VarTypeManager.ARITHMETIC_EXCEPTION, e.getMessage());
         }
         return null;
     }
@@ -322,29 +320,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return false;
     }
 
-
-    @Override
-    public Object visitCallExpr(Expr.Call expr) {
-        Object callee = evaluate(expr.callee);
-
-        List<Object> arguments = visitArgs(expr.args);
-
-        if (callee instanceof LoxCallable function) {
-            if (arguments.size() != function.arity()) {
-                throw new RuntimeError(expr.bracket, "Expected " +
-                        function.arity() + " arguments but got " +
-                        arguments.size() + ".");
-            }
-            try {
-                this.pushCall("", function.toString(), "Native Method");
-                return function.call(this.environment, this, arguments);
-            } finally {
-                this.popCall();
-            }
-        }
-        throw new RuntimeError(expr.bracket, "unknown function");
-    }
-
     private void popCall() {
         this.callStack.pop();
     }
@@ -353,7 +328,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         this.callStack.push(classFullName + "." + methodName, className);
     }
 
-    private void pushCallIndex(int line) {
+    public void pushCallIndex(int line) {
         this.callStack.pushLineIndex(line);
     }
 
@@ -367,14 +342,18 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return data;
     }
 
+    @Override
+    public Object visitStaticCallExpr(Expr.StaticCall expr) {
+        return expr.target.getStaticMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).call(null, this, visitArgs(expr.args));
+    }
+
     public List<Object> visitArgs(List<Expr> args) {
         return args.stream().map(this::evaluate).toList();
     }
 
     @Override
     public Object visitConstructorExpr(Expr.Constructor expr) {
-        //TODO need to get line location!
-        pushCallIndex(-1);
+        pushCallIndex(expr.keyword.line());
         pushCall(expr.target.absoluteName(), "<init>", expr.target.name());
         Object data = expr.target.createInst(expr.params, expr.ordinal, this);
         popCall();
@@ -384,6 +363,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitGetExpr(Expr.Get expr) {
         return ((ClassInstance) evaluate(expr.object)).getField(expr.name.lexeme());
+    }
+
+    @Override
+    public Object visitStaticGetExpr(Expr.StaticGet expr) {
+        return expr.target.getStaticField(expr.name.lexeme());
     }
 
     @Override
@@ -398,8 +382,23 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitStaticSetExpr(Expr.StaticSet expr) {
+        Object val = evaluate(expr.value);
+        if (expr.assignType.type() == TokenType.ASSIGN) {
+            return expr.target.assignStaticField(expr.name.lexeme(), val);
+        } else {
+            return expr.target.assignStaticFieldWithOperator(expr.name.lexeme(), val, expr.assignType);
+        }
+    }
+
+    @Override
     public Object visitSpecialSetExpr(Expr.SpecialSet expr) {
         return ((ClassInstance) evaluate(expr.callee)).specialAssign(expr.name.lexeme(), expr.assignType);
+    }
+
+    @Override
+    public Object visitStaticSpecialExpr(Expr.StaticSpecial expr) {
+        return expr.target.staticSpecialAssign(expr.name.lexeme(), expr.assignType);
     }
 
     private boolean isEqual(Object a, Object b) {
@@ -407,22 +406,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (a == null) return false;
 
         return a.equals(b);
-    }
-
-
-    public static void checkNumberOperand(Token operator, Object operand) {
-        if (operand instanceof Double) return;
-        if (operand instanceof Integer) return;
-        throw new RuntimeError(operator, "Operand must be a number.");
-    }
-
-    public static void checkNumberOperands(Token operator, Object left, Object right) {
-        boolean leftCheck = left instanceof Double || left instanceof Integer;
-        boolean rightCheck = right instanceof Double || right instanceof Integer;
-
-        if (leftCheck && rightCheck) return;
-
-        throw new RuntimeError(operator, "Operands must be numbers.");
     }
 
     public Object evaluate(Expr expr) {
@@ -433,13 +416,5 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (object == null) return false;
         if (object instanceof Boolean) return (boolean)object;
         return true;
-    }
-
-    public void tryInterpret(LoxClass clazz) {
-        if (!clazz.hasStaticMethod("main")) return;
-        LoxCallable callable = clazz.getStaticMethod("main", List.of());
-        if (callable.arity() == 0) {
-            callable.call(new Environment(), this, List.of());
-        }
     }
 }

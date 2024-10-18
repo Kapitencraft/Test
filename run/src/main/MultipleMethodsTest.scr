@@ -2,15 +2,15 @@ package main;
 
 class MultipleMethodsTest {
     MultipleMethodsTest(String i, String b) {
-        print(i + b);
+        System.print(i + b);
     }
 
     void test(String i) {
-        print(i);
+        System.print(i);
     }
 
     void test(int i) {
-        print(i**2);
+        System.print(i**2);
     }
 
     static void main(String args) {

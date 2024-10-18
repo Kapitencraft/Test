@@ -1,12 +1,11 @@
 package net.kapitencraft.lang.compile.parser;
 
-import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
-import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 import java.util.ArrayList;
@@ -141,11 +140,12 @@ public class ExprParser extends AbstractParser {
         LoxClass left = finder.findRetType(leftArg);
         LoxClass right = finder.findRetType(rightArg);
         if (operator.type() == ADD && (left == VarTypeManager.STRING || right == VarTypeManager.STRING)) return;
-        if (operator.type().isCategory(BOOL_BINARY) && !(left == VarTypeManager.BOOLEAN && right == VarTypeManager.BOOLEAN))
+        if (operator.type().isCategory(ARITHMETIC_BINARY)) {
+            if (!(left.superclass() == VarTypeManager.NUMBER && right.superclass() == VarTypeManager.NUMBER))
+                error(operator, "both values must be numbers");
+        } else if (operator.type().isCategory(BOOL_BINARY) && !(left == VarTypeManager.BOOLEAN && right == VarTypeManager.BOOLEAN))
             error(operator, "both values must be boolean");
-        if (operator.type().isCategory(ARITHMETIC_BINARY) && !(left.superclass() == VarTypeManager.NUMBER && right.superclass() == VarTypeManager.NUMBER))
-            error(operator, "both values must be numbers");
-        if (left != right)
+        else if (left != right)
             error(operator, "can not combine values of different types");
 
     }
@@ -248,14 +248,6 @@ public class ExprParser extends AbstractParser {
         return new Expr.Switch(provider, params, def, keyword);
     }
 
-    private Expr finishCall(Expr callee) {
-        List<Expr> arguments = args();
-
-        Token bracket = consumeBracketClose("arguments");
-
-        return new Expr.Call(callee, bracket, arguments);
-    }
-
     private Expr finishInstCall(Expr.Get get) {
         List<Expr> arguments = args();
 
@@ -263,23 +255,60 @@ public class ExprParser extends AbstractParser {
         LoxClass targetClass = this.finder.findRetType(get.object);
 
         int ordinal = targetClass.getMethodOrdinal(get.name.lexeme(), givenTypes);
-        if (ordinal == -1) error(get.name, "unknown symbol");
-        LoxCallable callable = ordinal == -1 ? null : targetClass.getMethodByOrdinal(get.name.lexeme(), ordinal);
-        List<? extends LoxClass> expectedTypes = callable != null ? callable.argTypes() : List.of();
+        if (ordinal == -1) {
+            error(get.name, "unknown symbol");
+            return new Expr.InstCall(get.object, get.name, ordinal, consumeBracketClose("arguments"), arguments);
+        }
+        LoxCallable callable = targetClass.getMethodByOrdinal(get.name.lexeme(), ordinal);
+
+        checkArguments(arguments, callable, get.name);
+
+        Token bracket = consumeBracketClose("arguments");
+
+        return new Expr.InstCall(get.object, get.name, ordinal, bracket, arguments);
+    }
+
+    private Expr statics() {
+        LoxClass target = consumeVarType();
+        Token name = previous();
+        if (check(BRACKET_O)) return staticCall(target, name);
+        if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
+        if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
+        return new Expr.StaticGet(target, name);
+    }
+
+    private Expr staticCall(LoxClass target, Token name) {
+        consumeBracketOpen("static call");
+        List<Expr> args = args();
+        consumeBracketClose("static call");
+
+        int ordinal = target.getStaticMethodOrdinal(name.lexeme(), args.stream().map(this.finder::findRetType).toList());
+        LoxCallable callable = target.getStaticMethodByOrdinal(name.lexeme(), ordinal);
+        List<? extends LoxClass> expectedTypes = callable.argTypes();
+        List<? extends LoxClass> givenTypes = args.stream().map(this.finder::findRetType).toList();
         if (expectedTypes.size() != givenTypes.size()) {
-            error(get.name, String.format("method %s cannot be applied to given types;", get.name.lexeme()));
+            error(name, String.format("static method %s cannot be applied to given types;", name.lexeme()));
 
             errorLogger.logError("required: " + expectedTypes.stream().map(LoxClass::name).collect(Collectors.joining(",")));
             errorLogger.logError("found:    " + givenTypes.stream().map(LoxClass::name).collect(Collectors.joining(",")));
             errorLogger.logError("reason: actual and formal argument lists differ in length");
         } else {
             for (int i = 0; i < givenTypes.size(); i++) {
-                expectType(locFinder.find(arguments.get(i)), givenTypes.get(i), expectedTypes.get(i));
+                expectType(locFinder.find(args.get(i)), givenTypes.get(i), expectedTypes.get(i));
             }
         }
-        Token bracket = consumeBracketClose("arguments");
 
-        return new Expr.InstCall(get.object, get.name, ordinal, bracket, arguments);
+        return new Expr.StaticCall(target, name, ordinal, args);
+    }
+
+    private Expr staticAssign(LoxClass target, Token name) {
+        Token type = previous();
+        Expr value = expression();
+        return new Expr.StaticSet(target, name, value, type);
+    }
+
+    private Expr staticSpecialAssign(LoxClass target, Token name) {
+        return new Expr.StaticSpecial(target, name, previous());
     }
 
     private List<Expr> args() {
@@ -300,7 +329,7 @@ public class ExprParser extends AbstractParser {
         while (true) {
             if (match(BRACKET_O)) {
                 if (expr instanceof Expr.Get get) expr = finishInstCall(get);
-                    else expr = finishCall(expr);
+                else error(locFinder.find(expr), "obj expected");
             } else if (match(DOT)) {
                 Token name = consume(IDENTIFIER, "Expect property name after '.'.");
                 if (!check(BRACKET_O)) { //ensure not to check for field if it's a method
@@ -313,6 +342,23 @@ public class ExprParser extends AbstractParser {
         }
 
         return expr;
+    }
+
+    private void checkArguments(List<Expr> args, LoxCallable target, Token loc) {
+        List<? extends LoxClass> expectedTypes = target.argTypes();
+        List<? extends LoxClass> givenTypes = args.stream().map(this.finder::findRetType).toList();
+        if (expectedTypes.size() != givenTypes.size()) {
+            error(loc, String.format("constructor for %s cannot be applied to given types;", loc.lexeme()));
+
+            errorLogger.logError("required: " + expectedTypes.stream().map(LoxClass::name).collect(Collectors.joining(",")));
+            errorLogger.logError("found:    " + givenTypes.stream().map(LoxClass::name).collect(Collectors.joining(",")));
+            errorLogger.logError("reason: actual and formal argument lists differ in length");
+        } else {
+            for (int i = 0; i < givenTypes.size(); i++) {
+                expectType(locFinder.find(args.get(i)), givenTypes.get(i), expectedTypes.get(i));
+            }
+        }
+
     }
 
     private Object literal() {
@@ -336,21 +382,10 @@ public class ExprParser extends AbstractParser {
             consumeBracketClose("constructor");
             int ordinal = loxClass.getConstructor().getMethodOrdinal(args.stream().map(this.finder::findRetType).toList());
             LoxCallable callable = loxClass.getConstructor().getMethodByOrdinal(ordinal);
-            List<? extends LoxClass> expectedTypes = callable.argTypes();
-            List<LoxClass> givenTypes = args.stream().map(this.finder::findRetType).toList();
-            if (expectedTypes.size() != givenTypes.size()) {
-                error(loc, String.format("method %s cannot be applied to given types;", loc.lexeme()));
 
-                errorLogger.logError("required: " + expectedTypes.stream().map(LoxClass::name).collect(Collectors.joining(",")));
-                errorLogger.logError("found:    " + givenTypes.stream().map(LoxClass::name).collect(Collectors.joining(",")));
-                errorLogger.logError("reason: actual and formal argument lists differ in length");
-            } else {
-                for (int i = 0; i < givenTypes.size(); i++) {
-                    expectType(locFinder.find(args.get(i)), givenTypes.get(i), expectedTypes.get(i));
-                }
-            }
+            checkArguments(args, callable, loc);
 
-            return new Expr.Constructor(loxClass, args, ordinal);
+            return new Expr.Constructor(loc, loxClass, args, ordinal);
         }
 
         if (match(PRIMITIVE)) {
@@ -359,12 +394,12 @@ public class ExprParser extends AbstractParser {
 
         if (match(IDENTIFIER)) {
             Token previous = previous();
-            if (peek().type() == BRACKET_O) {
-                return new Expr.FuncRef(previous);
-            } else {
-                checkVarExistence(previous, true, true);
-                return new Expr.VarRef(previous);
+            if (!varAnalyser.has(previous.lexeme())) {
+                current--;
+                return statics();
             }
+            checkVarExistence(previous, true, true);
+            return new Expr.VarRef(previous);
         }
 
         if (match(THIS)) return new Expr.VarRef(previous());

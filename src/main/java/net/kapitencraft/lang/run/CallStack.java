@@ -1,18 +1,11 @@
 package net.kapitencraft.lang.run;
 
-import net.kapitencraft.lang.VarTypeManager;
-import net.kapitencraft.lang.exception.runtime.AbstractRuntimeException;
-import net.kapitencraft.lang.exception.runtime.StackOverflowException;
-import net.kapitencraft.lang.oop.ClassInstance;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.tool.Consumers;
+import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
 import net.kapitencraft.tool.Pair;
 
-import javax.naming.Name;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Consumer;
 
 public class CallStack {
@@ -29,7 +22,7 @@ public class CallStack {
     }
 
     public void push(String methodRef, String callClass) {
-        if (stack.size() > MAX_STACK_SIZE) throw new AbstractRuntimeException(VarTypeManager.STACK_OVERFLOW.createNativeInst(List.of(""), 0, Interpreter.INSTANCE));
+        if (stack.size() > MAX_STACK_SIZE) throw AbstractScriptedException.createException(VarTypeManager.STACK_OVERFLOW_EXCEPTION, "");
         stack.push(Pair.of(methodRef, callClass));
     }
 
@@ -47,5 +40,10 @@ public class CallStack {
     public void pop() {
         lineIndexes.pop();
         stack.pop();
+    }
+
+    public void clear() {
+        stack.clear();
+        lineIndexes.clear();
     }
 }

@@ -1,20 +1,13 @@
 package net.kapitencraft.lang.run;
 
-import net.kapitencraft.lang.VarTypeManager;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Scanner;
 
 public class Main {
     public static Map<String, LoxCallable> natives = Map.of(
@@ -162,14 +155,6 @@ public class Main {
                 }
             }
     );
-
-    static boolean hadRuntimeError = false;
-
-    static void runtimeError(RuntimeError error) {
-        System.err.println(error.getMessage() +
-                "\n[line " + error.token.line() + "]");
-        hadRuntimeError = true;
-    }
 
     public static void error(int lineIndex, String message, String fileId, String line) {
         Compiler.report(lineIndex, message, fileId, line.length(), line);

@@ -1,0 +1,220 @@
+{
+  "name": "TimeTest",
+  "superclass": "scripted.lang.Object",
+  "methods": {},
+  "staticMethods": {
+    "main": [
+      {
+        "retType": "scripted.lang.void",
+        "name": {
+          "type": "IDENTIFIER",
+          "lexeme": "main",
+          "literal": {},
+          "line": 4,
+          "lineStartIndex": 16
+        },
+        "params": [],
+        "body": [
+          {
+            "TYPE": "for",
+            "init": {
+              "TYPE": "varDecl",
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "i",
+                "literal": {},
+                "line": 5,
+                "lineStartIndex": 17
+              },
+              "targetType": "scripted.lang.int",
+              "initializer": {
+                "TYPE": "literal",
+                "value": {
+                  "type": "NUM",
+                  "lexeme": "0",
+                  "literal": {
+                    "type": "int",
+                    "value": 0
+                  },
+                  "line": 5,
+                  "lineStartIndex": 21
+                }
+              },
+              "isFinal": false
+            },
+            "condition": {
+              "TYPE": "binary",
+              "left": {
+                "TYPE": "varRef",
+                "name": {
+                  "type": "IDENTIFIER",
+                  "lexeme": "i",
+                  "literal": {},
+                  "line": 5,
+                  "lineStartIndex": 24
+                }
+              },
+              "operator": {
+                "type": "LESSER",
+                "lexeme": "\u003c",
+                "literal": {},
+                "line": 5,
+                "lineStartIndex": 26
+              },
+              "right": {
+                "TYPE": "literal",
+                "value": {
+                  "type": "NUM",
+                  "lexeme": "1000",
+                  "literal": {
+                    "type": "int",
+                    "value": 1000
+                  },
+                  "line": 5,
+                  "lineStartIndex": 28
+                }
+              }
+            },
+            "increment": {
+              "TYPE": "specialAssign",
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "i",
+                "literal": {},
+                "line": 5,
+                "lineStartIndex": 34
+              },
+              "assignType": {
+                "type": "GROW",
+                "lexeme": "++",
+                "literal": {},
+                "line": 5,
+                "lineStartIndex": 35
+              }
+            },
+            "body": {
+              "TYPE": "block",
+              "statements": [
+                {
+                  "TYPE": "expression",
+                  "expr": {
+                    "TYPE": "staticCall",
+                    "target": "scripted.lang.System",
+                    "name": {
+                      "type": "IDENTIFIER",
+                      "lexeme": "print",
+                      "literal": {},
+                      "line": 6,
+                      "lineStartIndex": 19
+                    },
+                    "ordinal": 0,
+                    "args": [
+                      {
+                        "TYPE": "varRef",
+                        "name": {
+                          "type": "IDENTIFIER",
+                          "lexeme": "i",
+                          "literal": {},
+                          "line": 6,
+                          "lineStartIndex": 25
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "keyword": {
+              "type": "FOR",
+              "lexeme": "for",
+              "literal": {},
+              "line": 5,
+              "lineStartIndex": 8
+            }
+          },
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "staticCall",
+              "target": "scripted.lang.System",
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "print",
+                "literal": {},
+                "line": 8,
+                "lineStartIndex": 15
+              },
+              "ordinal": 0,
+              "args": [
+                {
+                  "TYPE": "binary",
+                  "left": {
+                    "TYPE": "binary",
+                    "left": {
+                      "TYPE": "literal",
+                      "value": {
+                        "type": "STR",
+                        "lexeme": "\"counting to 1000 took \"",
+                        "literal": {
+                          "type": "String",
+                          "value": "counting to 1000 took "
+                        },
+                        "line": 8,
+                        "lineStartIndex": 21
+                      }
+                    },
+                    "operator": {
+                      "type": "ADD",
+                      "lexeme": "+",
+                      "literal": {},
+                      "line": 8,
+                      "lineStartIndex": 46
+                    },
+                    "right": {
+                      "TYPE": "staticCall",
+                      "target": "scripted.lang.System",
+                      "name": {
+                        "type": "IDENTIFIER",
+                        "lexeme": "time",
+                        "literal": {},
+                        "line": 8,
+                        "lineStartIndex": 55
+                      },
+                      "ordinal": 0,
+                      "args": []
+                    }
+                  },
+                  "operator": {
+                    "type": "ADD",
+                    "lexeme": "+",
+                    "literal": {},
+                    "line": 8,
+                    "lineStartIndex": 62
+                  },
+                  "right": {
+                    "TYPE": "literal",
+                    "value": {
+                      "type": "STR",
+                      "lexeme": "\"ms\"",
+                      "literal": {
+                        "type": "String",
+                        "value": "ms"
+                      },
+                      "line": 8,
+                      "lineStartIndex": 64
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "flags": []
+      }
+    ]
+  },
+  "constructor": [],
+  "fields": {},
+  "staticFields": {},
+  "flags": []
+}

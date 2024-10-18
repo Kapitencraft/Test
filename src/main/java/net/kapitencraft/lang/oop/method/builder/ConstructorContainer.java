@@ -1,10 +1,10 @@
-package net.kapitencraft.lang.func.method_builder;
+package net.kapitencraft.lang.oop.method.builder;
 
 import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.ClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.tool.Util;

@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.func;
+package net.kapitencraft.lang.oop.method;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compile.CacheBuilder;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.env.core.Environment;
+import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.CacheLoader;

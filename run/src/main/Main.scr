@@ -4,13 +4,7 @@ class Main {
     int x;
 
     static void main(String args) {
-        Main main = new Main.A();
-        main.x = 10;
-        if (main instanceof A a) {
-            a.test2();
-        }
-
-        print(main.x);
+        System.print((4**0 + 64**0.5)**-2);
     }
 
     void test() {

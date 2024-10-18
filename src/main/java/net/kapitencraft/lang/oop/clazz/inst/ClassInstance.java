@@ -1,8 +1,7 @@
-package net.kapitencraft.lang.oop;
+package net.kapitencraft.lang.oop.clazz.inst;
 
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
@@ -16,6 +15,7 @@ import java.util.Map;
 public class ClassInstance {
     private final Environment environment;
     private final Map<String, Object> fields = new HashMap<>();
+    private final Map<String, Object> staticFields = new HashMap<>();
     private final LoxClass type;
 
     public LoxClass getType() {
@@ -43,7 +43,7 @@ public class ClassInstance {
     }
 
     public Object specialAssign(String name, Token assignType) {
-        Object val = this.fields.get(name);
+        Object val = getField(name);
         if (val instanceof Integer) {
             this.assignField(name, (int)val + (assignType.type() == TokenType.GROW ? 1 : -1));
         } else {
@@ -51,7 +51,6 @@ public class ClassInstance {
         }
         return getField(name);
     }
-
 
     public Object getField(String name) {
         return this.fields.get(name);

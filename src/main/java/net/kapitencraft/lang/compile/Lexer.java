@@ -1,9 +1,8 @@
 package net.kapitencraft.lang.compile;
 
-import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.run.Main;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 
@@ -183,7 +182,6 @@ public class Lexer {
 
     private void number() {
         boolean seenDecimal = match('.');
-        current--; //jump back
         while (isDigit(peek())) advance();
 
         // Look for a fractional part.
@@ -193,8 +191,7 @@ public class Lexer {
             while (isDigit(peek()));
         }
         String literal = source.substring(start, current);
-        if (peek() == 'f' || peek() == 'F') { //float :hypers:
-            advance();
+        if (match('f') || match('F')) { //float :hypers:
             addToken(NUM, Float.parseFloat(literal), VarTypeManager.FLOAT);
         }
 

@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.compile.visitor;
 
-import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compile.VarTypeParser;
 import net.kapitencraft.lang.compile.analyser.VarAnalyser;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -49,13 +49,13 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
     }
 
     @Override
-    public LoxClass visitCallExpr(Expr.Call expr) {
-        return null;
+    public LoxClass visitInstCallExpr(Expr.InstCall expr) {
+        return findRetType(expr.callee).getMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).type();
     }
 
     @Override
-    public LoxClass visitInstCallExpr(Expr.InstCall expr) {
-        return findRetType(expr.callee).getMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).type();
+    public LoxClass visitStaticCallExpr(Expr.StaticCall expr) {
+        return expr.target;
     }
 
     @Override
@@ -64,13 +64,28 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
     }
 
     @Override
+    public LoxClass visitStaticGetExpr(Expr.StaticGet expr) {
+        return null;
+    }
+
+    @Override
     public LoxClass visitSetExpr(Expr.Set expr) {
         return findRetType(expr.object).getFieldType(expr.name.lexeme());
     }
 
     @Override
+    public LoxClass visitStaticSetExpr(Expr.StaticSet expr) {
+        return null;
+    }
+
+    @Override
     public LoxClass visitSpecialSetExpr(Expr.SpecialSet expr) {
         return findRetType(expr.callee).getFieldType(expr.name.lexeme());
+    }
+
+    @Override
+    public LoxClass visitStaticSpecialExpr(Expr.StaticSpecial expr) {
+        return null;
     }
 
     @Override
@@ -100,17 +115,12 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
 
     @Override
     public LoxClass visitUnaryExpr(Expr.Unary expr) {
-        return null;
+        return findRetType(expr.right);
     }
 
     @Override
     public LoxClass visitVarRefExpr(Expr.VarRef expr) {
         return varAnalyser.getType(expr.name.lexeme());
-    }
-
-    @Override
-    public LoxClass visitFuncRefExpr(Expr.FuncRef expr) {
-        return null; //removed soon
     }
 
     @Override

@@ -1,18 +1,32 @@
-package net.kapitencraft.lang.native_classes;
+package net.kapitencraft.lang.natives.scripted.lang;
 
-import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.func.GeneratedCallable;
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.func.method_builder.ConstructorContainer;
-import net.kapitencraft.lang.func.method_builder.MethodContainer;
-import net.kapitencraft.lang.oop.ClassInstance;
+import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
+import net.kapitencraft.lang.oop.method.builder.MethodContainer;
+import net.kapitencraft.lang.holder.LiteralHolder;
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
+import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
+import net.kapitencraft.lang.oop.LoxField;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.Interpreter;
 
 import java.util.List;
+import java.util.Map;
 
 public class ThrowableClass implements LoxClass {
+    @Override
+    public Object getStaticField(String name) {
+        return null;
+    }
+
+    @Override
+    public Object assignStaticField(String name, Object val) {
+        return null;
+    }
+
     @Override
     public String name() {
         return "Throwable";
@@ -26,6 +40,29 @@ public class ThrowableClass implements LoxClass {
     @Override
     public LoxClass superclass() {
         return VarTypeManager.OBJECT;
+    }
+
+    @Override
+    public Map<String, LoxField> getFields() {
+        return Map.of(
+                "message", new LoxField() {
+
+                    @Override
+                    public Object initialize(Environment environment, Interpreter interpreter) {
+                        return null;
+                    }
+
+                    @Override
+                    public LoxClass getType() {
+                        return VarTypeManager.STRING;
+                    }
+
+                    @Override
+                    public boolean isFinal() {
+                        return true;
+                    }
+                }
+        );
     }
 
     @Override
@@ -49,6 +86,16 @@ public class ThrowableClass implements LoxClass {
     }
 
     @Override
+    public LoxCallable getStaticMethodByOrdinal(String name, int ordinal) {
+        return null;
+    }
+
+    @Override
+    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+        return 0;
+    }
+
+    @Override
     public boolean hasStaticMethod(String name) {
         return false;
     }
@@ -64,7 +111,7 @@ public class ThrowableClass implements LoxClass {
 
                     @Override
                     public LoxClass type() {
-                        return ThrowableClass.this;
+                        return VarTypeManager.VOID;
                     }
 
                     @Override
@@ -74,7 +121,8 @@ public class ThrowableClass implements LoxClass {
 
                     @Override
                     public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                        return new ClassInstance(ThrowableClass.this, interpreter);
+                        ((ClassInstance) environment.getVar(new Token(TokenType.IDENTIFIER, "this", new LiteralHolder(null, null), -1, 0))).assignField("message", arguments.get(0));
+                        return null;
                     }
 
                     @Override
@@ -102,16 +150,16 @@ public class ThrowableClass implements LoxClass {
 
     @Override
     public int getMethodOrdinal(String name, List<LoxClass> types) {
-        return 0;
+        return -1;
     }
 
     @Override
-    public boolean hasEnclosing(String lexeme) {
+    public boolean hasEnclosing(String name) {
         return false;
     }
 
     @Override
-    public LoxClass getEnclosing(String lexeme) {
+    public LoxClass getEnclosing(String name) {
         return null;
     }
 }

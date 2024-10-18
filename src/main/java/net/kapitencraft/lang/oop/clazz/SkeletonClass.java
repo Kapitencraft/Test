@@ -3,13 +3,13 @@ package net.kapitencraft.lang.oop.clazz;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.compile.parser.SkeletonParser;
-import net.kapitencraft.lang.func.method_builder.ConstructorContainer;
-import net.kapitencraft.lang.func.method_builder.DataMethodContainer;
+import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
+import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.oop.SkeletonMethod;
+import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.run.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Util;
@@ -187,6 +187,16 @@ public class SkeletonClass implements LoxClass {
     }
 
     @Override
+    public Object getStaticField(String name) {
+        throw new IllegalAccessError("cannot access field from skeleton");
+    }
+
+    @Override
+    public Object assignStaticField(String name, Object val) {
+        throw new IllegalAccessError("cannot access field from skeleton");
+    }
+
+    @Override
     public String name() {
         return name;
     }
@@ -219,6 +229,16 @@ public class SkeletonClass implements LoxClass {
     @Override
     public LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
         return staticMethods.get(name).getMethod(args);
+    }
+
+    @Override
+    public LoxCallable getStaticMethodByOrdinal(String name, int ordinal) {
+        return staticMethods.get(name).getMethodByOrdinal(ordinal);
+    }
+
+    @Override
+    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+        return staticMethods.get(name).getMethodOrdinal(args);
     }
 
     @Override

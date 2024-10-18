@@ -1,10 +1,9 @@
 package net.kapitencraft.tool;
 
+import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.run.Interpreter;
-import net.kapitencraft.lang.run.RuntimeError;
-
-import static net.kapitencraft.lang.run.Interpreter.checkNumberOperands;
 
 public class Math {
 
@@ -129,40 +128,36 @@ public class Math {
     }
 
     public static Object merge(Object activeVal, Object exprVal, Token type) {
-        return switch (type.type()) {
-            case AND_ASSIGN:
-                yield Interpreter.isTruthy(activeVal) && Interpreter.isTruthy(exprVal);
-            case OR_ASSIGN:
-                yield Interpreter.isTruthy(activeVal) || Interpreter.isTruthy(exprVal);
-            case XOR_ASSIGN:
-                yield Interpreter.isTruthy(activeVal) ^ Interpreter.isTruthy(exprVal);
-            case SUB_ASSIGN:
-                checkNumberOperands(type, activeVal, exprVal);
-                yield Math.mergeSub(activeVal, exprVal);
-            case DIV_ASSIGN:
-                checkNumberOperands(type, activeVal, exprVal);
-                yield Math.mergeDiv(activeVal, exprVal);
-            case MUL_ASSIGN:
-                checkNumberOperands(type, activeVal, exprVal);
-                yield Math.mergeMul(activeVal, exprVal);
-            case MOD_ASSIGN:
-                checkNumberOperands(type, activeVal, exprVal);
-                yield Math.mergeMod(activeVal, exprVal);
-            case ADD_ASSIGN:
-                if (activeVal instanceof String lS) {
-                    yield lS + exprVal;
-                } else if (exprVal instanceof String vS) {
-                    yield activeVal + vS;
-                }
+        try {
+            return switch (type.type()) {
+                case AND_ASSIGN:
+                    yield Interpreter.isTruthy(activeVal) && Interpreter.isTruthy(exprVal);
+                case OR_ASSIGN:
+                    yield Interpreter.isTruthy(activeVal) || Interpreter.isTruthy(exprVal);
+                case XOR_ASSIGN:
+                    yield Interpreter.isTruthy(activeVal) ^ Interpreter.isTruthy(exprVal);
+                case SUB_ASSIGN:
+                    yield Math.mergeSub(activeVal, exprVal);
+                case DIV_ASSIGN:
+                    yield Math.mergeDiv(activeVal, exprVal);
+                case MUL_ASSIGN:
+                    yield Math.mergeMul(activeVal, exprVal);
+                case MOD_ASSIGN:
+                    yield Math.mergeMod(activeVal, exprVal);
+                case ADD_ASSIGN:
+                    if (activeVal instanceof String lS) {
+                        yield lS + exprVal;
+                    } else if (exprVal instanceof String vS) {
+                        yield activeVal + vS;
+                    }
 
-                try {
                     yield Math.mergeAdd(activeVal, exprVal);
-                } catch (Exception e) {
-                    throw new RuntimeError(type, "Operands must be two numbers or two strings.");
-                }
-
-            default:
-                throw new RuntimeError(type, "Unknown Operation type");
-        };
+                default:
+                    throw AbstractScriptedException.createException(VarTypeManager.ARITHMETIC_EXCEPTION, "Unknown Operation type");
+            };
+        } catch (ArithmeticException e) {
+            Interpreter.INSTANCE.pushCallIndex(type.line());
+            throw AbstractScriptedException.createException(VarTypeManager.ARITHMETIC_EXCEPTION, e.getMessage());
+        }
     }
 }

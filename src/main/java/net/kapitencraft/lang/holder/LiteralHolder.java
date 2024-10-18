@@ -1,8 +1,7 @@
 package net.kapitencraft.lang.holder;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.tool.GsonHelper;
 

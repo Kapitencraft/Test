@@ -13,6 +13,7 @@ import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
 
 import java.util.List;
+import java.util.Timer;
 
 public class CacheLoader {
 
@@ -36,11 +37,14 @@ public class CacheLoader {
             case "specialAssign" -> readSpecialAssign(object);
             case "binary" -> readBinary(object);
             case "when" -> readWhen(object);
-            case "call" -> readCall(object); //removed soon
             case "instCall" -> readInstCall(object);
+            case "staticCall" -> readStaticCall(object);
             case "get" -> readGet(object);
+            case "staticGet" -> readStaticGet(object);
             case "set" -> readSet(object);
+            case "staticSet" -> readStaticSet(object);
             case "specialSet" -> readSpecialSet(object);
+            case "specialStaticSet" -> readSpecialStaticSet(object);
             case "switch" -> readSwitch(object);
             case "castCheck" -> readCastCheck(object);
             case "grouping" -> readGrouping(object);
@@ -48,10 +52,39 @@ public class CacheLoader {
             case "logical" -> readLogical(object);
             case "unary" -> readUnary(object);
             case "varRef" -> readVarRef(object);
-            case "funcRef" -> readFuncRef(object);
             case "constructor" -> readConstructor(object);
             default -> throw new IllegalStateException("unknown expr key '" + type + "'");
         };
+    }
+
+    private static Expr readStaticGet(JsonObject object) {
+        LoxClass target = ClassLoader.loadClassReference(object, "target");
+        Token name = Token.readFromSubObject(object, "name");
+        return new Expr.StaticGet(target, name);
+    }
+
+    private static Expr readStaticSet(JsonObject object) {
+        LoxClass target = ClassLoader.loadClassReference(object, "target");
+        Token name = Token.readFromSubObject(object, "name");
+        Expr value = readSubExpr(object, "value");
+        Token assignType = Token.readFromSubObject(object, "assignType");
+        return new Expr.StaticSet(target, name, value, assignType);
+
+    }
+
+    private static Expr readSpecialStaticSet(JsonObject object) {
+        LoxClass target = ClassLoader.loadClassReference(object, "target");
+        Token name = Token.readFromSubObject(object, "name");
+        Token assignType = Token.readFromSubObject(object, "assignType");
+        return new Expr.StaticSpecial(target, name, assignType);
+    }
+
+    private static Expr readStaticCall(JsonObject object) {
+        LoxClass target = ClassLoader.loadClassReference(object, "target");
+        Token name = Token.readFromSubObject(object, "name");
+        int ordinal = GsonHelper.getAsInt(object, "ordinal");
+        List<Expr> args = readArgs(object, "args");
+        return new Expr.StaticCall(target, name, ordinal, args);
     }
 
     private static Expr readBinary(JsonObject object) {
@@ -66,13 +99,6 @@ public class CacheLoader {
         Expr ifTrue = readSubExpr(object, "ifTrue");
         Expr ifFalse = readSubExpr(object, "ifFalse");
         return new Expr.When(condition, ifTrue, ifFalse);
-    }
-
-    private static Expr readCall(JsonObject object) {
-        Expr callee = readSubExpr(object, "callee");
-        Token bracket = Token.readFromSubObject(object, "bracket");
-        List<Expr> args = readArgs(object, "args");
-        return new Expr.Call(callee, bracket, args);
     }
 
     private static Expr readInstCall(JsonObject object) {
@@ -154,15 +180,11 @@ public class CacheLoader {
         return new Expr.VarRef(Token.readFromSubObject(object, "name"));
     }
 
-    private static Expr readFuncRef(JsonObject object) {
-        return new Expr.FuncRef(Token.readFromSubObject(object, "name"));
-    }
-
     private static Expr readConstructor(JsonObject object) {
         LoxClass target = ClassLoader.loadClassReference(object, "target");
         List<Expr> args = readArgs(object, "args");
         int ordinal = GsonHelper.getAsInt(object, "ordinal");
-        return new Expr.Constructor(target, args, ordinal);
+        return new Expr.Constructor(Token.readFromSubObject(object, "keyword"), target, args, ordinal);
     }
 
     private static Expr readAssign(JsonObject object) {
@@ -185,12 +207,19 @@ public class CacheLoader {
             case "expression" -> readExpression(object);
             case "if" -> readIf(object);
             case "return" -> readReturn(object);
+            case "throw" -> readThrow(object);
             case "varDecl" -> readVarDecl(object);
             case "while" -> readWhile(object);
             case "for" -> readFor(object);
             case "loopInterrupt" -> readLoopInterrupt(object);
             default -> throw new IllegalStateException("unknown stmt key '" + type + "'");
         };
+    }
+
+    private static Stmt readThrow(JsonObject object) {
+        Token token = Token.readFromSubObject(object, "keyword");
+        Expr expr = readSubExpr(object, "value");
+        return new Stmt.Throw(token, expr);
     }
 
     private static Stmt readBlock(JsonObject object) {

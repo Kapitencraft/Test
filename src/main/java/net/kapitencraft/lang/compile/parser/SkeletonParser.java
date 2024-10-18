@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.compile.parser;
 
-import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.compile.VarTypeParser;
 import net.kapitencraft.lang.holder.token.Token;
@@ -49,7 +49,7 @@ public class SkeletonParser extends AbstractParser {
         }
 
         PreviewClass previewClass = new PreviewClass(name.lexeme());
-        parser.addClass(previewClass);
+        parser.addClass(previewClass, null);
         LoxClass superClass = VarTypeManager.OBJECT;
         if (match(EXTENDS)) superClass = consumeVarType(parser);
 
@@ -178,9 +178,13 @@ public class SkeletonParser extends AbstractParser {
     private void importStmt() {
         consume(IMPORT, "Expected import or class");
         List<Token> packages = readPackage();
+        String nameOverride = null;
+        if (match(AS)) nameOverride = consumeIdentifier().lexeme();
         consumeEndOfArg();
         LoxClass target = VarTypeManager.getClass(packages, this::error);
-        if (target != null) parser.addClass(target);
+        if (target != null) {
+            parser.addClass(target, nameOverride);
+        }
     }
 
     private List<Token> readPackage() {

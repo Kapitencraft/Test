@@ -59,6 +59,11 @@ public class ReturnScanner implements Stmt.Visitor<Boolean> {
     }
 
     @Override
+    public Boolean visitThrowStmt(Stmt.Throw stmt) {
+        return true;
+    }
+
+    @Override
     public Boolean visitVarDeclStmt(Stmt.VarDecl stmt) {
         return false;
     }

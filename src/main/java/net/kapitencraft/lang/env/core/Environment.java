@@ -17,12 +17,10 @@ public class Environment {
 
     public void push() {
         vars.push();
-        methods.push();
     }
 
     public void pop() {
         vars.pop();
-        methods.pop();
     }
 
     //var
@@ -30,20 +28,16 @@ public class Environment {
         vars.define(name, value);
     }
 
-    public Object getVar(String name) {
+    public Object getVar(Token name) {
         return vars.get(name);
     }
 
-    public void assignVar(String name, Object value) {
+    public void assignVar(Token name, Object value) {
         vars.assign(name, value);
     }
 
-    public Object assignVarWithOperator(Token type, String name, Object value) {
+    public Object assignVarWithOperator(Token type, Token name, Object value) {
         return vars.assignWithOperator(type, name, value);
-    }
-
-    public boolean hasVar(String name) {
-        return vars.has(name);
     }
 
     //method
@@ -51,11 +45,7 @@ public class Environment {
         this.methods.define(name, func);
     }
 
-    public LoxCallable getMethod(String name) {
-        return this.methods.get(name);
-    }
-
-    public Object specialVarAssign(String name, Token type) {
+    public Object specialVarAssign(Token name, Token type) {
         return vars.specialAssign(name, type);
     }
 }

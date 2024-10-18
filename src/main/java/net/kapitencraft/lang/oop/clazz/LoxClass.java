@@ -1,17 +1,36 @@
 package net.kapitencraft.lang.oop.clazz;
 
-import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.func.method_builder.MethodContainer;
+import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.oop.ClassInstance;
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
+import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.LoxField;
 import net.kapitencraft.lang.run.Interpreter;
+import net.kapitencraft.tool.Math;
 
 import java.util.List;
 import java.util.Map;
 
 public interface LoxClass {
+    Object getStaticField(String name);
+
+    Object assignStaticField(String name, Object val);
+
+    default Object staticSpecialAssign(String name, Token assignType) {
+        Object val = getStaticField(name);
+        if (val instanceof Integer) {
+            return this.assignStaticField(name, (int)val + (assignType.type() == TokenType.GROW ? 1 : -1));
+        } else {
+            return this.assignStaticField(name, (double)val + (assignType.type() == TokenType.GROW ? 1 : -1));
+        }
+    }
+
+    default Object assignStaticFieldWithOperator(String name, Object val, Token type) {
+        return this.assignStaticField(name, Math.merge(getStaticField(name), val, type));
+    }
 
     String name();
 
@@ -33,7 +52,13 @@ public interface LoxClass {
         return superclass().hasField(name);
     }
 
-    LoxCallable getStaticMethod(String name, List<? extends LoxClass> args);
+    default LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
+        return getStaticMethodByOrdinal(name, getStaticMethodOrdinal(name, args));
+    }
+
+    LoxCallable getStaticMethodByOrdinal(String name, int ordinal);
+
+    int getStaticMethodOrdinal(String name, List<? extends LoxClass> args);
 
     default LoxCallable getMethod(String name, List<LoxClass> args) {
         return superclass().getMethod(name, args);
@@ -101,7 +126,7 @@ public interface LoxClass {
      */
     int getMethodOrdinal(String name, List<LoxClass> types);
 
-    boolean hasEnclosing(String lexeme);
+    boolean hasEnclosing(String name);
 
-    LoxClass getEnclosing(String lexeme);
+    LoxClass getEnclosing(String name);
 }

@@ -17,24 +17,16 @@
           {
             "TYPE": "expression",
             "expr": {
-              "TYPE": "call",
-              "callee": {
-                "TYPE": "funcRef",
-                "name": {
-                  "type": "IDENTIFIER",
-                  "lexeme": "print",
-                  "literal": {},
-                  "line": 9,
-                  "lineStartIndex": 8
-                }
-              },
-              "bracket": {
-                "type": "BRACKET_C",
-                "lexeme": ")",
+              "TYPE": "staticCall",
+              "target": "scripted.lang.System",
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "print",
                 "literal": {},
                 "line": 9,
                 "lineStartIndex": 15
               },
+              "ordinal": 0,
               "args": [
                 {
                   "TYPE": "varRef",
@@ -43,7 +35,7 @@
                     "lexeme": "i",
                     "literal": {},
                     "line": 9,
-                    "lineStartIndex": 14
+                    "lineStartIndex": 21
                   }
                 }
               ]
@@ -66,24 +58,16 @@
           {
             "TYPE": "expression",
             "expr": {
-              "TYPE": "call",
-              "callee": {
-                "TYPE": "funcRef",
-                "name": {
-                  "type": "IDENTIFIER",
-                  "lexeme": "print",
-                  "literal": {},
-                  "line": 13,
-                  "lineStartIndex": 8
-                }
-              },
-              "bracket": {
-                "type": "BRACKET_C",
-                "lexeme": ")",
+              "TYPE": "staticCall",
+              "target": "scripted.lang.System",
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "print",
                 "literal": {},
                 "line": 13,
-                "lineStartIndex": 18
+                "lineStartIndex": 15
               },
+              "ordinal": 0,
               "args": [
                 {
                   "TYPE": "binary",
@@ -94,7 +78,7 @@
                       "lexeme": "i",
                       "literal": {},
                       "line": 13,
-                      "lineStartIndex": 14
+                      "lineStartIndex": 21
                     }
                   },
                   "operator": {
@@ -102,7 +86,7 @@
                     "lexeme": "**",
                     "literal": {},
                     "line": 13,
-                    "lineStartIndex": 15
+                    "lineStartIndex": 22
                   },
                   "right": {
                     "TYPE": "literal",
@@ -114,7 +98,7 @@
                         "value": 2
                       },
                       "line": 13,
-                      "lineStartIndex": 17
+                      "lineStartIndex": 24
                     }
                   }
                 }
@@ -148,10 +132,10 @@
               "line": 17,
               "lineStartIndex": 28
             },
-            "targetType": "main.MultipleMethodsTest",
+            "targetType": "main..MultipleMethodsTest",
             "initializer": {
               "TYPE": "constructor",
-              "target": "main.MultipleMethodsTest",
+              "target": "main..MultipleMethodsTest",
               "args": [
                 {
                   "TYPE": "literal",
@@ -180,6 +164,13 @@
                   }
                 }
               ],
+              "keyword": {
+                "type": "IDENTIFIER",
+                "lexeme": "MultipleMethodsTest",
+                "literal": {},
+                "line": 17,
+                "lineStartIndex": 39
+              },
               "ordinal": 0
             },
             "isFinal": false
@@ -296,24 +287,16 @@
         {
           "TYPE": "expression",
           "expr": {
-            "TYPE": "call",
-            "callee": {
-              "TYPE": "funcRef",
-              "name": {
-                "type": "IDENTIFIER",
-                "lexeme": "print",
-                "literal": {},
-                "line": 5,
-                "lineStartIndex": 8
-              }
-            },
-            "bracket": {
-              "type": "BRACKET_C",
-              "lexeme": ")",
+            "TYPE": "staticCall",
+            "target": "scripted.lang.System",
+            "name": {
+              "type": "IDENTIFIER",
+              "lexeme": "print",
               "literal": {},
               "line": 5,
-              "lineStartIndex": 19
+              "lineStartIndex": 15
             },
+            "ordinal": 0,
             "args": [
               {
                 "TYPE": "binary",
@@ -324,7 +307,7 @@
                     "lexeme": "i",
                     "literal": {},
                     "line": 5,
-                    "lineStartIndex": 14
+                    "lineStartIndex": 21
                   }
                 },
                 "operator": {
@@ -332,7 +315,7 @@
                   "lexeme": "+",
                   "literal": {},
                   "line": 5,
-                  "lineStartIndex": 16
+                  "lineStartIndex": 23
                 },
                 "right": {
                   "TYPE": "varRef",
@@ -341,7 +324,7 @@
                     "lexeme": "b",
                     "literal": {},
                     "line": 5,
-                    "lineStartIndex": 18
+                    "lineStartIndex": 25
                   }
                 }
               }

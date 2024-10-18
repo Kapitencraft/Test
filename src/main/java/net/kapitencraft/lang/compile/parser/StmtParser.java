@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.compile.parser;
 
-import net.kapitencraft.lang.VarTypeManager;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -28,10 +28,11 @@ public class StmtParser extends ExprParser {
 
         try {
             if (match(FINAL)) return varDeclaration(true, consumeVarType());
-            if (check(IDENTIFIER)) {
-                Token id = peek();
+            if (match(IDENTIFIER)) {
+                Token id = previous();
                 LoxClass loxClass = parser.getClass(id.lexeme());
-                if (loxClass != null) return varDeclaration(false, loxClass);
+                if (loxClass != null && !check(DOT)) return varDeclaration(false, loxClass);
+                current--; //jump back if it isn't a var decl
             }
 
             return statement();
@@ -66,17 +67,18 @@ public class StmtParser extends ExprParser {
     private Stmt statement() {
         try {
             if (match(RETURN)) return returnStatement();
+            if (match(THROW)) return thrStatement();
             if (match(CONTINUE, BREAK)) return loopInterruptionStatement();
             if (match(FOR)) return forStatement();
             if (match(IF)) return ifStatement();
             if (match(WHILE)) return whileStatement();
             if (match(C_BRACKET_O)) return new Stmt.Block(block());
             if (check(IDENTIFIER)) {
-                LoxClass loxClass = parser.getClass(peek().lexeme());
-                if (loxClass != null) {
-                    advance();
+                LoxClass loxClass = parser.getClass(advance().lexeme());
+                if (loxClass != null && !check(DOT)) {
                     return varDeclaration(false, loxClass);
                 }
+                current--;
             }
 
             return expressionStatement();
@@ -84,6 +86,14 @@ public class StmtParser extends ExprParser {
             synchronize();
             return null;
         }
+    }
+
+    private Stmt thrStatement() {
+        Token keyword = previous();
+        Expr val = expression();
+        expectType(val, VarTypeManager.THROWABLE);
+        consumeEndOfArg();
+        return new Stmt.Throw(keyword, val);
     }
 
     private Stmt returnStatement() {

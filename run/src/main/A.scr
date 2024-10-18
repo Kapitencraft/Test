@@ -17,8 +17,8 @@ abstract class A {
 
     static void main(String args) {
         A a = new B();
-        print(a.test(5));
+        System.print(a.test(5));
         a = new C();
-        print(a.test(5));
+        System.print(a.test(5));
     }
 }

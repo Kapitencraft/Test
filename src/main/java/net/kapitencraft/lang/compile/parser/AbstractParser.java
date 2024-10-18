@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compile.parser;
 
-import net.kapitencraft.lang.VarTypeManager;
+import com.google.common.collect.ImmutableList;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.compile.VarTypeParser;
 import net.kapitencraft.lang.compile.analyser.VarAnalyser;
@@ -12,13 +13,11 @@ import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
-@SuppressWarnings("ThrowableNotThrown")
+@SuppressWarnings({"ThrowableNotThrown", "UnusedReturnValue"})
 public class AbstractParser {
     private final Map<TokenTypeCategory, TokenType[]> categoryLookup = createCategoryLookup();
 
@@ -35,6 +34,7 @@ public class AbstractParser {
     protected VarTypeParser parser;
     protected RetTypeFinder finder;
     protected final LocationFinder locFinder = new LocationFinder();
+    protected final Deque<List<LoxClass>> args = new ArrayDeque<>(); //TODO either use or remove
     protected final Compiler.ErrorLogger errorLogger;
     protected VarAnalyser varAnalyser;
 
@@ -52,6 +52,22 @@ public class AbstractParser {
     protected void checkVarType(Token name, Expr value) {
         if (!varAnalyser.has(name.lexeme())) return;
         expectType(name, value, varAnalyser.getType(name.lexeme()));
+    }
+
+    protected void expectType(LoxClass... types) {
+        args.push(List.of(types));
+    }
+
+    protected boolean typeAllowed(LoxClass target) {
+        return searched().contains(target);
+    }
+
+    protected List<LoxClass> searched() {
+        return args.getLast();
+    }
+
+    protected void expectType(List<LoxClass> types) {
+        args.push(ImmutableList.copyOf(types));
     }
 
     protected LoxClass expectType(Token errorLoc, Expr value, LoxClass type) {
@@ -146,12 +162,13 @@ public class AbstractParser {
     }
 
     protected LoxClass consumeVarType() {
-        //TODO make enclosed classes working
         Token token = consumeIdentifier();
         LoxClass loxClass = parser.getClass(token.lexeme());
         while (match(DOT)) {
             Token enclosingName = consumeIdentifier();
-            if (!loxClass.hasEnclosing(enclosingName.lexeme())) error(enclosingName, "unknown enclosing class '" + enclosingName.lexeme() + "'");
+            if (!loxClass.hasEnclosing(enclosingName.lexeme())) {
+                return loxClass;
+            }
             loxClass = loxClass.getEnclosing(enclosingName.lexeme());
         }
         if (loxClass == null) error(token, "unknown class '" + token.lexeme() + "'");
