@@ -19,6 +19,10 @@ public class DataMethodContainer implements MethodContainer {
         this.methods = methods;
     }
 
+    public static DataMethodContainer of(LoxCallable... methods) {
+        return new DataMethodContainer(methods);
+    }
+
     public LoxCallable getMethod(List<? extends LoxClass> expectedArgs) {
         for (LoxCallable method : methods) {
             if (Util.matchArgs(method.argTypes(), expectedArgs)) return method;

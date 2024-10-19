@@ -11,15 +11,13 @@ import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
 import static net.kapitencraft.lang.holder.token.TokenTypeCategory.EQUALITY;
 
 public class RetTypeFinder implements Expr.Visitor<LoxClass> {
-    private final VarTypeParser parser;
     private final VarAnalyser varAnalyser;
 
     public LoxClass findRetType(Expr expr) {
         return expr.accept(this);
     }
 
-    public RetTypeFinder(VarTypeParser parser, VarAnalyser varAnalyser) {
-        this.parser = parser;
+    public RetTypeFinder(VarAnalyser varAnalyser) {
         this.varAnalyser = varAnalyser;
     }
 
@@ -55,7 +53,7 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
 
     @Override
     public LoxClass visitStaticCallExpr(Expr.StaticCall expr) {
-        return expr.target;
+        return expr.target.getStaticMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).type();
     }
 
     @Override
@@ -65,7 +63,7 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
 
     @Override
     public LoxClass visitStaticGetExpr(Expr.StaticGet expr) {
-        return null;
+        return expr.target.getStaticFieldType(expr.name.lexeme());
     }
 
     @Override
@@ -75,7 +73,7 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
 
     @Override
     public LoxClass visitStaticSetExpr(Expr.StaticSet expr) {
-        return null;
+        return expr.target.getStaticFieldType(expr.name.lexeme());
     }
 
     @Override
@@ -85,7 +83,7 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
 
     @Override
     public LoxClass visitStaticSpecialExpr(Expr.StaticSpecial expr) {
-        return null;
+        return expr.target.getStaticFieldType(expr.name.lexeme());
     }
 
     @Override

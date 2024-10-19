@@ -13,7 +13,18 @@
           "line": 18,
           "lineStartIndex": 16
         },
-        "params": [],
+        "params": [
+          {
+            "type": "scripted.lang.String",
+            "name": {
+              "type": "IDENTIFIER",
+              "lexeme": "args",
+              "literal": {},
+              "line": 18,
+              "lineStartIndex": 28
+            }
+          }
+        ],
         "body": [
           {
             "TYPE": "varDecl",
@@ -24,10 +35,10 @@
               "line": 19,
               "lineStartIndex": 10
             },
-            "targetType": "main..A",
+            "targetType": "main.A",
             "initializer": {
               "TYPE": "constructor",
-              "target": "main.A$.B",
+              "target": "main.A$B",
               "args": [],
               "keyword": {
                 "type": "IDENTIFIER",
@@ -113,7 +124,7 @@
               },
               "value": {
                 "TYPE": "constructor",
-                "target": "main.A$.C",
+                "target": "main.A$C",
                 "args": [],
                 "keyword": {
                   "type": "IDENTIFIER",

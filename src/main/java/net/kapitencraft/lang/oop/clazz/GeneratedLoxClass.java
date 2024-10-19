@@ -213,11 +213,6 @@ public final class GeneratedLoxClass implements LoxClass {
         return packageRepresentation;
     }
 
-    @Override
-    public String absoluteName() {
-        return packageRepresentation() + "." + name();
-    }
-
     public GeneratedLoxClass[] enclosing() {
         return enclosing.values().toArray(new GeneratedLoxClass[0]);
     }

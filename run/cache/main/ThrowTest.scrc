@@ -3,6 +3,171 @@
   "superclass": "scripted.lang.Object",
   "methods": {},
   "staticMethods": {
+    "test": [
+      {
+        "retType": "scripted.lang.int",
+        "name": {
+          "type": "IDENTIFIER",
+          "lexeme": "test",
+          "literal": {},
+          "line": 4,
+          "lineStartIndex": 15
+        },
+        "params": [
+          {
+            "type": "scripted.lang.int",
+            "name": {
+              "type": "IDENTIFIER",
+              "lexeme": "i",
+              "literal": {},
+              "line": 4,
+              "lineStartIndex": 24
+            }
+          }
+        ],
+        "body": [
+          {
+            "TYPE": "if",
+            "condition": {
+              "TYPE": "binary",
+              "left": {
+                "TYPE": "varRef",
+                "name": {
+                  "type": "IDENTIFIER",
+                  "lexeme": "i",
+                  "literal": {},
+                  "line": 5,
+                  "lineStartIndex": 12
+                }
+              },
+              "operator": {
+                "type": "LEQUAL",
+                "lexeme": "\u003c\u003d",
+                "literal": {},
+                "line": 5,
+                "lineStartIndex": 14
+              },
+              "right": {
+                "TYPE": "literal",
+                "value": {
+                  "type": "NUM",
+                  "lexeme": "0",
+                  "literal": {
+                    "type": "int",
+                    "value": 0
+                  },
+                  "line": 5,
+                  "lineStartIndex": 17
+                }
+              }
+            },
+            "then": {
+              "TYPE": "throw",
+              "keyword": {
+                "type": "THROW",
+                "lexeme": "throw",
+                "literal": {},
+                "line": 5,
+                "lineStartIndex": 20
+              },
+              "value": {
+                "TYPE": "constructor",
+                "target": "scripted.lang.ArithmeticException",
+                "args": [
+                  {
+                    "TYPE": "literal",
+                    "value": {
+                      "type": "STR",
+                      "lexeme": "\"EEE\"",
+                      "literal": {
+                        "type": "String",
+                        "value": "EEE"
+                      },
+                      "line": 5,
+                      "lineStartIndex": 50
+                    }
+                  }
+                ],
+                "keyword": {
+                  "type": "IDENTIFIER",
+                  "lexeme": "ArithmeticException",
+                  "literal": {},
+                  "line": 5,
+                  "lineStartIndex": 30
+                },
+                "ordinal": 0
+              }
+            },
+            "elifs": [],
+            "keyword": {
+              "type": "IF",
+              "lexeme": "if",
+              "literal": {},
+              "line": 5,
+              "lineStartIndex": 8
+            }
+          },
+          {
+            "TYPE": "return",
+            "keyword": {
+              "type": "RETURN",
+              "lexeme": "return",
+              "literal": {},
+              "line": 6,
+              "lineStartIndex": 8
+            },
+            "value": {
+              "TYPE": "staticCall",
+              "target": "main.ThrowTest",
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "test",
+                "literal": {},
+                "line": 6,
+                "lineStartIndex": 25
+              },
+              "ordinal": 0,
+              "args": [
+                {
+                  "TYPE": "binary",
+                  "left": {
+                    "TYPE": "varRef",
+                    "name": {
+                      "type": "IDENTIFIER",
+                      "lexeme": "i",
+                      "literal": {},
+                      "line": 6,
+                      "lineStartIndex": 30
+                    }
+                  },
+                  "operator": {
+                    "type": "SUB",
+                    "lexeme": "-",
+                    "literal": {},
+                    "line": 6,
+                    "lineStartIndex": 31
+                  },
+                  "right": {
+                    "TYPE": "literal",
+                    "value": {
+                      "type": "NUM",
+                      "lexeme": "1",
+                      "literal": {
+                        "type": "int",
+                        "value": 1
+                      },
+                      "line": 6,
+                      "lineStartIndex": 32
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "flags": []
+      }
+    ],
     "main": [
       {
         "retType": "scripted.lang.void",
@@ -10,47 +175,140 @@
           "type": "IDENTIFIER",
           "lexeme": "main",
           "literal": {},
-          "line": 4,
+          "line": 9,
           "lineStartIndex": 16
         },
-        "params": [],
+        "params": [
+          {
+            "type": "scripted.lang.String",
+            "name": {
+              "type": "IDENTIFIER",
+              "lexeme": "args",
+              "literal": {},
+              "line": 9,
+              "lineStartIndex": 28
+            }
+          }
+        ],
         "body": [
           {
-            "TYPE": "throw",
-            "keyword": {
-              "type": "THROW",
-              "lexeme": "throw",
-              "literal": {},
-              "line": 5,
-              "lineStartIndex": 8
-            },
-            "value": {
-              "TYPE": "constructor",
-              "target": "scripted.lang.ArithmeticException",
-              "args": [
+            "TYPE": "try",
+            "body": {
+              "TYPE": "block",
+              "statements": [
                 {
-                  "TYPE": "literal",
-                  "value": {
-                    "type": "STR",
-                    "lexeme": "\"EEE\"",
-                    "literal": {
-                      "type": "String",
-                      "value": "EEE"
+                  "TYPE": "expression",
+                  "expr": {
+                    "TYPE": "staticCall",
+                    "target": "main.ThrowTest",
+                    "name": {
+                      "type": "IDENTIFIER",
+                      "lexeme": "test",
+                      "literal": {},
+                      "line": 11,
+                      "lineStartIndex": 22
                     },
-                    "line": 5,
-                    "lineStartIndex": 38
+                    "ordinal": 0,
+                    "args": [
+                      {
+                        "TYPE": "literal",
+                        "value": {
+                          "type": "NUM",
+                          "lexeme": "10",
+                          "literal": {
+                            "type": "int",
+                            "value": 10
+                          },
+                          "line": 11,
+                          "lineStartIndex": 27
+                        }
+                      }
+                    ]
                   }
                 }
-              ],
-              "keyword": {
-                "type": "IDENTIFIER",
-                "lexeme": "ArithmeticException",
-                "literal": {},
-                "line": 5,
-                "lineStartIndex": 18
-              },
-              "ordinal": 0
-            }
+              ]
+            },
+            "catches": [
+              {
+                "initData": {
+                  "classes": [
+                    "scripted.lang.ArithmeticException"
+                  ],
+                  "name": {
+                    "type": "IDENTIFIER",
+                    "lexeme": "e",
+                    "literal": {},
+                    "line": 12,
+                    "lineStartIndex": 37
+                  }
+                },
+                "executor": {
+                  "TYPE": "block",
+                  "statements": [
+                    {
+                      "TYPE": "expression",
+                      "expr": {
+                        "TYPE": "staticCall",
+                        "target": "scripted.lang.System",
+                        "name": {
+                          "type": "IDENTIFIER",
+                          "lexeme": "print",
+                          "literal": {},
+                          "line": 13,
+                          "lineStartIndex": 19
+                        },
+                        "ordinal": 0,
+                        "args": [
+                          {
+                            "TYPE": "binary",
+                            "left": {
+                              "TYPE": "literal",
+                              "value": {
+                                "type": "STR",
+                                "lexeme": "\"Error: \"",
+                                "literal": {
+                                  "type": "String",
+                                  "value": "Error: "
+                                },
+                                "line": 13,
+                                "lineStartIndex": 25
+                              }
+                            },
+                            "operator": {
+                              "type": "ADD",
+                              "lexeme": "+",
+                              "literal": {},
+                              "line": 13,
+                              "lineStartIndex": 35
+                            },
+                            "right": {
+                              "TYPE": "get",
+                              "callee": {
+                                "TYPE": "varRef",
+                                "name": {
+                                  "type": "IDENTIFIER",
+                                  "lexeme": "e",
+                                  "literal": {},
+                                  "line": 13,
+                                  "lineStartIndex": 37
+                                }
+                              },
+                              "name": {
+                                "type": "IDENTIFIER",
+                                "lexeme": "message",
+                                "literal": {},
+                                "line": 13,
+                                "lineStartIndex": 39
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         ],
         "flags": []

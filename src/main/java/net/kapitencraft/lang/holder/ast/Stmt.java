@@ -19,6 +19,7 @@ public abstract class Stmt {
         R visitWhileStmt(While stmt);
         R visitForStmt(For stmt);
         R visitLoopInterruptionStmt(LoopInterruption stmt);
+        R visitTryStmt(Try stmt);
     }
 
     public static class Block extends Stmt {
@@ -188,6 +189,23 @@ public abstract class Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLoopInterruptionStmt(this);
+        }
+    }
+
+    public static class Try extends Stmt {
+        public final Block body;
+        public final List<Pair<Pair<List<LoxClass>,Token>,Block>> catches;
+        public final Block finale;
+
+        public Try(Block body, List<Pair<Pair<List<LoxClass>,Token>,Block>> catches, Block finale) {
+            this.body = body;
+            this.catches = catches;
+            this.finale = finale;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitTryStmt(this);
         }
     }
 

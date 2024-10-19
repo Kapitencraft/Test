@@ -6,7 +6,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.GeneratedLoxClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
 
 import java.util.List;
@@ -328,6 +331,29 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "loopInterrupt");
         object.add("keyword", stmt.type.toJson());
+        return object;
+    }
+
+    @Override
+    public JsonElement visitTryStmt(Stmt.Try stmt) {
+        JsonObject object = new JsonObject();
+        object.addProperty("TYPE", "try");
+        object.add("body", cache(stmt.body));
+        JsonArray array = new JsonArray();
+        stmt.catches.forEach(pair -> {
+            JsonObject pairDat = new JsonObject();
+            Pair<List<LoxClass>, Token> pair1 = pair.left();
+            JsonObject pair1Dat = new JsonObject();
+            JsonArray classes = new JsonArray();
+            pair1.left().stream().map(LoxClass::absoluteName).forEach(classes::add);
+            pair1Dat.add("classes", classes);
+            pair1Dat.add("name", pair1.right().toJson());
+            pairDat.add("initData", pair1Dat);
+            pairDat.add("executor", cache(pair.right()));
+            array.add(pairDat);
+        });
+        object.add("catches", array);
+        if (stmt.finale != null) object.add("finale", cache(stmt.finale));
         return object;
     }
 }

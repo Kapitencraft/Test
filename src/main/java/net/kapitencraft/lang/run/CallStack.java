@@ -46,4 +46,11 @@ public class CallStack {
         stack.clear();
         lineIndexes.clear();
     }
+
+    public void resetToSize(int stackIndex) {
+        this.lineIndexes.pop();
+        while (this.stack.size() > stackIndex) {
+            this.pop();
+        }
+    }
 }

@@ -11,14 +11,15 @@ funcDecl    -> VAR_TYPE IDENTIFIER "(" parameters? ")" block
 fieldDecl   -> "static"? varDecl;
 varDecl     -> "final"? VAR_TYPE IDENTIFIER ( "=" expression )? ";"
 
-statement   -> exprStmt | forStmt | ifStmt | printStmt | returnStmt | whileStmt | block
+statement   -> exprStmt | forStmt | ifStmt | tryStmt | thrStmt | returnStmt | whileStmt | block
 exprStmt    -> switch | call | assignment ";"
 forStmt     -> "for" "(" ( varDecl | exprStmt)? ";" expression? ";" expression? ")" statement
 ifStmt      -> "if" "(" expression ")" statement ( "elif" "(" expression ")" statement )* ( "else" statement )?
+tryStmt     -> "try" "{" statement* "}" ( ( "catch" "(" VAR_TYPE ( "|" VAR_TYPE )* IDENTIFIER ")" "{" statement* "}" ) | ("finally" "{" statement* "}"
 thrStmt     -> "throw" expression ";"
 returnStmt  -> "return" expression? ";"
 whileStmt   -> "while" "(" expression ")" statement
-block       -> "{" declaration* "}"
+block       -> "{" statement* "}"
 
 expression  -> switch | when;
 

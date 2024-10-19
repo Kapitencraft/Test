@@ -1,13 +1,13 @@
 package net.kapitencraft.lang.run;
 
 import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
+import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.exception.EscapeLoop;
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.tool.Math;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -18,8 +18,7 @@ import java.util.*;
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public static final Interpreter INSTANCE = new Interpreter();
 
-    final Environment globals = new Environment();
-    private Environment environment = globals;
+    private Environment environment = new Environment();
     private final CallStack callStack = new CallStack();
 
     public static final Scanner in = new Scanner(System.in);
@@ -50,12 +49,14 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                     this.pushCall(target.absoluteName(), "main", target.name());
                     try {
                         millisAtStart = System.currentTimeMillis();
-                        method.call(null, this, List.of(data));
+                        this.environment.push();
+                        method.call(new Environment(), this, List.of(data));
                     } catch (AbstractScriptedException e) {
                         System.err.println("Caused by: " + e.exceptionType.getType().absoluteName() + ": " + e.exceptionType.getField("message"));
                         this.callStack.printStackTrace(System.err::println);
                         System.exit(65);
                     } finally {
+                        this.environment.pop();
                         this.callStack.clear();
                     }
                 }, () -> System.err.printf("could not find executable main method inside class '%s'", target.absoluteName()));
@@ -97,9 +98,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitFuncDeclStmt(Stmt.FuncDecl stmt) {
-        GeneratedCallable function = new GeneratedCallable(stmt);
-        environment.defineMethod(stmt.name.lexeme(), function);
-        return null;
+        return null; //TODO move field & function decl away from "stmt"
     }
 
     @Override
@@ -174,6 +173,34 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitLoopInterruptionStmt(Stmt.LoopInterruption stmt) {
         throw new EscapeLoop(stmt.type);
+    }
+
+    @Override
+    public Void visitTryStmt(Stmt.Try stmt) {
+        int stackIndex = this.callStack.stack.size();
+        try {
+            visitBlockStmt(stmt.body);
+        } catch (AbstractScriptedException e) {
+            this.callStack.resetToSize(stackIndex);
+            boolean handled = false;
+            a: for (Pair<Pair<List<LoxClass>, Token>, Stmt.Block> pair : stmt.catches) {
+                Pair<List<LoxClass>, Token> constData = pair.left();
+                LoxClass causer = e.exceptionType.getType();
+                for (LoxClass loxClass : constData.left()) {
+                    if (causer.isChildOf(loxClass)) {
+                        environment.push();
+                        environment.defineVar(constData.right().lexeme(), e.exceptionType);
+                        visitBlockStmt(pair.right());
+                        environment.pop();
+                        handled = true;
+                        break a;
+                    }
+                }
+            }
+            if (stmt.finale != null) visitBlockStmt(stmt.finale);
+            if (!handled) throw e;
+        }
+        return null;
     }
 
     @Override
@@ -344,7 +371,15 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitStaticCallExpr(Expr.StaticCall expr) {
-        return expr.target.getStaticMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).call(null, this, visitArgs(expr.args));
+        pushCallIndex(expr.name.line());
+        pushCall(expr.target.absoluteName(), expr.name.lexeme(), expr.target.name());
+        Object data = staticCall(expr.target, expr.name.lexeme(), expr.methodOrdinal, visitArgs(expr.args));
+        popCall();
+        return data;
+    }
+
+    private Object staticCall(LoxClass target, String name, int ordinal, List<Object> args) {
+        return target.getStaticMethodByOrdinal(name, ordinal).call(new Environment(), this, args);
     }
 
     public List<Object> visitArgs(List<Expr> args) {

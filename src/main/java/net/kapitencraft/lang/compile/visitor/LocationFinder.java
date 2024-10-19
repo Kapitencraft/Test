@@ -61,7 +61,7 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
 
     @Override
     public Token visitStaticSetExpr(Expr.StaticSet expr) {
-        return null;
+        return expr.name;
     }
 
     @Override
@@ -71,7 +71,7 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
 
     @Override
     public Token visitStaticSpecialExpr(Expr.StaticSpecial expr) {
-        return null;
+        return expr.name;
     }
 
     @Override
@@ -162,5 +162,10 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
     @Override
     public Token visitLoopInterruptionStmt(Stmt.LoopInterruption stmt) {
         return stmt.type;
+    }
+
+    @Override
+    public Token visitTryStmt(Stmt.Try stmt) {
+        return null;
     }
 }

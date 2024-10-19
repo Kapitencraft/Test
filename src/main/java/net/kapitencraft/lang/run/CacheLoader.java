@@ -12,6 +12,7 @@ import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 
@@ -211,9 +212,42 @@ public class CacheLoader {
             case "varDecl" -> readVarDecl(object);
             case "while" -> readWhile(object);
             case "for" -> readFor(object);
+            case "try" -> readTry(object);
             case "loopInterrupt" -> readLoopInterrupt(object);
             default -> throw new IllegalStateException("unknown stmt key '" + type + "'");
         };
+    }
+
+    private static Stmt readTry(JsonObject object) {
+        Stmt.Block body = readBlock(GsonHelper.getAsJsonObject(object, "body"));
+        List<Pair<Pair<List<LoxClass>, Token>, Stmt.Block>> catches = new ArrayList<>();
+        {
+            GsonHelper.getAsJsonArray(object, "catches").asList().stream()
+                    .map(JsonElement::getAsJsonObject)
+                    .forEach(obj -> {
+                        JsonObject initData = GsonHelper.getAsJsonObject(obj, "initData");
+                        List<LoxClass> targets = GsonHelper.getAsJsonArray(initData, "classes")
+                                .asList()
+                                .stream()
+                                .map(JsonElement::getAsString)
+                                .map(VarTypeManager::getClassForName)
+                                .toList();
+                        Token name = Token.readFromSubObject(initData, "name");
+                        Stmt.Block block = readBlock(GsonHelper.getAsJsonObject(obj, "executor"));
+
+                        catches.add(Pair.of(
+                                Pair.of(
+                                        targets,
+                                        name
+                                ),
+                                block
+                        ));
+                    });
+            ;
+        }
+        Stmt.Block finale = null;
+        if (object.has("finale")) finale = readBlock(GsonHelper.getAsJsonObject(object, "finale"));
+        return new Stmt.Try(body, catches, finale);
     }
 
     private static Stmt readThrow(JsonObject object) {
@@ -222,7 +256,7 @@ public class CacheLoader {
         return new Stmt.Throw(token, expr);
     }
 
-    private static Stmt readBlock(JsonObject object) {
+    private static Stmt.Block readBlock(JsonObject object) {
         return new Stmt.Block(readStmtList(object, "statements"));
     }
 

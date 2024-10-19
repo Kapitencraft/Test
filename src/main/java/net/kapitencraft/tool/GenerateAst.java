@@ -44,7 +44,8 @@ public class GenerateAst {
                 "VarDecl          : Token name; LoxClass type; Expr initializer; boolean isFinal",
                 "While            : Expr condition; Stmt body; Token keyword",
                 "For              : Stmt init; Expr condition; Expr increment; Stmt body; Token keyword",
-                "LoopInterruption : Token type"
+                "LoopInterruption : Token type",
+                "Try              : Block body; List<Pair<Pair<List<LoxClass>,Token>,Block>> catches; Block finale"
         ));
     }
 

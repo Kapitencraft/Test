@@ -132,7 +132,7 @@ public class Lexer {
                     addToken(OR);
                 else if (match('='))
                     addToken(OR_ASSIGN);
-                else error("unexpected token");
+                else addToken(SINGLE_OR);
             case '^':
                 if (match('='))
                     addToken(XOR_ASSIGN);

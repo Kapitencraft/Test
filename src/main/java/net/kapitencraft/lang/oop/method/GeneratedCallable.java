@@ -35,6 +35,7 @@ public class GeneratedCallable implements LoxCallable {
                 JsonObject object1 = new JsonObject();
                 object1.addProperty("type", pair.left().absoluteName());
                 object1.add("name", pair.right().toJson());
+                array.add(object1);
             });
             object.add("params", array);
         }

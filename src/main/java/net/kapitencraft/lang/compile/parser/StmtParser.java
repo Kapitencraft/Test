@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.compile.parser;
 
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compile.Compiler;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -67,12 +68,13 @@ public class StmtParser extends ExprParser {
     private Stmt statement() {
         try {
             if (match(RETURN)) return returnStatement();
+            if (match(TRY)) return tryStatement();
             if (match(THROW)) return thrStatement();
             if (match(CONTINUE, BREAK)) return loopInterruptionStatement();
             if (match(FOR)) return forStatement();
             if (match(IF)) return ifStatement();
             if (match(WHILE)) return whileStatement();
-            if (match(C_BRACKET_O)) return new Stmt.Block(block());
+            if (match(C_BRACKET_O)) return new Stmt.Block(block("block"));
             if (check(IDENTIFIER)) {
                 LoxClass loxClass = parser.getClass(advance().lexeme());
                 if (loxClass != null && !check(DOT)) {
@@ -86,6 +88,41 @@ public class StmtParser extends ExprParser {
             synchronize();
             return null;
         }
+    }
+
+    private Stmt tryStatement() {
+        consumeCurlyOpen("try statement");
+        Stmt.Block tryBlock = new Stmt.Block(block("try statement"));
+        Token brClose = previous();
+
+        List<Pair<Pair<List<LoxClass>,Token>, Stmt.Block>> catches = new ArrayList<>(); //what an insane varType
+        while (match(CATCH)) {
+            List<LoxClass> targets = new ArrayList<>();
+            consumeBracketOpen("catch");
+            do {
+                targets.add(consumeVarType());
+            } while (match(SINGLE_OR));
+            varAnalyser.push();
+            Token name = consumeIdentifier();
+            consumeBracketClose("catch");
+            createVar(name, VarTypeManager.THROWABLE, true, false);
+            consumeCurlyOpen("catch statement");
+            Stmt.Block block = new Stmt.Block(block("catch statement"));
+            varAnalyser.pop();
+            catches.add(Pair.of(
+                    Pair.of(
+                            targets,
+                            name
+                    ),
+                    block
+            ));
+        }
+        Stmt.Block finallyBlock = null;
+        if (match(FINALLY)) {
+            consumeCurlyOpen("finally statement");
+            finallyBlock = new Stmt.Block(block("finally statement"));
+        } else if (catches.isEmpty()) error(brClose, "expected 'catch' or 'finally'");
+        return new Stmt.Try(tryBlock, catches, finallyBlock);
     }
 
     private Stmt thrStatement() {
@@ -196,14 +233,14 @@ public class StmtParser extends ExprParser {
         return new Stmt.While(condition, body, keyword);
     }
 
-    private List<Stmt> block() {
+    private List<Stmt> block(String name) {
         List<Stmt> statements = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             statements.add(declaration());
         }
 
-        consumeCurlyClose("block");
+        consumeCurlyClose(name);
         return statements;
     }
 

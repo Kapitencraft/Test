@@ -1,7 +1,16 @@
 package main;
 
 class ThrowTest {
+    static int test(int i) {
+        if (i <= 0) throw new ArithmeticException("EEE");
+        return ThrowTest.test(i-1);
+    }
+
     static void main(String args) {
-        throw new ArithmeticException("EEE");
+        try {
+            ThrowTest.test(10);
+        } catch (ArithmeticException e) {
+            System.print("Error: " + e.message);
+        }
     }
 }

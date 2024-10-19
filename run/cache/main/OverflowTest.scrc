@@ -110,7 +110,18 @@
           "line": 12,
           "lineStartIndex": 16
         },
-        "params": [],
+        "params": [
+          {
+            "type": "scripted.lang.String",
+            "name": {
+              "type": "IDENTIFIER",
+              "lexeme": "args",
+              "literal": {},
+              "line": 12,
+              "lineStartIndex": 28
+            }
+          }
+        ],
         "body": [
           {
             "TYPE": "varDecl",
@@ -121,10 +132,10 @@
               "line": 13,
               "lineStartIndex": 21
             },
-            "targetType": "main..OverflowTest",
+            "targetType": "main.OverflowTest",
             "initializer": {
               "TYPE": "constructor",
-              "target": "main..OverflowTest",
+              "target": "main.OverflowTest",
               "args": [],
               "keyword": {
                 "type": "IDENTIFIER",

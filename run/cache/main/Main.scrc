@@ -60,7 +60,18 @@
           "line": 6,
           "lineStartIndex": 16
         },
-        "params": [],
+        "params": [
+          {
+            "type": "scripted.lang.String",
+            "name": {
+              "type": "IDENTIFIER",
+              "lexeme": "args",
+              "literal": {},
+              "line": 6,
+              "lineStartIndex": 28
+            }
+          }
+        ],
         "body": [
           {
             "TYPE": "expression",

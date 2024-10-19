@@ -82,4 +82,11 @@ public class ReturnScanner implements Stmt.Visitor<Boolean> {
     public Boolean visitLoopInterruptionStmt(Stmt.LoopInterruption stmt) {
         return false;
     }
+
+    @Override
+    public Boolean visitTryStmt(Stmt.Try stmt) {
+        return visitBlockStmt(stmt.finale) &&
+                stmt.catches.stream().map(Pair::right).allMatch(this::visitBlockStmt) &&
+                visitBlockStmt(stmt.body);
+    }
 }

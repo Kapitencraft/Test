@@ -4,16 +4,12 @@ import net.kapitencraft.lang.natives.scripted.lang.*;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
-import net.kapitencraft.lang.natives.scripted.util.SystemClass;
+import net.kapitencraft.lang.natives.scripted.lang.SystemClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.clazz.ReflectiveClass;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -48,6 +44,7 @@ public class VarTypeManager {
     public static final LoxClass FUNCTION_CALL_ERROR = new FunctionCallError();
 
     public static final LoxClass SYSTEM = new SystemClass();
+    public static final LoxClass MATH = new MathClass();
 
     static {
         keywords = Arrays.stream(values()).filter(tokenType -> tokenType.isCategory(TokenTypeCategory.KEY_WORD)).collect(Collectors.toMap(tokenType -> tokenType.name().toLowerCase(Locale.ROOT), Function.identity()));

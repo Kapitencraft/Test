@@ -97,7 +97,7 @@ public class AbstractParser {
 
     protected void createVar(Token name, LoxClass type, boolean hasValue, boolean isFinal) {
         if (varAnalyser.has(name.lexeme())) {
-            error(name, "Variable '" + name.lexeme() + "' already defined");
+            error(name, "Variable '" + name.lexeme() + "' already defined in current scope");
         }
         varAnalyser.add(name.lexeme(), type, hasValue, isFinal);
     }
@@ -111,7 +111,7 @@ public class AbstractParser {
         this.tokens = toParse;
         this.parser = targetAnalyser;
         this.varAnalyser = new VarAnalyser();
-        this.finder = new RetTypeFinder(targetAnalyser, varAnalyser);
+        this.finder = new RetTypeFinder(varAnalyser);
     }
 
     protected boolean check(TokenType type) {
