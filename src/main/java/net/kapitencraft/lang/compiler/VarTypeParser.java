@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.compile;
+package net.kapitencraft.lang.compiler;
 
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.oop.clazz.LoxClass;

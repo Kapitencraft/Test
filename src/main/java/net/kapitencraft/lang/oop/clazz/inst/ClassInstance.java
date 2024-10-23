@@ -69,4 +69,9 @@ public class ClassInstance {
             this.environment.pop();
         }
     }
+
+    @Override
+    public String toString() {
+        return (String) this.type.getMethod("toString", List.of()).call(null, Interpreter.INSTANCE, List.of());
+    }
 }

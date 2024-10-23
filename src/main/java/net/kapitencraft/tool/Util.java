@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 public class Util {
 
-    public static <K, V> Map<K, V> mergeMaps(Map<K, V> base, Map<K, ? extends V> extension) {
+    public static <K, V> Map<K, V> mergeMaps(Map<? extends K, ? extends V> base, Map<? extends K, ? extends V> extension) {
         Map<K, V> temp = new HashMap<>(base);
         temp.putAll(extension);
         return Map.copyOf(temp);

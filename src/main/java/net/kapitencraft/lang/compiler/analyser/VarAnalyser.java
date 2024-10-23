@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.compile.analyser;
+package net.kapitencraft.lang.compiler.analyser;
 
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.env.abst.Leveled;

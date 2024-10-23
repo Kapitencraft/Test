@@ -2,19 +2,19 @@ package net.kapitencraft.lang.oop.clazz;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compile.CacheBuilder;
+import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
-import net.kapitencraft.lang.oop.GeneratedField;
-import net.kapitencraft.lang.oop.LoxField;
+import net.kapitencraft.lang.oop.field.GeneratedField;
+import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.tool.Util;
 
 import java.util.*;
 
 public final class GeneratedLoxClass implements LoxClass {
-    private final Map<String, DataMethodContainer> allMethods;
+    private final Map<String, DataMethodContainer   > allMethods;
     private final Map<String, DataMethodContainer> allStaticMethods;
 
     private final Map<String, Object> staticFieldData = new HashMap<>();
@@ -104,7 +104,7 @@ public final class GeneratedLoxClass implements LoxClass {
     }
 
 
-    public Map<String, MethodContainer> getMethods() {
+    public Map<String, ? extends MethodContainer> getMethods() {
         return Util.mergeMaps(LoxClass.super.getMethods(), allMethods);
     }
 

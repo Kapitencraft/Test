@@ -8,7 +8,7 @@ import com.google.gson.stream.JsonReader;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.oop.GeneratedField;
+import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.GeneratedLoxClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
@@ -29,13 +29,13 @@ public class ClassLoader {
     public static final File cacheLoc = new File("./run/cache");
 
     public static void main(String[] args) {
-        PackageHolder pckSkeleton = load(cacheLoc);
+        PackageHolder pckSkeleton = load(cacheLoc, ".scrc");
         applyPreviews(pckSkeleton);
         generateSkeletons(pckSkeleton);
         generateClasses(pckSkeleton);
         System.out.println("Loading complete.");
-        Scanner scanner = new Scanner(System.in);
         Interpreter interpreter = Interpreter.INSTANCE;
+        Scanner scanner = Interpreter.in;
         String line = "";
         while (!line.equals("!exit")) {
             if (line.startsWith("!run ")) {
@@ -53,10 +53,10 @@ public class ClassLoader {
         }
     }
 
-    public static PackageHolder load(File cacheLoc) {
+    public static PackageHolder load(File fileLoc, String end) {
         PackageHolder root = new PackageHolder();
         List<Pair<File, PackageHolder>> pckLoader = new ArrayList<>();
-        pckLoader.add(Pair.of(cacheLoc, root));
+        pckLoader.add(Pair.of(fileLoc, root));
         while (!pckLoader.isEmpty()) {
             Pair<File, PackageHolder> pck = pckLoader.get(0);
             File file = pck.left();
@@ -70,7 +70,7 @@ public class ClassLoader {
                     holder.packages.put(file1.getName(), child);
                     pckLoader.add(Pair.of(file1, child));
                 } else {
-                    String name = file1.getName().replace(".scrc", "");
+                    String name = file1.getName().replace(end, "");
                     String[] enclosedSplit = name.split("\\$");
                     if (enclosedSplit.length > 1) {
                         if (!enclosedLoaderMap.containsKey(enclosedSplit[0])) {

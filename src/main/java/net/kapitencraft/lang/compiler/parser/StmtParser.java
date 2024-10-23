@@ -1,8 +1,7 @@
-package net.kapitencraft.lang.compile.parser;
+package net.kapitencraft.lang.compiler.parser;
 
-import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.compile.Compiler;
+import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;

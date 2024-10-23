@@ -3,7 +3,7 @@ package net.kapitencraft.lang.oop.method;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compile.CacheBuilder;
+import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;

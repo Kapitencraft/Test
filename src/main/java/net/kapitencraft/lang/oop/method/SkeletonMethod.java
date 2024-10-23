@@ -2,7 +2,7 @@ package net.kapitencraft.lang.oop.method;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compile.parser.SkeletonParser;
+import net.kapitencraft.lang.compiler.parser.SkeletonParser;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.oop.clazz.LoxClass;

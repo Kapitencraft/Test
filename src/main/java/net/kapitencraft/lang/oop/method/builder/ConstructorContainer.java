@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.oop.method.builder;
 
-import net.kapitencraft.lang.compile.Compiler;
+import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.holder.token.Token;

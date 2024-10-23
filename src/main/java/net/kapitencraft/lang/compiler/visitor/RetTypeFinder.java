@@ -1,8 +1,7 @@
-package net.kapitencraft.lang.compile.visitor;
+package net.kapitencraft.lang.compiler.visitor;
 
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.compile.VarTypeParser;
-import net.kapitencraft.lang.compile.analyser.VarAnalyser;
+import net.kapitencraft.lang.compiler.analyser.VarAnalyser;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.LoxClass;

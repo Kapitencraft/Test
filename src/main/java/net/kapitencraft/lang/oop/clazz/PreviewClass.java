@@ -4,13 +4,12 @@ import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
-import net.kapitencraft.lang.oop.LoxField;
+import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.run.Interpreter;
 
 import java.util.List;
 import java.util.Map;
 
-//TODO unwrap
 public class PreviewClass implements LoxClass {
     private LoxClass target;
     private final String name;
@@ -131,7 +130,7 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
-    public Map<String, MethodContainer> getMethods() {
+    public Map<String, ? extends MethodContainer> getMethods() {
         assertApplied();
         return target.getMethods();
     }

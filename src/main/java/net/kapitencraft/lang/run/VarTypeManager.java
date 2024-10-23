@@ -23,7 +23,7 @@ public class VarTypeManager {
     public static final ReflectiveLoader reflectiveLoader = new ReflectiveLoader();
     private static final Map<String, TokenType> keywords;
 
-    public static final LoxClass OBJECT = new PrimitiveClass("Object", null);
+    public static final LoxClass OBJECT = new ObjectClass();
 
     public static final LoxClass NUMBER = new PrimitiveClass("num" , null);
     public static final LoxClass INTEGER = new PrimitiveClass(NUMBER, "int", 0);
@@ -35,7 +35,6 @@ public class VarTypeManager {
 
 
     public static final LoxClass VOID = new PrimitiveClass("void", null);
-    //TODO move Object away from primitive class given that it isn't actually one
 
     public static final LoxClass THROWABLE = new ThrowableClass();
     public static final LoxClass STACK_OVERFLOW_EXCEPTION = new StackOverflowExceptionClass();
@@ -67,6 +66,7 @@ public class VarTypeManager {
         registerMain(ARITHMETIC_EXCEPTION);
         registerMain(FUNCTION_CALL_ERROR);
         registerMain(SYSTEM);
+        registerMain(MATH);
         classLookup.put(Number.class, NUMBER);
         classLookup.put(Integer.class, INTEGER);
         classLookup.put(int.class, INTEGER);

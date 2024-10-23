@@ -3,7 +3,9 @@ program     -> pck import* classDecl
 pck         -> "package" VAR_TYPE ";"
 import      -> "import" VAR_TYPE ("as" IDENTIFIER)? ";"
 
+interfaceDecl -> "interface" IDENTIFIER ( "extends" IDENTIFIER ( "," IDENTIFIER )* )?
 classDecl   -> "class" IDENTIFIER ( "extends" IDENTIFIER )? "{" (funcDecl | varDecl)* "}"
+enumDecl -> "enum" ( "implements" IDENTIFIER ( "," IDENTIFIER )*
 
 declaration -> varDecl | statement
 

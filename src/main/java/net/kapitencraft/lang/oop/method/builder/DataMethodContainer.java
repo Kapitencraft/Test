@@ -2,8 +2,8 @@ package net.kapitencraft.lang.oop.method.builder;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
-import net.kapitencraft.lang.compile.CacheBuilder;
-import net.kapitencraft.lang.compile.Compiler;
+import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.func.LoxCallable;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.holder.token.Token;

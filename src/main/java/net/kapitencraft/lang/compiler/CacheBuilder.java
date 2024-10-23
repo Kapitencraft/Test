@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.compile;
+package net.kapitencraft.lang.compiler;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

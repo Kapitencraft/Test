@@ -1,8 +1,8 @@
-package net.kapitencraft.lang.compile.parser;
+package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.compile.Compiler;
-import net.kapitencraft.lang.compile.VarTypeParser;
+import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
@@ -42,7 +42,7 @@ public class SkeletonParser extends AbstractParser {
 
         consume(CLASS, "'class' expected");
 
-        Token name = consume(IDENTIFIER, "class name expected");
+        Token name = consumeIdentifier();
 
         if (fileId != null && !Objects.equals(name.lexeme(), fileId)) {
             error(name, "file and class name must match");
@@ -81,6 +81,12 @@ public class SkeletonParser extends AbstractParser {
             }
             if (check(CLASS)) {
                 enclosed.add(classDecl(isAbstract, isFinal, pckID, null));
+            } else if (check(INTERFACE)) {
+                if (isAbstract) error(peek(), "interfaces can not be declared abstract");
+                if (isFinal) error(peek(), "interfaces can not be final");
+                enclosed.add(interfaceDecl(pckID, null));
+            } else if (check(ENUM)) {
+
             } else {
                 if (Objects.equals(peek().lexeme(), name.lexeme())) {
                     Token constName = consume(IDENTIFIER, "that shouldn't have happened...");
@@ -106,6 +112,64 @@ public class SkeletonParser extends AbstractParser {
         return new ClassDecl(classAbstract, classFinal, previewClass, name, pckID, superClass, constructors.toArray(new MethodDecl[0]), methods.toArray(new MethodDecl[0]), fields.toArray(new FieldDecl[0]), enclosed.toArray(new ClassDecl[0]));
     }
 
+    private ClassDecl interfaceDecl(String pckID, String fileId) {
+        consume(INTERFACE, "'interface' expected");
+
+        Token name = consumeIdentifier();
+
+        if (fileId != null && !Objects.equals(name.lexeme(), fileId)) {
+            error(name, "file and class name must match");
+        }
+
+        PreviewClass preview = new PreviewClass(name.lexeme());
+        parser.addClass(preview, null);
+
+        List<LoxClass> parentInterfaces = new ArrayList<>();
+
+        if (match(EXTENDS)) {
+            do {
+                parentInterfaces.add(consumeVarType(parser));
+            } while (match(COMMA));
+        }
+
+        consumeCurlyOpen("class");
+
+        List<MethodDecl> methods = new ArrayList<>();
+        List<FieldDecl> fields = new ArrayList<>();
+        List<ClassDecl> enclosed = new ArrayList<>();
+
+        while (!check(C_BRACKET_C) && !isAtEnd()) {
+            boolean isStatic = false;
+            while (!check(IDENTIFIER) && !check(CLASS) && !check(EOF)) {
+                if (match(STATIC)) {
+                    if (isStatic) error(previous(), "duplicate static keyword");
+                    isStatic = true;
+                } else {
+                    error(peek(), "<identifier> expected");
+                }
+            }
+            if (check(CLASS)) {
+                enclosed.add(classDecl(false, false, pckID, null));
+            } else if (check(INTERFACE)) {
+                enclosed.add(interfaceDecl(pckID, null));
+            } else if (check(ENUM)) {
+
+            } else {
+                LoxClass type = consumeVarType(parser);
+                Token elementName = consumeIdentifier();
+                if (match(BRACKET_O)) {
+                    MethodDecl decl = funcDecl(parser, type, elementName, false, isStatic, true);
+                    methods.add(decl);
+                } else {
+                    FieldDecl decl = fieldDecl(type, elementName, false, true);
+                    fields.add(decl);
+                }
+            }
+        }
+        consumeCurlyClose("class");
+        return new InterfaceDecl(preview, name, pckID, parentInterfaces.toArray(new LoxClass[0]), methods.toArray(new MethodDecl[0]), fields.toArray(new FieldDecl[0]), enclosed.toArray(new ClassDecl[0]));
+    }
+
     public ClassDecl parse() {
         List<Token> pck = new ArrayList<>();
         try {
@@ -126,9 +190,11 @@ public class SkeletonParser extends AbstractParser {
         while (!check(CLASS) && !check(EOF)) {
             if (match(FINAL)) {
                 if (isFinal) error(previous(), "duplicate final keyword");
+                else if (isAbstract) error(previous(), "illegal combination of modifiers final and abstract");
                 isFinal = true;
             } else if (match(ABSTRACT)) {
                 if (isAbstract) error(previous(), "duplicate abstract keyword");
+                else if (isFinal) error(previous(), "illegal combination of modifiers abstract and final");
                 isAbstract = true;
             } else {
                 error(advance(), "<identifier> expected");
@@ -230,7 +296,31 @@ public class SkeletonParser extends AbstractParser {
 
     }
 
-    public record ClassDecl(boolean isAbstract, boolean isFinal, PreviewClass target, Token name, String pck, LoxClass superclass, MethodDecl[] constructors, MethodDecl[] methods, FieldDecl[] fields, ClassDecl[] enclosed) {
+    public record ClassDecl(boolean isAbstract, boolean isFinal, PreviewClass target, Token name, String pck, LoxClass superclass, MethodDecl[] constructors, MethodDecl[] methods, FieldDecl[] fields, ClassConstructor<?, ?>[] enclosed) implements ClassConstructor<ClassDecl, Compiler.BakedClass> {
 
+        @Override
+        public Compiler.BakedClass construct(ClassDecl value, Compiler.ErrorLogger logger, VarTypeParser parser, String pck) {
+            return null;
+        }
+    }
+
+    public record InterfaceDecl(PreviewClass target, Token name, String pck, LoxClass[] parentInterfaces, MethodDecl[] methods, FieldDecl[] fields, ClassConstructor<?, ?>[] enclosed) implements ClassConstructor<InterfaceDecl, Compiler.BakedInterface> {
+
+        @Override
+        public Compiler.BakedInterface construct(InterfaceDecl value, Compiler.ErrorLogger logger, VarTypeParser parser, String pck) {
+            return null;
+        }
+    }
+
+    public record EnumDecl(PreviewClass target, Token name, String pck, LoxClass[] interfaces, MethodDecl[] methods, FieldDecl[] fields, ClassConstructor<?, ?>[] enclosed) implements ClassConstructor<EnumDecl, Compiler.BakedEnum> {
+
+        @Override
+        public Compiler.BakedEnum construct(EnumDecl value, Compiler.ErrorLogger logger, VarTypeParser parser, String pck) {
+            return null;
+        }
+    }
+
+    public interface ClassConstructor<T extends ClassConstructor<T, I>, I extends Compiler.ClassBuilder<I>> {
+        I construct(T value, Compiler.ErrorLogger logger, VarTypeParser parser, String pck);
     }
 }

@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.oop;
+package net.kapitencraft.lang.oop.field;
 
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.oop.clazz.LoxClass;

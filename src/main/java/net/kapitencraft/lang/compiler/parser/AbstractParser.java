@@ -1,12 +1,12 @@
-package net.kapitencraft.lang.compile.parser;
+package net.kapitencraft.lang.compiler.parser;
 
 import com.google.common.collect.ImmutableList;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.compile.Compiler;
-import net.kapitencraft.lang.compile.VarTypeParser;
-import net.kapitencraft.lang.compile.analyser.VarAnalyser;
-import net.kapitencraft.lang.compile.visitor.LocationFinder;
-import net.kapitencraft.lang.compile.visitor.RetTypeFinder;
+import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.VarTypeParser;
+import net.kapitencraft.lang.compiler.analyser.VarAnalyser;
+import net.kapitencraft.lang.compiler.visitor.LocationFinder;
+import net.kapitencraft.lang.compiler.visitor.RetTypeFinder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;

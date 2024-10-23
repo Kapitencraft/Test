@@ -1,19 +1,19 @@
-package net.kapitencraft.lang.compile;
+package net.kapitencraft.lang.compiler;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.compile.parser.ExprParser;
-import net.kapitencraft.lang.compile.parser.SkeletonParser;
-import net.kapitencraft.lang.compile.parser.StmtParser;
-import net.kapitencraft.lang.compile.visitor.LocationFinder;
+import net.kapitencraft.lang.compiler.parser.ExprParser;
+import net.kapitencraft.lang.compiler.parser.SkeletonParser;
+import net.kapitencraft.lang.compiler.parser.StmtParser;
+import net.kapitencraft.lang.compiler.visitor.LocationFinder;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.ast.Stmt;
-import net.kapitencraft.lang.oop.GeneratedField;
+import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.clazz.GeneratedLoxClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
@@ -59,6 +59,14 @@ public class Compiler {
         public void logError(String s) {
             System.err.println(s);
         }
+
+        public void warn(Token loc, String msg) {
+            Compiler.warn(loc, msg, fileLoc, lines[loc.line()]);
+        }
+
+        public void warn(Stmt loc, String msg) {
+            warn(finder.find(loc), msg);
+        }
     }
 
     public static void main(String[] args) throws IOException {
@@ -69,11 +77,8 @@ public class Compiler {
         CacheBuilder builder = new CacheBuilder();
         System.out.println("Compiling...");
 
-        ClassLoader.PackageHolder holder = ClassLoader.load(root);
+        ClassLoader.PackageHolder holder = ClassLoader.load(root, ".scr");
         ClassLoader.applyPreviews(holder);
-
-
-
 
         for (File file : source) {
             BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -253,30 +258,64 @@ public class Compiler {
     }
 
     public static void error(Token token, String message, String fileId, String line) {
-        report(token.line(), message, fileId, token.lineStartIndex(), line);
+        error(token.line(), token.lineStartIndex(), message, fileId, line);
     }
 
     public static void error(int lineIndex, int lineStartIndex, String msg, String fileId, String line) {
-        report(lineIndex, msg, fileId, lineStartIndex, line);
+        report(System.err, lineIndex, msg, fileId, lineStartIndex, line, true);
     }
 
-    public static void report(int lineIndex, String message, String fileId, int startIndex, String line) {
-        System.err.print(fileId);
-        System.err.print(":");
-        System.err.print(lineIndex);
-        System.err.print(": ");
-        System.err.println(message);
+    public static void warn(Token token, String msg, String fileId, String line) {
+        warn(token.line(), token.lineStartIndex(), msg, fileId, line);
+    }
 
-        System.err.println(line);
+    public static void warn(int lineIndex, int lineStartIndex, String msg, String filedId, String line) {
+        System.out.print("\u001B[33m"); //set output color to yellow
+        report(System.out, lineIndex, msg, filedId, lineStartIndex, line, false);
+        System.out.print("\u001B[0m"); //reset output color
+    }
+
+    public static void report(PrintStream target, int lineIndex, String message, String fileId, int startIndex, String line, boolean setHasError) {
+        target.print(fileId);
+        target.print(":");
+        target.print(lineIndex);
+        target.print(": ");
+        target.println(message);
+
+        target.println(line);
         for (int i = 0; i < startIndex; i++) {
-            System.err.print(" ");
+            target.print(" ");
         }
-        System.err.println("^");
+        target.println("^");
 
-        hadError = true;
+        hadError |= setHasError;
     }
 
-    public record BakedClass(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.FuncDecl[] constructors, Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields, LoxClass superclass, Token name, String pck, BakedClass[] enclosed, boolean isAbstract, boolean isFinal) {
+    public record BakedClass(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.FuncDecl[] constructors, Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields, LoxClass superclass, Token name, String pck, BakedClass[] enclosed, boolean isAbstract, boolean isFinal) implements ClassBuilder<BakedClass> {
 
+        @Override
+        public LoxClass build(BakedClass in, ErrorLogger logger) {
+            return null;
+        }
+    }
+
+    public record BakedInterface(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.VarDecl[] staticFields, LoxClass[] parentInterfaces, Token name, String pck) implements ClassBuilder<BakedInterface> {
+
+        @Override
+        public LoxClass build(BakedInterface in, ErrorLogger logger) {
+            return null;
+        }
+    }
+
+    public record BakedEnum(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields, LoxClass[] interfaces, Token name, String pck, BakedClass[] enclosed) implements ClassBuilder<BakedEnum> {
+
+        @Override
+        public LoxClass build(BakedEnum in, ErrorLogger logger) {
+            return null;
+        }
+    }
+
+    public interface ClassBuilder<T extends ClassBuilder<T>> {
+        LoxClass build(T in, ErrorLogger logger);
     }
 }

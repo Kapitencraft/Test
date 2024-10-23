@@ -1,6 +1,6 @@
-package net.kapitencraft.lang.compile.visitor;
+package net.kapitencraft.lang.compiler.visitor;
 
-import net.kapitencraft.lang.compile.Compiler;
+import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.Pair;
 

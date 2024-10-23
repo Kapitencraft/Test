@@ -9,7 +9,7 @@ import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
-import net.kapitencraft.lang.oop.LoxField;
+import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.Interpreter;
 

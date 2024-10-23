@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.compile.visitor;
+package net.kapitencraft.lang.compiler.visitor;
 
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;

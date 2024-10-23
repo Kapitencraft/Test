@@ -1,26 +1,27 @@
-package net.kapitencraft.lang.oop.clazz;
+package net.kapitencraft.lang.natives.scripted.lang;
 
+import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.NativeMethod;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
-import net.kapitencraft.lang.oop.field.LoxField;
+import net.kapitencraft.lang.run.Interpreter;
+import net.kapitencraft.lang.run.VarTypeManager;
 
+import javax.xml.crypto.Data;
 import java.util.List;
 import java.util.Map;
 
-public class PrimitiveClass implements LoxClass {
-    private final String name;
-    private final LoxClass superclass;
-    private final Object defaultValue;
-
-    public PrimitiveClass(LoxClass superclass, String name, Object defaultValue) {
-        this.name = name;
-        this.superclass = superclass;
-        this.defaultValue = defaultValue;
-    }
-
-    public PrimitiveClass(String name, Object defaultValue) {
-        this(null, name, defaultValue);
-    }
+public class ObjectClass implements LoxClass {
+    private final Map<String, DataMethodContainer> methods = Map.of(
+            "toString", DataMethodContainer.of(new NativeMethod(List.of(), VarTypeManager.STRING) {
+                @Override
+                public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+                    return name();
+                }
+            })
+    );
 
     @Override
     public Object getStaticField(String name) {
@@ -34,41 +35,21 @@ public class PrimitiveClass implements LoxClass {
 
     @Override
     public String name() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
-        return "Primitive$" + name;
+        return "Object";
     }
 
     @Override
     public String packageRepresentation() {
-        return "scripted.lang."; //TODO perhaps add package field?
+        return "scripted.lang";
     }
 
     @Override
     public LoxClass superclass() {
-        return superclass;
-    }
-
-    @Override
-    public LoxClass getFieldType(String name) {
         return null;
     }
 
     @Override
     public LoxClass getStaticFieldType(String name) {
-        return null;
-    }
-
-    @Override
-    public boolean hasField(String name) {
-        return false;
-    }
-
-    @Override
-    public LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
         return null;
     }
 
@@ -83,33 +64,13 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getMethod(String name, List<LoxClass> args) {
-        return null;
-    }
-
-    @Override
     public boolean hasStaticMethod(String name) {
         return false;
     }
 
     @Override
-    public boolean hasMethod(String name) {
-        return false;
-    }
-
-    @Override
-    public Map<String, LoxField> getFields() {
-        return Map.of();
-    }
-
-    @Override
     public MethodContainer getConstructor() {
         return null;
-    }
-
-    @Override
-    public Map<String, MethodContainer> getMethods() {
-        return Map.of();
     }
 
     @Override
@@ -119,17 +80,17 @@ public class PrimitiveClass implements LoxClass {
 
     @Override
     public boolean isFinal() {
-        return true;
+        return false;
     }
 
     @Override
     public LoxCallable getMethodByOrdinal(String name, int ordinal) {
-        return null;
+        return methods.get(name).getMethodByOrdinal(ordinal);
     }
 
     @Override
     public int getMethodOrdinal(String name, List<LoxClass> types) {
-        return -1;
+        return methods.get(name).getMethodOrdinal(types);
     }
 
     @Override
@@ -142,7 +103,8 @@ public class PrimitiveClass implements LoxClass {
         return null;
     }
 
-    public Object defaultValue() {
-        return defaultValue;
+    @Override
+    public Map<String, ? extends MethodContainer> getMethods() {
+        return methods;
     }
 }
