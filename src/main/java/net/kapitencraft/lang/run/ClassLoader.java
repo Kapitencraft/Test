@@ -172,7 +172,7 @@ public class ClassLoader {
 
         List<String> flags = GsonHelper.getAsJsonArray(object, "flags").asList().stream().map(JsonElement::getAsString).toList();
 
-        Map<String, GeneratedLoxClass> enclosedClasses = enclosed.stream().collect(Collectors.toMap(GeneratedLoxClass::name, Function.identity()));
+        Map<String, LoxClass> enclosedClasses = enclosed.stream().collect(Collectors.toMap(GeneratedLoxClass::name, Function.identity()));
 
         return new GeneratedLoxClass(
                 methods.build(), staticMethods.build(), constructorData,
@@ -251,19 +251,19 @@ public class ClassLoader {
             if (obj == null || obj.getClass() != this.getClass()) return false;
             var that = (ClassHolder) obj;
             return Objects.equals(this.file, that.file) &&
-                    Objects.equals(this.children, that.children);
+                    Arrays.equals(this.children, that.children);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(file, children);
+            return Objects.hash(file, Arrays.hashCode(children));
         }
 
         @Override
         public String toString() {
             return "ClassHolder[" +
                     "file=" + file + ", " +
-                    "children=" + children + ']';
+                    "children=" + Arrays.toString(children) + ']';
         }
 
         }

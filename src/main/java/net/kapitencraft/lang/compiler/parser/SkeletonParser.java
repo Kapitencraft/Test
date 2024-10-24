@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
@@ -58,35 +59,20 @@ public class SkeletonParser extends AbstractParser {
         List<MethodDecl> methods = new ArrayList<>();
         List<MethodDecl> constructors = new ArrayList<>();
         List<FieldDecl> fields = new ArrayList<>();
-        List<ClassDecl> enclosed = new ArrayList<>();
+        List<ClassConstructor<?>> enclosed = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
-            boolean isStatic = false;
-            boolean isFinal = false;
-            boolean isAbstract = false;
-            while (!check(IDENTIFIER) && !check(CLASS) && !check(EOF)) {
-                if (match(STATIC)) {
-                    if (isStatic) error(previous(), "duplicate static keyword");
-                    isStatic = true;
-                } else if (match(FINAL)) {
-                    if (isFinal) error(previous(), "duplicate final keyword");
-                    isFinal = true;
-                } else if (match(ABSTRACT)) {
-                    if (isAbstract) error(previous(), "duplicate abstract keyword");
-                    if (!classAbstract) error(previous(), "abstract method on non-abstract class");
-                    isAbstract = true;
-                } else {
-                    error(peek(), "<identifier> expected");
-                }
-            }
+            ModifiersParser modifiers = new ModifiersParser();
+            modifiers.parse();
             if (check(CLASS)) {
-                enclosed.add(classDecl(isAbstract, isFinal, pckID, null));
+                enclosed.add(classDecl(modifiers.isAbstract, modifiers.isFinal, pckID, null));
             } else if (check(INTERFACE)) {
-                if (isAbstract) error(peek(), "interfaces can not be declared abstract");
-                if (isFinal) error(peek(), "interfaces can not be final");
+                if (modifiers.isAbstract) error(peek(), "interfaces can not be declared abstract");
+                if (modifiers.isFinal) error(peek(), "interfaces can not be final");
                 enclosed.add(interfaceDecl(pckID, null));
             } else if (check(ENUM)) {
-
+                if (modifiers.isAbstract) error(peek(), "enums can not be abstract");
+                if (modifiers.isFinal) error(peek(), "enums can not be final");
             } else {
                 if (Objects.equals(peek().lexeme(), name.lexeme())) {
                     Token constName = consume(IDENTIFIER, "that shouldn't have happened...");
@@ -97,12 +83,11 @@ public class SkeletonParser extends AbstractParser {
                     LoxClass type = consumeVarType(parser);
                     Token elementName = consumeIdentifier();
                     if (match(BRACKET_O)) {
-                        if (isAbstract && isStatic) error(elementName, "illegal combination of modifiers abstract and static");
-                        MethodDecl decl = funcDecl(parser, type, elementName, isFinal, isStatic, isAbstract);
+                        MethodDecl decl = funcDecl(parser, type, elementName, modifiers.isFinal, modifiers.isStatic, modifiers.isAbstract);
                         methods.add(decl);
                     } else {
-                        if (isAbstract) error(elementName, "fields may not be abstract");
-                        FieldDecl decl = fieldDecl(type, elementName, isFinal, isStatic);
+                        if (modifiers.isAbstract) error(elementName, "fields may not be abstract");
+                        FieldDecl decl = fieldDecl(type, elementName, modifiers.isFinal, modifiers.isStatic);
                         fields.add(decl);
                     }
                 }
@@ -112,7 +97,7 @@ public class SkeletonParser extends AbstractParser {
         return new ClassDecl(classAbstract, classFinal, previewClass, name, pckID, superClass, constructors.toArray(new MethodDecl[0]), methods.toArray(new MethodDecl[0]), fields.toArray(new FieldDecl[0]), enclosed.toArray(new ClassDecl[0]));
     }
 
-    private ClassDecl interfaceDecl(String pckID, String fileId) {
+    private InterfaceDecl interfaceDecl(String pckID, String fileId) {
         consume(INTERFACE, "'interface' expected");
 
         Token name = consumeIdentifier();
@@ -136,38 +121,29 @@ public class SkeletonParser extends AbstractParser {
 
         List<MethodDecl> methods = new ArrayList<>();
         List<FieldDecl> fields = new ArrayList<>();
-        List<ClassDecl> enclosed = new ArrayList<>();
+        List<ClassConstructor<?>> enclosed = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
-            boolean isStatic = false;
-            while (!check(IDENTIFIER) && !check(CLASS) && !check(EOF)) {
-                if (match(STATIC)) {
-                    if (isStatic) error(previous(), "duplicate static keyword");
-                    isStatic = true;
-                } else {
-                    error(peek(), "<identifier> expected");
-                }
-            }
-            if (check(CLASS)) {
-                enclosed.add(classDecl(false, false, pckID, null));
-            } else if (check(INTERFACE)) {
-                enclosed.add(interfaceDecl(pckID, null));
-            } else if (check(ENUM)) {
-
-            } else {
+            ModifiersParser modifiers = new ModifiersParser();
+            modifiers.parse();
+            if (!readClass(enclosed::add, pckID, modifiers)) {
                 LoxClass type = consumeVarType(parser);
                 Token elementName = consumeIdentifier();
                 if (match(BRACKET_O)) {
-                    MethodDecl decl = funcDecl(parser, type, elementName, false, isStatic, true);
+                    MethodDecl decl = funcDecl(parser, type, elementName, modifiers.isFinal, modifiers.isStatic, modifiers.isAbstract);
                     methods.add(decl);
                 } else {
-                    FieldDecl decl = fieldDecl(type, elementName, false, true);
+                    FieldDecl decl = fieldDecl(type, elementName, modifiers.isFinal, modifiers.isStatic);
                     fields.add(decl);
                 }
             }
         }
         consumeCurlyClose("class");
         return new InterfaceDecl(preview, name, pckID, parentInterfaces.toArray(new LoxClass[0]), methods.toArray(new MethodDecl[0]), fields.toArray(new FieldDecl[0]), enclosed.toArray(new ClassDecl[0]));
+    }
+
+    private EnumDecl enumDecl(String pckID, String fileId) {
+        return null;
     }
 
     public ClassDecl parse() {
@@ -197,11 +173,23 @@ public class SkeletonParser extends AbstractParser {
                 else if (isFinal) error(previous(), "illegal combination of modifiers abstract and final");
                 isAbstract = true;
             } else {
-                error(advance(), "<identifier> expected");
+                error(advance(), "modifier or <identifier> expected");
             }
         }
         String pckId = pck.stream().map(Token::lexeme).collect(Collectors.joining("."));
         return classDecl(isAbstract, isFinal, pckId, fileName);
+    }
+
+    private boolean readClass(Consumer<ClassConstructor<?>> sink, String pckID, ModifiersParser modifiers) {
+        if (check(CLASS)) {
+            sink.accept(classDecl(false, modifiers.isFinal, pckID, null));
+        } else if (check(INTERFACE)) {
+            sink.accept(interfaceDecl(pckID, null));
+        } else if (check(ENUM)) {
+            sink.accept(enumDecl(pckID, null));
+        } else
+            return false;
+        return true;
     }
 
     private MethodDecl funcDecl(VarTypeParser parser, LoxClass type, Token name, boolean isFinal, boolean isStatic, boolean isAbstract) {
@@ -296,31 +284,60 @@ public class SkeletonParser extends AbstractParser {
 
     }
 
-    public record ClassDecl(boolean isAbstract, boolean isFinal, PreviewClass target, Token name, String pck, LoxClass superclass, MethodDecl[] constructors, MethodDecl[] methods, FieldDecl[] fields, ClassConstructor<?, ?>[] enclosed) implements ClassConstructor<ClassDecl, Compiler.BakedClass> {
+    public record ClassDecl(boolean isAbstract, boolean isFinal, PreviewClass target, Token name, String pck, LoxClass superclass, MethodDecl[] constructors, MethodDecl[] methods, FieldDecl[] fields, ClassConstructor<?>[] enclosed) implements ClassConstructor<Compiler.BakedClass> {
 
         @Override
-        public Compiler.BakedClass construct(ClassDecl value, Compiler.ErrorLogger logger, VarTypeParser parser, String pck) {
+        public Compiler.BakedClass construct(Compiler.ErrorLogger logger, VarTypeParser parser, String pck) {
             return null;
         }
     }
 
-    public record InterfaceDecl(PreviewClass target, Token name, String pck, LoxClass[] parentInterfaces, MethodDecl[] methods, FieldDecl[] fields, ClassConstructor<?, ?>[] enclosed) implements ClassConstructor<InterfaceDecl, Compiler.BakedInterface> {
+    public record InterfaceDecl(PreviewClass target, Token name, String pck, LoxClass[] parentInterfaces, MethodDecl[] methods, FieldDecl[] fields, ClassConstructor<?>[] enclosed) implements ClassConstructor<Compiler.BakedInterface> {
 
         @Override
-        public Compiler.BakedInterface construct(InterfaceDecl value, Compiler.ErrorLogger logger, VarTypeParser parser, String pck) {
+        public Compiler.BakedInterface construct(Compiler.ErrorLogger logger, VarTypeParser parser, String pck) {
             return null;
         }
     }
 
-    public record EnumDecl(PreviewClass target, Token name, String pck, LoxClass[] interfaces, MethodDecl[] methods, FieldDecl[] fields, ClassConstructor<?, ?>[] enclosed) implements ClassConstructor<EnumDecl, Compiler.BakedEnum> {
+    public record EnumDecl(PreviewClass target, Token name, String pck, LoxClass[] interfaces, MethodDecl[] methods, FieldDecl[] fields, ClassConstructor<?>[] enclosed) implements ClassConstructor<Compiler.BakedEnum> {
 
         @Override
-        public Compiler.BakedEnum construct(EnumDecl value, Compiler.ErrorLogger logger, VarTypeParser parser, String pck) {
+        public Compiler.BakedEnum construct(Compiler.ErrorLogger logger, VarTypeParser parser, String pck) {
             return null;
         }
     }
 
-    public interface ClassConstructor<T extends ClassConstructor<T, I>, I extends Compiler.ClassBuilder<I>> {
-        I construct(T value, Compiler.ErrorLogger logger, VarTypeParser parser, String pck);
+    public interface ClassConstructor<I extends Compiler.ClassBuilder> {
+        I construct(Compiler.ErrorLogger logger, VarTypeParser parser, String pck);
+    }
+
+    public class ModifiersParser {
+        private boolean isFinal;
+        private boolean isStatic;
+        private boolean isAbstract;
+
+        public void parse() {
+            while (!check(IDENTIFIER) && !check(CLASS) && !check(EOF)) {
+                if (match(STATIC)) {
+                    if (isStatic) error(previous(), "duplicate static keyword");
+                    if (isFinal) error(previous(), "illegal combination of modifiers 'static' and 'final'");
+                    if (isAbstract) error(previous(), "illegal combination of modifiers 'static' and 'abstract'");
+                    isStatic = true;
+                } else if (match(FINAL)) {
+                    if (isFinal) error(previous(), "duplicate final keyword");
+                    if (isStatic) error(previous(), "illegal combination of modifiers 'final' and 'static'");
+                    if (isAbstract) error(previous(), "illegal combination of modifiers 'final' and 'abstract'");
+                    isFinal = true;
+                } else if (match(ABSTRACT)) {
+                    if (isAbstract) error(previous(), "duplicate final keyword");
+                    if (isStatic) error(previous(), "illegal combination of modifiers 'abstract' and 'static'");
+                    if (isFinal) error(previous(), "illegal combination of modifiers 'abstract' and 'final'");
+                    isAbstract = true;
+                } else {
+                    error(peek(), "<identifier> expected");
+                }
+            }
+        }
     }
 }

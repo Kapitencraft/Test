@@ -152,10 +152,9 @@ public class Compiler {
             else fields.add(fieldDecl);
         }
 
-        List<BakedClass> enclosed = new ArrayList<>();
-        for (SkeletonParser.ClassDecl classDecl : decl.enclosed()) {
-            BakedClass loxClass = compileClass(logger, classDecl, varTypeParser, pck + decl.name().lexeme() + "$");
-            enclosed.add(loxClass);
+        List<ClassBuilder> enclosed = new ArrayList<>();
+        for (SkeletonParser.ClassConstructor<?> classDecl : decl.enclosed()) {
+            enclosed.add(classDecl.construct(logger, varTypeParser, pck + decl.name().lexeme() + "$"));
         }
 
         List<Stmt.FuncDecl> methods = new ArrayList<>();
@@ -196,16 +195,16 @@ public class Compiler {
                 decl.superclass(),
                 decl.name(),
                 pck,
-                enclosed.toArray(new BakedClass[0]),
+                enclosed.toArray(new ClassBuilder<?>[0]),
                 decl.isAbstract(),
                 decl.isFinal()
         );
     }
 
     private static GeneratedLoxClass generateClass(BakedClass baked, ErrorLogger logger) {
-        ImmutableMap.Builder<String, GeneratedLoxClass> enclosed = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, LoxClass> enclosed = new ImmutableMap.Builder<>();
         for (int i = 0; i < baked.enclosed().length; i++) {
-            GeneratedLoxClass loxClass = generateClass(baked.enclosed()[i], logger);
+            LoxClass loxClass = baked.enclosed()[i].build(logger);
             enclosed.put(loxClass.name(), loxClass);
         }
 
@@ -242,9 +241,9 @@ public class Compiler {
                 DataMethodContainer.bakeBuilders(methods), DataMethodContainer.bakeBuilders(staticMethods),
                 container,
                 fields, generateFields(baked.staticFields()),
+                enclosed.build(),
                 baked.superclass(),
                 baked.name().lexeme(),
-                enclosed.build(),
                 baked.pck(),
                 baked.isAbstract(),
                 baked.isFinal()
@@ -291,31 +290,31 @@ public class Compiler {
         hadError |= setHasError;
     }
 
-    public record BakedClass(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.FuncDecl[] constructors, Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields, LoxClass superclass, Token name, String pck, BakedClass[] enclosed, boolean isAbstract, boolean isFinal) implements ClassBuilder<BakedClass> {
+    public record BakedClass(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.FuncDecl[] constructors, Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields, LoxClass superclass, Token name, String pck, ClassBuilder[] enclosed, boolean isAbstract, boolean isFinal) implements ClassBuilder {
 
         @Override
-        public LoxClass build(BakedClass in, ErrorLogger logger) {
+        public LoxClass build(ErrorLogger logger) {
             return null;
         }
     }
 
-    public record BakedInterface(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.VarDecl[] staticFields, LoxClass[] parentInterfaces, Token name, String pck) implements ClassBuilder<BakedInterface> {
+    public record BakedInterface(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.VarDecl[] staticFields, LoxClass[] parentInterfaces, Token name, String pck, ClassBuilder[] enclosed) implements ClassBuilder {
 
         @Override
-        public LoxClass build(BakedInterface in, ErrorLogger logger) {
+        public LoxClass build(ErrorLogger logger) {
             return null;
         }
     }
 
-    public record BakedEnum(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields, LoxClass[] interfaces, Token name, String pck, BakedClass[] enclosed) implements ClassBuilder<BakedEnum> {
+    public record BakedEnum(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields, LoxClass[] interfaces, Token name, String pck, ClassBuilder[] enclosed) implements ClassBuilder {
 
         @Override
-        public LoxClass build(BakedEnum in, ErrorLogger logger) {
+        public LoxClass build(ErrorLogger logger) {
             return null;
         }
     }
 
-    public interface ClassBuilder<T extends ClassBuilder<T>> {
-        LoxClass build(T in, ErrorLogger logger);
+    public interface ClassBuilder {
+        LoxClass build(ErrorLogger logger);
     }
 }
