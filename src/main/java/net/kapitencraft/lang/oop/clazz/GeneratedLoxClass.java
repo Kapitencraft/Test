@@ -24,7 +24,7 @@ public final class GeneratedLoxClass implements LoxClass {
     private final Map<String, GeneratedField> allFields;
     private final Map<String, GeneratedField> allStaticFields;
 
-    private final Map<String, GeneratedLoxClass> enclosing;
+    private final Map<String, LoxClass> enclosing;
 
     private final LoxClass superclass;
     private final String name;
@@ -34,7 +34,8 @@ public final class GeneratedLoxClass implements LoxClass {
 
     public GeneratedLoxClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor,
                              Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
-                             LoxClass superclass, String name, Map<String, GeneratedLoxClass> enclosing, String packageRepresentation, boolean isAbstract, boolean isFinal) {
+                             Map<String, LoxClass> enclosing,
+                             LoxClass superclass, String name, String packageRepresentation, boolean isAbstract, boolean isFinal) {
         this.allMethods = methods;
         this.allStaticMethods = staticMethods;
         this.constructor = constructor.build(this);
@@ -51,7 +52,7 @@ public final class GeneratedLoxClass implements LoxClass {
     public GeneratedLoxClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, List<LoxCallable> constructorData,
                              Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
                              LoxClass superclass, String name, String packageRepresentation,
-                             Map<String, GeneratedLoxClass> enclosing,
+                             Map<String, LoxClass> enclosing,
                              boolean isAbstract, boolean isFinal) {
         this.allMethods = methods;
         this.allStaticMethods = staticMethods;
