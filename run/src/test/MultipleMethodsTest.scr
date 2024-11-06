@@ -1,4 +1,4 @@
-package main;
+package test;
 
 class MultipleMethodsTest {
     MultipleMethodsTest(String i, String b) {

@@ -13,17 +13,22 @@ import net.kapitencraft.lang.oop.clazz.ReflectiveClass;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 public class VarTypeManager {
     private static final Package root = new Package("");
+    private static final Package langRoot = getOrCreatePackage("scripted.lang");
     private static final Map<Class<?>, LoxClass> classLookup = new HashMap<>();
     public static final ReflectiveLoader reflectiveLoader = new ReflectiveLoader();
-    private static final Map<String, TokenType> keywords;
 
     public static final LoxClass OBJECT = new ObjectClass();
+
+    public static final LoxClass ENUM = new EnumClass();
+
+    //TODO load dynamically because of forward references
 
     public static final LoxClass NUMBER = new PrimitiveClass("num" , null);
     public static final LoxClass INTEGER = new PrimitiveClass(NUMBER, "int", 0);
@@ -31,7 +36,7 @@ public class VarTypeManager {
     public static final LoxClass DOUBLE = new PrimitiveClass(NUMBER, "double", 0d);
     public static final LoxClass BOOLEAN = new PrimitiveClass("bool", false);
     public static final LoxClass CHAR = new PrimitiveClass("char", ' ');
-    public static final LoxClass STRING = new PrimitiveClass("String", "");
+    public static final LoxClass STRING = new PrimitiveClass("String", ""); //TODO move to actually class after arrays
 
 
     public static final LoxClass VOID = new PrimitiveClass("void", null);
@@ -46,7 +51,6 @@ public class VarTypeManager {
     public static final LoxClass MATH = new MathClass();
 
     static {
-        keywords = Arrays.stream(values()).filter(tokenType -> tokenType.isCategory(TokenTypeCategory.KEY_WORD)).collect(Collectors.toMap(tokenType -> tokenType.name().toLowerCase(Locale.ROOT), Function.identity()));
         initialize();
     }
 
@@ -83,6 +87,14 @@ public class VarTypeManager {
 
     }
 
+    public static <T extends LoxClass> T register(Package pck, Supplier<T> sup) {
+
+    }
+
+    private static <T extends LoxClass> T registerMain(Supplier<T> sup) {
+        return register(langRoot, sup);
+    }
+
     private static void registerMain(LoxClass clazz) {
         getOrCreatePackage("scripted.lang").addClass(clazz.name(), clazz);
     }
@@ -91,11 +103,7 @@ public class VarTypeManager {
         getOrCreatePackage("scripted.lang").addClass(clazz);
     }
 
-    public static TokenType getType(String name) {
-        if (keywords.containsKey(name)) return keywords.get(name);
 
-        return IDENTIFIER;
-    }
 
     public static LoxClass getClassForName(String type) {
         String[] packages = type.split("\\.");

@@ -5,6 +5,7 @@ import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,5 +26,14 @@ public class VarTypeParser {
 
     public void addClass(LoxClass clazz, String nameOverride) {
         implemented.put(nameOverride != null ? nameOverride : clazz.name(), clazz);
+    }
+
+    @Override
+    public String toString() {
+        return "VarTypeParser" + implemented;
+    }
+
+    public boolean hasClass(LoxClass target, String nameOverride) {
+        return hasClass(Optional.ofNullable(nameOverride).orElseGet(target::name));
     }
 }

@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.parser;
 
 import com.google.common.collect.ImmutableList;
+import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.VarTypeParser;
@@ -119,6 +120,11 @@ public class AbstractParser {
         return peek().type() == type;
     }
 
+    protected boolean check(TokenType... types) {
+        if (isAtEnd()) return false;
+        return Arrays.stream(types).anyMatch(this::check);
+    }
+
     protected boolean match(TokenTypeCategory category) {
         return match(categoryLookup.get(category));
     }
@@ -162,16 +168,31 @@ public class AbstractParser {
     }
 
     protected LoxClass consumeVarType() {
+        StringBuilder typeName = new StringBuilder();
         Token token = consumeIdentifier();
+        typeName.append(token.lexeme());
         LoxClass loxClass = parser.getClass(token.lexeme());
-        while (match(DOT)) {
-            Token enclosingName = consumeIdentifier();
-            if (!loxClass.hasEnclosing(enclosingName.lexeme())) {
+        if (loxClass == null) {
+            Package p = VarTypeManager.getPackage(token.lexeme());
+            while (match(DOT)) {
+                String id = consumeIdentifier().lexeme();
+                typeName.append(".").append(id);
+                if (p.hasClass(id)) {
+                    loxClass = p.getClass(id);
+                    break;
+                }
+                p = p.getPackage(id);
+            }
+        }
+        while (match(DOT) && loxClass != null) {
+            String enclosingName = consumeIdentifier().lexeme();
+            typeName.append(".").append(enclosingName);
+            if (!loxClass.hasEnclosing(enclosingName)) {
                 return loxClass;
             }
-            loxClass = loxClass.getEnclosing(enclosingName.lexeme());
+            loxClass = loxClass.getEnclosing(enclosingName);
         }
-        if (loxClass == null) error(token, "unknown class '" + token.lexeme() + "'");
+        if (loxClass == null) error(token, "unknown class '" + typeName + "'");
         return loxClass;
     }
 
@@ -205,6 +226,11 @@ public class AbstractParser {
         errorLogger.error(token, message);
         return new ParseError();
     }
+
+    protected void warn(Token token, String message) {
+        errorLogger.warn(token, message);
+    }
+
 
     protected void synchronize() {
 

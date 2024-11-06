@@ -255,12 +255,13 @@ public class StmtParser extends ExprParser {
         return stmts;
     }
 
-    public void applyMethod(List<Pair<LoxClass, Token>> params, LoxClass targetClass, LoxClass funcRetType) {
+    public void applyMethod(List<Pair<LoxClass, String>> params, LoxClass targetClass, LoxClass superclass, LoxClass funcRetType) {
         this.varAnalyser.push();
         this.funcRetType = funcRetType;
         if (targetClass != null) this.varAnalyser.add("this", targetClass, true, true);
-        for (Pair<LoxClass, Token> param : params) {
-            varAnalyser.add(param.right().lexeme(), param.left(), true, false);
+        if (superclass != null) this.varAnalyser.add("super", superclass, true, true);
+        for (Pair<LoxClass, String> param : params) {
+            varAnalyser.add(param.right(), param.left(), true, false);
         }
     }
 

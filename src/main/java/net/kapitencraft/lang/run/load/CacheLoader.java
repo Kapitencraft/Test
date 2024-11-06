@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.run;
+package net.kapitencraft.lang.run.load;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -8,13 +8,13 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
 
 public class CacheLoader {
 
@@ -30,7 +30,6 @@ public class CacheLoader {
         return readExpr(GsonHelper.getAsJsonObject(object, name));
     }
 
-    //TODO move to registry after merge
     public static Expr readExpr(JsonObject object) {
         String type = GsonHelper.getAsString(object, "TYPE");
         return switch (type) {

@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.oop.clazz.inst;
 
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
@@ -15,7 +15,6 @@ import java.util.Map;
 public class ClassInstance {
     private final Environment environment;
     private final Map<String, Object> fields = new HashMap<>();
-    private final Map<String, Object> staticFields = new HashMap<>();
     private final LoxClass type;
 
     public LoxClass getType() {
@@ -25,6 +24,7 @@ public class ClassInstance {
     public ClassInstance(LoxClass type, Interpreter interpreter) {
         this.environment = new Environment();
         environment.defineVar("this", this);
+        environment.defineVar("super", this); //TODO add scoped method map
         this.type = type;
         this.executeConstructor(interpreter);
     }
@@ -61,7 +61,7 @@ public class ClassInstance {
     }
 
     public Object executeMethod(String name, int ordinal, List<Object> arguments, Interpreter interpreter) {
-        LoxCallable callable = type.getMethodByOrdinal(name, ordinal);
+        ScriptedCallable callable = type.getMethodByOrdinal(name, ordinal);
         this.environment.push();
         try {
             return callable.call(this.environment, interpreter, arguments);

@@ -165,7 +165,5 @@ public class Manager {
                 System.out.println();
             }
         }
-
-        void checkUpdate()
     }
 }

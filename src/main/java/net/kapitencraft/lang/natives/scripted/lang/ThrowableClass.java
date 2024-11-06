@@ -2,7 +2,7 @@ package net.kapitencraft.lang.natives.scripted.lang;
 
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.holder.LiteralHolder;
@@ -81,12 +81,12 @@ public class ThrowableClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
+    public ScriptedCallable getStaticMethod(String name, List<? extends LoxClass> args) {
         return null;
     }
 
     @Override
-    public LoxCallable getStaticMethodByOrdinal(String name, int ordinal) {
+    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
         return null;
     }
 
@@ -103,12 +103,7 @@ public class ThrowableClass implements LoxClass {
     @Override
     public MethodContainer getConstructor() {
         return ConstructorContainer.fromCache(List.of(
-                new LoxCallable() {
-                    @Override
-                    public int arity() {
-                        return 1;
-                    }
-
+                new ScriptedCallable() {
                     @Override
                     public LoxClass type() {
                         return VarTypeManager.VOID;
@@ -144,7 +139,12 @@ public class ThrowableClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getMethodByOrdinal(String name, int ordinal) {
+    public boolean isInterface() {
+        return false;
+    }
+
+    @Override
+    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
         return null;
     }
 

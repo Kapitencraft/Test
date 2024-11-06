@@ -1,0 +1,59 @@
+{
+  "TYPE": "interface",
+  "name": "InterfaceTest",
+  "methods": {
+    "a": [
+      {
+        "retType": "scripted.lang.String",
+        "params": [],
+        "body": [
+          {
+            "TYPE": "return",
+            "keyword": {
+              "type": "RETURN",
+              "lexeme": "return",
+              "literal": {},
+              "line": 9,
+              "lineStartIndex": 8
+            },
+            "value": {
+              "TYPE": "literal",
+              "value": {
+                "type": "STR",
+                "lexeme": "\"a\"",
+                "literal": {
+                  "type": "String",
+                  "value": "a"
+                },
+                "line": 9,
+                "lineStartIndex": 15
+              }
+            }
+          }
+        ],
+        "flags": []
+      }
+    ],
+    "test": [
+      {
+        "retType": "scripted.lang.void",
+        "params": [],
+        "flags": [
+          "isAbstract"
+        ]
+      }
+    ],
+    "e": [
+      {
+        "retType": "scripted.lang.String",
+        "params": [],
+        "flags": [
+          "isAbstract"
+        ]
+      }
+    ]
+  },
+  "staticMethods": {},
+  "implemented": [],
+  "staticFields": {}
+}

@@ -32,4 +32,8 @@ public record Token(TokenType type, String lexeme, LiteralHolder literal, int li
         int lineStartIndex = GsonHelper.getAsInt(object, "lineStartIndex");
         return new Token(type, lexeme, literal, line, lineStartIndex);
     }
+
+    public static Token createNative(String lexeme) {
+        return new Token(TokenType.IDENTIFIER, lexeme, LiteralHolder.EMPTY, -1, -1);
+    }
 }

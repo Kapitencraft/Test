@@ -6,6 +6,7 @@ import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.tool.GsonHelper;
 
 public record LiteralHolder(Object value, LoxClass type) {
+    public static final LiteralHolder EMPTY = new LiteralHolder(null, null);
 
     public JsonObject toJson() {
         JsonObject object = new JsonObject();
@@ -32,7 +33,7 @@ public record LiteralHolder(Object value, LoxClass type) {
     }
 
     public static LiteralHolder fromJson(JsonObject object) {
-        if (object.isEmpty()) return new LiteralHolder(null, null);
+        if (object.isEmpty()) return EMPTY;
         String type = GsonHelper.getAsString(object, "type");
         LoxClass target = switch (type) {
             case "int" -> VarTypeManager.INTEGER;

@@ -1,28 +1,32 @@
 {
+  "TYPE": "class",
   "name": "A",
   "superclass": "scripted.lang.Object",
-  "methods": {},
+  "implemented": [],
+  "methods": {
+    "test": [
+      {
+        "retType": "scripted.lang.int",
+        "params": [
+          {
+            "type": "scripted.lang.int",
+            "name": "in"
+          }
+        ],
+        "flags": [
+          "isAbstract"
+        ]
+      }
+    ]
+  },
   "staticMethods": {
     "main": [
       {
         "retType": "scripted.lang.void",
-        "name": {
-          "type": "IDENTIFIER",
-          "lexeme": "main",
-          "literal": {},
-          "line": 18,
-          "lineStartIndex": 16
-        },
         "params": [
           {
             "type": "scripted.lang.String",
-            "name": {
-              "type": "IDENTIFIER",
-              "lexeme": "args",
-              "literal": {},
-              "line": 18,
-              "lineStartIndex": 28
-            }
+            "name": "args"
           }
         ],
         "body": [

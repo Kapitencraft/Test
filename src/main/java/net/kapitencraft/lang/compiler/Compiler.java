@@ -1,28 +1,25 @@
 package net.kapitencraft.lang.compiler;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.parser.ExprParser;
 import net.kapitencraft.lang.compiler.parser.SkeletonParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.visitor.LocationFinder;
-import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
-import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.oop.method.GeneratedCallable;
+import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.oop.field.GeneratedField;
-import net.kapitencraft.lang.oop.clazz.GeneratedLoxClass;
+import net.kapitencraft.lang.oop.clazz.GeneratedClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
-import net.kapitencraft.lang.oop.clazz.SkeletonClass;
-import net.kapitencraft.lang.run.ClassLoader;
+import net.kapitencraft.lang.run.load.ClassLoader;
+import net.kapitencraft.lang.run.load.CompilerHolder;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Util;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,6 +39,10 @@ public class Compiler {
 
         public void error(Token loc, String msg) {
             Compiler.error(loc, msg, fileLoc, lines[loc.line() - 1]);
+        }
+
+        public void errorF(Token loc, String format, Object... args) {
+            error(loc, String.format(format, args));
         }
 
         public void error(int lineIndex, int lineStartIndex, String msg) {
@@ -67,34 +68,45 @@ public class Compiler {
         public void warn(Stmt loc, String msg) {
             warn(finder.find(loc), msg);
         }
-    }
 
-    public static void main(String[] args) throws IOException {
-        File root = new File("./run/src");
-        File cache = new File("./run/cache");
-        List<File> source = Util.listResources(root, ".scr");
-
-        CacheBuilder builder = new CacheBuilder();
-        System.out.println("Compiling...");
-
-        ClassLoader.PackageHolder holder = ClassLoader.load(root, ".scr");
-        ClassLoader.applyPreviews(holder);
-
-        for (File file : source) {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String val = reader.lines().collect(Collectors.joining("\n"));
-            ErrorLogger logger = new ErrorLogger(val.split("\n", Integer.MAX_VALUE), file.getAbsolutePath().replace(".\\", ""));
-            String path = file.getParentFile().getPath().substring(10).replace(".scr", "");
-            String absoluteName = file.getName().replace(".scr", "");
-
-            GeneratedLoxClass loxClass = compile(val, logger, path.replace('\\', '.'), absoluteName);
-            cache(cache, builder, path.replace('\\', '/'), loxClass, absoluteName);
+        @Override
+        public String toString() {
+            return "ErrorLogger for '" + fileLoc + "'";
         }
     }
 
-    private static void cache(File cache, CacheBuilder builder, String path, GeneratedLoxClass target, String name) throws IOException {
+    public static void main(String[] args) {
+        File root = new File("./run/src");
+        File cache = ClassLoader.cacheLoc;
+
+        System.out.println("Compiling...");
+
+        ClassLoader.PackageHolder holder = ClassLoader.load(root, ".scr", CompilerHolder::new);
+        ClassLoader.applyPreviews(holder);
+
+        ClassLoader.useHolders(holder, (s, classHolder) -> ((CompilerHolder) classHolder).applyConstructor());
+
+        ClassLoader.generateSkeletons(holder);
+
+        ClassLoader.useHolders(holder, (s, classHolder) -> ((CompilerHolder) classHolder).construct());
+
+        ClassLoader.generateClasses(holder);
+
+        if (hadError) System.exit(65);
+
+        if (cache.exists()) Util.delete(cache);
+
+        CacheBuilder builder = new CacheBuilder();
+        ClassLoader.useClasses(holder, (stringClassHolderMap, aPackage) ->
+                stringClassHolderMap.values().forEach(classHolder -> ((CompilerHolder) classHolder).cache(builder))
+        );
+
+        if (hadError) System.exit(65);
+    }
+
+    public static void cache(File cacheBase, CacheBuilder builder, String path, CacheableClass target, String name) throws IOException {
         JsonObject object = builder.cacheClass(target);
-        File cacheTarget = new File(cache, path + "/" + name + ".scrc");
+        File cacheTarget = new File(cacheBase, path + "/" + name + ".scrc");
         if (!cacheTarget.exists()) {
             cacheTarget.getParentFile().mkdirs();
             cacheTarget.createNewFile();
@@ -102,158 +114,9 @@ public class Compiler {
         FileWriter writer = new FileWriter(cacheTarget);
         writer.write(GsonHelper.GSON.toJson(object));
         writer.close();
-        for (GeneratedLoxClass loxClass : target.enclosing()) {
-            cache(cache, builder, path, loxClass, name + "$" + loxClass.name());
+        for (CacheableClass loxClass : target.enclosing()) {
+            cache(cacheBase, builder, path, loxClass, name + "$" + loxClass.name());
         }
-    }
-
-    public static GeneratedLoxClass compile(String source, ErrorLogger logger, String pck, String fileName) {
-        Lexer lexer = new Lexer(source, logger);
-        List<Token> tokens = lexer.scanTokens();
-
-        SkeletonParser parser = new SkeletonParser(logger, fileName);
-        VarTypeParser varTypeParser = new VarTypeParser();
-
-        parser.apply(tokens.toArray(new Token[0]), varTypeParser);
-
-        SkeletonParser.ClassDecl decl = parser.parse();
-
-        if (!Objects.equals(decl.pck(), pck)) {
-            logger.error(
-                    tokens.get(0),
-                    "package path '" + decl.pck() + "' does not match file path '" + pck + "'");
-        }
-
-        BakedClass baked = compileClass(logger, decl, varTypeParser, decl.pck() + ".");
-
-        // Stop if there was a syntax error.
-        if (hadError) System.exit(65);
-
-        return generateClass(baked, logger);
-    }
-
-    private static BakedClass compileClass(ErrorLogger logger, SkeletonParser.ClassDecl decl, VarTypeParser varTypeParser, String pck) {
-        StmtParser stmtParser = new StmtParser(logger);
-        ExprParser exprParser = new ExprParser(logger);
-
-        SkeletonClass skeletonClass = SkeletonClass.create(logger, decl);
-        decl.target().apply(skeletonClass);
-
-        List<Stmt.VarDecl> fields = new ArrayList<>();
-        List<Stmt.VarDecl> staticFields = new ArrayList<>();
-        for (SkeletonParser.FieldDecl field : decl.fields()) {
-            Expr initializer = null;
-            if (field.body() != null) {
-                exprParser.apply(field.body(), varTypeParser);
-                initializer = exprParser.expression();
-            }
-            Stmt.VarDecl fieldDecl = new Stmt.VarDecl(field.name(), field.type(), initializer, field.isFinal());
-            if (field.isStatic()) staticFields.add(fieldDecl);
-            else fields.add(fieldDecl);
-        }
-
-        List<ClassBuilder> enclosed = new ArrayList<>();
-        for (SkeletonParser.ClassConstructor<?> classDecl : decl.enclosed()) {
-            enclosed.add(classDecl.construct(logger, varTypeParser, pck + decl.name().lexeme() + "$"));
-        }
-
-        List<Stmt.FuncDecl> methods = new ArrayList<>();
-        List<Stmt.FuncDecl> staticMethods = new ArrayList<>();
-        List<Stmt.FuncDecl> abstracts = new ArrayList<>();
-        for (SkeletonParser.MethodDecl method : decl.methods()) {
-            List<Stmt> body = null;
-            if (!method.isAbstract()) {
-                stmtParser.apply(method.body(), varTypeParser);
-                stmtParser.applyMethod(method.params(), skeletonClass, method.type());
-                body = stmtParser.parse();
-                stmtParser.popMethod();
-            }
-            Stmt.FuncDecl methodDecl = new Stmt.FuncDecl(method.type(), method.name(), method.params(), body, method.isFinal(), method.isAbstract());
-            if (method.isStatic()) staticMethods.add(methodDecl);
-            else if (method.isAbstract()) abstracts.add(methodDecl);
-            else methods.add(methodDecl);
-        }
-
-        List<Stmt.FuncDecl> constructors = new ArrayList<>();
-        for (SkeletonParser.MethodDecl method : decl.constructors()) {
-            stmtParser.apply(method.body(), varTypeParser);
-            stmtParser.applyMethod(method.params(), skeletonClass, VarTypeManager.VOID);
-            List<Stmt> body = stmtParser.parse();
-            Stmt.FuncDecl constDecl = new Stmt.FuncDecl(method.type(), method.name(), method.params(), body, method.isFinal(), method.isAbstract());
-            stmtParser.popMethod();
-            constructors.add(constDecl);
-        }
-
-        return new BakedClass(
-                decl.target(),
-                abstracts.toArray(new Stmt.FuncDecl[0]),
-                methods.toArray(new Stmt.FuncDecl[0]),
-                staticMethods.toArray(new Stmt.FuncDecl[0]),
-                constructors.toArray(new Stmt.FuncDecl[0]),
-                fields.toArray(new Stmt.VarDecl[0]),
-                staticFields.toArray(new Stmt.VarDecl[0]),
-                decl.superclass(),
-                decl.name(),
-                pck,
-                enclosed.toArray(new ClassBuilder<?>[0]),
-                decl.isAbstract(),
-                decl.isFinal()
-        );
-    }
-
-    private static GeneratedLoxClass generateClass(BakedClass baked, ErrorLogger logger) {
-        ImmutableMap.Builder<String, LoxClass> enclosed = new ImmutableMap.Builder<>();
-        for (int i = 0; i < baked.enclosed().length; i++) {
-            LoxClass loxClass = baked.enclosed()[i].build(logger);
-            enclosed.put(loxClass.name(), loxClass);
-        }
-
-        Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
-        for (Stmt.FuncDecl method : baked.methods()) {
-            methods.putIfAbsent(method.name.lexeme(), new DataMethodContainer.Builder(baked.name()));
-            DataMethodContainer.Builder builder = methods.get(method.name.lexeme());
-            builder.addMethod(logger, new GeneratedCallable(method), method.name);
-        }
-
-        Map<String, DataMethodContainer.Builder> staticMethods = new HashMap<>();
-        for (Stmt.FuncDecl method : baked.staticMethods()) {
-            staticMethods.putIfAbsent(method.name.lexeme(), new DataMethodContainer.Builder(baked.name()));
-            DataMethodContainer.Builder builder = staticMethods.get(method.name.lexeme());
-            builder.addMethod(logger, new GeneratedCallable(method), method.name);
-        }
-
-        Map<String, GeneratedField> fields = generateFields(baked.fields());
-
-        List<String> finalFields = new ArrayList<>();
-        fields.forEach((name, field) -> {
-            if (field.isFinal() && !field.hasInit()) {
-                finalFields.add(name);
-            }
-        });
-
-        ConstructorContainer.Builder container = new ConstructorContainer.Builder(finalFields, baked.name());
-        for (Stmt.FuncDecl method : baked.constructors()) {
-            container.addMethod(logger, new GeneratedCallable(method), method.name);
-        }
-
-
-        GeneratedLoxClass loxClass = new GeneratedLoxClass(
-                DataMethodContainer.bakeBuilders(methods), DataMethodContainer.bakeBuilders(staticMethods),
-                container,
-                fields, generateFields(baked.staticFields()),
-                enclosed.build(),
-                baked.superclass(),
-                baked.name().lexeme(),
-                baked.pck(),
-                baked.isAbstract(),
-                baked.isFinal()
-        );
-        baked.target().apply(loxClass);
-        return loxClass;
-    }
-
-    private static Map<String, GeneratedField> generateFields(Stmt.VarDecl[] declarations) {
-        return Arrays.stream(declarations).collect(Collectors.toMap(dec -> dec.name.lexeme(), GeneratedField::new));
     }
 
     public static void error(Token token, String message, String fileId, String line) {
@@ -290,31 +153,15 @@ public class Compiler {
         hadError |= setHasError;
     }
 
-    public record BakedClass(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.FuncDecl[] constructors, Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields, LoxClass superclass, Token name, String pck, ClassBuilder[] enclosed, boolean isAbstract, boolean isFinal) implements ClassBuilder {
-
-        @Override
-        public LoxClass build(ErrorLogger logger) {
-            return null;
-        }
-    }
-
-    public record BakedInterface(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.VarDecl[] staticFields, LoxClass[] parentInterfaces, Token name, String pck, ClassBuilder[] enclosed) implements ClassBuilder {
-
-        @Override
-        public LoxClass build(ErrorLogger logger) {
-            return null;
-        }
-    }
-
-    public record BakedEnum(PreviewClass target, Stmt.FuncDecl[] abstracts, Stmt.FuncDecl[] methods, Stmt.FuncDecl[] staticMethods, Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields, LoxClass[] interfaces, Token name, String pck, ClassBuilder[] enclosed) implements ClassBuilder {
-
-        @Override
-        public LoxClass build(ErrorLogger logger) {
-            return null;
-        }
-    }
-
     public interface ClassBuilder {
-        LoxClass build(ErrorLogger logger);
+        ErrorLogger logger();
+
+        CacheableClass build();
+
+        static Map<String, GeneratedField> generateFields(Stmt.VarDecl[] declarations) {
+            return Arrays.stream(declarations).collect(Collectors.toMap(dec -> dec.name.lexeme(), decl -> new GeneratedField(decl.type, decl.initializer, decl.isFinal)));
+        }
+
+        LoxClass superclass();
     }
 }

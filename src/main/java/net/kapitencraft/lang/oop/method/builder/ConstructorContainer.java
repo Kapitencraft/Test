@@ -2,7 +2,7 @@ package net.kapitencraft.lang.oop.method.builder;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
@@ -14,17 +14,13 @@ import java.util.List;
 
 public class ConstructorContainer extends DataMethodContainer {
 
-    public ConstructorContainer(LoxCallable[] methods) {
+    public ConstructorContainer(ScriptedCallable[] methods) {
         super(methods);
     }
 
-    public static ConstructorContainer fromCache(List<LoxCallable> methods, LoxClass targetClass) {
+    public static ConstructorContainer fromCache(List<ScriptedCallable> methods, LoxClass targetClass) {
         if (methods.isEmpty()) {
-            methods.add(new LoxCallable() {
-                @Override
-                public int arity() {
-                    return 0;
-                }
+            methods.add(new ScriptedCallable() {
 
                 @Override
                 public LoxClass type() {
@@ -45,14 +41,19 @@ public class ConstructorContainer extends DataMethodContainer {
                 public boolean isAbstract() {
                     return false;
                 }
+
+                @Override
+                public boolean isFinal() {
+                    return false;
+                }
             });
         }
-        return new ConstructorContainer(methods.toArray(new LoxCallable[0]));
+        return new ConstructorContainer(methods.toArray(new ScriptedCallable[0]));
     }
 
     public static class Builder {
         private final List<String> finalVars;
-        private final List<LoxCallable> methods = new ArrayList<>();
+        private final List<ScriptedCallable> methods = new ArrayList<>();
         private final Token className;
 
         public Builder(List<String> finalVars, Token className) {
@@ -60,12 +61,12 @@ public class ConstructorContainer extends DataMethodContainer {
             this.className = className;
         }
 
-        public void addMethod(Compiler.ErrorLogger errorLogger, LoxCallable callable, Token constructorLocation) {
-            List<? extends List<? extends LoxClass>> appliedTypes = methods.stream().map(LoxCallable::argTypes).toList();
+        public void addMethod(Compiler.ErrorLogger errorLogger, ScriptedCallable callable, Token constructorLocation) {
+            List<? extends List<? extends LoxClass>> appliedTypes = methods.stream().map(ScriptedCallable::argTypes).toList();
             List<? extends LoxClass> argTypes = callable.argTypes();
             for (List<? extends LoxClass> appliedType : appliedTypes) {
                 if (Util.matchArgs(argTypes, appliedType)) {
-                    errorLogger.error(constructorLocation, String.format("duplicate constructor with args %s in class %s", Util.getDescriptor(argTypes), className.lexeme()));
+                    errorLogger.errorF(constructorLocation, "duplicate constructor with args %s in class %s", Util.getDescriptor(argTypes), className.lexeme());
                     return;
                 }
             }
@@ -75,12 +76,7 @@ public class ConstructorContainer extends DataMethodContainer {
         public ConstructorContainer build(LoxClass targetClass) {
             if (methods.isEmpty()) {
                 if (finalVars.isEmpty()) {
-                    methods.add(new LoxCallable() {
-                        @Override
-                        public int arity() {
-                            return 0;
-                        }
-
+                    methods.add(new ScriptedCallable() {
                         @Override
                         public LoxClass type() {
                             return targetClass;
@@ -100,13 +96,18 @@ public class ConstructorContainer extends DataMethodContainer {
                         public boolean isAbstract() {
                             return false;
                         }
+
+                        @Override
+                        public boolean isFinal() {
+                            return false;
+                        }
                     });
                 }
                 else {
 
                 }
             }
-            return new ConstructorContainer(methods.toArray(new LoxCallable[0]));
+            return new ConstructorContainer(methods.toArray(new ScriptedCallable[0]));
         }
     }
 }

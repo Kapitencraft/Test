@@ -1,0 +1,6 @@
+package test;
+
+import test.InterfaceTest as IT;
+
+class InterfaceImplementationTest implements IT {
+}

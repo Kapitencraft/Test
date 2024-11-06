@@ -2,25 +2,20 @@ package net.kapitencraft.lang.oop.method;
 
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.Interpreter;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
 
-public class ReflectiveConstructor<T> implements LoxCallable {
+public class ReflectiveConstructor<T> implements ScriptedCallable {
     private final Constructor<T> value;
     private final LoxClass target;
 
     public ReflectiveConstructor(Constructor<T> value) {
         this.value = value;
         this.target = VarTypeManager.lookupClass(value.getDeclaringClass());
-    }
-
-    @Override
-    public int arity() {
-        return 0;
     }
 
     @Override

@@ -33,7 +33,10 @@ public class CallStack {
         while (stackIterator.hasNext()) {
             Pair<String, String> location = stackIterator.next();
             int index = indexesIterator.next();
-            stackTracePrinter.accept(String.format("\tat %s(%s.scr:%s)", location.left(), location.right(), index));
+            if (index == -1)
+                stackTracePrinter.accept(String.format("\tat %s(NativeMethod)", location.left()));
+            else
+                stackTracePrinter.accept(String.format("\tat %s(%s.scr:%s)", location.left(), location.right(), index));
         }
     }
 

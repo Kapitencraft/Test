@@ -37,8 +37,6 @@ public class MathMain {
     }
 
     public static void main(String[] args) {
-        System.out.println("\u001B[32mE");
-        System.exit(0);
         Scanner scanner = new Scanner(System.in);
 
         int i;

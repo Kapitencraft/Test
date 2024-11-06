@@ -1,7 +1,8 @@
 package net.kapitencraft.lang.oop.clazz;
 
+import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
@@ -11,13 +12,21 @@ import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.tool.Math;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public interface LoxClass {
-    Object getStaticField(String name);
+    Map<String, Object> staticFieldData = new HashMap<>();
 
-    Object assignStaticField(String name, Object val);
+    default Object getStaticField(String name) {
+        return staticFieldData.get(name);
+    }
+
+    default Object assignStaticField(String name, Object val) {
+        staticFieldData.put(name, val);
+        return getStaticField(name);
+    }
 
     default Object staticSpecialAssign(String name, Token assignType) {
         Object val = getStaticField(name);
@@ -42,6 +51,10 @@ public interface LoxClass {
 
     LoxClass superclass();
 
+    default LoxClass[] interfaces() {
+        return superclass().interfaces();
+    }
+
     default LoxClass getFieldType(String name) {
         return superclass().getFieldType(name);
     }
@@ -52,21 +65,19 @@ public interface LoxClass {
         return superclass().hasField(name);
     }
 
-    default LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
+    default ScriptedCallable getStaticMethod(String name, List<? extends LoxClass> args) {
         return getStaticMethodByOrdinal(name, getStaticMethodOrdinal(name, args));
     }
 
-    LoxCallable getStaticMethodByOrdinal(String name, int ordinal);
+    ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal);
 
     int getStaticMethodOrdinal(String name, List<? extends LoxClass> args);
 
-    default LoxCallable getMethod(String name, List<LoxClass> args) {
+    default ScriptedCallable getMethod(String name, List<LoxClass> args) {
         return superclass().getMethod(name, args);
     }
 
-    default Map<String, ? extends MethodContainer> getMethods() {
-        return superclass().getMethods();
-    }
+    Map<String, ? extends MethodContainer> getDeclaredMethods();
 
     boolean hasStaticMethod(String name);
 
@@ -94,6 +105,8 @@ public interface LoxClass {
 
     boolean isFinal();
 
+    boolean isInterface();
+
     default boolean is(LoxClass other) {
         return other == this;
     }
@@ -117,7 +130,7 @@ public interface LoxClass {
      * @param ordinal ID of the given method name generated at step COMPILE
      * @return the method that corresponds to the given ID
      */
-    LoxCallable getMethodByOrdinal(String name, int ordinal);
+    ScriptedCallable getMethodByOrdinal(String name, int ordinal);
 
     /**
      * @param name name of the method
@@ -129,4 +142,6 @@ public interface LoxClass {
     boolean hasEnclosing(String name);
 
     LoxClass getEnclosing(String name);
+
+    MethodMap getMethods();
 }

@@ -2,12 +2,10 @@ package net.kapitencraft.lang.natives.scripted.lang;
 
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.func.NativeMethod;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.NativeUtilClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 
@@ -23,7 +21,7 @@ public class SystemClass extends NativeUtilClass {
 
     private static Map<String, DataMethodContainer> setupMethods() {
         ImmutableMap.Builder<String, DataMethodContainer> builder = new ImmutableMap.Builder<>();
-        builder.put("print", new DataMethodContainer(new LoxCallable[]{
+        builder.put("print", new DataMethodContainer(new ScriptedCallable[]{
                 new NativeMethod(List.of(VarTypeManager.OBJECT), VarTypeManager.VOID) {
                     @Override
                     public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
@@ -32,7 +30,7 @@ public class SystemClass extends NativeUtilClass {
                     }
                 }
         }));
-        builder.put("time", new DataMethodContainer(new LoxCallable[]{
+        builder.put("time", new DataMethodContainer(new ScriptedCallable[]{
                 new NativeMethod(List.of(), VarTypeManager.INTEGER) {
                     @Override
                     public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
@@ -40,7 +38,7 @@ public class SystemClass extends NativeUtilClass {
                     }
                 }
         }));
-        builder.put("input", new DataMethodContainer(new LoxCallable[]{
+        builder.put("input", new DataMethodContainer(new ScriptedCallable[]{
                 new NativeMethod(List.of(VarTypeManager.OBJECT), VarTypeManager.STRING) {
                     @Override
                     public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {

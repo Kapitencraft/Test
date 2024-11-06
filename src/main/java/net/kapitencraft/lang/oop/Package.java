@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.oop;
 
-import net.kapitencraft.lang.oop.clazz.GeneratedLoxClass;
+import net.kapitencraft.lang.oop.clazz.GeneratedClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -42,7 +42,7 @@ public class Package {
     public void addClass(String name, LoxClass cl) {
         if (classes.get(name) instanceof PreviewClass previewClass) {
             previewClass.apply(cl);
-            if (cl instanceof GeneratedLoxClass) classes.put(name, cl);
+            if (cl instanceof GeneratedClass) classes.put(name, cl);
         } else {
             classes.put(name, cl);
         }

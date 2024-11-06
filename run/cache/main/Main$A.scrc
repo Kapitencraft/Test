@@ -1,0 +1,65 @@
+{
+  "TYPE": "class",
+  "name": "A",
+  "superclass": "main.Main",
+  "implemented": [],
+  "methods": {
+    "test2": [
+      {
+        "retType": "scripted.lang.void",
+        "params": [],
+        "body": [
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "set",
+              "callee": {
+                "TYPE": "varRef",
+                "name": {
+                  "type": "THIS",
+                  "lexeme": "this",
+                  "literal": {},
+                  "line": 17,
+                  "lineStartIndex": 12
+                }
+              },
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "x",
+                "literal": {},
+                "line": 17,
+                "lineStartIndex": 17
+              },
+              "value": {
+                "TYPE": "literal",
+                "value": {
+                  "type": "NUM",
+                  "lexeme": "0",
+                  "literal": {
+                    "type": "int",
+                    "value": 0
+                  },
+                  "line": 17,
+                  "lineStartIndex": 21
+                }
+              },
+              "assignType": {
+                "type": "ASSIGN",
+                "lexeme": "\u003d",
+                "literal": {},
+                "line": 17,
+                "lineStartIndex": 19
+              }
+            }
+          }
+        ],
+        "flags": []
+      }
+    ]
+  },
+  "staticMethods": {},
+  "constructor": [],
+  "fields": {},
+  "staticFields": {},
+  "flags": []
+}
