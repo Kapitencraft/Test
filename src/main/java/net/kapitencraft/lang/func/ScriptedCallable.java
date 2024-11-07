@@ -6,8 +6,7 @@ import net.kapitencraft.lang.run.Interpreter;
 
 import java.util.List;
 
-public interface LoxCallable {
-    int arity();
+public interface ScriptedCallable {
 
     LoxClass type();
 
@@ -16,4 +15,6 @@ public interface LoxCallable {
     Object call(Environment environment, Interpreter interpreter, List<Object> arguments);
 
     boolean isAbstract();
+
+    boolean isFinal();
 }

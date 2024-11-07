@@ -15,19 +15,19 @@ public class MathClass extends NativeUtilClass {
     public MathClass() {
         super(Map.of(
                 "abs", DataMethodContainer.of(
-                        new NativeMethod(List.of(VarTypeManager.INTEGER), VarTypeManager.INTEGER) {
+                        new NativeMethod(List.of(VarTypeManager.INTEGER), VarTypeManager.INTEGER, true) {
                             @Override
                             public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                                 return Math.abs((Integer) arguments.get(0));
                             }
                         },
-                        new NativeMethod(List.of(VarTypeManager.FLOAT), VarTypeManager.FLOAT) {
+                        new NativeMethod(List.of(VarTypeManager.FLOAT), VarTypeManager.FLOAT, true) {
                             @Override
                             public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                                 return Math.abs((Float) arguments.get(0));
                             }
                         },
-                        new NativeMethod(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE) {
+                        new NativeMethod(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE, true) {
                             @Override
                             public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                                 return Math.abs((Double) arguments.get(0));
@@ -35,7 +35,7 @@ public class MathClass extends NativeUtilClass {
                         }
                 ),
                 "sqrt", DataMethodContainer.of(
-                        new NativeMethod(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE) {
+                        new NativeMethod(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE, true) {
                             @Override
                             public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                                 return Math.sqrt((Double) arguments.get(0));
@@ -43,7 +43,7 @@ public class MathClass extends NativeUtilClass {
                         }
                 ),
                 "log", DataMethodContainer.of(
-                        new NativeMethod(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE) {
+                        new NativeMethod(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE, true) {
                             @Override
                             public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                                 return Math.log((Double) arguments.get(0));
@@ -51,7 +51,7 @@ public class MathClass extends NativeUtilClass {
                         }
                 ),
                 "log10", DataMethodContainer.of(
-                        new NativeMethod(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE) {
+                        new NativeMethod(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE, true) {
                             @Override
                             public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                                 return Math.log10((Double) arguments.get(0));
@@ -59,7 +59,7 @@ public class MathClass extends NativeUtilClass {
                         }
                 ),
                 "sin", DataMethodContainer.of(
-                        new NativeMethod(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE) {
+                        new NativeMethod(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE, true) {
                             @Override
                             public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                                 return Math.sin((Double) arguments.get(0));

@@ -1,23 +1,18 @@
 package net.kapitencraft.lang.func;
 
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.run.Interpreter;
 
 import java.util.List;
 
-public abstract class NativeMethod implements LoxCallable {
+public abstract class NativeMethod implements ScriptedCallable {
     private final List<? extends LoxClass> arguments;
     private final LoxClass retType;
+    private final boolean isFinal;
 
-    public NativeMethod(List<? extends LoxClass> arguments, LoxClass retType) {
+    public NativeMethod(List<? extends LoxClass> arguments, LoxClass retType, boolean isFinal) {
         this.arguments = arguments;
         this.retType = retType;
-    }
-
-    @Override
-    public int arity() {
-        return arguments.size();
+        this.isFinal = isFinal;
     }
 
     @Override
@@ -33,5 +28,10 @@ public abstract class NativeMethod implements LoxCallable {
     @Override
     public boolean isAbstract() {
         return false;
+    }
+
+    @Override
+    public boolean isFinal() {
+        return isFinal;
     }
 }

@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.oop.clazz;
 
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -55,8 +55,8 @@ public class NativeUtilClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return null;
+    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
+        return staticMethods.get(name).getMethodByOrdinal(ordinal);
     }
 
     @Override
@@ -81,11 +81,16 @@ public class NativeUtilClass implements LoxClass {
 
     @Override
     public boolean isFinal() {
+        return true;
+    }
+
+    @Override
+    public boolean isInterface() {
         return false;
     }
 
     @Override
-    public LoxCallable getMethodByOrdinal(String name, int ordinal) {
+    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
         return null;
     }
 

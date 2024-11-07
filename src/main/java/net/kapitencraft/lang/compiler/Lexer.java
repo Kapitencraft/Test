@@ -1,17 +1,30 @@
 package net.kapitencraft.lang.compiler;
 
+import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 public class Lexer {
+    private static final Map<String, TokenType> keywords;
+
+    static {
+        keywords = Arrays.stream(values()).filter(tokenType -> tokenType.isCategory(TokenTypeCategory.KEY_WORD)).collect(Collectors.toMap(tokenType -> tokenType.name().toLowerCase(Locale.ROOT), Function.identity()));
+    }
+
+    public static TokenType getType(String name) {
+        if (keywords.containsKey(name)) return keywords.get(name);
+
+        return IDENTIFIER;
+    }
 
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
@@ -60,12 +73,16 @@ public class Lexer {
     private void addToken(TokenType type) {
         if (type == TRUE) addToken(type, true, VarTypeManager.BOOLEAN);
         else if (type == FALSE) addToken(type, false, VarTypeManager.BOOLEAN);
-        else addToken(type, null, null);
+        else addToken(type, LiteralHolder.EMPTY);
     }
 
     private void addToken(TokenType type, Object literal, LoxClass literalClass) {
+        this.addToken(type, new LiteralHolder(literal, literalClass));
+    }
+
+    private void addToken(TokenType type, LiteralHolder holder) {
         String text = source.substring(start, current);
-        tokens.add(new Token(type, text, new LiteralHolder(literal, literalClass), line, start - indexAtLineStart));
+        tokens.add(new Token(type, text, holder, line, start - indexAtLineStart));
     }
 
     public List<Token> scanTokens() {
@@ -203,7 +220,7 @@ public class Lexer {
         while (isAlphaNumeric(peek())) advance();
 
         String text = source.substring(start, current);
-        addToken(VarTypeManager.getType(text));
+        addToken(getType(text));
     }
 
     private void string() {

@@ -6,11 +6,10 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.func.LoxCallable;
-import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.run.CacheLoader;
-import net.kapitencraft.lang.run.ClassLoader;
+import net.kapitencraft.lang.run.load.CacheLoader;
+import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.GsonHelper;
@@ -18,36 +17,42 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.List;
 
-public class GeneratedCallable implements LoxCallable {
-    private final Stmt.FuncDecl declaration;
+public class GeneratedCallable implements ScriptedCallable {
+    private final LoxClass retType;
+    private final List<Pair<LoxClass,String>> params;
+    private final List<Stmt> body;
+    private final boolean isFinal, isAbstract;
 
-    public GeneratedCallable(Stmt.FuncDecl declaration) {
-        this.declaration = declaration;
+    public GeneratedCallable(LoxClass retType, List<Pair<LoxClass, String>> params, List<Stmt> body, boolean isFinal, boolean isAbstract) {
+        this.retType = retType;
+        this.params = params;
+        this.body = body;
+        this.isFinal = isFinal;
+        this.isAbstract = isAbstract;
     }
 
     public JsonObject save(CacheBuilder builder) {
         JsonObject object = new JsonObject();
-        object.addProperty("retType", declaration.retType.absoluteName());
-        object.add("name", declaration.name.toJson());
+        object.addProperty("retType", retType.absoluteName());
         {
             JsonArray array = new JsonArray();
-            declaration.params.forEach(pair -> {
+            params.forEach(pair -> {
                 JsonObject object1 = new JsonObject();
                 object1.addProperty("type", pair.left().absoluteName());
-                object1.add("name", pair.right().toJson());
+                object1.addProperty("name", pair.right());
                 array.add(object1);
             });
             object.add("params", array);
         }
-        {
+        if (!isAbstract) {
             JsonArray array = new JsonArray();
-            declaration.body.stream().map(builder::cache).forEach(array::add);
+            body.stream().map(builder::cache).forEach(array::add);
             object.add("body", array);
         }
         {
             JsonArray array = new JsonArray();
-            if (declaration.isFinal) array.add("isFinal");
-            if (declaration.isAbstract) array.add("isAbstract");
+            if (isFinal) array.add("isFinal");
+            if (isAbstract) array.add("isAbstract");
             object.add("flags", array);
         }
 
@@ -56,32 +61,35 @@ public class GeneratedCallable implements LoxCallable {
 
     public static GeneratedCallable load(JsonObject object) {
         LoxClass retType = ClassLoader.loadClassReference(object, "retType");
-        Token name = Token.readFromSubObject(object, "name");
         JsonArray paramData = GsonHelper.getAsJsonArray(object, "params");
 
-        List<Pair<LoxClass, Token>> params = paramData.asList().stream().map(JsonElement::getAsJsonObject).map(object1 -> {
+        List<Pair<LoxClass, String>> params = paramData.asList().stream().map(JsonElement::getAsJsonObject).map(object1 -> {
             LoxClass type = ClassLoader.loadClassReference(object1, "type");
-            Token argName = Token.readFromSubObject(object1, "name");
+            String argName = GsonHelper.getAsString(object1, "name");
             return Pair.of(type, argName);
         }).toList();
 
         List<String> flags = ClassLoader.readFlags(object);
 
-        return new GeneratedCallable(new Stmt.FuncDecl(retType, name, params, CacheLoader.readStmtList(object, "body"), flags.contains("isFinal"), flags.contains("isAbstract")));
+        List<Stmt> body;
+        if (flags.contains("isAbstract")) body = null;
+        else body = CacheLoader.readStmtList(object, "body");
+
+        return new GeneratedCallable(retType, params, body, flags.contains("isFinal"), flags.contains("isAbstract"));
     }
 
     @Override
     public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-        if (declaration.body == null) {
+        if (body == null) {
             throw new IllegalAccessError("abstract method called directly! this shouldn't happen...");
         }
 
-        for (int i = 0; i < declaration.params.size(); i++) {
-            environment.defineVar(declaration.params.get(i).right().lexeme(), arguments.get(i));
+        for (int i = 0; i < params.size(); i++) {
+            environment.defineVar(params.get(i).right(), arguments.get(i));
         }
 
         try {
-            interpreter.interpret(declaration.body, environment);
+            interpreter.interpret(body, environment);
         } catch (CancelBlock returnValue) {
             return returnValue.value;
         }
@@ -90,26 +98,16 @@ public class GeneratedCallable implements LoxCallable {
 
     @Override
     public boolean isAbstract() {
-        return declaration.body == null;
+        return body == null;
     }
 
     @Override
     public LoxClass type() {
-        return declaration.retType;
+        return retType;
     }
 
     @Override
     public List<? extends LoxClass> argTypes() {
-        return declaration.params.stream().map(Pair::left).toList();
-    }
-
-    @Override
-    public int arity() {
-        return declaration.params.size();
-    }
-
-    @Override
-    public String toString() {
-        return "<declared fn#" + declaration.name.lexeme() + ">";
+        return params.stream().map(Pair::left).toList();
     }
 }

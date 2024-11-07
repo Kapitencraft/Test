@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.oop.clazz;
 
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
@@ -13,23 +13,26 @@ import java.util.Map;
 public class PreviewClass implements LoxClass {
     private LoxClass target;
     private final String name;
+    private final boolean isInterface;
 
-    public PreviewClass(String name) {
+    public PreviewClass(String name, boolean isInterface) {
         this.name = name;
+        this.isInterface = isInterface;
     }
 
-    public void apply(LoxClass target) {
+    public <T extends LoxClass> T apply(T target) {
         this.target = target;
+        return target;
     }
 
     @Override
-    public LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
+    public ScriptedCallable getStaticMethod(String name, List<? extends LoxClass> args) {
         assertApplied();
         return target.getStaticMethod(name, args);
     }
 
     @Override
-    public LoxCallable getStaticMethodByOrdinal(String name, int ordinal) {
+    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
         assertApplied();
         return target.getStaticMethodByOrdinal(name, ordinal);
     }
@@ -41,7 +44,7 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getMethod(String name, List<LoxClass> args) {
+    public ScriptedCallable getMethod(String name, List<LoxClass> args) {
         assertApplied();
         return target.getMethod(name, args);
     }
@@ -130,9 +133,9 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
-    public Map<String, ? extends MethodContainer> getMethods() {
+    public Map<String, ? extends MethodContainer> getDeclaredMethods() {
         assertApplied();
-        return target.getMethods();
+        return target.getDeclaredMethods();
     }
 
     @Override
@@ -145,6 +148,11 @@ public class PreviewClass implements LoxClass {
     public boolean isFinal() {
         assertApplied();
         return target.isFinal();
+    }
+
+    @Override
+    public boolean isInterface() {
+        return isInterface;
     }
 
     private void assertApplied() {
@@ -197,7 +205,7 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getMethodByOrdinal(String name, int ordinal) {
+    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
         assertApplied();
         return target.getMethodByOrdinal(name, ordinal);
     }

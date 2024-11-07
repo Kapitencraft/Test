@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.oop.clazz;
 
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.field.LoxField;
 
@@ -44,7 +44,7 @@ public class PrimitiveClass implements LoxClass {
 
     @Override
     public String packageRepresentation() {
-        return "scripted.lang."; //TODO perhaps add package field?
+        return "scripted.lang.";
     }
 
     @Override
@@ -68,12 +68,12 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
+    public ScriptedCallable getStaticMethod(String name, List<? extends LoxClass> args) {
         return null;
     }
 
     @Override
-    public LoxCallable getStaticMethodByOrdinal(String name, int ordinal) {
+    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
         return null;
     }
 
@@ -83,7 +83,7 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getMethod(String name, List<LoxClass> args) {
+    public ScriptedCallable getMethod(String name, List<LoxClass> args) {
         return null;
     }
 
@@ -108,7 +108,7 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public Map<String, MethodContainer> getMethods() {
+    public Map<String, MethodContainer> getDeclaredMethods() {
         return Map.of();
     }
 
@@ -123,7 +123,12 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getMethodByOrdinal(String name, int ordinal) {
+    public boolean isInterface() {
+        return false;
+    }
+
+    @Override
+    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
         return null;
     }
 

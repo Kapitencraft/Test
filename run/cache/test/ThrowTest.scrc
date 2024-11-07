@@ -1,28 +1,17 @@
 {
+  "TYPE": "class",
   "name": "ThrowTest",
   "superclass": "scripted.lang.Object",
+  "implemented": [],
   "methods": {},
   "staticMethods": {
     "test": [
       {
         "retType": "scripted.lang.int",
-        "name": {
-          "type": "IDENTIFIER",
-          "lexeme": "test",
-          "literal": {},
-          "line": 4,
-          "lineStartIndex": 15
-        },
         "params": [
           {
             "type": "scripted.lang.int",
-            "name": {
-              "type": "IDENTIFIER",
-              "lexeme": "i",
-              "literal": {},
-              "line": 4,
-              "lineStartIndex": 24
-            }
+            "name": "i"
           }
         ],
         "body": [
@@ -118,7 +107,7 @@
             },
             "value": {
               "TYPE": "staticCall",
-              "target": "main.ThrowTest",
+              "target": "test.ThrowTest",
               "name": {
                 "type": "IDENTIFIER",
                 "lexeme": "test",
@@ -171,23 +160,10 @@
     "main": [
       {
         "retType": "scripted.lang.void",
-        "name": {
-          "type": "IDENTIFIER",
-          "lexeme": "main",
-          "literal": {},
-          "line": 9,
-          "lineStartIndex": 16
-        },
         "params": [
           {
             "type": "scripted.lang.String",
-            "name": {
-              "type": "IDENTIFIER",
-              "lexeme": "args",
-              "literal": {},
-              "line": 9,
-              "lineStartIndex": 28
-            }
+            "name": "args"
           }
         ],
         "body": [
@@ -200,7 +176,7 @@
                   "TYPE": "expression",
                   "expr": {
                     "TYPE": "staticCall",
-                    "target": "main.ThrowTest",
+                    "target": "test.ThrowTest",
                     "name": {
                       "type": "IDENTIFIER",
                       "lexeme": "test",

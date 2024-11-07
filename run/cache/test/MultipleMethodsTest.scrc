@@ -1,27 +1,16 @@
 {
+  "TYPE": "class",
   "name": "MultipleMethodsTest",
   "superclass": "scripted.lang.Object",
+  "implemented": [],
   "methods": {
     "test": [
       {
         "retType": "scripted.lang.void",
-        "name": {
-          "type": "IDENTIFIER",
-          "lexeme": "test",
-          "literal": {},
-          "line": 8,
-          "lineStartIndex": 9
-        },
         "params": [
           {
             "type": "scripted.lang.String",
-            "name": {
-              "type": "IDENTIFIER",
-              "lexeme": "i",
-              "literal": {},
-              "line": 8,
-              "lineStartIndex": 21
-            }
+            "name": "i"
           }
         ],
         "body": [
@@ -57,23 +46,10 @@
       },
       {
         "retType": "scripted.lang.void",
-        "name": {
-          "type": "IDENTIFIER",
-          "lexeme": "test",
-          "literal": {},
-          "line": 12,
-          "lineStartIndex": 9
-        },
         "params": [
           {
             "type": "scripted.lang.int",
-            "name": {
-              "type": "IDENTIFIER",
-              "lexeme": "i",
-              "literal": {},
-              "line": 12,
-              "lineStartIndex": 18
-            }
+            "name": "i"
           }
         ],
         "body": [
@@ -136,23 +112,10 @@
     "main": [
       {
         "retType": "scripted.lang.void",
-        "name": {
-          "type": "IDENTIFIER",
-          "lexeme": "main",
-          "literal": {},
-          "line": 16,
-          "lineStartIndex": 16
-        },
         "params": [
           {
             "type": "scripted.lang.String",
-            "name": {
-              "type": "IDENTIFIER",
-              "lexeme": "args",
-              "literal": {},
-              "line": 16,
-              "lineStartIndex": 28
-            }
+            "name": "args"
           }
         ],
         "body": [
@@ -165,10 +128,10 @@
               "line": 17,
               "lineStartIndex": 28
             },
-            "targetType": "main.MultipleMethodsTest",
+            "targetType": "test.MultipleMethodsTest",
             "initializer": {
               "TYPE": "constructor",
-              "target": "main.MultipleMethodsTest",
+              "target": "test.MultipleMethodsTest",
               "args": [
                 {
                   "TYPE": "literal",
@@ -308,33 +271,14 @@
   "constructor": [
     {
       "retType": "scripted.lang.void",
-      "name": {
-        "type": "IDENTIFIER",
-        "lexeme": "MultipleMethodsTest",
-        "literal": {},
-        "line": 4,
-        "lineStartIndex": 4
-      },
       "params": [
         {
           "type": "scripted.lang.String",
-          "name": {
-            "type": "IDENTIFIER",
-            "lexeme": "i",
-            "literal": {},
-            "line": 4,
-            "lineStartIndex": 31
-          }
+          "name": "i"
         },
         {
           "type": "scripted.lang.String",
-          "name": {
-            "type": "IDENTIFIER",
-            "lexeme": "b",
-            "literal": {},
-            "line": 4,
-            "lineStartIndex": 41
-          }
+          "name": "b"
         }
       ],
       "body": [

@@ -2,7 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
@@ -259,7 +259,7 @@ public class ExprParser extends AbstractParser {
             error(get.name, "unknown symbol");
             return new Expr.InstCall(get.object, get.name, ordinal, consumeBracketClose("arguments"), arguments);
         }
-        LoxCallable callable = targetClass.getMethodByOrdinal(get.name.lexeme(), ordinal);
+        ScriptedCallable callable = targetClass.getMethodByOrdinal(get.name.lexeme(), ordinal);
 
         checkArguments(arguments, callable, get.name);
 
@@ -283,7 +283,7 @@ public class ExprParser extends AbstractParser {
         consumeBracketClose("static call");
 
         int ordinal = target.getStaticMethodOrdinal(name.lexeme(), args.stream().map(this.finder::findRetType).toList());
-        LoxCallable callable = target.getStaticMethodByOrdinal(name.lexeme(), ordinal);
+        ScriptedCallable callable = target.getStaticMethodByOrdinal(name.lexeme(), ordinal);
         List<? extends LoxClass> expectedTypes = callable.argTypes();
         List<? extends LoxClass> givenTypes = args.stream().map(this.finder::findRetType).toList();
         if (expectedTypes.size() != givenTypes.size()) {
@@ -344,7 +344,7 @@ public class ExprParser extends AbstractParser {
         return expr;
     }
 
-    private void checkArguments(List<Expr> args, LoxCallable target, Token loc) {
+    private void checkArguments(List<Expr> args, ScriptedCallable target, Token loc) {
         List<? extends LoxClass> expectedTypes = target.argTypes();
         List<? extends LoxClass> givenTypes = args.stream().map(this.finder::findRetType).toList();
         if (expectedTypes.size() != givenTypes.size()) {
@@ -381,7 +381,7 @@ public class ExprParser extends AbstractParser {
             List<Expr> args = args();
             consumeBracketClose("constructor");
             int ordinal = loxClass.getConstructor().getMethodOrdinal(args.stream().map(this.finder::findRetType).toList());
-            LoxCallable callable = loxClass.getConstructor().getMethodByOrdinal(ordinal);
+            ScriptedCallable callable = loxClass.getConstructor().getMethodByOrdinal(ordinal);
 
             checkArguments(args, callable, loc);
 

@@ -21,7 +21,7 @@ public enum TokenType {
     AND_ASSIGN(OPERATION_ASSIGN), OR_ASSIGN(OPERATION_ASSIGN), XOR_ASSIGN(OPERATION_ASSIGN),
     GROW, SHRINK,
     CLASS(KEY_WORD), INTERFACE(KEY_WORD), ENUM(KEY_WORD),
-    FUNC(KEY_WORD), EXTENDS(KEY_WORD), IMPORT(KEY_WORD), PACKAGE(KEY_WORD), AS(KEY_WORD),
+    FUNC(KEY_WORD), EXTENDS(KEY_WORD), IMPLEMENTS(KEY_WORD), IMPORT(KEY_WORD), PACKAGE(KEY_WORD), AS(KEY_WORD),
     FINAL(KEY_WORD), STATIC(KEY_WORD), ABSTRACT(KEY_WORD),
     SWITCH(KEY_WORD), CASE(KEY_WORD), DEFAULT(KEY_WORD),
     IF(KEY_WORD), ELSE(KEY_WORD), ELIF(KEY_WORD),
@@ -40,5 +40,9 @@ public enum TokenType {
 
     public boolean isCategory(TokenTypeCategory category) {
         return categories.contains(category);
+    }
+
+    public String id() {
+        return name().toLowerCase();
     }
 }

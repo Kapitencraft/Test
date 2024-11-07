@@ -11,7 +11,7 @@ public class ReflectiveLoader {
     private final Map<Class<?>, LoxClass> registeredReflective = new HashMap<>();
 
     public PreviewClass register(Class<?> clazz, String pck) {
-        PreviewClass previewClass = new PreviewClass(clazz.getSimpleName());
+        PreviewClass previewClass = new PreviewClass(clazz.getSimpleName(), clazz.isInterface());
         registeredReflective.putIfAbsent(clazz, previewClass);
         if (!registeredReflective.containsKey(clazz.getSuperclass()) && clazz.getSuperclass() != Object.class)
             register(clazz.getSuperclass(), pck);

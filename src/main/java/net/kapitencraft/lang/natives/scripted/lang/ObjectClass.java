@@ -1,15 +1,15 @@
 package net.kapitencraft.lang.natives.scripted.lang;
 
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.func.NativeMethod;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 
-import javax.xml.crypto.Data;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +19,12 @@ public class ObjectClass implements LoxClass {
                 @Override
                 public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                     return name();
+                }
+            }),
+            "equals", DataMethodContainer.of(new NativeMethod(List.of(this), VarTypeManager.BOOLEAN) {
+                @Override
+                public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+                    return environment.getThis() == arguments.get(0);
                 }
             })
     );
@@ -34,6 +40,16 @@ public class ObjectClass implements LoxClass {
     }
 
     @Override
+    public LoxClass getFieldType(String name) {
+        return VarTypeManager.VOID;
+    }
+
+    @Override
+    public Map<String, LoxField> getFields() {
+        return Map.of();
+    }
+
+    @Override
     public String name() {
         return "Object";
     }
@@ -41,6 +57,11 @@ public class ObjectClass implements LoxClass {
     @Override
     public String packageRepresentation() {
         return "scripted.lang";
+    }
+
+    @Override
+    public String absoluteName() {
+        return "scripted.lang.Object";
     }
 
     @Override
@@ -54,7 +75,7 @@ public class ObjectClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getStaticMethodByOrdinal(String name, int ordinal) {
+    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
         return null;
     }
 
@@ -84,7 +105,12 @@ public class ObjectClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getMethodByOrdinal(String name, int ordinal) {
+    public boolean isInterface() {
+        return false;
+    }
+
+    @Override
+    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
         return methods.get(name).getMethodByOrdinal(ordinal);
     }
 
@@ -104,7 +130,7 @@ public class ObjectClass implements LoxClass {
     }
 
     @Override
-    public Map<String, ? extends MethodContainer> getMethods() {
+    public Map<String, ? extends MethodContainer> getDeclaredMethods() {
         return methods;
     }
 }

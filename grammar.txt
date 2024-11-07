@@ -45,7 +45,7 @@ unary       -> ( "!" | "-" ) unary | call | switch | constructor
 call        -> primary ( "(" arguments? ")" | "." IDENTIFIER )*
 constructor -> "new" VAR_TYPE "(" arguments? ")"
 
-primary     -> "true" | "false" | "null" | "this" | NUMBER | STRING | IDENTIFIER | "(" expression ")" | "super"
+primary     -> "true" | "false" | "null" | "this" | NUMBER | STRING | IDENTIFIER | "(" expression ")" | "super" "." IDENTIFIER
 
 //util
 parameters  -> VAR_TYPE IDENTIFIER ( "," IDENTIFIER )*

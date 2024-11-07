@@ -8,7 +8,7 @@ import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.clazz.inst.ReflectiveClassInstance;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.ReflectiveConstructor;
 import net.kapitencraft.lang.oop.method.ReflectiveMethod;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
@@ -119,7 +119,7 @@ public class ReflectiveClass<T> implements LoxClass {
     }
 
     @Override
-    public LoxCallable getStaticMethodByOrdinal(String name, int ordinal) {
+    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
         return staticMethods.get(name).getMethodByOrdinal(ordinal);
     }
 
@@ -149,7 +149,12 @@ public class ReflectiveClass<T> implements LoxClass {
     }
 
     @Override
-    public LoxCallable getMethodByOrdinal(String name, int ordinal) {
+    public boolean isInterface() {
+        return target.isInterface();
+    }
+
+    @Override
+    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
         return methods.get(name).getMethodByOrdinal(ordinal);
     }
 

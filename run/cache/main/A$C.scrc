@@ -1,0 +1,70 @@
+{
+  "TYPE": "class",
+  "name": "C",
+  "superclass": "main.A",
+  "implemented": [],
+  "methods": {
+    "test": [
+      {
+        "retType": "scripted.lang.int",
+        "params": [
+          {
+            "type": "scripted.lang.int",
+            "name": "in"
+          }
+        ],
+        "body": [
+          {
+            "TYPE": "return",
+            "keyword": {
+              "type": "RETURN",
+              "lexeme": "return",
+              "literal": {},
+              "line": 14,
+              "lineStartIndex": 12
+            },
+            "value": {
+              "TYPE": "binary",
+              "left": {
+                "TYPE": "varRef",
+                "name": {
+                  "type": "IDENTIFIER",
+                  "lexeme": "in",
+                  "literal": {},
+                  "line": 14,
+                  "lineStartIndex": 19
+                }
+              },
+              "operator": {
+                "type": "ADD",
+                "lexeme": "+",
+                "literal": {},
+                "line": 14,
+                "lineStartIndex": 22
+              },
+              "right": {
+                "TYPE": "literal",
+                "value": {
+                  "type": "NUM",
+                  "lexeme": "8",
+                  "literal": {
+                    "type": "int",
+                    "value": 8
+                  },
+                  "line": 14,
+                  "lineStartIndex": 24
+                }
+              }
+            }
+          }
+        ],
+        "flags": []
+      }
+    ]
+  },
+  "staticMethods": {},
+  "constructor": [],
+  "fields": {},
+  "staticFields": {},
+  "flags": []
+}

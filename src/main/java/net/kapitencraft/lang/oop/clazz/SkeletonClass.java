@@ -4,13 +4,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.parser.SkeletonParser;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.func.LoxCallable;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
-import net.kapitencraft.lang.run.ClassLoader;
+import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Util;
 
@@ -32,8 +30,7 @@ public class SkeletonClass implements LoxClass {
     private final Map<String, DataMethodContainer> staticMethods;
     private final ConstructorContainer constructor;
 
-    private final boolean isAbstract;
-    private final boolean isFinal;
+    private final boolean isAbstract, isFinal;
 
     public SkeletonClass(String name, String pck, LoxClass superclass,
                          Map<String, LoxClass> staticFields, Map<String, LoxClass> fields,
@@ -71,88 +68,13 @@ public class SkeletonClass implements LoxClass {
         this.isFinal = isFinal;
     }
 
-    public static SkeletonClass create(Compiler.ErrorLogger logger, SkeletonParser.ClassDecl decl) {
-        //fields
-        ImmutableMap.Builder<String, LoxClass> fields = new ImmutableMap.Builder<>();
-        ImmutableMap.Builder<String, LoxClass> staticFields = new ImmutableMap.Builder<>();
-        List<String> finalFields = new ArrayList<>();
-        for (SkeletonParser.FieldDecl field : decl.fields()) {
-            if (field.isStatic()) staticFields.put(field.name().lexeme(), field.type());
-            else {
-                fields.put(field.name().lexeme(), field.type());
-                if (field.isFinal() && field.body() == null) finalFields.add(field.name().lexeme());
-            }
-        }
-
-        //enclosed classes
-        ImmutableMap.Builder<String, PreviewClass> enclosed = new ImmutableMap.Builder<>();
-        for (SkeletonParser.ClassDecl enclosedDecl : decl.enclosed()) {
-            SkeletonClass skeletonClass = create(logger, enclosedDecl);
-            enclosedDecl.target().apply(skeletonClass);
-            enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
-        }
-
-        //methods
-        Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
-        Map<String, DataMethodContainer.Builder> staticMethods = new HashMap<>();
-        for (SkeletonParser.MethodDecl method : decl.methods()) {
-            if (method.isStatic()) {
-                staticMethods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(decl.name()));
-                DataMethodContainer.Builder builder = staticMethods.get(method.name().lexeme());
-                builder.addMethod(logger, SkeletonMethod.create(method), method.name());
-            } else {
-                methods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(decl.name()));
-                DataMethodContainer.Builder builder = methods.get(method.name().lexeme());
-                builder.addMethod(logger, SkeletonMethod.create(method), method.name());
-            }
-        }
-
-        //constructor
-        ConstructorContainer.Builder constructorBuilder = new ConstructorContainer.Builder(finalFields, decl.name());
-        for (SkeletonParser.MethodDecl constructor : decl.constructors()) {
-            constructorBuilder.addMethod(
-                    logger,
-                    SkeletonMethod.create(constructor),
-                    constructor.name()
-            );
-        }
-
-        return new SkeletonClass(
-                decl.name().lexeme(),
-                null, decl.superclass(),
-                staticFields.build(),
-                fields.build(),
-                enclosed.build(),
-                DataMethodContainer.bakeBuilders(methods),
-                DataMethodContainer.bakeBuilders(staticMethods),
-                constructorBuilder,
-                decl.isAbstract(),
-                decl.isFinal());
-    }
-
     public static SkeletonClass fromCache(JsonObject data, String pck, PreviewClass[] enclosed) {
-            String name = GsonHelper.getAsString(data, "name");
+        String name = GsonHelper.getAsString(data, "name");
         LoxClass superclass = VarTypeManager.getClassForName(GsonHelper.getAsString(data, "superclass"));
-        ImmutableMap.Builder<String, DataMethodContainer> methods = new ImmutableMap.Builder<>();
-        {
-            JsonObject methodData = GsonHelper.getAsJsonObject(data, "methods");
-            methodData.asMap().forEach((s, element) -> {
-                SkeletonMethod[] methodDeclarations =
-                element.getAsJsonArray().asList().stream().map(JsonElement::getAsJsonObject).map(SkeletonMethod::fromJson)
-                        .toArray(SkeletonMethod[]::new);
-                methods.put(s, new DataMethodContainer(methodDeclarations));
-            });
-        }
-        ImmutableMap.Builder<String, DataMethodContainer> staticMethods = new ImmutableMap.Builder<>();
-        {
-            JsonObject methodData = GsonHelper.getAsJsonObject(data, "staticMethods");
-            methodData.asMap().forEach((s, element) -> {
-                SkeletonMethod[] methodDeclarations =
-                        element.getAsJsonArray().asList().stream().map(JsonElement::getAsJsonObject).map(SkeletonMethod::fromJson)
-                                .toArray(SkeletonMethod[]::new);
-                methods.put(s, new DataMethodContainer(methodDeclarations));
-            });
-        }
+
+        ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
+        ImmutableMap<String, DataMethodContainer> staticMethods = SkeletonMethod.readFromCache(data, "staticMethods");
+
         ConstructorContainer constructorContainer = new ConstructorContainer(
                 GsonHelper.getAsJsonArray(data, "constructor").asList()
                         .stream()
@@ -180,7 +102,7 @@ public class SkeletonClass implements LoxClass {
         return new SkeletonClass(name, pck, superclass,
                 staticFields.build(), fields.build(),
                 Arrays.stream(enclosed).collect(Collectors.toMap(LoxClass::name, Function.identity())),
-                methods.build(), staticMethods.build(),
+                methods, staticMethods,
                 constructorContainer,
                 flags.contains("isAbstract"), flags.contains("isFinal")
         );
@@ -227,12 +149,12 @@ public class SkeletonClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getStaticMethod(String name, List<? extends LoxClass> args) {
+    public ScriptedCallable getStaticMethod(String name, List<? extends LoxClass> args) {
         return staticMethods.get(name).getMethod(args);
     }
 
     @Override
-    public LoxCallable getStaticMethodByOrdinal(String name, int ordinal) {
+    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
         return staticMethods.get(name).getMethodByOrdinal(ordinal);
     }
 
@@ -262,7 +184,12 @@ public class SkeletonClass implements LoxClass {
     }
 
     @Override
-    public LoxCallable getMethodByOrdinal(String name, int ordinal) {
+    public boolean isInterface() {
+        return false;
+    }
+
+    @Override
+    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
         return methods.get(name).getMethodByOrdinal(ordinal);
     }
 

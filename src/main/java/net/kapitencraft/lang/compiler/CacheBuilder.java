@@ -7,7 +7,8 @@ import com.google.gson.JsonPrimitive;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.GeneratedLoxClass;
+import net.kapitencraft.lang.oop.clazz.CacheableClass;
+import net.kapitencraft.lang.oop.clazz.GeneratedClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
@@ -29,7 +30,7 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         return array;
     }
 
-    public JsonObject cacheClass(GeneratedLoxClass loxClass) {
+    public JsonObject cacheClass(CacheableClass loxClass) {
         return loxClass.save(this);
     }
 

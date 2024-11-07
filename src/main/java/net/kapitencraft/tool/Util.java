@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class Util {
@@ -18,6 +19,14 @@ public class Util {
         Map<K, V> temp = new HashMap<>(base);
         temp.putAll(extension);
         return Map.copyOf(temp);
+    }
+
+    public static void delete(File file) {
+        File[] files = file.listFiles();
+        if (files != null) for (File subFile : files) {
+            delete(subFile);
+        }
+        file.delete();
     }
 
     //that's because Objects.requireNonNullElse checks else for null
@@ -42,7 +51,6 @@ public class Util {
 
     /**
      * get all elements of a Map containing a Map
-     * @see DoubleMap DoubleMap
      */
     static <T, K, L, J extends Map<K, L>> List<L> values(Map<T, J> map) {
         return map.values().stream().map(Map::values).flatMap(Collection::stream).toList();
@@ -94,5 +102,24 @@ public class Util {
         array.asList().stream().map(JsonElement::getAsJsonObject)
                 .forEach(object -> map.put(keyExtractor.apply(object, "key"), valueExtractor.apply(object, "value")));
         return map;
+    }
+
+    public static <T> List<T> invert(List<T> parents) {
+        List<T> inverted = new ArrayList<>();
+        for (int i = parents.size()-1; i >= 0; i--) {
+            inverted.add(parents.get(i));
+        }
+        return inverted;
+    }
+
+    public static <K, V, L> Collector<L, ?, List<Pair<K, V>>> toPairList(Function<L, K> keyMapper, Function<L, V> valueMapper) {
+        return Collector.of(
+                ArrayList::new,
+                (pairs, l) -> pairs.add(new Pair<>(keyMapper.apply(l), valueMapper.apply(l))),
+                (pairs, pairs2) -> {
+                    pairs.addAll(pairs2);
+                    return pairs;
+                }
+        );
     }
 }

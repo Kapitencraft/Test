@@ -51,6 +51,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                         millisAtStart = System.currentTimeMillis();
                         this.environment.push();
                         method.call(new Environment(), this, List.of(data));
+                        System.out.println("\u001B[32mExecution finished\u001B[0m");
                     } catch (AbstractScriptedException e) {
                         System.err.println("Caused by: " + e.exceptionType.getType().absoluteName() + ": " + e.exceptionType.getField("message"));
                         this.callStack.printStackTrace(System.err::println);
@@ -358,6 +359,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public void pushCallIndex(int line) {
         this.callStack.pushLineIndex(line);
     }
+
 
     @Override
     public Object visitInstCallExpr(Expr.InstCall expr) {

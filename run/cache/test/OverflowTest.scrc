@@ -1,17 +1,12 @@
 {
+  "TYPE": "class",
   "name": "OverflowTest",
   "superclass": "scripted.lang.Object",
+  "implemented": [],
   "methods": {
     "test": [
       {
         "retType": "scripted.lang.void",
-        "name": {
-          "type": "IDENTIFIER",
-          "lexeme": "test",
-          "literal": {},
-          "line": 4,
-          "lineStartIndex": 9
-        },
         "params": [],
         "body": [
           {
@@ -53,13 +48,6 @@
     "test1": [
       {
         "retType": "scripted.lang.void",
-        "name": {
-          "type": "IDENTIFIER",
-          "lexeme": "test1",
-          "literal": {},
-          "line": 8,
-          "lineStartIndex": 9
-        },
         "params": [],
         "body": [
           {
@@ -103,23 +91,10 @@
     "main": [
       {
         "retType": "scripted.lang.void",
-        "name": {
-          "type": "IDENTIFIER",
-          "lexeme": "main",
-          "literal": {},
-          "line": 12,
-          "lineStartIndex": 16
-        },
         "params": [
           {
             "type": "scripted.lang.String",
-            "name": {
-              "type": "IDENTIFIER",
-              "lexeme": "args",
-              "literal": {},
-              "line": 12,
-              "lineStartIndex": 28
-            }
+            "name": "args"
           }
         ],
         "body": [
@@ -132,10 +107,10 @@
               "line": 13,
               "lineStartIndex": 21
             },
-            "targetType": "main.OverflowTest",
+            "targetType": "test.OverflowTest",
             "initializer": {
               "TYPE": "constructor",
-              "target": "main.OverflowTest",
+              "target": "test.OverflowTest",
               "args": [],
               "keyword": {
                 "type": "IDENTIFIER",

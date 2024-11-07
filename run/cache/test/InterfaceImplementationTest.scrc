@@ -1,0 +1,14 @@
+{
+  "TYPE": "class",
+  "name": "InterfaceImplementationTest",
+  "superclass": "scripted.lang.Object",
+  "implemented": [
+    "test.InterfaceTest"
+  ],
+  "methods": {},
+  "staticMethods": {},
+  "constructor": [],
+  "fields": {},
+  "staticFields": {},
+  "flags": []
+}
