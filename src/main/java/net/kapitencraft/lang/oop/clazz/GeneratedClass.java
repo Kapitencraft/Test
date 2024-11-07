@@ -5,7 +5,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
+import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -22,8 +24,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class GeneratedClass implements CacheableClass {
+    private final MethodMap methods;
+    private final MethodMap staticMethods;
     private final Map<String, DataMethodContainer> allMethods;
-    private final Map<String, DataMethodContainer> allStaticMethods;
+
+    private final MethodLookup lookup;
+
 
     private final ConstructorContainer constructor;
 
@@ -43,8 +49,9 @@ public final class GeneratedClass implements CacheableClass {
                           Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
                           Map<String, LoxClass> enclosing,
                           LoxClass superclass, LoxClass[] implemented, String name, String packageRepresentation, boolean isAbstract, boolean isFinal) {
+        this.methods = new MethodMap(methods);
         this.allMethods = methods;
-        this.allStaticMethods = staticMethods;
+        this.staticMethods = new MethodMap(staticMethods);
         this.constructor = constructor.build(this);
         this.allFields = fields;
         this.allStaticFields = staticFields;
@@ -55,6 +62,7 @@ public final class GeneratedClass implements CacheableClass {
         this.packageRepresentation = packageRepresentation;
         this.isAbstract = isAbstract;
         this.isFinal = isFinal;
+        this.lookup = MethodLookup.createFromClass(this);
     }
 
     public GeneratedClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, List<ScriptedCallable> constructorData,
@@ -62,8 +70,9 @@ public final class GeneratedClass implements CacheableClass {
                           LoxClass superclass, String name, String packageRepresentation,
                           Map<String, LoxClass> enclosing, LoxClass[] implemented,
                           boolean isAbstract, boolean isFinal) {
+        this.methods = new MethodMap(methods);
         this.allMethods = methods;
-        this.allStaticMethods = staticMethods;
+        this.staticMethods = new MethodMap(staticMethods);
         this.constructor = ConstructorContainer.fromCache(constructorData, this);
         this.allFields = fields;
         this.allStaticFields = staticFields;
@@ -74,6 +83,7 @@ public final class GeneratedClass implements CacheableClass {
         this.implemented = implemented;
         this.isAbstract = isAbstract;
         this.isFinal = isFinal;
+        this.lookup = MethodLookup.createFromClass(this);
     }
 
     public static LoxClass load(JsonObject data, List<LoxClass> enclosed, String pck) {
@@ -116,8 +126,8 @@ public final class GeneratedClass implements CacheableClass {
             Arrays.stream(this.implemented).map(LoxClass::absoluteName).forEach(parentInterfaces::add);
             object.add("implemented", parentInterfaces);
         }
-        object.add("methods", DataMethodContainer.saveMethods(allMethods, cacheBuilder));
-        object.add("staticMethods", DataMethodContainer.saveMethods(allStaticMethods, cacheBuilder));
+        object.add("methods", methods.save(cacheBuilder));
+        object.add("staticMethods", staticMethods.save(cacheBuilder));
         object.add("constructor", constructor.cache(cacheBuilder));
         {
             JsonObject fields = new JsonObject();
@@ -141,11 +151,6 @@ public final class GeneratedClass implements CacheableClass {
         return object;
     }
 
-
-    public Map<String, ? extends MethodContainer> getDeclaredMethods() {
-        return allMethods;
-    }
-
     @Override
     public LoxClass getFieldType(String name) {
         return Optional.ofNullable(getFields().get(name)).map(LoxField::getType).orElse(CacheableClass.super.getFieldType(name));
@@ -163,12 +168,12 @@ public final class GeneratedClass implements CacheableClass {
 
     @Override
     public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
-        return allStaticMethods.get(name).getMethodOrdinal(args);
+        return staticMethods.getMethodOrdinal(name, args);
     }
 
     @Override
     public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return allStaticMethods.get(name).getMethodByOrdinal(ordinal);
+        return staticMethods.getMethodByOrdinal(name, ordinal);
     }
 
     @Override
@@ -178,7 +183,7 @@ public final class GeneratedClass implements CacheableClass {
 
     @Override
     public boolean hasStaticMethod(String name) {
-        return allStaticMethods.containsKey(name);
+        return staticMethods.has(name);
     }
 
     @Override
@@ -212,12 +217,12 @@ public final class GeneratedClass implements CacheableClass {
 
     @Override
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return getDeclaredMethods().get(name).getMethodByOrdinal(ordinal);
+        return lookup.getMethodByOrdinal(name, ordinal);
     }
 
     @Override
     public int getMethodOrdinal(String name, List<LoxClass> types) {
-        return getDeclaredMethods().get(name).getMethodOrdinal(types);
+        return lookup.getMethodOrdinal(name, types);
     }
 
     @Override
@@ -228,6 +233,11 @@ public final class GeneratedClass implements CacheableClass {
     @Override
     public LoxClass getEnclosing(String name) {
         return null;
+    }
+
+    @Override
+    public MethodMap getMethods() {
+        return methods;
     }
 
     @Override
@@ -251,10 +261,15 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
+    public MethodLookup methods() {
+        return lookup;
+    }
+
+    @Override
     public String toString() { //jesus
         return "GeneratedClass{" + name + "}[" +
                 "methods=" + allMethods + ", " +
-                "staticMethods=" + allStaticMethods + ", " +
+                "staticMethods=" + staticMethods + ", " +
                 "fields=" + allFields + ", " +
                 "staticFields=" + allStaticFields + ", " +
                 "superclass=" + superclass + ']';

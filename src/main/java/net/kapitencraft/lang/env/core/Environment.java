@@ -1,8 +1,6 @@
 package net.kapitencraft.lang.env.core;
 
-import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.holder.token.TokenType;
 
 public class Environment {
     private final VarEnv vars;

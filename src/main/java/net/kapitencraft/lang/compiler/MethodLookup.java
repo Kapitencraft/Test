@@ -66,16 +66,14 @@ public class MethodLookup {
         }
         for (Pair<Token, GeneratedCallable> pair : map) {
             List<Pair<LoxClass, ScriptedCallable>> methods = abstracts.get(pair.left().lexeme());
-            for (int i = 0; i < methods.size(); i++) {
-                if (Util.matchArgs(pair.right().argTypes(), methods.get(i).right().argTypes())) {
-                    methods.remove(i);
-                }
-            }
+            methods.removeIf(callablePair -> Util.matchArgs(pair.right().argTypes(), callablePair.right().argTypes()));
         }
         abstracts.forEach((string, pairs) -> {
             pairs.forEach(pair -> {
                 if (pair.left().isInterface())
-                    logger.errorF(className, "class %s must either be declared abstract or override method '%s' from interface %s", className.lexeme(), string, pair.left().name());
+                    logger.errorF(className, "class %s must either be declared abstract or override abstract method '%s' from interface %s", className.lexeme(), string, pair.left().name());
+                else
+                    logger.errorF(className, "class %s must either be declared abstract or override abstract method '%s' from class %s", className.lexeme(), string, pair.left().name());
             });
         });
     }
@@ -85,6 +83,7 @@ public class MethodLookup {
         List<LoxClass> allParents = new ArrayList<>();
         for (LoxClass parent : parentMap) {
             addInterfaces(parent, allParents::add);
+            allParents.add(parent);
         }
         List<Pair<LoxClass, MethodMap>> lookup = allParents.stream().collect(Util.toPairList(Function.identity(), LoxClass::getMethods));
         return new MethodLookup(lookup);

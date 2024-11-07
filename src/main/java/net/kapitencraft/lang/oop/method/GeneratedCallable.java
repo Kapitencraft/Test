@@ -102,6 +102,11 @@ public class GeneratedCallable implements ScriptedCallable {
     }
 
     @Override
+    public boolean isFinal() {
+        return isFinal;
+    }
+
+    @Override
     public LoxClass type() {
         return retType;
     }

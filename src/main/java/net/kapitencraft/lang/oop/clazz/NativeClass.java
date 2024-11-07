@@ -1,66 +1,47 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.field.LoxField;
-import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
-import net.kapitencraft.lang.run.VarTypeManager;
 
+import javax.xml.crypto.Data;
 import java.util.List;
 import java.util.Map;
 
-public class NativeUtilClass implements LoxClass {
-    private final MethodMap staticMethods;
-    private final Map<String, NativeField> staticFields;
-    private final String name;
-    private final String pck;
+public class NativeClass extends NativeUtilClass {
+    private final MethodMap methods;
+    private final LoxClass superclass;
 
-    public NativeUtilClass(Map<String, DataMethodContainer> staticMethods, String name, String pck) {
-        this.staticMethods = new MethodMap(staticMethods);
-        this.name = name;
-        this.pck = pck;
-    }
-
-    @Override
-    public String name() {
-        return name;
-    }
-
-    @Override
-    public String packageRepresentation() {
-        return pck;
-    }
-
-    @Override
-    public String absoluteName() {
-        return packageRepresentation() + "." + name();
+    public NativeClass(String name, String pck, Map<String, DataMethodContainer> staticMethods, Map<String, DataMethodContainer> methods, LoxClass superclass) {
+        super(staticMethods, name, pck);
+        this.methods = new MethodMap(methods);
+        this.superclass = superclass;
     }
 
     @Override
     public LoxClass superclass() {
-        return VarTypeManager.OBJECT;
+        return superclass;
     }
 
     @Override
     public LoxClass getStaticFieldType(String name) {
-        return staticFields.get(name).getType();
+        return null;
     }
 
     @Override
     public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return staticMethods.getMethodByOrdinal(name, ordinal);
+        return null;
     }
 
     @Override
     public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
-        return staticMethods.getMethodOrdinal(name, args);
+        return 0;
     }
 
     @Override
     public boolean hasStaticMethod(String name) {
-        return staticMethods.has(name);
+        return false;
     }
 
     @Override
@@ -75,7 +56,7 @@ public class NativeUtilClass implements LoxClass {
 
     @Override
     public boolean isFinal() {
-        return true;
+        return false;
     }
 
     @Override

@@ -8,9 +8,11 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.load.CompilerHolder;
 import net.kapitencraft.tool.GsonHelper;
+import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
 
 import java.io.*;
@@ -157,5 +159,9 @@ public class Compiler {
         }
 
         LoxClass superclass();
+
+        Token name();
+
+        Pair<Token, GeneratedCallable>[] methods();
     }
 }

@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
@@ -133,12 +134,6 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
-    public Map<String, ? extends MethodContainer> getDeclaredMethods() {
-        assertApplied();
-        return target.getDeclaredMethods();
-    }
-
-    @Override
     public boolean isAbstract() {
         assertApplied();
         return target.isAbstract();
@@ -202,6 +197,12 @@ public class PreviewClass implements LoxClass {
     public LoxClass getEnclosing(String name) {
         assertApplied();
         return target.getEnclosing(name);
+    }
+
+    @Override
+    public MethodMap getMethods() {
+        assertApplied();
+        return target.getMethods();
     }
 
     @Override

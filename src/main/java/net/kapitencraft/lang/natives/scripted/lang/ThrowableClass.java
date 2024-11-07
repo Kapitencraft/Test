@@ -1,5 +1,7 @@
 package net.kapitencraft.lang.natives.scripted.lang;
 
+import net.kapitencraft.lang.func.NativeMethod;
+import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -103,7 +105,7 @@ public class ThrowableClass implements LoxClass {
     @Override
     public MethodContainer getConstructor() {
         return ConstructorContainer.fromCache(List.of(
-                new ScriptedCallable() {
+                new NativeMethod(List.of(VarTypeManager.STRING), VarTypeManager.VOID, ) {
                     @Override
                     public LoxClass type() {
                         return VarTypeManager.VOID;
@@ -116,12 +118,17 @@ public class ThrowableClass implements LoxClass {
 
                     @Override
                     public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                        ((ClassInstance) environment.getVar(new Token(TokenType.IDENTIFIER, "this", new LiteralHolder(null, null), -1, 0))).assignField("message", arguments.get(0));
+                        ((ClassInstance) environment.getThis()).assignField("message", arguments.get(0));
                         return null;
                     }
 
                     @Override
                     public boolean isAbstract() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean isFinal() {
                         return false;
                     }
                 }
@@ -160,6 +167,11 @@ public class ThrowableClass implements LoxClass {
 
     @Override
     public LoxClass getEnclosing(String name) {
+        return null;
+    }
+
+    @Override
+    public MethodMap getMethods() {
         return null;
     }
 }

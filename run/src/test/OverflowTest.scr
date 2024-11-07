@@ -1,16 +1,15 @@
 package test;
 
 class OverflowTest {
-    void test() {
-        this.test1();
+    static void test() {
+        OverflowTest.test1();
     }
 
-    void test1() {
-        this.test();
+    static void test1() {
+        OverflowTest.test();
     }
 
     static void main(String args) {
-        OverflowTest test = new OverflowTest();
-        test.test();
+        OverflowTest.test();
     }
 }

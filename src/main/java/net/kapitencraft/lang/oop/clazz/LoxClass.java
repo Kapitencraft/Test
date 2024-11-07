@@ -77,8 +77,6 @@ public interface LoxClass {
         return superclass().getMethod(name, args);
     }
 
-    Map<String, ? extends MethodContainer> getDeclaredMethods();
-
     boolean hasStaticMethod(String name);
 
     default boolean hasMethod(String name) {

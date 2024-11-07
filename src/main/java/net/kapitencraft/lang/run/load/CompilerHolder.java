@@ -1,12 +1,12 @@
 package net.kapitencraft.lang.run.load;
 
-import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.*;
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Lexer;
-import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.compiler.parser.ExprParser;
 import net.kapitencraft.lang.compiler.parser.SkeletonParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
+import net.kapitencraft.lang.holder.baked.BakedClass;
+import net.kapitencraft.lang.holder.baked.BakedInterface;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
@@ -105,7 +105,11 @@ public class CompilerHolder extends ClassHolder {
         if (!checkConstructorCreated()) return null;
         target = builder.build();
         if (builder.superclass() != null) {
-            
+            MethodLookup lookup = MethodLookup.createFromClass(builder.superclass());
+            lookup.checkAbstract(logger, builder.name(), builder.methods());
+            if (builder instanceof BakedClass) {
+                lookup.checkFinal(logger, builder.methods());
+            }
         }
         return target;
     }

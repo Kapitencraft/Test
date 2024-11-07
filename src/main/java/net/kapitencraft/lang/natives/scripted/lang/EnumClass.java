@@ -13,13 +13,13 @@ import java.util.Map;
 
 public class EnumClass implements LoxClass {
     private final Map<String, DataMethodContainer> methods = Map.of(
-            "ordinal", DataMethodContainer.of(new NativeMethod(List.of(), VarTypeManager.INTEGER) {
+            "ordinal", DataMethodContainer.of(new NativeMethod(List.of(), VarTypeManager.INTEGER, false) {
                 @Override
                 public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                     return environment.getVar(Token.createNative("ordinal"));
                 }
             }),
-            "name", DataMethodContainer.of(new NativeMethod(List.of(), VarTypeManager.STRING) {
+            "name", DataMethodContainer.of(new NativeMethod(List.of(), VarTypeManager.STRING, false) {
                 @Override
                 public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                     return environment.getVar(Token.createNative("name"));
