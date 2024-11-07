@@ -41,13 +41,43 @@ public class MethodLookup {
         }
     }
 
-    public void checkAbstract(Compiler.ErrorLogger logger, Pair<Token, GeneratedCallable>[] map) {
+    public void checkAbstract(Compiler.ErrorLogger logger, Token className, Pair<Token, GeneratedCallable>[] map) {
         Map<String, List<Pair<LoxClass, ScriptedCallable>>> abstracts = new HashMap<>();
         for (Pair<LoxClass, MethodMap> methods : lookup) {
             methods.right().asMap().forEach((s, dataMethodContainer) -> {
-                dataMethodContainer.getMethods().
+                a: for (ScriptedCallable method : dataMethodContainer.getMethods()) {
+                    List<Pair<LoxClass, ScriptedCallable>> classData = abstracts.get(s);
+                    if (method.isAbstract()) {
+                        for (Pair<LoxClass, ScriptedCallable> pair : classData) {
+                            if (Util.matchArgs(pair.right().argTypes(), method.argTypes())) continue a;
+                        }
+                        classData.add(Pair.of(methods.left(), method));
+                    } else {
+                        for (int i = 0; i < classData.size(); i++) {
+                            Pair<LoxClass, ScriptedCallable> pair = classData.get(i);
+                            if (Util.matchArgs(pair.right().argTypes(), method.argTypes())) {
+                                classData.remove(i);
+                                continue a;
+                            }
+                        }
+                    }
+                }
             });
         }
+        for (Pair<Token, GeneratedCallable> pair : map) {
+            List<Pair<LoxClass, ScriptedCallable>> methods = abstracts.get(pair.left().lexeme());
+            for (int i = 0; i < methods.size(); i++) {
+                if (Util.matchArgs(pair.right().argTypes(), methods.get(i).right().argTypes())) {
+                    methods.remove(i);
+                }
+            }
+        }
+        abstracts.forEach((string, pairs) -> {
+            pairs.forEach(pair -> {
+                if (pair.left().isInterface())
+                    logger.errorF(className, "class %s must either be declared abstract or override method '%s' from interface %s", className.lexeme(), string, pair.left().name());
+            });
+        });
     }
 
     public static MethodLookup createFromClass(LoxClass loxClass) {

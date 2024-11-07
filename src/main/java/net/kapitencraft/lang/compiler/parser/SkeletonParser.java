@@ -423,8 +423,8 @@ public class SkeletonParser extends AbstractParser {
 
         Compiler.ErrorLogger logger();
 
-        default void applySkeleton() {
-            this.target().apply(createSkeleton());
+        default LoxClass applySkeleton() {
+            return this.target().apply(createSkeleton());
         }
     }
 

@@ -97,7 +97,7 @@ public class CompilerHolder extends ClassHolder {
     @Override
     public LoxClass createSkeleton() {
         if (!checkConstructorCreated()) return null;
-        return constructor.createSkeleton();
+        return constructor.applySkeleton();
     }
 
     @Override
@@ -105,8 +105,6 @@ public class CompilerHolder extends ClassHolder {
         if (!checkConstructorCreated()) return null;
         target = builder.build();
         if (builder.superclass() != null) {
-            Map<String, ? extends MethodContainer> declaredMethods = target.getDeclaredMethods();
-            Map<String, ? extends MethodContainer> superMethods = builder.superclass().getMethods();
             
         }
         return target;

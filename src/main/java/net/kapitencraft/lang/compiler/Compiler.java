@@ -1,25 +1,19 @@
 package net.kapitencraft.lang.compiler;
 
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.parser.ExprParser;
-import net.kapitencraft.lang.compiler.parser.SkeletonParser;
-import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.visitor.LocationFinder;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.oop.field.GeneratedField;
-import net.kapitencraft.lang.oop.clazz.GeneratedClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.load.CompilerHolder;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Util;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
 
