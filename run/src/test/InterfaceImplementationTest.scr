@@ -1,12 +1,9 @@
 package test;
 
 import test.InterfaceTest as IT;
+import test.FinalTest;
 
-class InterfaceImplementationTest implements IT {
-
-    void test() {
-        System.print("test?");
-    }
+class InterfaceImplementationTest extends FinalTest implements IT {
 
     String e() {
         return "e";

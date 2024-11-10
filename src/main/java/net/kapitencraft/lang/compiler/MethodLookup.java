@@ -34,7 +34,7 @@ public class MethodLookup {
                 for (ScriptedCallable method : methodMap.get(pair.left().lexeme()).getMethods()) {
                     if (!method.isFinal()) continue;
                     if (Util.matchArgs(method.argTypes(), pair.right().argTypes())) {
-                        logger.errorF(pair.left(), "method '%s' can not override final method from class '%s'");
+                        logger.errorF(pair.left(), "method '%s(%s)' can not override final method from class '%s'", pair.left().lexeme(), Util.getDescriptor(pair.right().argTypes()), lookupElement.left().name());
                     }
                 }
             }

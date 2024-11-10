@@ -1,0 +1,54 @@
+{
+  "TYPE": "class",
+  "name": "FinalTest",
+  "superclass": "scripted.lang.Object",
+  "interfaces": [],
+  "methods": {
+    "test": [
+      {
+        "retType": "scripted.lang.String",
+        "params": [],
+        "body": [
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "staticCall",
+              "target": "scripted.lang.System",
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "print",
+                "literal": {},
+                "line": 6,
+                "lineStartIndex": 15
+              },
+              "ordinal": -1,
+              "args": [
+                {
+                  "TYPE": "literal",
+                  "value": {
+                    "type": "STR",
+                    "lexeme": "\"test!\"",
+                    "literal": {
+                      "type": "String",
+                      "value": "test!"
+                    },
+                    "line": 6,
+                    "lineStartIndex": 21
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "flags": [
+          "isFinal"
+        ]
+      }
+    ]
+  },
+  "staticMethods": {},
+  "constructor": [],
+  "fields": {},
+  "staticFields": {},
+  "flags": []
+}
