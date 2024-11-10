@@ -1,15 +1,12 @@
 package net.kapitencraft.lang.natives.scripted.lang;
 
-import net.kapitencraft.lang.func.NativeMethod;
+import net.kapitencraft.lang.func.NativeMethodImpl;
 import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
-import net.kapitencraft.lang.holder.LiteralHolder;
-import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
@@ -105,7 +102,7 @@ public class ThrowableClass implements LoxClass {
     @Override
     public MethodContainer getConstructor() {
         return ConstructorContainer.fromCache(List.of(
-                new NativeMethod(List.of(VarTypeManager.STRING), VarTypeManager.VOID, ) {
+                new NativeMethodImpl(List.of(VarTypeManager.STRING), VarTypeManager.VOID, false, false) {
                     @Override
                     public LoxClass type() {
                         return VarTypeManager.VOID;

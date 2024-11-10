@@ -25,7 +25,7 @@ public class SkeletonInterface implements LoxClass {
 
     private final Map<String, PreviewClass> enclosed;
 
-    private final Map<String, DataMethodContainer> methods;
+    private final MethodMap methods;
     private final MethodMap staticMethods;
 
     public SkeletonInterface(String name, String pck, LoxClass superclass, LoxClass[] interfaces, Map<String, LoxClass> staticFields, Map<String, PreviewClass> enclosed, Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods) {
@@ -35,7 +35,7 @@ public class SkeletonInterface implements LoxClass {
         this.interfaces = interfaces;
         this.staticFields = staticFields;
         this.enclosed = enclosed;
-        this.methods = methods;
+        this.methods = new MethodMap(methods);
         this.staticMethods = new MethodMap(staticMethods);
     }
 
@@ -123,12 +123,12 @@ public class SkeletonInterface implements LoxClass {
 
     @Override
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return methods.get(name).getMethodByOrdinal(ordinal);
+        return methods.getMethodByOrdinal(name, ordinal);
     }
 
     @Override
     public int getMethodOrdinal(String name, List<LoxClass> types) {
-        return methods.get(name).getMethodOrdinal(types);
+        return methods.getMethodOrdinal(name, types);
     }
 
     @Override
@@ -139,5 +139,10 @@ public class SkeletonInterface implements LoxClass {
     @Override
     public LoxClass getEnclosing(String name) {
         return enclosed.get(name);
+    }
+
+    @Override
+    public MethodMap getMethods() {
+        return methods;
     }
 }

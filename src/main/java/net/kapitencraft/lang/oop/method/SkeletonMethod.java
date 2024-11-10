@@ -18,16 +18,17 @@ import java.util.List;
 public class SkeletonMethod implements ScriptedCallable {
     private final List<? extends LoxClass> args;
     private final LoxClass retType;
-    private final boolean isAbstract;
+    private final boolean isAbstract, isFinal;
 
-    public SkeletonMethod(List<? extends LoxClass> args, LoxClass retType, boolean isAbstract) {
+    public SkeletonMethod(List<? extends LoxClass> args, LoxClass retType, boolean isAbstract, boolean isFinal) {
         this.args = args;
         this.retType = retType;
         this.isAbstract = isAbstract;
+        this.isFinal = isFinal;
     }
 
     public static SkeletonMethod create(SkeletonParser.MethodDecl decl) {
-        return new SkeletonMethod(decl.params().stream().map(Pair::left).toList(), decl.type(), decl.isAbstract());
+        return new SkeletonMethod(decl.params().stream().map(Pair::left).toList(), decl.type(), decl.isAbstract(), decl.isFinal());
     }
 
     public static SkeletonMethod fromJson(JsonObject object) {
@@ -37,7 +38,7 @@ public class SkeletonMethod implements ScriptedCallable {
                 .map(object1 -> ClassLoader.loadClassReference(object1, "type"))
                 .toList();
         List<String> flags = ClassLoader.readFlags(object);
-        return new SkeletonMethod(args, retType, flags.contains("isAbstract"));
+        return new SkeletonMethod(args, retType, flags.contains("isAbstract"), flags.contains("isFinal"));
     }
 
     public static ImmutableMap<String, DataMethodContainer> readFromCache(JsonObject data, String subElementName) {
@@ -70,5 +71,10 @@ public class SkeletonMethod implements ScriptedCallable {
     @Override
     public boolean isAbstract() {
         return isAbstract;
+    }
+
+    @Override
+    public boolean isFinal() {
+        return isFinal;
     }
 }

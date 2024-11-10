@@ -163,5 +163,7 @@ public class Compiler {
         Token name();
 
         Pair<Token, GeneratedCallable>[] methods();
+
+        LoxClass[] interfaces();
     }
 }

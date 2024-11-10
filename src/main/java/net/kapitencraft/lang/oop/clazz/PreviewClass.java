@@ -98,6 +98,12 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
+    public LoxClass[] interfaces() {
+        assertApplied();
+        return target.interfaces();
+    }
+
+    @Override
     public boolean hasField(String name) {
         assertApplied();
         return target.hasField(name);
@@ -147,7 +153,7 @@ public class PreviewClass implements LoxClass {
 
     @Override
     public boolean isInterface() {
-        return isInterface;
+        return isInterface || target != null && target.isInterface();
     }
 
     private void assertApplied() {

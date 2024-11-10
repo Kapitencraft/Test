@@ -103,7 +103,7 @@ public final class GeneratedClass implements CacheableClass {
 
         Map<String, LoxClass> enclosedClasses = enclosed.stream().collect(Collectors.toMap(LoxClass::name, Function.identity()));
 
-        LoxClass[] implemented = GsonHelper.getAsJsonArray(data, "implemented").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(LoxClass[]::new);
+        LoxClass[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(LoxClass[]::new);
 
         return new GeneratedClass(
                 methods, staticMethods, constructorData,
@@ -124,7 +124,7 @@ public final class GeneratedClass implements CacheableClass {
         {
             JsonArray parentInterfaces = new JsonArray();
             Arrays.stream(this.implemented).map(LoxClass::absoluteName).forEach(parentInterfaces::add);
-            object.add("implemented", parentInterfaces);
+            object.add("interfaces", parentInterfaces);
         }
         object.add("methods", methods.save(cacheBuilder));
         object.add("staticMethods", staticMethods.save(cacheBuilder));

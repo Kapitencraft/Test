@@ -4,15 +4,16 @@ import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 import java.util.List;
 
-public abstract class NativeMethod implements ScriptedCallable {
+public abstract class NativeMethodImpl implements ScriptedCallable {
     private final List<? extends LoxClass> arguments;
     private final LoxClass retType;
-    private final boolean isFinal;
+    private final boolean isFinal, isAbstract;
 
-    public NativeMethod(List<? extends LoxClass> arguments, LoxClass retType, boolean isFinal) {
+    public NativeMethodImpl(List<? extends LoxClass> arguments, LoxClass retType, boolean isFinal, boolean isAbstract) {
         this.arguments = arguments;
         this.retType = retType;
         this.isFinal = isFinal;
+        this.isAbstract = isAbstract;
     }
 
     @Override
@@ -27,7 +28,7 @@ public abstract class NativeMethod implements ScriptedCallable {
 
     @Override
     public boolean isAbstract() {
-        return false;
+        return isAbstract;
     }
 
     @Override

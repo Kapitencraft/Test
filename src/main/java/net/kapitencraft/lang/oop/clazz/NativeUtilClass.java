@@ -1,7 +1,6 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -17,8 +16,9 @@ public class NativeUtilClass implements LoxClass {
     private final String name;
     private final String pck;
 
-    public NativeUtilClass(Map<String, DataMethodContainer> staticMethods, String name, String pck) {
+    public NativeUtilClass(Map<String, DataMethodContainer> staticMethods, Map<String, NativeField> staticFields, String name, String pck) {
         this.staticMethods = new MethodMap(staticMethods);
+        this.staticFields = staticFields;
         this.name = name;
         this.pck = pck;
     }

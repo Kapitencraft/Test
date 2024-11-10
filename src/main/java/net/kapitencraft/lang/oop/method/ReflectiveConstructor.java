@@ -37,4 +37,9 @@ public class ReflectiveConstructor<T> implements ScriptedCallable {
     public boolean isAbstract() {
         return false;
     }
+
+    @Override
+    public boolean isFinal() {
+        return false;
+    }
 }

@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.method.MethodMap;
@@ -20,6 +21,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GeneratedInterface implements LoxInterface, CacheableClass {
+    private final MethodMap methods;
+    private final MethodLookup lookup;
     private final Map<String, DataMethodContainer> allMethods;
     private final MethodMap staticMethods;
     private final Map<String, GeneratedField> allStaticFields;
@@ -32,6 +35,7 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     private final String packageRepresentation;
 
     public GeneratedInterface(Map<String, DataMethodContainer> allMethods, Map<String, DataMethodContainer> allStaticMethods, Map<String, GeneratedField> allStaticFields, LoxClass[] parentInterfaces, Map<String, LoxClass> enclosing, String name, String packageRepresentation) {
+        this.methods = new MethodMap(allMethods);
         this.allMethods = allMethods;
         this.staticMethods = new MethodMap(allStaticMethods);
         this.allStaticFields = allStaticFields;
@@ -39,6 +43,7 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
         this.enclosing = enclosing;
         this.name = name;
         this.packageRepresentation = packageRepresentation;
+        this.lookup = MethodLookup.createFromClass(this);
     }
 
     public static LoxClass load(JsonObject data, List<LoxClass> enclosed, String pck) {
@@ -48,7 +53,7 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
 
         ImmutableMap<String, GeneratedField> staticFields = GeneratedField.loadFieldMap(data, "staticFields");
 
-        LoxClass[] implemented = GsonHelper.getAsJsonArray(data, "implemented").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(LoxClass[]::new);
+        LoxClass[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(LoxClass[]::new);
         return new GeneratedInterface(
                 methods,
                 staticMethods,
@@ -91,23 +96,18 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     }
 
     @Override
-    public Map<String, ? extends MethodContainer> getDeclaredMethods() {
-        return Map.of();
-    }
-
-    @Override
     public boolean hasStaticMethod(String name) {
         return staticMethods.has(name);
     }
 
     @Override
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return allMethods.get(name).getMethodByOrdinal(ordinal);
+        return lookup.getMethodByOrdinal(name, ordinal);
     }
 
     @Override
     public int getMethodOrdinal(String name, List<LoxClass> types) {
-        return allMethods.get(name).getMethodOrdinal(types);
+        return lookup.getMethodOrdinal(name, types);
     }
 
     @Override
@@ -126,6 +126,11 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     }
 
     @Override
+    public MethodMap getMethods() {
+        return methods;
+    }
+
+    @Override
     public JsonObject save(CacheBuilder cacheBuilder) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "interface");
@@ -135,7 +140,7 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
         {
             JsonArray parentInterfaces = new JsonArray();
             Arrays.stream(this.parentInterfaces).map(LoxClass::absoluteName).forEach(parentInterfaces::add);
-            object.add("implemented", parentInterfaces);
+            object.add("interfaces", parentInterfaces);
         }
         {
             JsonObject staticFields = new JsonObject();
@@ -149,5 +154,10 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     @Override
     public CacheableClass[] enclosing() {
         return enclosing.values().toArray(new CacheableClass[0]);
+    }
+
+    @Override
+    public MethodLookup methods() {
+        return lookup;
     }
 }

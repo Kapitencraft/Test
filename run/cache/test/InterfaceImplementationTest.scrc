@@ -2,10 +2,82 @@
   "TYPE": "class",
   "name": "InterfaceImplementationTest",
   "superclass": "scripted.lang.Object",
-  "implemented": [
+  "interfaces": [
     "test.InterfaceTest"
   ],
-  "methods": {},
+  "methods": {
+    "test": [
+      {
+        "retType": "scripted.lang.void",
+        "params": [],
+        "body": [
+          {
+            "TYPE": "expression",
+            "expr": {
+              "TYPE": "staticCall",
+              "target": "scripted.lang.System",
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "print",
+                "literal": {},
+                "line": 7,
+                "lineStartIndex": 15
+              },
+              "ordinal": -1,
+              "args": [
+                {
+                  "TYPE": "literal",
+                  "value": {
+                    "type": "STR",
+                    "lexeme": "\"test?\"",
+                    "literal": {
+                      "type": "String",
+                      "value": "test?"
+                    },
+                    "line": 7,
+                    "lineStartIndex": 21
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "flags": []
+      }
+    ],
+    "e": [
+      {
+        "retType": "scripted.lang.String",
+        "params": [],
+        "body": [
+          {
+            "TYPE": "return",
+            "keyword": {
+              "type": "RETURN",
+              "lexeme": "return",
+              "literal": {},
+              "line": 11,
+              "lineStartIndex": 8
+            },
+            "value": {
+              "TYPE": "literal",
+              "value": {
+                "type": "STR",
+                "lexeme": "\"e\"",
+                "literal": {
+                  "type": "String",
+                  "value": "e"
+                },
+                "line": 11,
+                "lineStartIndex": 15
+              }
+            }
+          }
+        ],
+        "flags": []
+      }
+    ]
+  },
   "staticMethods": {},
   "constructor": [],
   "fields": {},

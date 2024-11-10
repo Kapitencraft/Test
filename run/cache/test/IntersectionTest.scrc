@@ -2,7 +2,7 @@
   "TYPE": "class",
   "name": "IntersectionTest",
   "superclass": "scripted.lang.Object",
-  "implemented": [],
+  "interfaces": [],
   "methods": {},
   "staticMethods": {
     "main": [

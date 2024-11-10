@@ -24,7 +24,7 @@ public record BakedClass(
         Stmt.VarDecl[] fields,
         Stmt.VarDecl[] staticFields,
         LoxClass superclass, Token name, String pck,
-        LoxClass[] implemented,
+        LoxClass[] interfaces,
         Compiler.ClassBuilder[] enclosed,
         boolean isAbstract, boolean isFinal
 ) implements Compiler.ClassBuilder {
@@ -72,7 +72,7 @@ public record BakedClass(
                 fields, Compiler.ClassBuilder.generateFields(this.staticFields()),
                 enclosed.build(),
                 this.superclass(),
-                this.implemented(),
+                this.interfaces(),
                 this.name().lexeme(),
                 this.pck(),
                 this.isAbstract(),

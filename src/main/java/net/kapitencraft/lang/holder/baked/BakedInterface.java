@@ -13,7 +13,7 @@ import net.kapitencraft.tool.Pair;
 import java.util.HashMap;
 import java.util.Map;
 
-public record BakedInterface(Compiler.ErrorLogger logger, PreviewClass target, Pair<Token, GeneratedCallable>[] methods, Pair<Token, GeneratedCallable>[] staticMethods, Stmt.VarDecl[] staticFields, LoxClass[] parentInterfaces, Token name, String pck, Compiler.ClassBuilder[] enclosed) implements Compiler.ClassBuilder {
+public record BakedInterface(Compiler.ErrorLogger logger, PreviewClass target, Pair<Token, GeneratedCallable>[] methods, Pair<Token, GeneratedCallable>[] staticMethods, Stmt.VarDecl[] staticFields, LoxClass[] interfaces, Token name, String pck, Compiler.ClassBuilder[] enclosed) implements Compiler.ClassBuilder {
 
     @Override
     public CacheableClass build() {
@@ -44,7 +44,7 @@ public record BakedInterface(Compiler.ErrorLogger logger, PreviewClass target, P
                 DataMethodContainer.bakeBuilders(methods),
                 DataMethodContainer.bakeBuilders(staticMethods),
                 staticFields,
-                parentInterfaces,
+                interfaces,
                 enclosed.build(),
                 name().lexeme(),
                 pck()

@@ -48,4 +48,9 @@ public class ReflectiveMethod implements ScriptedCallable {
     public boolean isAbstract() {
         return Modifier.isAbstract(method.getModifiers());
     }
+
+    @Override
+    public boolean isFinal() {
+        return Modifier.isFinal(method.getModifiers());
+    }
 }

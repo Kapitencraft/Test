@@ -1,10 +1,8 @@
 package net.kapitencraft.lang.oop.clazz.inst;
 
-import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.ReflectiveClass;
 import net.kapitencraft.lang.run.Interpreter;
 
-import java.sql.Ref;
 import java.util.List;
 
 public class ReflectiveClassInstance<T> extends ClassInstance {

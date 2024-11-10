@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.clazz;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -26,7 +27,7 @@ public class SkeletonClass implements LoxClass {
 
     private final Map<String, PreviewClass> enclosed;
 
-    private final Map<String, DataMethodContainer> methods;
+    private final MethodMap methods;
     private final Map<String, DataMethodContainer> staticMethods;
     private final ConstructorContainer constructor;
 
@@ -43,7 +44,7 @@ public class SkeletonClass implements LoxClass {
         this.staticFields = staticFields;
         this.fields = fields;
         this.enclosed = enclosed;
-        this.methods = methods;
+        this.methods = new MethodMap(methods);
         this.staticMethods = staticMethods;
         this.constructor = constructor.build(this);
         this.isAbstract = isAbstract;
@@ -61,7 +62,7 @@ public class SkeletonClass implements LoxClass {
         this.staticFields = staticFields;
         this.fields = fields;
         this.enclosed = enclosed;
-        this.methods = methods;
+        this.methods = new MethodMap(methods);
         this.staticMethods = staticMethods;
         this.constructor = constructor;
         this.isAbstract = isAbstract;
@@ -190,12 +191,12 @@ public class SkeletonClass implements LoxClass {
 
     @Override
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return methods.get(name).getMethodByOrdinal(ordinal);
+        return methods.getMethodByOrdinal(name, ordinal);
     }
 
     @Override
     public int getMethodOrdinal(String name, List<LoxClass> types) {
-        return methods.get(name).getMethodOrdinal(types);
+        return methods.getMethodOrdinal(name, types);
     }
 
     @Override
@@ -206,5 +207,10 @@ public class SkeletonClass implements LoxClass {
     @Override
     public LoxClass getEnclosing(String name) {
         return enclosed.get(name);
+    }
+
+    @Override
+    public MethodMap getMethods() {
+        return methods;
     }
 }

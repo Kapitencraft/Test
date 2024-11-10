@@ -3,4 +3,12 @@ package test;
 import test.InterfaceTest as IT;
 
 class InterfaceImplementationTest implements IT {
+
+    void test() {
+        System.print("test?");
+    }
+
+    String e() {
+        return "e";
+    }
 }

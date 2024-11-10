@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.field.LoxField;
 
@@ -108,11 +109,6 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public Map<String, MethodContainer> getDeclaredMethods() {
-        return Map.of();
-    }
-
-    @Override
     public boolean isAbstract() {
         return false;
     }
@@ -144,6 +140,11 @@ public class PrimitiveClass implements LoxClass {
 
     @Override
     public LoxClass getEnclosing(String name) {
+        return null;
+    }
+
+    @Override
+    public MethodMap getMethods() {
         return null;
     }
 

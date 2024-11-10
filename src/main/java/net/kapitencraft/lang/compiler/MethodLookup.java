@@ -7,7 +7,6 @@ import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.run.load.CompilerHolder;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
 
@@ -31,6 +30,7 @@ public class MethodLookup {
         for (Pair<Token, GeneratedCallable> pair : map) {
             for (Pair<LoxClass, MethodMap> lookupElement : lookup) {
                 Map<String, DataMethodContainer> methodMap = lookupElement.right().asMap();
+                if (!methodMap.containsKey(pair.left().lexeme())) continue; //no method with name found, continuing
                 for (ScriptedCallable method : methodMap.get(pair.left().lexeme()).getMethods()) {
                     if (!method.isFinal()) continue;
                     if (Util.matchArgs(method.argTypes(), pair.right().argTypes())) {
@@ -46,7 +46,7 @@ public class MethodLookup {
         for (Pair<LoxClass, MethodMap> methods : lookup) {
             methods.right().asMap().forEach((s, dataMethodContainer) -> {
                 a: for (ScriptedCallable method : dataMethodContainer.getMethods()) {
-                    List<Pair<LoxClass, ScriptedCallable>> classData = abstracts.get(s);
+                    List<Pair<LoxClass, ScriptedCallable>> classData = abstracts.computeIfAbsent(s, k -> new ArrayList<>());
                     if (method.isAbstract()) {
                         for (Pair<LoxClass, ScriptedCallable> pair : classData) {
                             if (Util.matchArgs(pair.right().argTypes(), method.argTypes())) continue a;
@@ -66,21 +66,26 @@ public class MethodLookup {
         }
         for (Pair<Token, GeneratedCallable> pair : map) {
             List<Pair<LoxClass, ScriptedCallable>> methods = abstracts.get(pair.left().lexeme());
+            if (methods == null) continue; //no abstract method for that name, continuing
             methods.removeIf(callablePair -> Util.matchArgs(pair.right().argTypes(), callablePair.right().argTypes()));
         }
         abstracts.forEach((string, pairs) -> {
             pairs.forEach(pair -> {
-                if (pair.left().isInterface())
-                    logger.errorF(className, "class %s must either be declared abstract or override abstract method '%s' from interface %s", className.lexeme(), string, pair.left().name());
-                else
-                    logger.errorF(className, "class %s must either be declared abstract or override abstract method '%s' from class %s", className.lexeme(), string, pair.left().name());
+                String errorMsg = pair.left().isInterface() ?
+                        "class %s must either be declared abstract or override abstract method '%s(%s)' from interface %s" :
+                        "class %s must either be declared abstract or override abstract method '%s(%s)' from class %s";
+                logger.errorF(className, errorMsg, className.lexeme(), string, Util.getDescriptor(pair.right().argTypes()), pair.left().name());
             });
         });
     }
 
-    public static MethodLookup createFromClass(LoxClass loxClass) {
+    public static MethodLookup createFromClass(LoxClass loxClass, LoxClass... interfaces) {
         List<LoxClass> parentMap = createParentMap(loxClass);
         List<LoxClass> allParents = new ArrayList<>();
+        for (LoxClass i : interfaces) {
+            addInterfaces(i, allParents::add);
+            allParents.add(i);
+        }
         for (LoxClass parent : parentMap) {
             addInterfaces(parent, allParents::add);
             allParents.add(parent);

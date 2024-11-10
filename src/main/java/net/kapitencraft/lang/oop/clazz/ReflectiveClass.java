@@ -6,6 +6,7 @@ import com.google.common.collect.Multimap;
 import net.kapitencraft.lang.oop.field.ReflectiveField;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.clazz.inst.ReflectiveClassInstance;
+import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -31,7 +32,7 @@ public class ReflectiveClass<T> implements LoxClass {
     private final ConstructorContainer constructor;
     private final Map<String, ReflectiveField> fields;
     private final Map<String, ReflectiveField> staticFields;
-    private final Map<String, DataMethodContainer> methods;
+    private final MethodMap methods;
     private final Map<String, DataMethodContainer> staticMethods;
 
     public ReflectiveClass(Class<T> target) {
@@ -58,7 +59,7 @@ public class ReflectiveClass<T> implements LoxClass {
         this.fields = loadFields(fields);
         this.staticFields = loadFields(staticFields);
 
-        this.methods = loadMethods(methods);
+        this.methods = new MethodMap(loadMethods(methods));
         this.staticMethods = loadMethods(staticMethods);
         this.constructor = new ConstructorContainer(Arrays.stream(target.getDeclaredConstructors()).map(ReflectiveConstructor::new).toArray(ReflectiveConstructor[]::new));
     }
@@ -155,12 +156,12 @@ public class ReflectiveClass<T> implements LoxClass {
 
     @Override
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return methods.get(name).getMethodByOrdinal(ordinal);
+        return methods.getMethodByOrdinal(name, ordinal);
     }
 
     @Override
     public int getMethodOrdinal(String name, List<LoxClass> types) {
-        return methods.get(name).getMethodOrdinal(types);
+        return methods.getMethodOrdinal(name, types);
     }
 
     @Override
@@ -171,6 +172,11 @@ public class ReflectiveClass<T> implements LoxClass {
     @Override
     public LoxClass getEnclosing(String name) {
         return enclosed.get(name);
+    }
+
+    @Override
+    public MethodMap getMethods() {
+        return methods;
     }
 
     @Override

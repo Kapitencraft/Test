@@ -2,7 +2,7 @@
   "TYPE": "class",
   "name": "C",
   "superclass": "main.A",
-  "implemented": [],
+  "interfaces": [],
   "methods": {
     "test": [
       {

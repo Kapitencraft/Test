@@ -6,18 +6,14 @@ import net.kapitencraft.lang.compiler.parser.ExprParser;
 import net.kapitencraft.lang.compiler.parser.SkeletonParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.holder.baked.BakedClass;
-import net.kapitencraft.lang.holder.baked.BakedInterface;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class CompilerHolder extends ClassHolder {
@@ -103,14 +99,14 @@ public class CompilerHolder extends ClassHolder {
     @Override
     public LoxClass loadClass() {
         if (!checkConstructorCreated()) return null;
-        target = builder.build();
+
         if (builder.superclass() != null) {
-            MethodLookup lookup = MethodLookup.createFromClass(builder.superclass());
+            MethodLookup lookup = MethodLookup.createFromClass(builder.superclass(), builder.interfaces());
             lookup.checkAbstract(logger, builder.name(), builder.methods());
             if (builder instanceof BakedClass) {
                 lookup.checkFinal(logger, builder.methods());
             }
         }
-        return target;
+        return target = builder.build();
     }
 }
