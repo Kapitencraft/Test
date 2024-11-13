@@ -66,7 +66,7 @@ public class ConstructorContainer extends DataMethodContainer {
             List<? extends LoxClass> argTypes = callable.argTypes();
             for (List<? extends LoxClass> appliedType : appliedTypes) {
                 if (Util.matchArgs(argTypes, appliedType)) {
-                    errorLogger.errorF(constructorLocation, "duplicate constructor with args %s in class %s", Util.getDescriptor(argTypes), className.lexeme());
+                    errorLogger.errorF(constructorLocation, "duplicate constructors with args %s in class %s", Util.getDescriptor(argTypes), className.lexeme());
                     return;
                 }
             }

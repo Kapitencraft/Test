@@ -52,7 +52,7 @@ public class CacheLoader {
             case "logical" -> readLogical(object);
             case "unary" -> readUnary(object);
             case "varRef" -> readVarRef(object);
-            case "constructor" -> readConstructor(object);
+            case "constructors" -> readConstructor(object);
             default -> throw new IllegalStateException("unknown expr key '" + type + "'");
         };
     }

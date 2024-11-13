@@ -130,7 +130,7 @@
             },
             "targetType": "test.MultipleMethodsTest",
             "initializer": {
-              "TYPE": "constructor",
+              "TYPE": "constructors",
               "target": "test.MultipleMethodsTest",
               "args": [
                 {
@@ -268,7 +268,7 @@
       }
     ]
   },
-  "constructor": [
+  "constructors": [
     {
       "retType": "scripted.lang.void",
       "params": [

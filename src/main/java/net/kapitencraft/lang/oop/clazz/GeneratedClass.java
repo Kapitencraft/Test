@@ -30,7 +30,6 @@ public final class GeneratedClass implements CacheableClass {
 
     private final MethodLookup lookup;
 
-
     private final ConstructorContainer constructor;
 
     private final Map<String, GeneratedField> allFields;
@@ -89,12 +88,14 @@ public final class GeneratedClass implements CacheableClass {
     public static LoxClass load(JsonObject data, List<LoxClass> enclosed, String pck) {
         String name = GsonHelper.getAsString(data, "name");
         LoxClass superclass = ClassLoader.loadClassReference(data, "superclass");
+        LoxClass[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(LoxClass[]::new);
+
         if (superclass == null) throw new IllegalArgumentException(String.format("could not find parent class for class '%s': '%s'", name, GsonHelper.getAsString(data, "superclass")));
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
         ImmutableMap<String, DataMethodContainer> staticMethods = DataMethodContainer.load(data, name, "staticMethods");
 
         List<ScriptedCallable> constructorData = new ArrayList<>();
-        GsonHelper.getAsJsonArray(data, "constructor").asList().stream().map(JsonElement::getAsJsonObject).map(GeneratedCallable::load).forEach(constructorData::add);
+        GsonHelper.getAsJsonArray(data, "constructors").asList().stream().map(JsonElement::getAsJsonObject).map(GeneratedCallable::load).forEach(constructorData::add);
 
         ImmutableMap<String, GeneratedField> fields = GeneratedField.loadFieldMap(data, "fields");
         ImmutableMap<String, GeneratedField> staticFields = GeneratedField.loadFieldMap(data, "staticFields");
@@ -102,8 +103,6 @@ public final class GeneratedClass implements CacheableClass {
         List<String> flags = GsonHelper.getAsJsonArray(data, "flags").asList().stream().map(JsonElement::getAsString).toList();
 
         Map<String, LoxClass> enclosedClasses = enclosed.stream().collect(Collectors.toMap(LoxClass::name, Function.identity()));
-
-        LoxClass[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(LoxClass[]::new);
 
         return new GeneratedClass(
                 methods, staticMethods, constructorData,
@@ -128,7 +127,7 @@ public final class GeneratedClass implements CacheableClass {
         }
         object.add("methods", methods.save(cacheBuilder));
         object.add("staticMethods", staticMethods.save(cacheBuilder));
-        object.add("constructor", constructor.cache(cacheBuilder));
+        object.add("constructors", constructor.cache(cacheBuilder));
         {
             JsonObject fields = new JsonObject();
             allFields.forEach((name, field) -> fields.add(name, field.cache(cacheBuilder)));

@@ -60,7 +60,7 @@
                 "lineStartIndex": 20
               },
               "value": {
-                "TYPE": "constructor",
+                "TYPE": "constructors",
                 "target": "scripted.lang.ArithmeticException",
                 "args": [
                   {
@@ -291,7 +291,7 @@
       }
     ]
   },
-  "constructor": [],
+  "constructors": [],
   "fields": {},
   "staticFields": {},
   "flags": []

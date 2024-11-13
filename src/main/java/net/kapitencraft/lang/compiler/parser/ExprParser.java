@@ -348,7 +348,7 @@ public class ExprParser extends AbstractParser {
         List<? extends LoxClass> expectedTypes = target.argTypes();
         List<? extends LoxClass> givenTypes = args.stream().map(this.finder::findRetType).toList();
         if (expectedTypes.size() != givenTypes.size()) {
-            error(loc, String.format("constructor for %s cannot be applied to given types;", loc.lexeme()));
+            error(loc, String.format("constructors for %s cannot be applied to given types;", loc.lexeme()));
 
             errorLogger.logError("required: " + expectedTypes.stream().map(LoxClass::name).collect(Collectors.joining(",")));
             errorLogger.logError("found:    " + givenTypes.stream().map(LoxClass::name).collect(Collectors.joining(",")));
@@ -377,9 +377,9 @@ public class ExprParser extends AbstractParser {
         if (match(NEW)) {
             LoxClass loxClass = consumeVarType();
             Token loc = previous();
-            consumeBracketOpen("constructor");
+            consumeBracketOpen("constructors");
             List<Expr> args = args();
-            consumeBracketClose("constructor");
+            consumeBracketClose("constructors");
             int ordinal = loxClass.getConstructor().getMethodOrdinal(args.stream().map(this.finder::findRetType).toList());
             ScriptedCallable callable = loxClass.getConstructor().getMethodByOrdinal(ordinal);
 

@@ -77,7 +77,7 @@ public class SkeletonClass implements LoxClass {
         ImmutableMap<String, DataMethodContainer> staticMethods = SkeletonMethod.readFromCache(data, "staticMethods");
 
         ConstructorContainer constructorContainer = new ConstructorContainer(
-                GsonHelper.getAsJsonArray(data, "constructor").asList()
+                GsonHelper.getAsJsonArray(data, "constructors").asList()
                         .stream()
                         .map(JsonElement::getAsJsonObject)
                         .map(SkeletonMethod::fromJson)

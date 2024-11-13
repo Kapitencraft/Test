@@ -8,7 +8,7 @@ public class MathMain {
     private static List<Integer> alleTeiler(int x) {
         if (cache.containsKey(x)) return cache.get(x);
         List<Integer> list = new ArrayList<>();
-        for (int i = 2; i <= x / 2; i++) {
+        for (int i = 2; i <= Math.sqrt(x); i++) {
             if (x % i == 0) list.add(i);
         }
         cache.put(x, list);

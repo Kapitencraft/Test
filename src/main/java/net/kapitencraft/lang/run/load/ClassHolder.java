@@ -16,7 +16,7 @@ public abstract class ClassHolder {
         this.children = children;
         String[] enclosed = file.getName().replace(".scrc", "").split("\\$");
         this.previewClass = new PreviewClass(enclosed[enclosed.length-1].replace(".scr", ""), isInterface());
-        //TODO fix call before constructor end
+        //TODO fix call before constructors end
     }
 
     protected abstract boolean isInterface();

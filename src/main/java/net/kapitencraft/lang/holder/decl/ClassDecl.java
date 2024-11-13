@@ -113,7 +113,7 @@ public record ClassDecl(
             if (field.isStatic()) staticFields.put(field.name().lexeme(), field.type());
             else {
                 fields.put(field.name().lexeme(), field.type());
-                if (field.isFinal() && field.body() == null) //add non-defaulted final fields to extra list to check constructor init
+                if (field.isFinal() && field.body() == null) //add non-defaulted final fields to extra list to check constructors init
                     finalFields.add(field.name().lexeme());
             }
         }
@@ -141,7 +141,7 @@ public record ClassDecl(
             }
         }
 
-        //constructor
+        //constructors
         ConstructorContainer.Builder constructorBuilder = new ConstructorContainer.Builder(finalFields, this.name());
         for (SkeletonParser.MethodDecl constructor : this.constructors()) {
             constructorBuilder.addMethod(

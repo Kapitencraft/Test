@@ -225,7 +225,7 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     @Override
     public JsonElement visitConstructorExpr(Expr.Constructor expr) {
         JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "constructor");
+        object.addProperty("TYPE", "constructors");
         object.addProperty("target", expr.target.absoluteName());
         object.add("args", saveArgs(expr.params));
         object.add("keyword", expr.keyword.toJson());

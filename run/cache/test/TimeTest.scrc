@@ -213,7 +213,7 @@
       }
     ]
   },
-  "constructor": [],
+  "constructors": [],
   "fields": {},
   "staticFields": {},
   "flags": []

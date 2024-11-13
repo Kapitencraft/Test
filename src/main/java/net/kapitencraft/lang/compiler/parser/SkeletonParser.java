@@ -83,7 +83,7 @@ public class SkeletonParser extends AbstractParser {
             if (readClass(enclosed::add, enclosedId, modifiers)) {
                 if (Objects.equals(peek().lexeme(), name.lexeme())) {
                     Token constName = consume(IDENTIFIER, "that shouldn't have happened... (expected class name to be identifier)");
-                    consumeBracketOpen("constructor");
+                    consumeBracketOpen("constructors");
                     MethodDecl decl = funcDecl(parser, VarTypeManager.VOID, constName, false, false, false);
                     constructors.add(decl);
                 } else {
@@ -181,16 +181,20 @@ public class SkeletonParser extends AbstractParser {
         consumeCurlyOpen("enum");
 
         List<EnumConstDecl> enumConstants = new ArrayList<>();
-        int ordinal = 0;
 
-        while (!check(EOA, C_BRACKET_C)) {
-            Token constName = consumeIdentifier();
-            Token[] args;
-            if (match(BRACKET_O)) {
-                args = getEnumConstCode();
-            } else args = new Token[0];
-            enumConstants.add(new EnumConstDecl(constName, ordinal++, args));
+        if (!check(C_BRACKET_C, EOA)) {
+            int ordinal = 0;
+            do {
+                Token constName = consumeIdentifier();
+                Token[] args;
+                if (match(BRACKET_O)) {
+                    args = getEnumConstCode();
+                } else args = new Token[0];
+                enumConstants.add(new EnumConstDecl(constName, ordinal++, args));
+            } while (match(COMMA));
         }
+
+        if (!check(C_BRACKET_C)) consumeEndOfArg();
 
         List<ClassConstructor<?>> enclosed = new ArrayList<>();
         List<MethodDecl> constructors = new ArrayList<>();
@@ -204,7 +208,7 @@ public class SkeletonParser extends AbstractParser {
             if (readClass(enclosed::add, enclosedId, modifiers)) {
                 if (Objects.equals(peek().lexeme(), name.lexeme())) {
                     Token constName = consume(IDENTIFIER, "that shouldn't have happened... (expected class name to be identifier)");
-                    consumeBracketOpen("constructor");
+                    consumeBracketOpen("constructors");
                     MethodDecl decl = funcDecl(parser, VarTypeManager.VOID, constName, false, false, false);
                     constructors.add(decl);
                 } else {
@@ -380,10 +384,14 @@ public class SkeletonParser extends AbstractParser {
     }
 
     private Token[] getEnumConstCode() {
-        return getScopedCode(BRACKET_C, BRACKET_O);
+        return getScopedCode(BRACKET_O, BRACKET_C);
     }
 
     private Token[] getScopedCode(TokenType increase, TokenType decrease) {
+        if (peek().type() == decrease) {
+            advance();
+            return new Token[0];
+        }
         List<Token> tokens = new ArrayList<>();
         int i = 1;
         tokens.add(peek());
