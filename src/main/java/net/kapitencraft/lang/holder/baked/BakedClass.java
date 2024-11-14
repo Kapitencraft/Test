@@ -69,7 +69,8 @@ public record BakedClass(
         GeneratedClass loxClass = new GeneratedClass(
                 DataMethodContainer.bakeBuilders(methods), DataMethodContainer.bakeBuilders(staticMethods),
                 container,
-                fields, Compiler.ClassBuilder.generateFields(this.staticFields()),
+                fields,
+                Compiler.ClassBuilder.generateFields(this.staticFields()),
                 enclosed.build(),
                 this.superclass(),
                 this.interfaces(),

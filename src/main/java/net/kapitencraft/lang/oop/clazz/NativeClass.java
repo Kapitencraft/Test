@@ -8,7 +8,6 @@ import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 
-import javax.xml.crypto.Data;
 import java.util.List;
 import java.util.Map;
 
