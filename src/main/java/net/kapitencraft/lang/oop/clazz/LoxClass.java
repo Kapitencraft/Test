@@ -28,6 +28,14 @@ public interface LoxClass {
         return getStaticField(name);
     }
 
+    default void clInit() {
+        this.staticFields().forEach((s, loxField) -> {
+            assignStaticField(s, loxField.initialize(null, Interpreter.INSTANCE));
+        });
+    }
+
+    Map<String, ? extends LoxField> staticFields();
+
     default Object staticSpecialAssign(String name, Token assignType) {
         Object val = getStaticField(name);
         if (val instanceof Integer) {
@@ -59,7 +67,9 @@ public interface LoxClass {
         return superclass().getFieldType(name);
     }
 
-    LoxClass getStaticFieldType(String name);
+    default LoxClass getStaticFieldType(String name) {
+        return staticFields().get(name).getType();
+    }
 
     default boolean hasField(String name) {
         return superclass().hasField(name);
@@ -111,8 +121,8 @@ public interface LoxClass {
 
     default boolean isParentOf(LoxClass suspectedChild) {
         if (suspectedChild instanceof PreviewClass previewClass) suspectedChild = previewClass.getTarget();
-        if (suspectedChild.is(this) || suspectedChild == VarTypeManager.OBJECT) return true;
-        while (suspectedChild != null && suspectedChild != VarTypeManager.OBJECT  && !suspectedChild.is(this)) {
+        if (suspectedChild.is(this) || !suspectedChild.isInterface() && VarTypeManager.OBJECT.get().is(this)) return true;
+        while (suspectedChild != null && suspectedChild != VarTypeManager.OBJECT.get()  && !suspectedChild.is(this)) {
             suspectedChild = suspectedChild.superclass();
         }
         return suspectedChild != null && suspectedChild.is(this);

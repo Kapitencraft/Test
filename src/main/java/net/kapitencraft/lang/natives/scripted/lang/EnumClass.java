@@ -19,7 +19,7 @@ public class EnumClass extends NativeClass {
                     return environment.getVar(Token.createNative("ordinal"));
                 }
             }),
-            "name", DataMethodContainer.of(new NativeMethodImpl(List.of(), VarTypeManager.STRING, false, false) {
+            "name", DataMethodContainer.of(new NativeMethodImpl(List.of(), VarTypeManager.STRING.get(), false, false) {
                 @Override
                 public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                     return environment.getVar(Token.createNative("name"));

@@ -44,7 +44,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     public void runMainMethod(LoxClass target, String data) {
         if (!target.hasStaticMethod("main")) return;
-        Optional.ofNullable(target.getStaticMethod("main", List.of(VarTypeManager.STRING)))
+        Optional.ofNullable(target.getStaticMethod("main", List.of(VarTypeManager.STRING.get())))
                 .ifPresentOrElse(method -> {
                     this.pushCall(target.absoluteName(), "main", target.name());
                     try {

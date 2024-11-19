@@ -21,7 +21,7 @@ public class NativeClass extends NativeUtilClass {
         super(staticMethods, staticFields, name, pck);
         this.methods = new MethodMap(methods);
         this.constructor = constructor;
-        this.superclass = superclass == null && this.getClass() != ObjectClass.class ? VarTypeManager.OBJECT : superclass;
+        this.superclass = superclass == null && this.getClass() != ObjectClass.class ? VarTypeManager.OBJECT.get() : superclass;
         this.isAbstract = isAbstract;
         this.isFinal = isFinal;
         this.isInterface = isInterface;
@@ -64,7 +64,7 @@ public class NativeClass extends NativeUtilClass {
 
     @Override
     public boolean hasMethod(String name) {
-        return methods.has(name);
+        return methods.has(name) || superclass != null && super.hasMethod(name);
     }
 
     @Override

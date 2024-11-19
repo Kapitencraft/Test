@@ -8,6 +8,7 @@ import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.field.GeneratedField;
+import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
@@ -63,6 +64,11 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
                 name,
                 pck
         );
+    }
+
+    @Override
+    public Map<String, ? extends LoxField> staticFields() {
+        return allStaticFields;
     }
 
     @Override

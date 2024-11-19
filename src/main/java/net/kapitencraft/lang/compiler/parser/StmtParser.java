@@ -104,7 +104,7 @@ public class StmtParser extends ExprParser {
             varAnalyser.push();
             Token name = consumeIdentifier();
             consumeBracketClose("catch");
-            createVar(name, VarTypeManager.THROWABLE, true, false);
+            createVar(name, VarTypeManager.THROWABLE.get(), true, false);
             consumeCurlyOpen("catch statement");
             Stmt.Block block = new Stmt.Block(block("catch statement"));
             varAnalyser.pop();
@@ -126,9 +126,11 @@ public class StmtParser extends ExprParser {
 
     private Stmt thrStatement() {
         Token keyword = previous();
+        expectType(VarTypeManager.THROWABLE.get());
         Expr val = expression();
-        expectType(val, VarTypeManager.THROWABLE);
+        expectType(val, VarTypeManager.THROWABLE.get());
         consumeEndOfArg();
+        popExpectation();
         return new Stmt.Throw(keyword, val);
     }
 
@@ -250,6 +252,7 @@ public class StmtParser extends ExprParser {
     }
 
     public List<Stmt> parse() {
+        if (tokens.length == 0) return List.of();
         List<Stmt> stmts = new ArrayList<>();
         while (!isAtEnd()) stmts.add(statement());
         return stmts;

@@ -80,7 +80,6 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         object.add("callee", cache(expr.callee));
         object.add("name", expr.name.toJson());
         object.addProperty("ordinal", expr.methodOrdinal);
-        object.add("bracket", expr.bracket.toJson());
         object.add("args", saveArgs(expr.args));
         return object;
     }

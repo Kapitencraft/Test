@@ -35,7 +35,7 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
         LoxClass left = findRetType(expr.left);
         LoxClass right = findRetType(expr.right);
         TokenType type = expr.operator.type();
-        if (type == TokenType.ADD && (left == VarTypeManager.STRING || right == VarTypeManager.STRING)) return VarTypeManager.STRING; //check if at least one of the values is string
+        if (type == TokenType.ADD && (left == VarTypeManager.STRING || right == VarTypeManager.STRING)) return VarTypeManager.STRING.get(); //check if at least one of the values is string
         if (type.isCategory(COMPARATORS) || type.isCategory(EQUALITY)) return VarTypeManager.BOOLEAN;
         return left;
     }

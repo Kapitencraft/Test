@@ -20,7 +20,7 @@ import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 @SuppressWarnings({"ThrowableNotThrown", "UnusedReturnValue"})
 public class AbstractParser {
-    private final Map<TokenTypeCategory, TokenType[]> categoryLookup = createCategoryLookup();
+    private static final Map<TokenTypeCategory, TokenType[]> categoryLookup = createCategoryLookup();
 
     private static Map<TokenTypeCategory, TokenType[]> createCategoryLookup() {
         Map<TokenTypeCategory, TokenType[]> lookup = new HashMap<>();
@@ -59,6 +59,10 @@ public class AbstractParser {
         args.push(List.of(types));
     }
 
+    protected void popExpectation() {
+        args.pop();
+    }
+
     protected boolean typeAllowed(LoxClass target) {
         return searched().contains(target);
     }
@@ -89,7 +93,7 @@ public class AbstractParser {
     }
 
     protected LoxClass expectType(Token errorLoc, LoxClass gotten, LoxClass expected) {
-        if (expected == VarTypeManager.OBJECT) return gotten;
+        if (expected == VarTypeManager.OBJECT.get()) return gotten;
         if (expected == VarTypeManager.NUMBER && (gotten == VarTypeManager.INTEGER || gotten == VarTypeManager.FLOAT || gotten == VarTypeManager.DOUBLE)) return gotten;
         if (!expected.isParentOf(gotten)) error(errorLoc, "incompatible types: " + gotten.name() + " cannot be converted to " + expected.name());
         return expected;

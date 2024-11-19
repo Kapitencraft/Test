@@ -75,6 +75,12 @@ public class PreviewClass implements LoxClass {
     }
 
     @Override
+    public Map<String, ? extends LoxField> staticFields() {
+        assertApplied();
+        return target.staticFields();
+    }
+
+    @Override
     public String name() {
         return name;
     }

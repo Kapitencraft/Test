@@ -1,9 +1,8 @@
 package net.kapitencraft.lang.natives.scripted.lang;
 
-import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.NativeClass;
-import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.run.VarTypeManager;
 
 import java.util.Map;
 
@@ -12,7 +11,7 @@ public class StringClass extends NativeClass {
 
     );
 
-    public StringClass(Map<String, DataMethodContainer> staticMethods, Map<String, NativeField> staticFields, Map<String, DataMethodContainer> methods, DataMethodContainer constructor, LoxClass superclass, boolean isAbstract, boolean isFinal, boolean isInterface) {
-        super("String", "scripted.lang", staticMethods, staticFields, methods, constructor, superclass, isAbstract, isFinal, isInterface);
+    public StringClass() {
+        super("String", "scripted.lang", Map.of(), Map.of(), METHODS, DataMethodContainer.of(), VarTypeManager.OBJECT.get(), false, false, false);
     }
 }

@@ -5,13 +5,7 @@ import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 public class MissingVarExceptionClass extends ThrowableClass {
 
-    @Override
-    public String name() {
-        return "MissingVarException";
-    }
-
-    @Override
-    public LoxClass superclass() {
-        return VarTypeManager.THROWABLE;
+    public MissingVarExceptionClass() {
+        super("MissingVarException", "scripted.lang", VarTypeManager.THROWABLE.get());
     }
 }

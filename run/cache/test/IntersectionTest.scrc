@@ -34,10 +34,7 @@
                   "value": {
                     "type": "STR",
                     "lexeme": "\"e\"",
-                    "literal": {
-                      "type": "String",
-                      "value": "e"
-                    },
+                    "literal": {},
                     "line": 8,
                     "lineStartIndex": 26
                   }
@@ -47,10 +44,7 @@
                   "value": {
                     "type": "STR",
                     "lexeme": "\"a\"",
-                    "literal": {
-                      "type": "String",
-                      "value": "a"
-                    },
+                    "literal": {},
                     "line": 8,
                     "lineStartIndex": 31
                   }
@@ -89,13 +83,6 @@
                 "lineStartIndex": 12
               },
               "ordinal": 1,
-              "bracket": {
-                "type": "BRACKET_C",
-                "lexeme": ")",
-                "literal": {},
-                "line": 9,
-                "lineStartIndex": 18
-              },
               "args": [
                 {
                   "TYPE": "literal",
@@ -135,23 +122,13 @@
                 "lineStartIndex": 12
               },
               "ordinal": 0,
-              "bracket": {
-                "type": "BRACKET_C",
-                "lexeme": ")",
-                "literal": {},
-                "line": 10,
-                "lineStartIndex": 25
-              },
               "args": [
                 {
                   "TYPE": "literal",
                   "value": {
                     "type": "STR",
                     "lexeme": "\"Hello!\"",
-                    "literal": {
-                      "type": "String",
-                      "value": "Hello!"
-                    },
+                    "literal": {},
                     "line": 10,
                     "lineStartIndex": 17
                   }

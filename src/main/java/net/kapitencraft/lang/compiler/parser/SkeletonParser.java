@@ -58,7 +58,7 @@ public class SkeletonParser extends AbstractParser {
         if (target == null) target = new PreviewClass(name.lexeme(), false);
 
         parser.addClass(target, null);
-        LoxClass superClass = VarTypeManager.OBJECT;
+        LoxClass superClass = VarTypeManager.OBJECT.get();
         if (match(EXTENDS)) superClass = consumeVarType(parser);
 
         List<LoxClass> implemented = new ArrayList<>();
@@ -170,6 +170,8 @@ public class SkeletonParser extends AbstractParser {
 
         if (target == null) target = new PreviewClass(name.lexeme(), false);
 
+        parser.addClass(target, null);
+
         List<LoxClass> interfaces = new ArrayList<>();
 
         if (match(IMPLEMENTS)) {
@@ -189,6 +191,7 @@ public class SkeletonParser extends AbstractParser {
                 Token[] args;
                 if (match(BRACKET_O)) {
                     args = getEnumConstCode();
+                    consumeBracketClose("enum constant");
                 } else args = new Token[0];
                 enumConstants.add(new EnumConstDecl(constName, ordinal++, args));
             } while (match(COMMA));
@@ -388,10 +391,7 @@ public class SkeletonParser extends AbstractParser {
     }
 
     private Token[] getScopedCode(TokenType increase, TokenType decrease) {
-        if (peek().type() == decrease) {
-            advance();
-            return new Token[0];
-        }
+        if (peek().type() == decrease) return new Token[0];
         List<Token> tokens = new ArrayList<>();
         int i = 1;
         tokens.add(peek());

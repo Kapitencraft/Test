@@ -5,6 +5,7 @@ import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.*;
+import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
@@ -23,10 +24,11 @@ public record BakedEnum(
         Pair<Token, GeneratedCallable>[] constructors,
         Pair<Token, GeneratedCallable>[] methods,
         Pair<Token, GeneratedCallable>[] staticMethods,
-        Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields,
         LoxClass[] interfaces,
+        Map<String, GeneratedField> constants,
+        Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields,
         Token name, String pck, Compiler.ClassBuilder[] enclosed
-) implements Compiler.ClassBuilder {
+        ) implements Compiler.ClassBuilder {
 
     @Override
     public CacheableClass build() {
@@ -64,24 +66,22 @@ public record BakedEnum(
             container.addMethod(logger, method.right(), method.left());
         }
 
-
-
         return new GeneratedEnum(
                 DataMethodContainer.bakeBuilders(methods),
                 DataMethodContainer.bakeBuilders(staticMethods),
                 container,
+                constants(),
                 fields,
                 Compiler.ClassBuilder.generateFields(this.staticFields()),
                 enclosed.build(),
                 interfaces(),
                 name().lexeme(),
-                pck()
-        );
+                pck());
     }
 
     @Override
     public LoxClass superclass() {
-        return VarTypeManager.ENUM;
+        return VarTypeManager.ENUM.get();
     }
 }
 

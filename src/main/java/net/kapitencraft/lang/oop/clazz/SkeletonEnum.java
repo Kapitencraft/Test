@@ -3,27 +3,29 @@ package net.kapitencraft.lang.oop.clazz;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.MethodMap;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.method.SkeletonMethod;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Util;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class SkeletonClass implements LoxClass {
+public class SkeletonEnum implements LoxClass {
     private final String name;
     private final String pck;
 
-    private final LoxClass superclass;
     private final Map<String, SkeletonField> fields;
     private final Map<String, SkeletonField> staticFields;
 
@@ -33,47 +35,37 @@ public class SkeletonClass implements LoxClass {
     private final Map<String, DataMethodContainer> staticMethods;
     private final ConstructorContainer constructor;
 
-    private final boolean isAbstract, isFinal;
-
-    public SkeletonClass(String name, String pck, LoxClass superclass,
+    public SkeletonEnum(String name, String pck,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, PreviewClass> enclosed,
-                         Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor,
-                         boolean isAbstract, boolean isFinal) {
+                         Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor) {
         this.name = name;
         this.pck = pck;
-        this.superclass = superclass;
         this.staticFields = staticFields;
         this.fields = fields;
         this.enclosed = enclosed;
         this.methods = new MethodMap(methods);
         this.staticMethods = staticMethods;
         this.constructor = constructor.build(this);
-        this.isAbstract = isAbstract;
-        this.isFinal = isFinal;
     }
 
-    public SkeletonClass(String name, String pck, LoxClass superclass,
+    public SkeletonEnum(String name, String pck,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, PreviewClass> enclosed,
-                         Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer constructor,
-                         boolean isAbstract, boolean isFinal) {
+                         Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
+                        ConstructorContainer constructor) {
         this.name = name;
         this.pck = pck;
-        this.superclass = superclass;
         this.staticFields = staticFields;
         this.fields = fields;
         this.enclosed = enclosed;
         this.methods = new MethodMap(methods);
         this.staticMethods = staticMethods;
         this.constructor = constructor;
-        this.isAbstract = isAbstract;
-        this.isFinal = isFinal;
     }
 
-    public static SkeletonClass fromCache(JsonObject data, String pck, PreviewClass[] enclosed) {
+    public static SkeletonEnum fromCache(JsonObject data, String pck, PreviewClass[] enclosed) {
         String name = GsonHelper.getAsString(data, "name");
-        LoxClass superclass = VarTypeManager.getClassForName(GsonHelper.getAsString(data, "superclass"));
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
         ImmutableMap<String, DataMethodContainer> staticMethods = SkeletonMethod.readFromCache(data, "staticMethods");
@@ -102,14 +94,11 @@ public class SkeletonClass implements LoxClass {
             });
         }
 
-        List<String> flags = ClassLoader.readFlags(data);
-
-        return new SkeletonClass(name, pck, superclass,
+        return new SkeletonEnum(name, pck,
                 staticFields.build(), fields.build(),
                 Arrays.stream(enclosed).collect(Collectors.toMap(LoxClass::name, Function.identity())),
                 methods, staticMethods,
-                constructorContainer,
-                flags.contains("isAbstract"), flags.contains("isFinal")
+                constructorContainer
         );
     }
 
@@ -145,12 +134,12 @@ public class SkeletonClass implements LoxClass {
 
     @Override
     public LoxClass getFieldType(String name) {
-        return Optional.ofNullable(this.fields.get(name)).map(SkeletonField::getType).orElseGet(() -> superclass.getFieldType(name));
+        return Util.nonNullElse(fields.get(name).getType(), LoxClass.super.getFieldType(name));
     }
 
     @Override
     public LoxClass superclass() {
-        return superclass;
+        return VarTypeManager.ENUM.get();
     }
 
     @Override
@@ -165,12 +154,12 @@ public class SkeletonClass implements LoxClass {
 
     @Override
     public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return staticMethods.get(name).getMethodByOrdinal(ordinal);
+        return Optional.ofNullable(staticMethods.get(name)).map(c -> c.getMethodByOrdinal(ordinal)).orElse(null);
     }
 
     @Override
     public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
-        return staticMethods.get(name).getMethodOrdinal(args);
+        return Optional.ofNullable(staticMethods.get(name)).map(c -> c.getMethodOrdinal(args)).orElse(-1);
     }
 
     @Override
@@ -185,12 +174,12 @@ public class SkeletonClass implements LoxClass {
 
     @Override
     public boolean isAbstract() {
-        return isAbstract;
+        return false;
     }
 
     @Override
     public boolean isFinal() {
-        return isFinal;
+        return true;
     }
 
     @Override
@@ -209,11 +198,6 @@ public class SkeletonClass implements LoxClass {
     }
 
     @Override
-    public boolean hasMethod(String name) {
-        return methods.has(name) || LoxClass.super.hasMethod(name);
-    }
-
-    @Override
     public boolean hasEnclosing(String name) {
         return enclosed.containsKey(name);
     }
@@ -227,4 +211,5 @@ public class SkeletonClass implements LoxClass {
     public MethodMap getMethods() {
         return methods;
     }
+
 }

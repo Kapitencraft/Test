@@ -26,7 +26,7 @@
                 "line": 9,
                 "lineStartIndex": 15
               },
-              "ordinal": -1,
+              "ordinal": 0,
               "args": [
                 {
                   "TYPE": "varRef",
@@ -65,7 +65,7 @@
                 "line": 13,
                 "lineStartIndex": 15
               },
-              "ordinal": -1,
+              "ordinal": 0,
               "args": [
                 {
                   "TYPE": "binary",
@@ -138,10 +138,7 @@
                   "value": {
                     "type": "STR",
                     "lexeme": "\"e\"",
-                    "literal": {
-                      "type": "String",
-                      "value": "e"
-                    },
+                    "literal": {},
                     "line": 17,
                     "lineStartIndex": 59
                   }
@@ -151,10 +148,7 @@
                   "value": {
                     "type": "STR",
                     "lexeme": "\"l\"",
-                    "literal": {
-                      "type": "String",
-                      "value": "l"
-                    },
+                    "literal": {},
                     "line": 17,
                     "lineStartIndex": 64
                   }
@@ -193,13 +187,6 @@
                 "lineStartIndex": 13
               },
               "ordinal": 1,
-              "bracket": {
-                "type": "BRACKET_C",
-                "lexeme": ")",
-                "literal": {},
-                "line": 18,
-                "lineStartIndex": 19
-              },
               "args": [
                 {
                   "TYPE": "literal",
@@ -239,23 +226,13 @@
                 "lineStartIndex": 13
               },
               "ordinal": 0,
-              "bracket": {
-                "type": "BRACKET_C",
-                "lexeme": ")",
-                "literal": {},
-                "line": 19,
-                "lineStartIndex": 26
-              },
               "args": [
                 {
                   "TYPE": "literal",
                   "value": {
                     "type": "STR",
                     "lexeme": "\"Hello!\"",
-                    "literal": {
-                      "type": "String",
-                      "value": "Hello!"
-                    },
+                    "literal": {},
                     "line": 19,
                     "lineStartIndex": 18
                   }
@@ -294,7 +271,7 @@
               "line": 5,
               "lineStartIndex": 15
             },
-            "ordinal": -1,
+            "ordinal": 0,
             "args": [
               {
                 "TYPE": "binary",

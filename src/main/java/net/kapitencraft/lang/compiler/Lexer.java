@@ -239,7 +239,7 @@ public class Lexer {
 
         // Trim the surrounding quotes.
         String value = source.substring(start + 1, current - 1);
-        addToken(STR, value, VarTypeManager.STRING);
+        addToken(STR, value, VarTypeManager.STRING.get());
     }
 
     private void error(String msg) {

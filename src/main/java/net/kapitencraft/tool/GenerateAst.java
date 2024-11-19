@@ -16,7 +16,7 @@ public class GenerateAst {
                 "SpecialAssign : Token name; Token assignType",
                 "Binary        : Expr left; Token operator; Expr right",
                 "When          : Expr condition; Expr ifTrue; Expr ifFalse",
-                "InstCall      : Expr callee; Token name; int methodOrdinal; Token bracket; List<Expr> args",
+                "InstCall      : Expr callee; Token name; int methodOrdinal; List<Expr> args",
                 "StaticCall    : LoxClass target; Token name; int methodOrdinal; List<Expr> args",
                 "Get           : Expr object; Token name",
                 "StaticGet     : LoxClass target; Token name",

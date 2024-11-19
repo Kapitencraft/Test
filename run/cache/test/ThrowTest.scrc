@@ -61,17 +61,14 @@
               },
               "value": {
                 "TYPE": "constructors",
-                "target": "scripted.lang.ArithmeticException",
+                "target": "scripted.lang..ArithmeticException",
                 "args": [
                   {
                     "TYPE": "literal",
                     "value": {
                       "type": "STR",
                       "lexeme": "\"EEE\"",
-                      "literal": {
-                        "type": "String",
-                        "value": "EEE"
-                      },
+                      "literal": {},
                       "line": 5,
                       "lineStartIndex": 50
                     }
@@ -208,7 +205,7 @@
               {
                 "initData": {
                   "classes": [
-                    "scripted.lang.ArithmeticException"
+                    "scripted.lang..ArithmeticException"
                   ],
                   "name": {
                     "type": "IDENTIFIER",
@@ -233,7 +230,7 @@
                           "line": 13,
                           "lineStartIndex": 19
                         },
-                        "ordinal": -1,
+                        "ordinal": 0,
                         "args": [
                           {
                             "TYPE": "binary",
@@ -242,10 +239,7 @@
                               "value": {
                                 "type": "STR",
                                 "lexeme": "\"Error: \"",
-                                "literal": {
-                                  "type": "String",
-                                  "value": "Error: "
-                                },
+                                "literal": {},
                                 "line": 13,
                                 "lineStartIndex": 25
                               }

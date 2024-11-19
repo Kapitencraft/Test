@@ -4,6 +4,7 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.field.LoxField;
+import net.kapitencraft.lang.run.VarTypeManager;
 
 import java.util.List;
 import java.util.Map;
@@ -13,14 +14,15 @@ public class PrimitiveClass implements LoxClass {
     private final LoxClass superclass;
     private final Object defaultValue;
 
-    public PrimitiveClass(LoxClass superclass, String name, Object defaultValue) {
+    public PrimitiveClass(LoxClass superclass, String name, Object defaultValue, Class<?> target) {
         this.name = name;
         this.superclass = superclass;
         this.defaultValue = defaultValue;
+        VarTypeManager.getOrCreatePackage("scripted.lang").addClass(name, this);
     }
 
-    public PrimitiveClass(String name, Object defaultValue) {
-        this(null, name, defaultValue);
+    public PrimitiveClass(String name, Object defaultValue, Class<?> target) {
+        this(null, name, defaultValue, target);
     }
 
     @Override
@@ -31,6 +33,11 @@ public class PrimitiveClass implements LoxClass {
     @Override
     public Object assignStaticField(String name, Object val) {
         return null;
+    }
+
+    @Override
+    public Map<String, ? extends LoxField> staticFields() {
+        return Map.of();
     }
 
     @Override

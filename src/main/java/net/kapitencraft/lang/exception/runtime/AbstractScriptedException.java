@@ -5,6 +5,7 @@ import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.Interpreter;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * base RuntimeException for Scripted mod; caught
@@ -16,7 +17,7 @@ public class AbstractScriptedException extends RuntimeException {
         this.exceptionType = exceptionType;
     }
 
-    public static AbstractScriptedException createException(LoxClass clazz, String msg) {
-        return new AbstractScriptedException(clazz.createNativeInst(List.of(msg), 0, Interpreter.INSTANCE));
+    public static AbstractScriptedException createException(Supplier<LoxClass> clazz, String msg) {
+        return new AbstractScriptedException(clazz.get().createNativeInst(List.of(msg), 0, Interpreter.INSTANCE));
     }
 }

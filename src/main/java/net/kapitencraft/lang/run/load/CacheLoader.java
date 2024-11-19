@@ -105,9 +105,8 @@ public class CacheLoader {
         Expr callee = readSubExpr(object, "callee");
         Token name = Token.readFromSubObject(object, "name");
         int ordinal = GsonHelper.getAsInt(object, "ordinal");
-        Token bracket = Token.readFromSubObject(object, "bracket");
         List<Expr> args = readArgs(object, "args");
-        return new Expr.InstCall(callee, name, ordinal, bracket, args);
+        return new Expr.InstCall(callee, name, ordinal, args);
     }
 
     private static Expr readGet(JsonObject object) {

@@ -13,6 +13,7 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.clazz.SkeletonInterface;
+import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -69,9 +70,9 @@ public record InterfaceDecl(VarTypeParser parser, Compiler.ErrorLogger logger, P
     public LoxClass createSkeleton() {
 
         //fields
-        ImmutableMap.Builder<String, LoxClass> staticFields = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
         for (SkeletonParser.FieldDecl field : this.fields()) {
-            if (field.isStatic()) staticFields.put(field.name().lexeme(), field.type());
+            if (field.isStatic()) staticFields.put(field.name().lexeme(), new SkeletonField(field.type(), field.isFinal()));
             else {
                 logger.error(field.name(), "fields inside Interfaces must always be static");
             }
@@ -102,7 +103,7 @@ public record InterfaceDecl(VarTypeParser parser, Compiler.ErrorLogger logger, P
 
         return new SkeletonInterface(
                 this.name().lexeme(),
-                this.pck(), null,
+                this.pck(),
                 this.parentInterfaces(),
                 staticFields.build(),
                 enclosed.build(),

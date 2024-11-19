@@ -1,7 +1,10 @@
 package net.kapitencraft.lang.natives.scripted.lang;
 
 import net.kapitencraft.lang.func.NativeMethodImpl;
+import net.kapitencraft.lang.oop.clazz.NativeClass;
+import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -15,15 +18,38 @@ import net.kapitencraft.lang.run.Interpreter;
 import java.util.List;
 import java.util.Map;
 
-public class ThrowableClass implements LoxClass {
-    @Override
-    public Object getStaticField(String name) {
-        return null;
-    }
+public class ThrowableClass extends NativeClass {
 
-    @Override
-    public Object assignStaticField(String name, Object val) {
-        return null;
+    public ThrowableClass(String name, String pck, LoxClass superclass) {
+        super(name, pck, Map.of(), Map.of(), Map.of(), ConstructorContainer.fromCache(List.of(
+                new NativeMethodImpl(List.of(VarTypeManager.STRING.get()), VarTypeManager.VOID, false, false) {
+                    @Override
+                    public LoxClass type() {
+                        return VarTypeManager.VOID;
+                    }
+
+                    @Override
+                    public List<? extends LoxClass> argTypes() {
+                        return List.of(VarTypeManager.STRING.get());
+                    }
+
+                    @Override
+                    public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+                        ((ClassInstance) environment.getThis()).assignField("message", arguments.get(0));
+                        return null;
+                    }
+
+                    @Override
+                    public boolean isAbstract() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean isFinal() {
+                        return false;
+                    }
+                }
+        ), VarTypeManager.THROWABLE.get()), superclass, false, false, false);
     }
 
     @Override
@@ -38,7 +64,7 @@ public class ThrowableClass implements LoxClass {
 
     @Override
     public LoxClass superclass() {
-        return VarTypeManager.OBJECT;
+        return VarTypeManager.OBJECT.get();
     }
 
     @Override
@@ -53,7 +79,7 @@ public class ThrowableClass implements LoxClass {
 
                     @Override
                     public LoxClass getType() {
-                        return VarTypeManager.STRING;
+                        return VarTypeManager.STRING.get();
                     }
 
                     @Override
@@ -66,7 +92,7 @@ public class ThrowableClass implements LoxClass {
 
     @Override
     public LoxClass getFieldType(String name) {
-        return "message".equals(name) ? VarTypeManager.STRING : null;
+        return "message".equals(name) ? VarTypeManager.STRING.get() : null;
     }
 
     @Override
@@ -97,39 +123,6 @@ public class ThrowableClass implements LoxClass {
     @Override
     public boolean hasStaticMethod(String name) {
         return false;
-    }
-
-    @Override
-    public MethodContainer getConstructor() {
-        return ConstructorContainer.fromCache(List.of(
-                new NativeMethodImpl(List.of(VarTypeManager.STRING), VarTypeManager.VOID, false, false) {
-                    @Override
-                    public LoxClass type() {
-                        return VarTypeManager.VOID;
-                    }
-
-                    @Override
-                    public List<? extends LoxClass> argTypes() {
-                        return List.of(VarTypeManager.STRING);
-                    }
-
-                    @Override
-                    public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                        ((ClassInstance) environment.getThis()).assignField("message", arguments.get(0));
-                        return null;
-                    }
-
-                    @Override
-                    public boolean isAbstract() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean isFinal() {
-                        return false;
-                    }
-                }
-        ), this);
     }
 
     @Override

@@ -15,6 +15,22 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
 }
 
+tasks.register('classLoader', JavaExec) {
+    mainClass = 'net.kapitencraft.lang.run.load.ClassLoader'
+
+    classpath = sourceSets.main.runtimeClasspath
+
+    args = []
+}
+
+tasks.register('compile', JavaExec) {
+    mainClass = 'net.kapitencraft.lang.compiler.Compiler'
+
+    classpath = sourceSets.main.runtimeClasspath
+
+    args = []
+}
+
 tasks.test {
     useJUnitPlatform()
 }

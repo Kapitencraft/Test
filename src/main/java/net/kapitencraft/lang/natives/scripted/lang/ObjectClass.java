@@ -16,14 +16,14 @@ import java.util.Map;
 public class ObjectClass extends NativeClass {
     private static final Map<String, DataMethodContainer> METHODS = Map.of(
             "toString", DataMethodContainer.of(
-                    new NativeMethodImpl(List.of(), VarTypeManager.STRING, false, false) {
+                    new NativeMethodImpl(List.of(), VarTypeManager.STRING.get(), false, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                             return ((ClassInstance) environment.getThis()).getType().name();
                         }
             }),
             "equals", DataMethodContainer.of(
-                    new NativeMethodImpl(List.of(VarTypeManager.OBJECT), VarTypeManager.BOOLEAN, false, false) {
+                    new NativeMethodImpl(List.of(VarTypeManager.OBJECT.get()), VarTypeManager.BOOLEAN, false, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                             return environment.getThis() == arguments.get(0);

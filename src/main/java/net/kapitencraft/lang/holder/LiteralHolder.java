@@ -41,7 +41,7 @@ public record LiteralHolder(Object value, LoxClass type) {
             case "double" -> VarTypeManager.DOUBLE;
             case "bool" -> VarTypeManager.BOOLEAN;
             case "char" -> VarTypeManager.CHAR;
-            case "String" -> VarTypeManager.STRING;
+            case "String" -> VarTypeManager.STRING.get();
             default -> throw new IllegalArgumentException("unknown primitive type");
         };
         Object val;

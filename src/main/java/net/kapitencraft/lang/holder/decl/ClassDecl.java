@@ -14,6 +14,7 @@ import net.kapitencraft.lang.oop.clazz.GeneratedClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.clazz.SkeletonClass;
+import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
@@ -106,14 +107,15 @@ public record ClassDecl(
     public LoxClass createSkeleton() {
 
         //fields
-        ImmutableMap.Builder<String, LoxClass> fields = new ImmutableMap.Builder<>();
-        ImmutableMap.Builder<String, LoxClass> staticFields = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
         List<String> finalFields = new ArrayList<>();
         for (SkeletonParser.FieldDecl field : this.fields()) {
-            if (field.isStatic()) staticFields.put(field.name().lexeme(), field.type());
+            SkeletonField skeletonField = new SkeletonField(field.type(), field.isFinal());
+            if (field.isStatic()) staticFields.put(field.name().lexeme(), skeletonField);
             else {
-                fields.put(field.name().lexeme(), field.type());
-                if (field.isFinal() && field.body() == null) //add non-defaulted final fields to extra list to check constructors init
+                fields.put(field.name().lexeme(), skeletonField);
+                if (skeletonField.isFinal() && field.body() == null) //add non-defaulted final fields to extra list to check constructors init
                     finalFields.add(field.name().lexeme());
             }
         }

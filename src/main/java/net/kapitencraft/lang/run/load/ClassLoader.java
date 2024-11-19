@@ -38,6 +38,13 @@ public class ClassLoader {
                     interpreter.runMainMethod(target, data.substring(data.indexOf(' ') + 1));
                 }
             }
+            while (!scanner.hasNext()) {
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             line = scanner.nextLine();
         }
     }

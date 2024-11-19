@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.clazz;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
+import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.field.ReflectiveField;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.clazz.inst.ReflectiveClassInstance;
@@ -24,7 +25,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ReflectiveClass<T> implements LoxClass {
-    private final Map<String, Object> staticFieldData = new HashMap<>();
 
     private final Class<T> target;
     private final ReflectiveClass<? super T> superclass;
@@ -89,14 +89,8 @@ public class ReflectiveClass<T> implements LoxClass {
     }
 
     @Override
-    public Object getStaticField(String name) {
-        return staticFieldData.get(name);
-    }
-
-    @Override
-    public Object assignStaticField(String name, Object val) {
-        staticFieldData.put(name, val);
-        return getStaticField(name);
+    public Map<String, ? extends LoxField> staticFields() {
+        return staticFields;
     }
 
     @Override

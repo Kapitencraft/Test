@@ -1,7 +1,19 @@
 package test;
 
 enum EnumTest {
-    A(),
-    B(),
-    C;
+    A("a", 0),
+    B("b", 1),
+    C("c", 2);
+
+    final String id;
+    final int count;
+
+    EnumTest(String id, int count) {
+        this.id = id;
+        this.count = count;
+    }
+
+    static void main(String args) {
+        //EnumTest.values();
+    }
 }

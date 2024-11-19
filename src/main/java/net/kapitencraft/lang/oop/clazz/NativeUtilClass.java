@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -24,6 +25,11 @@ public class NativeUtilClass implements LoxClass {
     }
 
     @Override
+    public Map<String, ? extends LoxField> staticFields() {
+        return staticFields;
+    }
+
+    @Override
     public String name() {
         return name;
     }
@@ -40,7 +46,7 @@ public class NativeUtilClass implements LoxClass {
 
     @Override
     public LoxClass superclass() {
-        return VarTypeManager.OBJECT;
+        return VarTypeManager.OBJECT.get();
     }
 
     @Override

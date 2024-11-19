@@ -14,7 +14,7 @@ public class SystemClass extends NativeUtilClass {
     private static final Map<String, DataMethodContainer> METHODS = Map.of(
             "print",
             DataMethodContainer.of(
-                    new NativeMethodImpl(List.of(VarTypeManager.OBJECT), VarTypeManager.VOID, true, false) {
+                    new NativeMethodImpl(List.of(VarTypeManager.OBJECT.get()), VarTypeManager.VOID, true, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                             System.out.println(Interpreter.stringify(arguments.get(0)));
@@ -31,7 +31,7 @@ public class SystemClass extends NativeUtilClass {
                         }
                     }),
             "input", DataMethodContainer.of(
-                    new NativeMethodImpl(List.of(VarTypeManager.OBJECT), VarTypeManager.STRING, true, false) {
+                    new NativeMethodImpl(List.of(VarTypeManager.OBJECT.get()), VarTypeManager.STRING.get(), true, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                             System.out.print(Interpreter.stringify(arguments.get(0)));

@@ -14,7 +14,7 @@ import java.util.List;
 
 public class VMHolder extends ClassHolder {
     private final JsonObject data;
-    private final boolean isInterface;
+    private final String type;
 
     public VMHolder(File file, ClassHolder[] children) {
         super(file, children);
@@ -23,12 +23,12 @@ public class VMHolder extends ClassHolder {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-        this.isInterface = "interface".equals(GsonHelper.getAsString(data, "TYPE"));
+        this.type =GsonHelper.getAsString(data, "TYPE");
     }
 
     @Override
     protected boolean isInterface() {
-        return isInterface;
+        return "interface".equals(type);
     }
 
     @Override
@@ -40,6 +40,8 @@ public class VMHolder extends ClassHolder {
         PreviewClass[] enclosedClasses = enclosed.toArray(new PreviewClass[0]);
         if (isInterface())
             return SkeletonInterface.fromCache(data, pck(), enclosedClasses);
+        else if ("enum".equals(type))
+            return SkeletonEnum.fromCache(data, pck(), enclosedClasses);
         else
             return SkeletonClass.fromCache(data, pck(), enclosedClasses);
     }
@@ -50,6 +52,8 @@ public class VMHolder extends ClassHolder {
         LoxClass target;
         if (isInterface())
             target = GeneratedInterface.load(data, enclosed, pck());
+        else if ("enum".equals(type))
+            target = GeneratedEnum.load(data, enclosed, pck());
         else
             target = GeneratedClass.load(data, enclosed, pck());
 

@@ -245,6 +245,11 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
+    public Map<String, ? extends LoxField> staticFields() {
+        return allStaticFields;
+    }
+
+    @Override
     public String name() {
         return name;
     }

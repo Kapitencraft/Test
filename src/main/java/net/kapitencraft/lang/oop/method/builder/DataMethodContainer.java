@@ -75,7 +75,7 @@ public class DataMethodContainer implements MethodContainer {
 
     public int getMethodOrdinal(List<? extends LoxClass> types) {
         for (int i = 0; i < methods.length; i++) {
-            if (Util.matchArgs(methods[i].argTypes(), types)) return i;
+            if (Util.matchArgs(types, methods[i].argTypes())) return i;
         }
         return -1;
     }

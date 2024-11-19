@@ -101,14 +101,12 @@ public abstract class Expr {
         public final Expr callee;
         public final Token name;
         public final int methodOrdinal;
-        public final Token bracket;
         public final List<Expr> args;
 
-        public InstCall(Expr callee, Token name, int methodOrdinal, Token bracket, List<Expr> args) {
+        public InstCall(Expr callee, Token name, int methodOrdinal, List<Expr> args) {
             this.callee = callee;
             this.name = name;
             this.methodOrdinal = methodOrdinal;
-            this.bracket = bracket;
             this.args = args;
         }
 

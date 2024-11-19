@@ -26,31 +26,30 @@ public class VarTypeManager {
     private static final Map<Class<?>, LoxClass> classLookup = new HashMap<>();
     public static final ReflectiveLoader reflectiveLoader = new ReflectiveLoader();
 
-    public static final LoxClass OBJECT = registerMain(ObjectClass::new, "Object"); //TODO this reference crashes!
+    public static final LoxClass NUMBER = new PrimitiveClass("num" , null, Number.class);
+    public static final LoxClass INTEGER = new PrimitiveClass(NUMBER, "int", 0, Integer.TYPE);
+    public static final LoxClass FLOAT = new PrimitiveClass(NUMBER, "float", 0f, Float.TYPE);
+    public static final LoxClass DOUBLE = new PrimitiveClass(NUMBER, "double", 0d, Double.TYPE);
+    public static final LoxClass BOOLEAN = new PrimitiveClass("bool", false, Boolean.TYPE);
+    public static final LoxClass CHAR = new PrimitiveClass("char", ' ', Character.TYPE);
+    public static final LoxClass VOID = new PrimitiveClass("void", null, Void.TYPE);
 
-    public static final LoxClass ENUM = registerMain(EnumClass::new, "Enum");
+    public static final Supplier<LoxClass> OBJECT = registerMain(ObjectClass::new, "Object");
 
-    //TODO load dynamically because of forward references
+    public static final Supplier<LoxClass> ENUM = registerMain(EnumClass::new, "Enum");
 
-    public static final LoxClass NUMBER = registerMain(()-> new PrimitiveClass("num" , null), "num", Number.class);
-    public static final LoxClass INTEGER = registerMain(()-> new PrimitiveClass(NUMBER, "int", 0), "int", Integer.TYPE);
-    public static final LoxClass FLOAT = registerMain(()-> new PrimitiveClass(NUMBER, "float", 0f), "float", Float.TYPE);
-    public static final LoxClass DOUBLE = registerMain(()-> new PrimitiveClass(NUMBER, "double", 0d), "double", Double.TYPE);
-    public static final LoxClass BOOLEAN = registerMain(() -> new PrimitiveClass("bool", false), "bool", Boolean.TYPE);
-    public static final LoxClass CHAR = registerMain(()-> new PrimitiveClass("char", ' '), "char", Character.TYPE);
-    public static final LoxClass STRING = registerMain(() -> new PrimitiveClass("String", ""), "String", String.class); //TODO move to actually class after arrays
+    public static final Supplier<LoxClass> STRING = registerMain(StringClass::new, "String", String.class);
 
 
-    public static final LoxClass VOID = registerMain(()-> new PrimitiveClass("void", null), "void", Void.TYPE);
 
-    public static final LoxClass THROWABLE = registerMain(ThrowableClass::new, "Throwable");
-    public static final LoxClass STACK_OVERFLOW_EXCEPTION = registerMain(StackOverflowExceptionClass::new, "StackOverflowException");
-    public static final LoxClass MISSING_VAR_EXCEPTION = registerMain(MissingVarExceptionClass::new, "MissingVarException");
-    public static final LoxClass ARITHMETIC_EXCEPTION = registerMain(ArithmeticExceptionClass::new, "ArithmeticException");
-    public static final LoxClass FUNCTION_CALL_ERROR = registerMain(FunctionCallErrorClass::new, "FunctionCallError");
+    public static final Supplier<LoxClass> THROWABLE = registerMain(() -> new ThrowableClass("Throwable", "scripted.lang", null), "Throwable");
+    public static final Supplier<LoxClass> STACK_OVERFLOW_EXCEPTION = registerMain(StackOverflowExceptionClass::new, "StackOverflowException");
+    public static final Supplier<LoxClass> MISSING_VAR_EXCEPTION = registerMain(MissingVarExceptionClass::new, "MissingVarException");
+    public static final Supplier<LoxClass> ARITHMETIC_EXCEPTION = registerMain(ArithmeticExceptionClass::new, "ArithmeticException");
+    public static final Supplier<LoxClass> FUNCTION_CALL_ERROR = registerMain(FunctionCallErrorClass::new, "FunctionCallError");
 
-    public static final LoxClass SYSTEM = registerMain(SystemClass::new, "System");
-    public static final LoxClass MATH = registerMain(MathClass::new, "Math");
+    public static final Supplier<LoxClass> SYSTEM = registerMain(SystemClass::new, "System");
+    public static final Supplier<LoxClass> MATH = registerMain(MathClass::new, "Math");
 
     static {
         loadClasses();
@@ -60,31 +59,61 @@ public class VarTypeManager {
         data.forEach(ClassData::create);
     }
 
-    private record ClassData<T>(Package pck, Supplier<T> sup, Class<?> target, PreviewClass preview) {
+    private static final class ClassData<T extends LoxClass> implements Supplier<LoxClass> {
+        private final Package pck;
+        private final Supplier<T> sup;
+        private final Class<?> target;
+        private final PreviewClass preview;
+        private LoxClass value;
 
-        public void create() {
-            LoxClass val = (LoxClass) sup.get(); //bruh
-            preview.apply(val);
-            pck.addClass(val.name(), val);
+        private ClassData(Package pck, Supplier<T> sup, Class<?> target, PreviewClass preview) {
+            this.pck = pck;
+            this.sup = sup;
+            this.target = target;
+            this.preview = preview;
+            this.value = preview;
         }
-    }
 
-    public static <T extends LoxClass> LoxClass register(Package pck, String name, Supplier<T> sup, Class<?> target) {
+            public void create() {
+                LoxClass val = sup.get(); //bruh
+                this.value = val;
+                preview.apply(val);
+                pck.addClass(val.name(), val);
+            }
+
+            @Override
+            public LoxClass get() {
+                return this.value;
+            }
+
+        @Override
+        public String toString() {
+            return "ClassData[" +
+                    "pck=" + pck + ", " +
+                    "sup=" + sup + ", " +
+                    "target=" + target + ", " +
+                    "preview=" + preview + ']';
+        }
+
+        }
+
+    public static <T extends LoxClass> Supplier<LoxClass> register(Package pck, String name, Supplier<T> sup, Class<?> target) {
         PreviewClass preview = new PreviewClass(name, false);
-        data.add(new ClassData<>(pck, sup, target, preview));
+        ClassData<T> targetData = new ClassData<>(pck, sup, target, preview);
+        data.add(targetData);
         pck.addClass(name, preview);
-        return preview;
+        return targetData;
     }
 
-    public static <T extends LoxClass> LoxClass register(Package pck, String name, Supplier<T> sup) {
+    public static <T extends LoxClass> Supplier<LoxClass> register(Package pck, String name, Supplier<T> sup) {
         return register(pck, name, sup, null);
     }
 
-    private static <T extends LoxClass> LoxClass registerMain(Supplier<T> sup, String name) {
+    private static <T extends LoxClass> Supplier<LoxClass> registerMain(Supplier<T> sup, String name) {
         return register(langRoot, name, sup);
     }
 
-    private static <T extends LoxClass> LoxClass registerMain(Supplier<T> sup, String name, Class<?> target) {
+    private static <T extends LoxClass> Supplier<LoxClass> registerMain(Supplier<T> sup, String name, Class<?> target) {
         return register(langRoot, name, sup, target);
     }
 

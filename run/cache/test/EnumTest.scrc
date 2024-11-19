@@ -1,0 +1,324 @@
+{
+  "TYPE": "enum",
+  "name": "EnumTest",
+  "interfaces": [],
+  "methods": {},
+  "staticMethods": {
+    "main": [
+      {
+        "retType": "scripted.lang.void",
+        "params": [
+          {
+            "type": "scripted.lang.String",
+            "name": "args"
+          }
+        ],
+        "body": [],
+        "flags": []
+      }
+    ]
+  },
+  "constructors": [
+    {
+      "retType": "scripted.lang.void",
+      "params": [
+        {
+          "type": "scripted.lang.String",
+          "name": "id"
+        },
+        {
+          "type": "scripted.lang.int",
+          "name": "count"
+        }
+      ],
+      "body": [
+        {
+          "TYPE": "expression",
+          "expr": {
+            "TYPE": "set",
+            "callee": {
+              "TYPE": "varRef",
+              "name": {
+                "type": "THIS",
+                "lexeme": "this",
+                "literal": {},
+                "line": 12,
+                "lineStartIndex": 8
+              }
+            },
+            "name": {
+              "type": "IDENTIFIER",
+              "lexeme": "id",
+              "literal": {},
+              "line": 12,
+              "lineStartIndex": 13
+            },
+            "value": {
+              "TYPE": "varRef",
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "id",
+                "literal": {},
+                "line": 12,
+                "lineStartIndex": 18
+              }
+            },
+            "assignType": {
+              "type": "ASSIGN",
+              "lexeme": "\u003d",
+              "literal": {},
+              "line": 12,
+              "lineStartIndex": 16
+            }
+          }
+        },
+        {
+          "TYPE": "expression",
+          "expr": {
+            "TYPE": "set",
+            "callee": {
+              "TYPE": "varRef",
+              "name": {
+                "type": "THIS",
+                "lexeme": "this",
+                "literal": {},
+                "line": 13,
+                "lineStartIndex": 8
+              }
+            },
+            "name": {
+              "type": "IDENTIFIER",
+              "lexeme": "count",
+              "literal": {},
+              "line": 13,
+              "lineStartIndex": 13
+            },
+            "value": {
+              "TYPE": "varRef",
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "count",
+                "literal": {},
+                "line": 13,
+                "lineStartIndex": 21
+              }
+            },
+            "assignType": {
+              "type": "ASSIGN",
+              "lexeme": "\u003d",
+              "literal": {},
+              "line": 13,
+              "lineStartIndex": 19
+            }
+          }
+        }
+      ],
+      "flags": []
+    }
+  ],
+  "enumConstants": {
+    "count": {
+      "type": "scripted.lang.int",
+      "isFinal": true
+    },
+    "id": {
+      "type": "scripted.lang.String",
+      "isFinal": true
+    }
+  },
+  "fields": {
+    "A": {
+      "type": "test.EnumTest",
+      "init": {
+        "TYPE": "constructors",
+        "target": "test.EnumTest",
+        "args": [
+          {
+            "TYPE": "literal",
+            "value": {
+              "type": "STR",
+              "lexeme": "\"a\"",
+              "literal": {},
+              "line": 4,
+              "lineStartIndex": 6
+            }
+          },
+          {
+            "TYPE": "literal",
+            "value": {
+              "type": "NUM",
+              "lexeme": "0",
+              "literal": {
+                "type": "int",
+                "value": 0
+              },
+              "line": 4,
+              "lineStartIndex": 11
+            }
+          },
+          {
+            "TYPE": "literal",
+            "value": {
+              "type": "NUM",
+              "lexeme": "0",
+              "literal": {
+                "type": "int",
+                "value": 0
+              },
+              "line": -1,
+              "lineStartIndex": -1
+            }
+          },
+          {
+            "TYPE": "literal",
+            "value": {
+              "type": "STR",
+              "lexeme": "A",
+              "literal": {},
+              "line": -1,
+              "lineStartIndex": -1
+            }
+          }
+        ],
+        "keyword": {
+          "type": "IDENTIFIER",
+          "lexeme": "A",
+          "literal": {},
+          "line": 4,
+          "lineStartIndex": 4
+        },
+        "ordinal": 0
+      },
+      "isFinal": true
+    },
+    "B": {
+      "type": "test.EnumTest",
+      "init": {
+        "TYPE": "constructors",
+        "target": "test.EnumTest",
+        "args": [
+          {
+            "TYPE": "literal",
+            "value": {
+              "type": "STR",
+              "lexeme": "\"b\"",
+              "literal": {},
+              "line": 5,
+              "lineStartIndex": 6
+            }
+          },
+          {
+            "TYPE": "literal",
+            "value": {
+              "type": "NUM",
+              "lexeme": "1",
+              "literal": {
+                "type": "int",
+                "value": 1
+              },
+              "line": 5,
+              "lineStartIndex": 11
+            }
+          },
+          {
+            "TYPE": "literal",
+            "value": {
+              "type": "NUM",
+              "lexeme": "1",
+              "literal": {
+                "type": "int",
+                "value": 1
+              },
+              "line": -1,
+              "lineStartIndex": -1
+            }
+          },
+          {
+            "TYPE": "literal",
+            "value": {
+              "type": "STR",
+              "lexeme": "B",
+              "literal": {},
+              "line": -1,
+              "lineStartIndex": -1
+            }
+          }
+        ],
+        "keyword": {
+          "type": "IDENTIFIER",
+          "lexeme": "B",
+          "literal": {},
+          "line": 5,
+          "lineStartIndex": 4
+        },
+        "ordinal": 0
+      },
+      "isFinal": true
+    },
+    "C": {
+      "type": "test.EnumTest",
+      "init": {
+        "TYPE": "constructors",
+        "target": "test.EnumTest",
+        "args": [
+          {
+            "TYPE": "literal",
+            "value": {
+              "type": "STR",
+              "lexeme": "\"c\"",
+              "literal": {},
+              "line": 6,
+              "lineStartIndex": 6
+            }
+          },
+          {
+            "TYPE": "literal",
+            "value": {
+              "type": "NUM",
+              "lexeme": "2",
+              "literal": {
+                "type": "int",
+                "value": 2
+              },
+              "line": 6,
+              "lineStartIndex": 11
+            }
+          },
+          {
+            "TYPE": "literal",
+            "value": {
+              "type": "NUM",
+              "lexeme": "2",
+              "literal": {
+                "type": "int",
+                "value": 2
+              },
+              "line": -1,
+              "lineStartIndex": -1
+            }
+          },
+          {
+            "TYPE": "literal",
+            "value": {
+              "type": "STR",
+              "lexeme": "C",
+              "literal": {},
+              "line": -1,
+              "lineStartIndex": -1
+            }
+          }
+        ],
+        "keyword": {
+          "type": "IDENTIFIER",
+          "lexeme": "C",
+          "literal": {},
+          "line": 6,
+          "lineStartIndex": 4
+        },
+        "ordinal": 0
+      },
+      "isFinal": true
+    }
+  },
+  "staticFields": {}
+}
