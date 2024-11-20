@@ -66,6 +66,11 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
     }
 
     @Override
+    public LoxClass visitArrayGetExpr(Expr.ArrayGet expr) {
+        return null;
+    }
+
+    @Override
     public LoxClass visitSetExpr(Expr.Set expr) {
         return findRetType(expr.object).getFieldType(expr.name.lexeme());
     }
@@ -76,6 +81,11 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
     }
 
     @Override
+    public LoxClass visitArraySetExpr(Expr.ArraySet expr) {
+        return null;
+    }
+
+    @Override
     public LoxClass visitSpecialSetExpr(Expr.SpecialSet expr) {
         return findRetType(expr.callee).getFieldType(expr.name.lexeme());
     }
@@ -83,6 +93,11 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
     @Override
     public LoxClass visitStaticSpecialExpr(Expr.StaticSpecial expr) {
         return expr.target.getStaticFieldType(expr.name.lexeme());
+    }
+
+    @Override
+    public LoxClass visitArraySpecialExpr(Expr.ArraySpecial expr) {
+        return null;
     }
 
     @Override

@@ -41,10 +41,13 @@ public class CacheLoader {
             case "staticCall" -> readStaticCall(object);
             case "get" -> readGet(object);
             case "staticGet" -> readStaticGet(object);
+            case "arrayGet" -> readArrayGet(object);
             case "set" -> readSet(object);
             case "staticSet" -> readStaticSet(object);
+            case "arraySet" -> readArraySet(object);
             case "specialSet" -> readSpecialSet(object);
             case "specialStaticSet" -> readSpecialStaticSet(object);
+            case "specialArraySet" -> readSpecialArraySet(object);
             case "switch" -> readSwitch(object);
             case "castCheck" -> readCastCheck(object);
             case "grouping" -> readGrouping(object);
@@ -55,6 +58,11 @@ public class CacheLoader {
             case "constructors" -> readConstructor(object);
             default -> throw new IllegalStateException("unknown expr key '" + type + "'");
         };
+    }
+
+    private static Expr readArrayGet(JsonObject object) {
+
+        return null;
     }
 
     private static Expr readStaticGet(JsonObject object) {

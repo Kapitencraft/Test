@@ -40,6 +40,8 @@ public interface LoxClass {
         Object val = getStaticField(name);
         if (val instanceof Integer) {
             return this.assignStaticField(name, (int)val + (assignType.type() == TokenType.GROW ? 1 : -1));
+        } else if (val instanceof Float) {
+            return this.assignStaticField(name, (float) val + (assignType.type() == TokenType.GROW ? 1 : -1));
         } else {
             return this.assignStaticField(name, (double)val + (assignType.type() == TokenType.GROW ? 1 : -1));
         }

@@ -4,6 +4,7 @@ import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.NativeMethodImpl;
 import net.kapitencraft.lang.natives.scripted.lang.*;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.natives.scripted.lang.IndexOutOfBoundsException;
 import net.kapitencraft.lang.natives.scripted.lang.SystemClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.Package;
@@ -47,6 +48,7 @@ public class VarTypeManager {
     public static final Supplier<LoxClass> MISSING_VAR_EXCEPTION = registerMain(MissingVarExceptionClass::new, "MissingVarException");
     public static final Supplier<LoxClass> ARITHMETIC_EXCEPTION = registerMain(ArithmeticExceptionClass::new, "ArithmeticException");
     public static final Supplier<LoxClass> FUNCTION_CALL_ERROR = registerMain(FunctionCallErrorClass::new, "FunctionCallError");
+    public static final Supplier<LoxClass> INDEX_OUT_OF_BOUNDS_EXCEPTION = registerMain(IndexOutOfBoundsException::new, "IndexOutOfBoundsException");
 
     public static final Supplier<LoxClass> SYSTEM = registerMain(SystemClass::new, "System");
     public static final Supplier<LoxClass> MATH = registerMain(MathClass::new, "Math");

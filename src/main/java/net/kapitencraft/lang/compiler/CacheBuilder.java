@@ -113,6 +113,15 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     }
 
     @Override
+    public JsonElement visitArrayGetExpr(Expr.ArrayGet expr) {
+        JsonObject object = new JsonObject();
+        object.addProperty("TYPE", "arrayGet");
+        object.add("object", cache(expr.object));
+        object.add("index", cache(expr.index));
+        return object;
+    }
+
+    @Override
     public JsonElement visitSetExpr(Expr.Set expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "set");
@@ -135,6 +144,16 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     }
 
     @Override
+    public JsonElement visitArraySetExpr(Expr.ArraySet expr) {
+        JsonObject object = new JsonObject();
+        object.addProperty("TYPE", "arraySet");
+        object.add("object", cache(expr.object));
+        object.add("index", cache(expr.index));
+        object.add("assign", expr.assignType.toJson());
+        return object;
+    }
+
+    @Override
     public JsonElement visitSpecialSetExpr(Expr.SpecialSet expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "specialSet");
@@ -147,9 +166,20 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     @Override
     public JsonElement visitStaticSpecialExpr(Expr.StaticSpecial expr) {
         JsonObject object = new JsonObject();
+        object.addProperty("TYPE", "specialStaticSet");
         object.addProperty("target", expr.target.absoluteName());
         object.add("name", expr.name.toJson());
         object.add("assignType", expr.assignType.toJson());
+        return object;
+    }
+
+    @Override
+    public JsonElement visitArraySpecialExpr(Expr.ArraySpecial expr) {
+        JsonObject object = new JsonObject();
+        object.addProperty("TYPE", "specialArraySet");
+        object.add("object", cache(expr.object));
+        object.add("index", cache(expr.index));
+        object.add("assign", expr.assignType.toJson());
         return object;
     }
 
@@ -248,12 +278,6 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         object.addProperty("TYPE", "expression");
         object.add("expr", cache(stmt.expression));
         return object;
-    }
-
-    @Override
-    public JsonElement visitFuncDeclStmt(Stmt.FuncDecl stmt) {
-
-        return null;
     }
 
     @Override

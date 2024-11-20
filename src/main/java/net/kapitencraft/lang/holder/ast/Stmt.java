@@ -11,7 +11,6 @@ public abstract class Stmt {
     public interface Visitor<R> {
         R visitBlockStmt(Block stmt);
         R visitExpressionStmt(Expression stmt);
-        R visitFuncDeclStmt(FuncDecl stmt);
         R visitIfStmt(If stmt);
         R visitReturnStmt(Return stmt);
         R visitThrowStmt(Throw stmt);
@@ -45,29 +44,6 @@ public abstract class Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitExpressionStmt(this);
-        }
-    }
-
-    public static class FuncDecl extends Stmt {
-        public final LoxClass retType;
-        public final Token name;
-        public final List<Pair<LoxClass,Token>> params;
-        public final List<Stmt> body;
-        public final boolean isFinal;
-        public final boolean isAbstract;
-
-        public FuncDecl(LoxClass retType, Token name, List<Pair<LoxClass,Token>> params, List<Stmt> body, boolean isFinal, boolean isAbstract) {
-            this.retType = retType;
-            this.name = name;
-            this.params = params;
-            this.body = body;
-            this.isFinal = isFinal;
-            this.isAbstract = isAbstract;
-        }
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitFuncDeclStmt(this);
         }
     }
 

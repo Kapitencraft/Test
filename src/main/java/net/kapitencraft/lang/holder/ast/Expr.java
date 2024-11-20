@@ -17,10 +17,13 @@ public abstract class Expr {
         R visitStaticCallExpr(StaticCall expr);
         R visitGetExpr(Get expr);
         R visitStaticGetExpr(StaticGet expr);
+        R visitArrayGetExpr(ArrayGet expr);
         R visitSetExpr(Set expr);
         R visitStaticSetExpr(StaticSet expr);
+        R visitArraySetExpr(ArraySet expr);
         R visitSpecialSetExpr(SpecialSet expr);
         R visitStaticSpecialExpr(StaticSpecial expr);
+        R visitArraySpecialExpr(ArraySpecial expr);
         R visitSwitchExpr(Switch expr);
         R visitCastCheckExpr(CastCheck expr);
         R visitGroupingExpr(Grouping expr);
@@ -165,6 +168,21 @@ public abstract class Expr {
         }
     }
 
+    public static class ArrayGet extends Expr {
+        public final Expr object;
+        public final Expr index;
+
+        public ArrayGet(Expr object, Expr index) {
+            this.object = object;
+            this.index = index;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitArrayGetExpr(this);
+        }
+    }
+
     public static class Set extends Expr {
         public final Expr object;
         public final Token name;
@@ -203,6 +221,25 @@ public abstract class Expr {
         }
     }
 
+    public static class ArraySet extends Expr {
+        public final Expr object;
+        public final Expr index;
+        public final Expr value;
+        public final Token assignType;
+
+        public ArraySet(Expr object, Expr index, Expr value, Token assignType) {
+            this.object = object;
+            this.index = index;
+            this.value = value;
+            this.assignType = assignType;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitArraySetExpr(this);
+        }
+    }
+
     public static class SpecialSet extends Expr {
         public final Expr callee;
         public final Token name;
@@ -234,6 +271,23 @@ public abstract class Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitStaticSpecialExpr(this);
+        }
+    }
+
+    public static class ArraySpecial extends Expr {
+        public final Expr object;
+        public final Expr index;
+        public final Token assignType;
+
+        public ArraySpecial(Expr object, Expr index, Token assignType) {
+            this.object = object;
+            this.index = index;
+            this.assignType = assignType;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitArraySpecialExpr(this);
         }
     }
 

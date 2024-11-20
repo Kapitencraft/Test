@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 
 public class GenerateAst {
@@ -20,10 +19,13 @@ public class GenerateAst {
                 "StaticCall    : LoxClass target; Token name; int methodOrdinal; List<Expr> args",
                 "Get           : Expr object; Token name",
                 "StaticGet     : LoxClass target; Token name",
+                "ArrayGet      : Expr object; Expr index",
                 "Set           : Expr object; Token name; Expr value; Token assignType",
                 "StaticSet     : LoxClass target; Token name; Expr value; Token assignType",
+                "ArraySet      : Expr object; Expr index; Expr value; Token assignType",
                 "SpecialSet    : Expr callee; Token name; Token assignType",
                 "StaticSpecial : LoxClass target; Token name; Token assignType",
+                "ArraySpecial  : Expr object; Expr index; Token assignType",
                 "Switch        : Expr provider; Map<Object,Expr> params; Expr defaulted; Token keyword",
                 "CastCheck     : Expr object; LoxClass targetType; Token patternVarName",
                 "Grouping      : Expr expression",
@@ -37,7 +39,6 @@ public class GenerateAst {
         defineAst("Stmt", List.of(
                 "Block            : List<Stmt> statements",
                 "Expression       : Expr expression",
-                "FuncDecl         : LoxClass retType; Token name; List<Pair<LoxClass,Token>> params; List<Stmt> body; boolean isFinal; boolean isAbstract",
                 "If               : Expr condition; Stmt thenBranch; Stmt elseBranch; List<Pair<Expr,Stmt>> elifs; Token keyword",
                 "Return           : Token keyword; Expr value",
                 "Throw            : Token keyword; Expr value",

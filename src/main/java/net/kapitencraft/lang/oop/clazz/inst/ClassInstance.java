@@ -44,12 +44,7 @@ public class ClassInstance {
 
     public Object specialAssign(String name, Token assignType) {
         Object val = getField(name);
-        if (val instanceof Integer) {
-            this.assignField(name, (int)val + (assignType.type() == TokenType.GROW ? 1 : -1));
-        } else {
-            this.assignField(name, (double)val + (assignType.type() == TokenType.GROW ? 1 : -1));
-        }
-        return getField(name);
+        return this.assignField(name, Math.specialMerge(val, assignType));
     }
 
     public Object getField(String name) {

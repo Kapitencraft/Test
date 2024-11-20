@@ -6,6 +6,7 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.List;
 
+//TODO reimplement
 public class ReturnScanner implements Stmt.Visitor<Boolean> {
     private final Compiler.ErrorLogger errorLogger;
 
@@ -17,7 +18,7 @@ public class ReturnScanner implements Stmt.Visitor<Boolean> {
         boolean seenReturn = false;
         for (Stmt stmt1 : stmts) {
             if (seenReturn) errorLogger.error(stmt1, "unreachable statement");
-            if (scanReturn(stmt1)) {
+            if (!seenReturn && scanReturn(stmt1)) {
                 seenReturn = true;
             }
         }
@@ -35,11 +36,6 @@ public class ReturnScanner implements Stmt.Visitor<Boolean> {
 
     @Override
     public Boolean visitExpressionStmt(Stmt.Expression stmt) {
-        return false;
-    }
-
-    @Override
-    public Boolean visitFuncDeclStmt(Stmt.FuncDecl stmt) {
         return false;
     }
 

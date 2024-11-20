@@ -98,11 +98,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitFuncDeclStmt(Stmt.FuncDecl stmt) {
-        return null; //TODO move field & function decl away from "stmt"
-    }
-
-    @Override
     public Void visitReturnStmt(Stmt.Return stmt) {
         Object value = null;
         if (stmt.value != null) value = evaluate(stmt.value);
@@ -408,6 +403,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitArrayGetExpr(Expr.ArrayGet expr) {
+        Object[] array = (Object[]) evaluate(expr.object);
+        int index = (int) evaluate(expr.index);
+        if (array.length < index || index < 0) {
+            pushCallIndex(0);
+            throw AbstractScriptedException.createException(VarTypeManager.INDEX_OUT_OF_BOUNDS_EXCEPTION, "index " + expr.index + " out of bounds for length " + array.length);
+        }
+        return array[index];
+    }
+
+    @Override
     public Object visitSetExpr(Expr.Set expr) {
         Object val = evaluate(expr.value);
         ClassInstance instance = (ClassInstance) evaluate(expr.object);
@@ -429,6 +435,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitArraySetExpr(Expr.ArraySet expr) {
+        Object[] array = (Object[]) evaluate(expr.object);
+        int index = (int) evaluate(expr.index);
+        if (array.length < index || index < 0) {
+            pushCallIndex(0);
+            throw AbstractScriptedException.createException(VarTypeManager.INDEX_OUT_OF_BOUNDS_EXCEPTION, "index " + expr.index + " out of bounds for length " + array.length);
+        }
+        return array[index] = Math.merge(array[index], evaluate(expr.value), expr.assignType);
+    }
+
+    @Override
     public Object visitSpecialSetExpr(Expr.SpecialSet expr) {
         return ((ClassInstance) evaluate(expr.callee)).specialAssign(expr.name.lexeme(), expr.assignType);
     }
@@ -436,6 +453,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitStaticSpecialExpr(Expr.StaticSpecial expr) {
         return expr.target.staticSpecialAssign(expr.name.lexeme(), expr.assignType);
+    }
+
+    @Override
+    public Object visitArraySpecialExpr(Expr.ArraySpecial expr) {
+        Object[] array = (Object[]) evaluate(expr.object);
+        int index = (int) evaluate(expr.index);
+        if (array.length < index || index < 0) {
+            pushCallIndex(0);
+            throw AbstractScriptedException.createException(VarTypeManager.INDEX_OUT_OF_BOUNDS_EXCEPTION, "index " + expr.index + " out of bounds for length " + array.length);
+        }
+        return array[index] = Math.specialMerge(array[index], expr.assignType);
     }
 
     private boolean isEqual(Object a, Object b) {
