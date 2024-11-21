@@ -120,6 +120,11 @@ public class VarTypeManager {
     }
 
     public static LoxClass getClassForName(String type) {
+        int arrayCount = 0;
+        while (type.charAt(0) == '[') {
+            arrayCount++;
+            type = type.substring(1);
+        }
         String[] packages = type.split("\\.");
         Package pg = rootPackage();
         for (int i = 0; i < packages.length; i++) {
@@ -132,6 +137,10 @@ public class VarTypeManager {
                     if (!loxClass.hasEnclosing(subClasses[j])) return null;
                     loxClass = loxClass.getEnclosing(subClasses[j]);
                 }
+                while (arrayCount > 0) {
+                    loxClass = loxClass.array();
+                    arrayCount--;
+                }
                 return loxClass;
             } else {
                 if (!pg.hasPackage(name)) return null;
@@ -143,6 +152,10 @@ public class VarTypeManager {
 
     public static Package rootPackage() {
         return root;
+    }
+
+    public static boolean hasPackage(String pckName) {
+        return root.hasPackage(pckName);
     }
 
     /**

@@ -167,6 +167,20 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitForEachStmt(Stmt.ForEach stmt) {
+        this.environment.push();
+        for (Object obj : (Object[]) evaluate(stmt.initializer)) {
+            environment.defineVar(stmt.name.lexeme(), obj);
+            try {
+            } catch (EscapeLoop escape) {
+                if (escape.token.type() == TokenType.BREAK) break;
+                //no need to "continue" as the JVM already does it when breaking out of the body
+            }
+        }
+        return null;
+    }
+
+    @Override
     public Void visitLoopInterruptionStmt(Stmt.LoopInterruption stmt) {
         throw new EscapeLoop(stmt.type);
     }

@@ -60,9 +60,25 @@ public class CacheLoader {
         };
     }
 
-    private static Expr readArrayGet(JsonObject object) {
+    private static Expr readArraySet(JsonObject object) {
+        Expr obj = readSubExpr(object, "object");
+        Expr index = readSubExpr(object, "index");
+        Expr value = readSubExpr(object, "value");
+        Token assign =Token.readFromSubObject(object, "assign");
+        return new Expr.ArraySet(obj, index, value, assign);
+    }
 
-        return null;
+    private static Expr readSpecialArraySet(JsonObject object) {
+        Expr obj = readSubExpr(object, "object");
+        Expr index = readSubExpr(object, "index");
+        Token assign = Token.readFromSubObject(object, "assign");
+        return new Expr.ArraySpecial(obj, index, assign);
+    }
+
+    private static Expr readArrayGet(JsonObject object) {
+        Expr obj = readSubExpr(object, "object");
+        Expr index = readSubExpr(object, "index");
+        return new Expr.ArrayGet(obj, index);
     }
 
     private static Expr readStaticGet(JsonObject object) {
@@ -218,10 +234,19 @@ public class CacheLoader {
             case "varDecl" -> readVarDecl(object);
             case "while" -> readWhile(object);
             case "for" -> readFor(object);
+            case "forEach" -> readForEach(object);
             case "try" -> readTry(object);
             case "loopInterrupt" -> readLoopInterrupt(object);
             default -> throw new IllegalStateException("unknown stmt key '" + type + "'");
         };
+    }
+
+    private static Stmt readForEach(JsonObject object) {
+        LoxClass type = ClassLoader.loadClassReference(object, "type");
+        Token name = Token.readFromSubObject(object, "name");
+        Expr init = readSubExpr(object, "init");
+        Stmt body = readStmt(GsonHelper.getAsJsonObject(object, "body"));
+        return new Stmt.ForEach(type, name, init, body);
     }
 
     private static Stmt readTry(JsonObject object) {

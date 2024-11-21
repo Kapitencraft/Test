@@ -171,6 +171,20 @@ public class AbstractParser {
         throw error(peek(), message);
     }
 
+    protected Optional<LoxClass> tryConsumeVarType() {
+        if (VarTypeManager.hasPackage(peek().lexeme())) {
+            if (!varAnalyser.has(peek().lexeme())) {
+                return Optional.of(consumeVarType());
+            }
+        }
+        LoxClass loxClass = parser.getClass(advance().lexeme());
+        if (loxClass != null && !check(DOT)) {
+            return Optional.of(loxClass);
+        } else
+        current--;
+        return Optional.empty();
+    }
+
     protected LoxClass consumeVarType() {
         StringBuilder typeName = new StringBuilder();
         Token token = consumeIdentifier();

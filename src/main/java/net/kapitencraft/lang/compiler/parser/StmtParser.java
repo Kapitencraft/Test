@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.compiler.parser;
 
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -10,6 +11,7 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 import static net.kapitencraft.lang.holder.token.TokenType.C_BRACKET_C;
@@ -75,11 +77,10 @@ public class StmtParser extends ExprParser {
             if (match(WHILE)) return whileStatement();
             if (match(C_BRACKET_O)) return new Stmt.Block(block("block"));
             if (check(IDENTIFIER)) {
-                LoxClass loxClass = parser.getClass(advance().lexeme());
-                if (loxClass != null && !check(DOT)) {
-                    return varDeclaration(false, loxClass);
+                Optional<LoxClass> type = tryConsumeVarType();
+                if (type.isPresent()) {
+                    return varDeclaration(false, type.get());
                 }
-                current--;
             }
 
             return expressionStatement();
@@ -162,6 +163,21 @@ public class StmtParser extends ExprParser {
         consumeBracketOpen("for");
         varAnalyser.push();
         loopIndex++;
+
+        Optional<LoxClass> type = tryConsumeVarType();
+
+        if (type.isPresent()) {
+            Token name = consumeIdentifier();
+            if (match(COLON)) {
+                LoxClass arrayType = type.get().array();
+                expectType(arrayType);
+                Expr init = expression();
+                popExpectation();
+                expectType(init, arrayType);
+                Stmt stmt = statement();
+                return new Stmt.ForEach(type.get(), name, init, stmt);
+            }
+        }
 
         Stmt initializer;
         if (match(EOA)) {

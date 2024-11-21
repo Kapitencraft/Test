@@ -77,6 +77,7 @@ public class CompilerHolder extends ClassHolder {
                     target.name()
             );
         } catch (IOException e) {
+            System.err.println("Fehler beim Laden: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }

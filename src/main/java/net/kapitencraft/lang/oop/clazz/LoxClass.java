@@ -19,6 +19,14 @@ import java.util.Map;
 public interface LoxClass {
     Map<String, Object> staticFieldData = new HashMap<>();
 
+    default boolean isArray() {
+        return false;
+    }
+
+    default LoxClass array() {
+        return new ArrayClass(this);
+    }
+
     default Object getStaticField(String name) {
         return staticFieldData.get(name);
     }

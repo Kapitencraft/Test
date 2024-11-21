@@ -170,6 +170,11 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
     }
 
     @Override
+    public Token visitForEachStmt(Stmt.ForEach stmt) {
+        return stmt.name;
+    }
+
+    @Override
     public Token visitLoopInterruptionStmt(Stmt.LoopInterruption stmt) {
         return stmt.type;
     }

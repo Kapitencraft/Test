@@ -75,6 +75,11 @@ public class ReturnScanner implements Stmt.Visitor<Boolean> {
     }
 
     @Override
+    public Boolean visitForEachStmt(Stmt.ForEach stmt) {
+        return scanReturn(stmt.body);
+    }
+
+    @Override
     public Boolean visitLoopInterruptionStmt(Stmt.LoopInterruption stmt) {
         return false;
     }

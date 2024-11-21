@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.clazz;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.NativeMethodImpl;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -12,8 +13,13 @@ import java.util.Map;
 
 public interface EnumClass extends LoxClass {
 
-
     Map<String, ? extends LoxField> enumConstants();
+
+    @Override
+    default void clInit() {
+        LoxClass.super.clInit();
+
+    }
 
     @Override
     default Map<String, ? extends LoxField> staticFields() {

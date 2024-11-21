@@ -17,6 +17,7 @@ public abstract class Stmt {
         R visitVarDeclStmt(VarDecl stmt);
         R visitWhileStmt(While stmt);
         R visitForStmt(For stmt);
+        R visitForEachStmt(ForEach stmt);
         R visitLoopInterruptionStmt(LoopInterruption stmt);
         R visitTryStmt(Try stmt);
     }
@@ -152,6 +153,25 @@ public abstract class Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitForStmt(this);
+        }
+    }
+
+    public static class ForEach extends Stmt {
+        public final LoxClass type;
+        public final Token name;
+        public final Expr initializer;
+        public final Stmt body;
+
+        public ForEach(LoxClass type, Token name, Expr initializer, Stmt body) {
+            this.type = type;
+            this.name = name;
+            this.initializer = initializer;
+            this.body = body;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitForEachStmt(this);
         }
     }
 

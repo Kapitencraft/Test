@@ -149,6 +149,7 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         object.addProperty("TYPE", "arraySet");
         object.add("object", cache(expr.object));
         object.add("index", cache(expr.index));
+        object.add("value", cache(expr.value));
         object.add("assign", expr.assignType.toJson());
         return object;
     }
@@ -347,6 +348,17 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         object.add("increment", cache(stmt.increment));
         object.add("body", cache(stmt.body));
         object.add("keyword", stmt.keyword.toJson());
+        return object;
+    }
+
+    @Override
+    public JsonElement visitForEachStmt(Stmt.ForEach stmt) {
+        JsonObject object = new JsonObject();
+        object.addProperty("TYPE", "forEach");
+        object.addProperty("type", stmt.type.absoluteName());
+        object.add("name", stmt.name.toJson());
+        object.add("init", cache(stmt.initializer));
+        object.add("body", cache(stmt.body));
         return object;
     }
 
