@@ -166,6 +166,7 @@ public class StmtParser extends ExprParser {
 
         Optional<LoxClass> type = tryConsumeVarType();
 
+        Stmt initializer;
         if (type.isPresent()) {
             Token name = consumeIdentifier();
             if (match(COLON)) {
@@ -174,13 +175,15 @@ public class StmtParser extends ExprParser {
                 Expr init = expression();
                 popExpectation();
                 expectType(init, arrayType);
+                consumeBracketClose("for");
+                varAnalyser.add(name.lexeme(), type.get(), true, false);
                 Stmt stmt = statement();
+                loopIndex--;
+                varAnalyser.pop();
                 return new Stmt.ForEach(type.get(), name, init, stmt);
             }
-        }
-
-        Stmt initializer;
-        if (match(EOA)) {
+            initializer = varDecl(false, type.get(), name);
+        } else if (match(EOA)) {
             initializer = null;
         } else if (match(IDENTIFIER) && parser.hasClass(previous().lexeme())) {
             initializer = varDeclaration(false, parser.getClass(previous().lexeme()));

@@ -68,7 +68,10 @@
                     "value": {
                       "type": "STR",
                       "lexeme": "\"EEE\"",
-                      "literal": {},
+                      "literal": {
+                        "type": "String",
+                        "value": "EEE"
+                      },
                       "line": 5,
                       "lineStartIndex": 50
                     }
@@ -239,7 +242,10 @@
                               "value": {
                                 "type": "STR",
                                 "lexeme": "\"Error: \"",
-                                "literal": {},
+                                "literal": {
+                                  "type": "String",
+                                  "value": "Error: "
+                                },
                                 "line": 13,
                                 "lineStartIndex": 25
                               }

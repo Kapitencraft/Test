@@ -81,7 +81,7 @@ public record EnumDecl(VarTypeParser parser, Compiler.ErrorLogger logger, Previe
         }
 
 
-        ImmutableMap.Builder<String, GeneratedField> enumConstants = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, GeneratedEnumConstant> enumConstants = new ImmutableMap.Builder<>();
         for (SkeletonParser.EnumConstDecl decl : constants) {
             List<Expr> args;
             if (decl.args().length == 0) {
@@ -97,10 +97,7 @@ public record EnumDecl(VarTypeParser parser, Compiler.ErrorLogger logger, Previe
 
             exprParser.checkArguments(args, callable, decl.name());
 
-            args.add(new Expr.Literal(new Token(TokenType.NUM, String.valueOf(decl.ordinal()), new LiteralHolder(decl.ordinal(), VarTypeManager.INTEGER), -1, -1)));
-            args.add(new Expr.Literal(new Token(TokenType.STR, decl.name().lexeme(), new LiteralHolder(decl.name().lexeme(), VarTypeManager.STRING.get()), -1, -1)));
-
-            enumConstants.put(decl.name().lexeme(), new GeneratedField(target, new Expr.Constructor(decl.name(), target, args, ordinal), true));
+            enumConstants.put(decl.name().lexeme(), new GeneratedEnumConstant(target, decl.ordinal(), decl.name().lexeme(), ordinal, args));
         }
 
 

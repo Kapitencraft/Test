@@ -25,7 +25,7 @@ public record BakedEnum(
         Pair<Token, GeneratedCallable>[] methods,
         Pair<Token, GeneratedCallable>[] staticMethods,
         LoxClass[] interfaces,
-        Map<String, GeneratedField> constants,
+        Map<String, GeneratedEnumConstant> constants,
         Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields,
         Token name, String pck, Compiler.ClassBuilder[] enclosed
         ) implements Compiler.ClassBuilder {
@@ -70,8 +70,8 @@ public record BakedEnum(
                 DataMethodContainer.bakeBuilders(methods),
                 DataMethodContainer.bakeBuilders(staticMethods),
                 container,
-                constants(),
                 fields,
+                constants(),
                 Compiler.ClassBuilder.generateFields(this.staticFields()),
                 enclosed.build(),
                 interfaces(),

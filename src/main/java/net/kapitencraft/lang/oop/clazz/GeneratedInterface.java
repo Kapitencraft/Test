@@ -12,6 +12,7 @@ import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
+import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
 
@@ -66,6 +67,28 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
         );
     }
 
+    boolean init = false;
+
+    @Override
+    public boolean hasInit() {
+        return init;
+    }
+
+    @Override
+    public void setInit() {
+        init = true;
+    }
+
+    @Override
+    public void clInit() {
+        if (Interpreter.suppressClassLoad) return;
+        Interpreter.INSTANCE.pushCallIndex(-1);
+        Interpreter.INSTANCE.pushCall(this.absoluteName(), "<clinit>", this.name());
+        LoxInterface.super.clInit();
+        this.enclosing.values().forEach(LoxClass::clInit);
+        Interpreter.INSTANCE.popCall();
+    }
+
     @Override
     public Map<String, ? extends LoxField> staticFields() {
         return allStaticFields;
@@ -93,11 +116,13 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
 
     @Override
     public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
+        checkInit();
         return staticMethods.getMethodByOrdinal(name, ordinal);
     }
 
     @Override
     public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+        checkInit();
         return staticMethods.getMethodOrdinal(name, args);
     }
 
@@ -108,11 +133,13 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
 
     @Override
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
+        checkInit();
         return lookup.getMethodByOrdinal(name, ordinal);
     }
 
     @Override
     public int getMethodOrdinal(String name, List<LoxClass> types) {
+        checkInit();
         return lookup.getMethodOrdinal(name, types);
     }
 

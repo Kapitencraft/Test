@@ -34,7 +34,10 @@
                   "value": {
                     "type": "STR",
                     "lexeme": "\"e\"",
-                    "literal": {},
+                    "literal": {
+                      "type": "String",
+                      "value": "e"
+                    },
                     "line": 8,
                     "lineStartIndex": 26
                   }
@@ -44,7 +47,10 @@
                   "value": {
                     "type": "STR",
                     "lexeme": "\"a\"",
-                    "literal": {},
+                    "literal": {
+                      "type": "String",
+                      "value": "a"
+                    },
                     "line": 8,
                     "lineStartIndex": 31
                   }
@@ -128,7 +134,10 @@
                   "value": {
                     "type": "STR",
                     "lexeme": "\"Hello!\"",
-                    "literal": {},
+                    "literal": {
+                      "type": "String",
+                      "value": "Hello!"
+                    },
                     "line": 10,
                     "lineStartIndex": 17
                   }

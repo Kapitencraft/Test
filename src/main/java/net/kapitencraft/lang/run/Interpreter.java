@@ -23,6 +23,8 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     public static final Scanner in = new Scanner(System.in);
 
+    public static boolean suppressClassLoad = false;
+
     public static long millisAtStart;
 
     public Interpreter() {
@@ -44,8 +46,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     public void runMainMethod(LoxClass target, String data) {
         if (!target.hasStaticMethod("main")) return;
+        suppressClassLoad = true;
         Optional.ofNullable(target.getStaticMethod("main", List.of(VarTypeManager.STRING.get())))
                 .ifPresentOrElse(method -> {
+                    suppressClassLoad = false;
                     this.pushCall(target.absoluteName(), "main", target.name());
                     try {
                         millisAtStart = System.currentTimeMillis();
@@ -60,7 +64,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                         this.environment.pop();
                         this.callStack.clear();
                     }
-                }, () -> System.err.printf("could not find executable main method inside class '%s'", target.absoluteName()));
+                }, () -> {
+                    System.err.printf("could not find executable main method inside class '%s'", target.absoluteName());
+                    suppressClassLoad = false;
+                });
     }
 
     public void interpret(List<Stmt> statements, Environment active) {
@@ -172,11 +179,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         for (Object obj : (Object[]) evaluate(stmt.initializer)) {
             environment.defineVar(stmt.name.lexeme(), obj);
             try {
+                execute(stmt.body);
             } catch (EscapeLoop escape) {
                 if (escape.token.type() == TokenType.BREAK) break;
                 //no need to "continue" as the JVM already does it when breaking out of the body
             }
         }
+        this.environment.pop();
         return null;
     }
 
@@ -357,7 +366,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return false;
     }
 
-    private void popCall() {
+    public void popCall() {
         this.callStack.pop();
     }
 

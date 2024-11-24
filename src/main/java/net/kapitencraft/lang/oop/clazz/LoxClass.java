@@ -28,23 +28,37 @@ public interface LoxClass {
     }
 
     default Object getStaticField(String name) {
+        checkInit();
         return staticFieldData.get(name);
     }
 
+    default void checkInit() {
+        if (!hasInit()) clInit();
+    }
+
     default Object assignStaticField(String name, Object val) {
+        checkInit();
         staticFieldData.put(name, val);
         return getStaticField(name);
     }
 
+    boolean hasInit();
+
+    void setInit();
+
     default void clInit() {
+        setInit();
+        //Interpreter.INSTANCE.pushCall(this.absoluteName(), "<clinit>", this.name());
         this.staticFields().forEach((s, loxField) -> {
             assignStaticField(s, loxField.initialize(null, Interpreter.INSTANCE));
         });
+        //Interpreter.INSTANCE.popCall();
     }
 
     Map<String, ? extends LoxField> staticFields();
 
     default Object staticSpecialAssign(String name, Token assignType) {
+        checkInit();
         Object val = getStaticField(name);
         if (val instanceof Integer) {
             return this.assignStaticField(name, (int)val + (assignType.type() == TokenType.GROW ? 1 : -1));
@@ -56,6 +70,7 @@ public interface LoxClass {
     }
 
     default Object assignStaticFieldWithOperator(String name, Object val, Token type) {
+        checkInit();
         return this.assignStaticField(name, Math.merge(getStaticField(name), val, type));
     }
 
@@ -94,7 +109,7 @@ public interface LoxClass {
     int getStaticMethodOrdinal(String name, List<? extends LoxClass> args);
 
     default ScriptedCallable getMethod(String name, List<LoxClass> args) {
-        return superclass().getMethod(name, args);
+        return getMethodByOrdinal(name, getMethodOrdinal(name, args));
     }
 
     boolean hasStaticMethod(String name);

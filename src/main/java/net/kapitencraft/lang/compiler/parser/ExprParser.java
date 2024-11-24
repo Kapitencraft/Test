@@ -34,10 +34,10 @@ public class ExprParser extends AbstractParser {
 
     private Expr when() {
         Expr expr = castCheck();
-        if (match(WHEN_CONDITION)) {
+        if (match(QUESTION_MARK)) {
             expectCondition(expr);
             Expr ifTrue = expression();
-            consume(WHEN_FALSE, "':' expected");
+            consume(TokenType.COLON, "':' expected");
             Expr ifFalse = expression();
             LoxClass ifTrueClass = finder.findRetType(ifTrue);
             LoxClass ifFalseClass = finder.findRetType(ifFalse);

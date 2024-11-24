@@ -24,6 +24,18 @@ public class NativeUtilClass implements LoxClass {
         this.pck = pck;
     }
 
+    private boolean init = false;
+
+    @Override
+    public boolean hasInit() {
+        return init;
+    }
+
+    @Override
+    public void setInit() {
+        init = true;
+    }
+
     @Override
     public Map<String, ? extends LoxField> staticFields() {
         return staticFields;

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.MethodMap;
@@ -22,7 +23,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class SkeletonEnum implements LoxClass {
+public class SkeletonEnum implements EnumClass  {
     private final String name;
     private final String pck;
 
@@ -113,6 +114,36 @@ public class SkeletonEnum implements LoxClass {
     }
 
     @Override
+    public boolean hasInit() {
+        return false;
+    }
+
+    @Override
+    public void setInit() {
+
+    }
+
+    @Override
+    public Map<String, ? extends LoxField> enumConstants() {
+        return Map.of();
+    }
+
+    @Override
+    public void setConstantValues(Map<String, ClassInstance> constants) {
+
+    }
+
+    @Override
+    public Map<String, ClassInstance> getConstantValues() {
+        return Map.of();
+    }
+
+    @Override
+    public ClassInstance[] getConstants() {
+        return new ClassInstance[0];
+    }
+
+    @Override
     public Map<String, ? extends LoxField> staticFields() {
         return staticFields;
     }
@@ -129,12 +160,12 @@ public class SkeletonEnum implements LoxClass {
 
     @Override
     public boolean hasField(String name) {
-        return this.fields.containsKey(name) || LoxClass.super.hasField(name);
+        return this.fields.containsKey(name) || EnumClass.super.hasField(name);
     }
 
     @Override
     public LoxClass getFieldType(String name) {
-        return Util.nonNullElse(fields.get(name).getType(), LoxClass.super.getFieldType(name));
+        return Util.nonNullElse(fields.get(name).getType(), EnumClass.super.getFieldType(name));
     }
 
     @Override
@@ -154,17 +185,17 @@ public class SkeletonEnum implements LoxClass {
 
     @Override
     public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return Optional.ofNullable(staticMethods.get(name)).map(c -> c.getMethodByOrdinal(ordinal)).orElse(null);
+        return Optional.ofNullable(staticMethods.get(name)).map(c -> c.getMethodByOrdinal(ordinal)).orElseGet(() -> EnumClass.super.getStaticMethodByOrdinal(name, ordinal));
     }
 
     @Override
     public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
-        return Optional.ofNullable(staticMethods.get(name)).map(c -> c.getMethodOrdinal(args)).orElse(-1);
+        return Optional.ofNullable(staticMethods.get(name)).map(c -> c.getMethodOrdinal(args)).orElseGet(() -> EnumClass.super.getStaticMethodOrdinal(name, args));
     }
 
     @Override
     public boolean hasStaticMethod(String name) {
-        return staticMethods.containsKey(name);
+        return staticMethods.containsKey(name) || "values".equals(name);
     }
 
     @Override

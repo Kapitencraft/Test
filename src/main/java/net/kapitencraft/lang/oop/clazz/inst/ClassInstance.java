@@ -67,6 +67,6 @@ public class ClassInstance {
 
     @Override
     public String toString() {
-        return (String) this.type.getMethod("toString", List.of()).call(null, Interpreter.INSTANCE, List.of());
+        return (String) this.type.getMethod("toString", List.of()).call(this.environment, Interpreter.INSTANCE, List.of());
     }
 }

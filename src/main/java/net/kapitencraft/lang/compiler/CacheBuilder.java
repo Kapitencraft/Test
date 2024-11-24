@@ -24,7 +24,7 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         return stmt.accept(this);
     }
 
-    private JsonArray saveArgs(List<Expr> args) {
+    public JsonArray saveArgs(List<Expr> args) {
         JsonArray array = new JsonArray();
         args.stream().map(this::cache).forEach(array::add);
         return array;

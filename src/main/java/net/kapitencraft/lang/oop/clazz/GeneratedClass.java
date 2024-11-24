@@ -14,6 +14,7 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.field.LoxField;
+import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
@@ -242,6 +243,28 @@ public final class GeneratedClass implements CacheableClass {
     @Override
     public LoxClass superclass() {
         return superclass;
+    }
+
+    boolean init = false;
+
+    @Override
+    public boolean hasInit() {
+        return init;
+    }
+
+    @Override
+    public void setInit() {
+        init = true;
+    }
+
+    @Override
+    public void clInit() {
+        if (Interpreter.suppressClassLoad) return;
+        Interpreter.INSTANCE.pushCallIndex(-1);
+        Interpreter.INSTANCE.pushCall(this.absoluteName(), "<clinit>", this.name());
+        CacheableClass.super.clInit();
+        this.enclosing.values().forEach(LoxClass::clInit);
+        Interpreter.INSTANCE.popCall();
     }
 
     @Override

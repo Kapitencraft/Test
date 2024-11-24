@@ -21,6 +21,12 @@ public class PreviewClass implements LoxClass {
         this.isInterface = isInterface;
     }
 
+    @Override
+    public boolean isArray() {
+        assertApplied();
+        return target.isArray();
+    }
+
     public <T extends LoxClass> T apply(T target) {
         this.target = target;
         return target;
@@ -72,6 +78,18 @@ public class PreviewClass implements LoxClass {
     public Object assignStaticField(String name, Object val) {
         assertApplied();
         return target.assignStaticField(name, val);
+    }
+
+    @Override
+    public boolean hasInit() {
+        assertApplied();
+        return target.hasInit();
+    }
+
+    @Override
+    public void setInit() {
+        assertApplied();
+        target.setInit();
     }
 
     @Override

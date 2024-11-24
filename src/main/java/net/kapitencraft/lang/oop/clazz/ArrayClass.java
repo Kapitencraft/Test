@@ -1,5 +1,7 @@
 package net.kapitencraft.lang.oop.clazz;
 
+import java.sql.Array;
+
 public class ArrayClass extends PrimitiveClass {
     private final LoxClass enclosed;
 
@@ -11,6 +13,12 @@ public class ArrayClass extends PrimitiveClass {
     @Override
     public boolean isArray() {
         return true;
+    }
+
+    @Override
+    public boolean is(LoxClass other) {
+        return other instanceof ArrayClass arrayClass ? arrayClass.enclosed.is(this.enclosed) :
+                other instanceof PrimitiveClass primitiveClass && primitiveClass.is(this);
     }
 
     @Override

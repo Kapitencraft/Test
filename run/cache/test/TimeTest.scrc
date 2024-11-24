@@ -155,7 +155,10 @@
                       "value": {
                         "type": "STR",
                         "lexeme": "\"counting to 1000 took \"",
-                        "literal": {},
+                        "literal": {
+                          "type": "String",
+                          "value": "counting to 1000 took "
+                        },
                         "line": 8,
                         "lineStartIndex": 21
                       }
@@ -193,7 +196,10 @@
                     "value": {
                       "type": "STR",
                       "lexeme": "\"ms\"",
-                      "literal": {},
+                      "literal": {
+                        "type": "String",
+                        "value": "ms"
+                      },
                       "line": 8,
                       "lineStartIndex": 64
                     }

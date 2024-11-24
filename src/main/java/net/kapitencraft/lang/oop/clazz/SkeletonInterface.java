@@ -83,6 +83,16 @@ public class SkeletonInterface implements LoxClass {
     }
 
     @Override
+    public boolean hasInit() {
+        return false;
+    }
+
+    @Override
+    public void setInit() {
+
+    }
+
+    @Override
     public Map<String, ? extends LoxField> staticFields() {
         return staticFields;
     }

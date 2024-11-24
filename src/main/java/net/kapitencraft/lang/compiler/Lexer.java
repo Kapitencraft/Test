@@ -166,10 +166,10 @@ public class Lexer {
                 break;
             case '"': string(); break;
             case ':':
-                addToken(WHEN_FALSE);
+                addToken(TokenType.COLON);
                 break;
             case '?':
-                addToken(WHEN_CONDITION);
+                addToken(QUESTION_MARK);
                 break;
 
             default:

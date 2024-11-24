@@ -25,7 +25,7 @@ public record LiteralHolder(Object value, LoxClass type) {
         } else if (type == VarTypeManager.CHAR) {
             object.addProperty("type", "char");
             object.addProperty("value", (char)value);
-        } else if (type == VarTypeManager.STRING) {
+        } else if (type == VarTypeManager.STRING.get()) {
             object.addProperty("type", "String");
             object.addProperty("value", (String) value);
         }

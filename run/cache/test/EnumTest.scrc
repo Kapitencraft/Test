@@ -13,7 +13,74 @@
             "name": "args"
           }
         ],
-        "body": [],
+        "body": [
+          {
+            "TYPE": "forEach",
+            "type": "test.EnumTest",
+            "name": {
+              "type": "IDENTIFIER",
+              "lexeme": "test",
+              "literal": {},
+              "line": 17,
+              "lineStartIndex": 22
+            },
+            "init": {
+              "TYPE": "staticCall",
+              "target": "test.EnumTest",
+              "name": {
+                "type": "IDENTIFIER",
+                "lexeme": "values",
+                "literal": {},
+                "line": 17,
+                "lineStartIndex": 38
+              },
+              "ordinal": 0,
+              "args": []
+            },
+            "body": {
+              "TYPE": "block",
+              "statements": [
+                {
+                  "TYPE": "expression",
+                  "expr": {
+                    "TYPE": "staticCall",
+                    "target": "scripted.lang.System",
+                    "name": {
+                      "type": "IDENTIFIER",
+                      "lexeme": "print",
+                      "literal": {},
+                      "line": 18,
+                      "lineStartIndex": 19
+                    },
+                    "ordinal": 0,
+                    "args": [
+                      {
+                        "TYPE": "get",
+                        "callee": {
+                          "TYPE": "varRef",
+                          "name": {
+                            "type": "IDENTIFIER",
+                            "lexeme": "test",
+                            "literal": {},
+                            "line": 18,
+                            "lineStartIndex": 25
+                          }
+                        },
+                        "name": {
+                          "type": "IDENTIFIER",
+                          "lexeme": "id",
+                          "literal": {},
+                          "line": 18,
+                          "lineStartIndex": 30
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ],
         "flags": []
       }
     ]
@@ -117,206 +184,113 @@
     }
   ],
   "enumConstants": {
+    "A": {
+      "ordinal": 0,
+      "name": "A",
+      "constructorOrdinal": 0,
+      "args": [
+        {
+          "TYPE": "literal",
+          "value": {
+            "type": "STR",
+            "lexeme": "\"a\"",
+            "literal": {
+              "type": "String",
+              "value": "a"
+            },
+            "line": 4,
+            "lineStartIndex": 6
+          }
+        },
+        {
+          "TYPE": "literal",
+          "value": {
+            "type": "NUM",
+            "lexeme": "0",
+            "literal": {
+              "type": "int",
+              "value": 0
+            },
+            "line": 4,
+            "lineStartIndex": 11
+          }
+        }
+      ]
+    },
+    "B": {
+      "ordinal": 1,
+      "name": "B",
+      "constructorOrdinal": 0,
+      "args": [
+        {
+          "TYPE": "literal",
+          "value": {
+            "type": "STR",
+            "lexeme": "\"b\"",
+            "literal": {
+              "type": "String",
+              "value": "b"
+            },
+            "line": 5,
+            "lineStartIndex": 6
+          }
+        },
+        {
+          "TYPE": "literal",
+          "value": {
+            "type": "NUM",
+            "lexeme": "1",
+            "literal": {
+              "type": "int",
+              "value": 1
+            },
+            "line": 5,
+            "lineStartIndex": 11
+          }
+        }
+      ]
+    },
+    "C": {
+      "ordinal": 2,
+      "name": "C",
+      "constructorOrdinal": 0,
+      "args": [
+        {
+          "TYPE": "literal",
+          "value": {
+            "type": "STR",
+            "lexeme": "\"c\"",
+            "literal": {
+              "type": "String",
+              "value": "c"
+            },
+            "line": 6,
+            "lineStartIndex": 6
+          }
+        },
+        {
+          "TYPE": "literal",
+          "value": {
+            "type": "NUM",
+            "lexeme": "2",
+            "literal": {
+              "type": "int",
+              "value": 2
+            },
+            "line": 6,
+            "lineStartIndex": 11
+          }
+        }
+      ]
+    }
+  },
+  "fields": {
     "count": {
       "type": "scripted.lang.int",
       "isFinal": true
     },
     "id": {
       "type": "scripted.lang.String",
-      "isFinal": true
-    }
-  },
-  "fields": {
-    "A": {
-      "type": "test.EnumTest",
-      "init": {
-        "TYPE": "constructors",
-        "target": "test.EnumTest",
-        "args": [
-          {
-            "TYPE": "literal",
-            "value": {
-              "type": "STR",
-              "lexeme": "\"a\"",
-              "literal": {},
-              "line": 4,
-              "lineStartIndex": 6
-            }
-          },
-          {
-            "TYPE": "literal",
-            "value": {
-              "type": "NUM",
-              "lexeme": "0",
-              "literal": {
-                "type": "int",
-                "value": 0
-              },
-              "line": 4,
-              "lineStartIndex": 11
-            }
-          },
-          {
-            "TYPE": "literal",
-            "value": {
-              "type": "NUM",
-              "lexeme": "0",
-              "literal": {
-                "type": "int",
-                "value": 0
-              },
-              "line": -1,
-              "lineStartIndex": -1
-            }
-          },
-          {
-            "TYPE": "literal",
-            "value": {
-              "type": "STR",
-              "lexeme": "A",
-              "literal": {},
-              "line": -1,
-              "lineStartIndex": -1
-            }
-          }
-        ],
-        "keyword": {
-          "type": "IDENTIFIER",
-          "lexeme": "A",
-          "literal": {},
-          "line": 4,
-          "lineStartIndex": 4
-        },
-        "ordinal": 0
-      },
-      "isFinal": true
-    },
-    "B": {
-      "type": "test.EnumTest",
-      "init": {
-        "TYPE": "constructors",
-        "target": "test.EnumTest",
-        "args": [
-          {
-            "TYPE": "literal",
-            "value": {
-              "type": "STR",
-              "lexeme": "\"b\"",
-              "literal": {},
-              "line": 5,
-              "lineStartIndex": 6
-            }
-          },
-          {
-            "TYPE": "literal",
-            "value": {
-              "type": "NUM",
-              "lexeme": "1",
-              "literal": {
-                "type": "int",
-                "value": 1
-              },
-              "line": 5,
-              "lineStartIndex": 11
-            }
-          },
-          {
-            "TYPE": "literal",
-            "value": {
-              "type": "NUM",
-              "lexeme": "1",
-              "literal": {
-                "type": "int",
-                "value": 1
-              },
-              "line": -1,
-              "lineStartIndex": -1
-            }
-          },
-          {
-            "TYPE": "literal",
-            "value": {
-              "type": "STR",
-              "lexeme": "B",
-              "literal": {},
-              "line": -1,
-              "lineStartIndex": -1
-            }
-          }
-        ],
-        "keyword": {
-          "type": "IDENTIFIER",
-          "lexeme": "B",
-          "literal": {},
-          "line": 5,
-          "lineStartIndex": 4
-        },
-        "ordinal": 0
-      },
-      "isFinal": true
-    },
-    "C": {
-      "type": "test.EnumTest",
-      "init": {
-        "TYPE": "constructors",
-        "target": "test.EnumTest",
-        "args": [
-          {
-            "TYPE": "literal",
-            "value": {
-              "type": "STR",
-              "lexeme": "\"c\"",
-              "literal": {},
-              "line": 6,
-              "lineStartIndex": 6
-            }
-          },
-          {
-            "TYPE": "literal",
-            "value": {
-              "type": "NUM",
-              "lexeme": "2",
-              "literal": {
-                "type": "int",
-                "value": 2
-              },
-              "line": 6,
-              "lineStartIndex": 11
-            }
-          },
-          {
-            "TYPE": "literal",
-            "value": {
-              "type": "NUM",
-              "lexeme": "2",
-              "literal": {
-                "type": "int",
-                "value": 2
-              },
-              "line": -1,
-              "lineStartIndex": -1
-            }
-          },
-          {
-            "TYPE": "literal",
-            "value": {
-              "type": "STR",
-              "lexeme": "C",
-              "literal": {},
-              "line": -1,
-              "lineStartIndex": -1
-            }
-          }
-        ],
-        "keyword": {
-          "type": "IDENTIFIER",
-          "lexeme": "C",
-          "literal": {},
-          "line": 6,
-          "lineStartIndex": 4
-        },
-        "ordinal": 0
-      },
       "isFinal": true
     }
   },

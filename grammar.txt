@@ -50,6 +50,9 @@ primary     -> "true" | "false" | "null" | "this" | NUMBER | STRING | IDENTIFIER
 //util
 parameters  -> VAR_TYPE IDENTIFIER ( "," IDENTIFIER )*
 arguments   -> expression ( "," expression )*
+genericType -> IDENTIFIER (("extends" IDENTIFIER) | ("super" IDENTIFIER))?
+generics    -> "<" genericType ("," genericType)* ">"
+genericDecl -> "<" IDENTIFIER ("," IDENTIFIER)* ">"
 
 //lexical
 NUMBER      -> DIGIT+ ( "." DIGIT+ )?

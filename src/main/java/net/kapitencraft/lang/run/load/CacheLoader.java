@@ -18,7 +18,7 @@ import java.util.List;
 
 public class CacheLoader {
 
-    private static List<Expr> readArgs(JsonObject object, String name) {
+    public static List<Expr> readArgs(JsonObject object, String name) {
         return GsonHelper.getAsJsonArray(object, name).asList().stream().map(JsonElement::getAsJsonObject).map(CacheLoader::readExpr).toList();
     }
 

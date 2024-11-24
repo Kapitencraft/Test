@@ -21,7 +21,10 @@
               "value": {
                 "type": "STR",
                 "lexeme": "\"a\"",
-                "literal": {},
+                "literal": {
+                  "type": "String",
+                  "value": "a"
+                },
                 "line": 9,
                 "lineStartIndex": 15
               }

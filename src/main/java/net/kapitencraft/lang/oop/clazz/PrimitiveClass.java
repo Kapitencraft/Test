@@ -36,6 +36,16 @@ public class PrimitiveClass implements LoxClass {
     }
 
     @Override
+    public boolean hasInit() {
+        return true;
+    }
+
+    @Override
+    public void setInit() {
+
+    }
+
+    @Override
     public Map<String, ? extends LoxField> staticFields() {
         return Map.of();
     }

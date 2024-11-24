@@ -24,9 +24,9 @@ public class ClassLoader {
         generateClasses(pckSkeleton);
         System.out.println("Loading complete.");
         Interpreter interpreter = Interpreter.INSTANCE;
-        Scanner scanner = Interpreter.in;
+        Scanner scanner = new Scanner(System.in);
         String line = "";
-        while (!line.equals("!exit")) {
+        while (!"!exit".equals(line)) {
             if (line.startsWith("!run ")) {
                 String data = line.substring(5);
                 String classRef;
@@ -36,13 +36,6 @@ public class ClassLoader {
                 if (target == null) System.err.println("unable to find class for id '" + classRef + "'");
                 else {
                     interpreter.runMainMethod(target, data.substring(data.indexOf(' ') + 1));
-                }
-            }
-            while (!scanner.hasNext()) {
-                try {
-                    Thread.sleep(20);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
                 }
             }
             line = scanner.nextLine();
