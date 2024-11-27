@@ -3,13 +3,7 @@ package net.kapitencraft.math;
 public class BitOperationMain {
 
     public static void main(String[] args) {
-        int a = 124;
-        int b = 91;
-
-        long wive = wive(a, b);
-        System.out.println(printBinary(wive));
-        System.out.println(extract(wive, true));
-        System.out.println(extract(wive, false));
+        System.out.println(obfuscate("Test"));
     }
 
     public static long wive(int a, int b) {
