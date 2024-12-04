@@ -5,24 +5,25 @@ import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.run.algebra.OperationType;
 
 import java.util.List;
 import java.util.Map;
 
-public class PrimitiveClass implements LoxClass {
+public abstract class PrimitiveClass implements LoxClass {
     private final String name;
     private final LoxClass superclass;
     private final Object defaultValue;
 
-    public PrimitiveClass(LoxClass superclass, String name, Object defaultValue, Class<?> target) {
+    public PrimitiveClass(LoxClass superclass, String name, Object defaultValue) {
         this.name = name;
         this.superclass = superclass;
         this.defaultValue = defaultValue;
         VarTypeManager.getOrCreatePackage("scripted.lang").addClass(name, this);
     }
 
-    public PrimitiveClass(String name, Object defaultValue, Class<?> target) {
-        this(null, name, defaultValue, target);
+    public PrimitiveClass(String name, Object defaultValue) {
+        this(null, name, defaultValue);
     }
 
     @Override

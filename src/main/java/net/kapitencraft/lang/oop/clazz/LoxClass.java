@@ -10,6 +10,8 @@ import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.run.Interpreter;
+import net.kapitencraft.lang.run.algebra.Operand;
+import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.tool.Math;
 
 import java.util.HashMap;
@@ -30,6 +32,19 @@ public interface LoxClass {
     default Object getStaticField(String name) {
         checkInit();
         return staticFieldData.get(name);
+    }
+
+    /**
+     * @param type the operation
+     * @param other the other type
+     * @return the resulting type or null, if this operation is not possible
+     */
+    default LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
+        return null;
+    }
+
+    default Object doOperation(OperationType type, Operand operand, Object self, Object other) {
+        return null;
     }
 
     default void checkInit() {

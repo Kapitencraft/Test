@@ -11,6 +11,7 @@ import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.clazz.ReflectiveClass;
+import net.kapitencraft.lang.oop.clazz.primitive.*;
 import net.kapitencraft.lang.run.natives.NativeClass;
 import net.kapitencraft.lang.run.natives.NativeMethod;
 
@@ -27,13 +28,13 @@ public class VarTypeManager {
     private static final Map<Class<?>, LoxClass> classLookup = new HashMap<>();
     public static final ReflectiveLoader reflectiveLoader = new ReflectiveLoader();
 
-    public static final LoxClass NUMBER = new PrimitiveClass("num" , null, Number.class);
-    public static final LoxClass INTEGER = new PrimitiveClass(NUMBER, "int", 0, Integer.TYPE);
-    public static final LoxClass FLOAT = new PrimitiveClass(NUMBER, "float", 0f, Float.TYPE);
-    public static final LoxClass DOUBLE = new PrimitiveClass(NUMBER, "double", 0d, Double.TYPE);
-    public static final LoxClass BOOLEAN = new PrimitiveClass("bool", false, Boolean.TYPE);
-    public static final LoxClass CHAR = new PrimitiveClass("char", ' ', Character.TYPE);
-    public static final LoxClass VOID = new PrimitiveClass("void", null, Void.TYPE);
+    public static final LoxClass NUMBER = new NumberClass();
+    public static final LoxClass INTEGER = new IntegerClass();
+    public static final LoxClass FLOAT = new FloatClass();
+    public static final LoxClass DOUBLE = new DoubleClass();
+    public static final LoxClass BOOLEAN = new BooleanClass();
+    public static final LoxClass CHAR = new CharacterClass();
+    public static final LoxClass VOID = new VoidClass();
 
     public static final Supplier<LoxClass> OBJECT = registerMain(ObjectClass::new, "Object");
 

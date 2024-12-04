@@ -16,6 +16,7 @@ import net.kapitencraft.lang.oop.method.ReflectiveMethod;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
+import net.kapitencraft.lang.run.algebra.OperationType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

@@ -1,12 +1,10 @@
 package net.kapitencraft.lang.oop.clazz;
 
-import java.sql.Array;
-
 public class ArrayClass extends PrimitiveClass {
     private final LoxClass enclosed;
 
     public ArrayClass(LoxClass enclosed) {
-        super(enclosed.name() + "[]", null, null);
+        super(enclosed.name() + "[]", null);
         this.enclosed = enclosed;
     }
 

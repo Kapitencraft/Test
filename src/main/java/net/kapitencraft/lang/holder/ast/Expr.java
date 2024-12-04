@@ -69,11 +69,13 @@ public abstract class Expr {
     public static class Binary extends Expr {
         public final Expr left;
         public final Token operator;
+        public final LoxClass executor;
         public final Expr right;
 
-        public Binary(Expr left, Token operator, Expr right) {
+        public Binary(Expr left, Token operator, LoxClass executor, Expr right) {
             this.left = left;
             this.operator = operator;
+            this.executor = executor;
             this.right = right;
         }
 

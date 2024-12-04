@@ -7,6 +7,7 @@ import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.run.algebra.OperationType;
 
 import java.util.List;
 import java.util.Map;

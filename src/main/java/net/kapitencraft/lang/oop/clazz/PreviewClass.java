@@ -7,6 +7,8 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.run.Interpreter;
+import net.kapitencraft.lang.run.algebra.Operand;
+import net.kapitencraft.lang.run.algebra.OperationType;
 
 import java.util.List;
 import java.util.Map;
@@ -72,6 +74,18 @@ public class PreviewClass implements LoxClass {
     public Object getStaticField(String name) {
         assertApplied();
         return target.getStaticField(name);
+    }
+
+    @Override
+    public LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
+        assertApplied();
+        return target.checkOperation(type, operand, other);
+    }
+
+    @Override
+    public Object doOperation(OperationType type, Operand operand, Object self, Object other) {
+        assertApplied();
+        return target.doOperation(type, operand, self, other);
     }
 
     @Override

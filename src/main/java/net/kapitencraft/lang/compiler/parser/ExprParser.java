@@ -7,6 +7,8 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.run.algebra.Operand;
+import net.kapitencraft.lang.run.algebra.OperationType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -139,6 +141,11 @@ public class ExprParser extends AbstractParser {
     private void checkBinary(Expr leftArg, Token operator, Expr rightArg) {
         LoxClass left = finder.findRetType(leftArg);
         LoxClass right = finder.findRetType(rightArg);
+
+        Operand operand = Operand.LEFT;
+        LoxClass result = left.checkOperation(OperationType.of(operator), Operand.LEFT, right);
+        LoxClass operatorType = left;
+        if (result == null) result = right.checkOperation(Opera)
         if (operator.type() == ADD && (left.is(VarTypeManager.STRING.get()) || right.is(VarTypeManager.STRING.get()))) return;
         if (operator.type().isCategory(ARITHMETIC_BINARY)) {
             if (!(left.superclass() == VarTypeManager.NUMBER && right.superclass() == VarTypeManager.NUMBER))

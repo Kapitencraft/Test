@@ -13,7 +13,7 @@ public class GenerateAst {
         defineAst("Expr", List.of(
                 "Assign        : Token name; Expr value; Token type",
                 "SpecialAssign : Token name; Token assignType",
-                "Binary        : Expr left; Token operator; Expr right",
+                "Binary        : Expr left; Token operator; LoxClass executor; Expr right",
                 "When          : Expr condition; Expr ifTrue; Expr ifFalse",
                 "InstCall      : Expr callee; Token name; int methodOrdinal; List<Expr> args",
                 "StaticCall    : LoxClass target; Token name; int methodOrdinal; List<Expr> args",
