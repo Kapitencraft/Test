@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.visitor;
 
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.clazz.ArrayClass;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.analyser.VarAnalyser;

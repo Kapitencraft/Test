@@ -97,6 +97,8 @@
                           "line": 7,
                           "lineStartIndex": 23
                         },
+                        "executor": "scripted.lang.int",
+                        "operand": "LEFT",
                         "right": {
                           "TYPE": "literal",
                           "value": {
@@ -118,6 +120,8 @@
                         "line": 7,
                         "lineStartIndex": 27
                       },
+                      "executor": "scripted.lang.int",
+                      "operand": "LEFT",
                       "right": {
                         "TYPE": "binary",
                         "left": {
@@ -140,6 +144,8 @@
                           "line": 7,
                           "lineStartIndex": 31
                         },
+                        "executor": "scripted.lang.int",
+                        "operand": "LEFT",
                         "right": {
                           "TYPE": "literal",
                           "value": {
@@ -163,6 +169,8 @@
                     "line": 7,
                     "lineStartIndex": 37
                   },
+                  "executor": "scripted.lang.double",
+                  "operand": "LEFT",
                   "right": {
                     "TYPE": "unary",
                     "operator": {

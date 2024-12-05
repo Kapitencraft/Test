@@ -13,7 +13,10 @@ public class FloatClass extends PrimitiveClass {
 
     @Override
     public LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
-        return other.is(VarTypeManager.NUMBER) ? other : VarTypeManager.VOID;
+        if (other.isChildOf(VarTypeManager.NUMBER)) {
+            return type.isComparator() ? VarTypeManager.BOOLEAN : other;
+        }
+        return VarTypeManager.VOID;
     }
 
     @Override

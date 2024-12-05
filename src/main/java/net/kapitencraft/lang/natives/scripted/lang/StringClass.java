@@ -21,7 +21,7 @@ public class StringClass extends NativeClass {
 
     @Override
     public LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
-        return type == OperationType.ADDITION ? VarTypeManager.STRING.get() : VarTypeManager.VOID;
+        return type == OperationType.ADDITION ? VarTypeManager.STRING.get() : super.checkOperation(type, operand, other);
     }
 
     @Override

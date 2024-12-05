@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.oop.clazz;
 
+import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -41,10 +42,11 @@ public interface LoxClass {
     /**
      * @param type the operation
      * @param other the other type
-     * @return the resulting type or {@link VarTypeManager#VOID}, if this operation is not possible
+     * @return the resulting type or {@link VarTypeManager#VOID}, if this operation is not possible (must return {@link VarTypeManager#BOOLEAN} or {@link VarTypeManager#VOID} for comparators)
+     * <br><br>API note: it's recommended to call {@code super.checkOperation(...)} due to the given equality check
      */
     default LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
-        return VarTypeManager.VOID;
+        return type.is(TokenTypeCategory.EQUALITY) && other.is(this) ? VarTypeManager.BOOLEAN : VarTypeManager.VOID;
     }
 
     default Object doOperation(OperationType type, Operand operand, Object self, Object other) {

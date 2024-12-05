@@ -42,6 +42,8 @@
                 "line": 14,
                 "lineStartIndex": 22
               },
+              "executor": "scripted.lang.int",
+              "operand": "LEFT",
               "right": {
                 "TYPE": "literal",
                 "value": {

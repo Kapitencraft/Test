@@ -61,6 +61,8 @@
                 "line": 5,
                 "lineStartIndex": 26
               },
+              "executor": "scripted.lang.int",
+              "operand": "LEFT",
               "right": {
                 "TYPE": "literal",
                 "value": {
@@ -170,6 +172,8 @@
                       "line": 8,
                       "lineStartIndex": 46
                     },
+                    "executor": "scripted.lang.String",
+                    "operand": "LEFT",
                     "right": {
                       "TYPE": "staticCall",
                       "target": "scripted.lang.System",
@@ -191,6 +195,8 @@
                     "line": 8,
                     "lineStartIndex": 62
                   },
+                  "executor": "scripted.lang.String",
+                  "operand": "LEFT",
                   "right": {
                     "TYPE": "literal",
                     "value": {

@@ -2,6 +2,7 @@ package net.kapitencraft.lang.run.algebra;
 
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
+import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -37,5 +38,13 @@ public enum OperationType {
 
     public static OperationType of(Token operator) {
         return operationForToken.get(operator.type());
+    }
+
+    public boolean is(TokenTypeCategory category) {
+        return this.type.isCategory(category);
+    }
+
+    public boolean isComparator() {
+        return is(TokenTypeCategory.COMPARATORS) || is(TokenTypeCategory.EQUALITY);
     }
 }

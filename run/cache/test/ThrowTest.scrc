@@ -36,6 +36,8 @@
                 "line": 5,
                 "lineStartIndex": 14
               },
+              "executor": "scripted.lang.int",
+              "operand": "LEFT",
               "right": {
                 "TYPE": "literal",
                 "value": {
@@ -136,6 +138,8 @@
                     "line": 6,
                     "lineStartIndex": 31
                   },
+                  "executor": "scripted.lang.int",
+                  "operand": "LEFT",
                   "right": {
                     "TYPE": "literal",
                     "value": {
@@ -257,6 +261,8 @@
                               "line": 13,
                               "lineStartIndex": 35
                             },
+                            "executor": "scripted.lang.String",
+                            "operand": "LEFT",
                             "right": {
                               "TYPE": "get",
                               "callee": {

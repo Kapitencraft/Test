@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.oop.clazz.primitive;
 
+import com.google.errorprone.annotations.Var;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -13,7 +14,10 @@ public class IntegerClass extends PrimitiveClass {
 
     @Override
     public LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
-        return other.isChildOf(VarTypeManager.NUMBER) ? other : VarTypeManager.VOID;
+        if (other.isChildOf(VarTypeManager.NUMBER)) {
+            return type.isComparator() ? VarTypeManager.BOOLEAN : other;
+        }
+        return VarTypeManager.VOID;
     }
 
     @Override

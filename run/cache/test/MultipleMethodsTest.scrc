@@ -86,6 +86,8 @@
                     "line": 13,
                     "lineStartIndex": 22
                   },
+                  "executor": "scripted.lang.int",
+                  "operand": "LEFT",
                   "right": {
                     "TYPE": "literal",
                     "value": {
@@ -301,6 +303,8 @@
                   "line": 5,
                   "lineStartIndex": 23
                 },
+                "executor": "scripted.lang.String",
+                "operand": "LEFT",
                 "right": {
                   "TYPE": "varRef",
                   "name": {
