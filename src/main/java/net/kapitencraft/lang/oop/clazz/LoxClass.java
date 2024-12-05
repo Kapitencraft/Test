@@ -34,13 +34,17 @@ public interface LoxClass {
         return staticFieldData.get(name);
     }
 
+    default LoxClass getComponentType() {
+        return null;
+    }
+
     /**
      * @param type the operation
      * @param other the other type
-     * @return the resulting type or null, if this operation is not possible
+     * @return the resulting type or {@link VarTypeManager#VOID}, if this operation is not possible
      */
     default LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
-        return null;
+        return VarTypeManager.VOID;
     }
 
     default Object doOperation(OperationType type, Operand operand, Object self, Object other) {

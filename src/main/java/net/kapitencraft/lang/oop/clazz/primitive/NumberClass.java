@@ -14,7 +14,7 @@ public class NumberClass extends PrimitiveClass {
 
     @Override
     public LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
-        return other.isChildOf(VarTypeManager.NUMBER) ? other : null;
+        return other.isChildOf(VarTypeManager.NUMBER) ? other : VarTypeManager.VOID;
     }
 
     @Override

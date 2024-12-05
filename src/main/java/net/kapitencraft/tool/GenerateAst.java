@@ -13,7 +13,7 @@ public class GenerateAst {
         defineAst("Expr", List.of(
                 "Assign        : Token name; Expr value; Token type",
                 "SpecialAssign : Token name; Token assignType",
-                "Binary        : Expr left; Token operator; LoxClass executor; Expr right",
+                "Binary        : Expr left; Token operator; LoxClass executor; Operand operand; Expr right",
                 "When          : Expr condition; Expr ifTrue; Expr ifFalse",
                 "InstCall      : Expr callee; Token name; int methodOrdinal; List<Expr> args",
                 "StaticCall    : LoxClass target; Token name; int methodOrdinal; List<Expr> args",
@@ -35,8 +35,12 @@ public class GenerateAst {
                 "Unary         : Token operator; Expr right",
                 "VarRef        : Token name",
                 "Constructor   : Token keyword; LoxClass target; List<Expr> params; int ordinal"
+        ), List.of(
+                "net.kapitencraft.lang.run.algebra.Operand",
+                "java.util.map"
         ));
-        defineAst("Stmt", List.of(
+        defineAst("Stmt",
+                List.of(
                 "Block            : List<Stmt> statements",
                 "Expression       : Expr expression",
                 "If               : Expr condition; Stmt thenBranch; Stmt elseBranch; List<Pair<Expr,Stmt>> elifs; Token keyword",
@@ -48,10 +52,12 @@ public class GenerateAst {
                 "ForEach          : LoxClass type; Token name; Expr initializer; Stmt body",
                 "LoopInterruption : Token type",
                 "Try              : Block body; List<Pair<Pair<List<LoxClass>,Token>,Block>> catches; Block finale"
+        ), List.of(
+                "net.kapitencraft.tool.Pair"
         ));
     }
 
-    private static void defineAst(String baseName, List<String> types) throws IOException {
+    private static void defineAst(String baseName, List<String> types, List<String> imports) throws IOException {
         String path = DIRECTORY + "/" + baseName + ".java";
         File file = new File(path);
         if (!file.exists()) {
@@ -67,6 +73,11 @@ public class GenerateAst {
         writer.println("import net.kapitencraft.lang.holder.token.Token;");
         writer.println("import net.kapitencraft.tool.Pair;");
         writer.println("import net.kapitencraft.lang.oop.clazz.LoxClass;");
+        for (String s : imports) {
+            writer.print("import ");
+            writer.print(s);
+            writer.println(";");
+        }
         writer.println();
         writer.println("public abstract class " + baseName + " {");
         writer.println();

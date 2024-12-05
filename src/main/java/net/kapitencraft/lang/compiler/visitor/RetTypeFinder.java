@@ -1,10 +1,14 @@
 package net.kapitencraft.lang.compiler.visitor;
 
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.oop.clazz.ArrayClass;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.analyser.VarAnalyser;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.run.algebra.Operand;
+import net.kapitencraft.lang.run.algebra.OperationType;
 
 import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
 import static net.kapitencraft.lang.holder.token.TokenTypeCategory.EQUALITY;
@@ -32,12 +36,7 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
 
     @Override
     public LoxClass visitBinaryExpr(Expr.Binary expr) {
-        LoxClass left = findRetType(expr.left);
-        LoxClass right = findRetType(expr.right);
-        TokenType type = expr.operator.type();
-        if (type == TokenType.ADD && (left == VarTypeManager.STRING || right == VarTypeManager.STRING)) return VarTypeManager.STRING.get(); //check if at least one of the values is string
-        if (type.isCategory(COMPARATORS) || type.isCategory(EQUALITY)) return VarTypeManager.BOOLEAN;
-        return left;
+        return expr.executor.checkOperation(OperationType.of(expr.operator), expr.operand, findRetType(expr.operand == Operand.LEFT ? expr.right : expr.left));
     }
 
     @Override
@@ -67,7 +66,7 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
 
     @Override
     public LoxClass visitArrayGetExpr(Expr.ArrayGet expr) {
-        return null;
+        return findRetType(expr.object).getComponentType();
     }
 
     @Override
@@ -82,7 +81,7 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
 
     @Override
     public LoxClass visitArraySetExpr(Expr.ArraySet expr) {
-        return null;
+        return findRetType(expr.object).getComponentType();
     }
 
     @Override

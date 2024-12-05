@@ -13,11 +13,11 @@ public class CharacterClass extends PrimitiveClass {
 
     @Override
     public LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
-        return other.isChildOf(VarTypeManager.INTEGER) ? VarTypeManager.INTEGER : null;
+        return other.isChildOf(VarTypeManager.INTEGER) ? VarTypeManager.INTEGER : VarTypeManager.VOID;
     }
 
     @Override
-    public Object doOperation(OperationType type, Object self, Object other) {
-        return VarTypeManager.INTEGER.doOperation(type, self, other);
+    public Object doOperation(OperationType type, Operand operand, Object self, Object other) {
+        return VarTypeManager.INTEGER.doOperation(type, operand, self, other);
     }
 }

@@ -15,7 +15,7 @@ public class DoubleClass extends PrimitiveClass {
 
     @Override
     public LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
-        return other.is(VarTypeManager.NUMBER) ? VarTypeManager.DOUBLE : null;
+        return other.is(VarTypeManager.NUMBER) ? VarTypeManager.DOUBLE : VarTypeManager.VOID;
     }
 
     @Override

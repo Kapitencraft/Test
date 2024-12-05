@@ -9,6 +9,7 @@ import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
+import net.kapitencraft.tool.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -138,23 +139,23 @@ public class ExprParser extends AbstractParser {
         return expr;
     }
 
-    private void checkBinary(Expr leftArg, Token operator, Expr rightArg) {
+    private Pair<LoxClass, Operand> getExecutor(Expr leftArg, Token operator, Expr rightArg) {
         LoxClass left = finder.findRetType(leftArg);
         LoxClass right = finder.findRetType(rightArg);
 
         Operand operand = Operand.LEFT;
-        LoxClass result = left.checkOperation(OperationType.of(operator), Operand.LEFT, right);
-        LoxClass operatorType = left;
-        if (result == null) result = right.checkOperation(Opera)
-        if (operator.type() == ADD && (left.is(VarTypeManager.STRING.get()) || right.is(VarTypeManager.STRING.get()))) return;
-        if (operator.type().isCategory(ARITHMETIC_BINARY)) {
-            if (!(left.superclass() == VarTypeManager.NUMBER && right.superclass() == VarTypeManager.NUMBER))
-                error(operator, "both values must be numbers");
-        } else if (operator.type().isCategory(BOOL_BINARY) && !(left == VarTypeManager.BOOLEAN && right == VarTypeManager.BOOLEAN))
-            error(operator, "both values must be boolean");
-        else if (left != right)
-            error(operator, "can not combine values of different types");
-
+        LoxClass executor = left;
+        LoxClass result = left.checkOperation(OperationType.of(operator), operand, right);
+        if (result == VarTypeManager.VOID) {
+            operand = Operand.RIGHT;
+            result = right.checkOperation(OperationType.of(operator), operand, left);
+            executor = right;
+        }
+        if (result == VarTypeManager.VOID) {
+            error(operator, "operator '" + operator.lexeme() + "' not possible for argument types " + left.absoluteName() + " and " + right.absoluteName());
+            return Pair.of(VarTypeManager.VOID, Operand.LEFT);
+        }
+        return Pair.of(executor, operand);
     }
 
     private Expr equality() {
@@ -163,8 +164,8 @@ public class ExprParser extends AbstractParser {
         while (match(EQUALITY)) {
             Token operator = previous();
             Expr right = comparison();
-            checkBinary(expr, operator, right);
-            expr = new Expr.Binary(expr, operator, right);
+            Pair<LoxClass, Operand> executorInfo = getExecutor(expr, operator, right);
+            expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
         }
 
         return expr;
@@ -176,8 +177,8 @@ public class ExprParser extends AbstractParser {
         while (match(COMPARATORS)) {
             Token operator = previous();
             Expr right = term();
-            checkBinary(expr, operator, right);
-            expr = new Expr.Binary(expr, operator, right);
+            Pair<LoxClass, Operand> executorInfo = getExecutor(expr, operator, right);
+            expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
         }
 
         return expr;
@@ -190,8 +191,8 @@ public class ExprParser extends AbstractParser {
             Token operator = previous();
             Expr right = factor();
 
-            checkBinary(expr, operator, right);
-            expr = new Expr.Binary(expr, operator, right);
+            Pair<LoxClass, Operand> executorInfo = getExecutor(expr, operator, right);
+            expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
         }
 
         return expr;
@@ -203,8 +204,8 @@ public class ExprParser extends AbstractParser {
         while (match(DIV, MUL, MOD, POW)) {
             Token operator = previous();
             Expr right = unary();
-            checkBinary(expr, operator, right);
-            expr = new Expr.Binary(expr, operator, right);
+            Pair<LoxClass, Operand> executorInfo = getExecutor(expr, operator, right);
+            expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
         }
 
         return expr;

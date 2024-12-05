@@ -9,6 +9,7 @@ import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
@@ -114,8 +115,10 @@ public class CacheLoader {
     private static Expr readBinary(JsonObject object) {
         Expr left = readSubExpr(object, "left");
         Token operator = Token.readFromSubObject(object, "operator");
+        LoxClass executor = ClassLoader.loadClassReference(object, "executor");
+        Operand operand = Operand.valueOf(GsonHelper.getAsString(object, "operand"));
         Expr right = readSubExpr(object, "right");
-        return new Expr.Binary(left, operator, right);
+        return new Expr.Binary(left, operator, executor, operand, right);
     }
 
     private static Expr readWhen(JsonObject object) {

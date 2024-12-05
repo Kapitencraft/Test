@@ -1,5 +1,7 @@
 package net.kapitencraft.lang.compiler.parser;
 
+import net.kapitencraft.lang.compiler.VarTypeParser;
+import net.kapitencraft.lang.compiler.visitor.ReturnScanner;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
@@ -12,6 +14,7 @@ import net.kapitencraft.tool.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Stack;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 import static net.kapitencraft.lang.holder.token.TokenType.C_BRACKET_C;
@@ -24,10 +27,34 @@ public class StmtParser extends ExprParser {
     }
 
     private LoxClass funcRetType = VarTypeManager.VOID;
+    private final Stack<Boolean> seenReturn = new Stack<>();
     private int loopIndex = 0;
 
-    private Stmt declaration() {
+    @Override
+    public void apply(Token[] toParse, VarTypeParser targetAnalyser) {
+        super.apply(toParse, targetAnalyser);
+        seenReturn.add(false);
+    }
 
+    private void seenReturn() {
+        seenReturn.set(seenReturn.size()-1, true);
+    }
+
+    private void pushScope() {
+        varAnalyser.push();
+        seenReturn.add(false);
+    }
+
+    private void popScope() {
+        varAnalyser.pop();
+        seenReturn.pop();
+    }
+
+    private Stmt declaration() {
+        if (seenReturn.peek()) {
+            error(peek(), "unreachable statement");
+            return null;
+        }
         try {
             if (match(FINAL)) return varDeclaration(true, consumeVarType());
             if (match(IDENTIFIER)) {
@@ -102,13 +129,13 @@ public class StmtParser extends ExprParser {
             do {
                 targets.add(consumeVarType());
             } while (match(SINGLE_OR));
-            varAnalyser.push();
+            pushScope();
             Token name = consumeIdentifier();
             consumeBracketClose("catch");
             createVar(name, VarTypeManager.THROWABLE.get(), true, false);
             consumeCurlyOpen("catch statement");
             Stmt.Block block = new Stmt.Block(block("catch statement"));
-            varAnalyser.pop();
+            popScope();
             catches.add(Pair.of(
                     Pair.of(
                             targets,
@@ -132,6 +159,7 @@ public class StmtParser extends ExprParser {
         expectType(val, VarTypeManager.THROWABLE.get());
         consumeEndOfArg();
         popExpectation();
+        seenReturn();
         return new Stmt.Throw(keyword, val);
     }
 
@@ -147,6 +175,7 @@ public class StmtParser extends ExprParser {
         else if (funcRetType != VarTypeManager.VOID) error(keyword, "incompatible types: missing return value.");
 
         consumeEndOfArg();
+        seenReturn();
         return new Stmt.Return(keyword, value);
     }
 
@@ -154,6 +183,7 @@ public class StmtParser extends ExprParser {
         Token token = previous();
         if (loopIndex <= 0) error(token, "'" + token.lexeme() + "' can only be used inside loops");
         consumeEndOfArg();
+        seenReturn();
         return new Stmt.LoopInterruption(token);
     }
 
@@ -161,7 +191,7 @@ public class StmtParser extends ExprParser {
         Token keyword = previous();
 
         consumeBracketOpen("for");
-        varAnalyser.push();
+        pushScope();
         loopIndex++;
 
         Optional<LoxClass> type = tryConsumeVarType();
@@ -179,7 +209,7 @@ public class StmtParser extends ExprParser {
                 varAnalyser.add(name.lexeme(), type.get(), true, false);
                 Stmt stmt = statement();
                 loopIndex--;
-                varAnalyser.pop();
+                popScope();
                 return new Stmt.ForEach(type.get(), name, init, stmt);
             }
             initializer = varDecl(false, type.get(), name);
@@ -206,7 +236,7 @@ public class StmtParser extends ExprParser {
 
         Stmt body = statement();
 
-        varAnalyser.pop();
+        popScope();
         loopIndex--;
 
         return new Stmt.For(initializer, condition, increment, body, keyword);
@@ -245,9 +275,9 @@ public class StmtParser extends ExprParser {
         this.expectCondition(condition);
         consumeBracketClose("while condition");
         this.loopIndex++;
-        this.varAnalyser.push();
+        this.pushScope();
         Stmt body = statement();
-        this.varAnalyser.pop();
+        this.popScope();
         this.loopIndex--;
 
         return new Stmt.While(condition, body, keyword);
@@ -278,7 +308,7 @@ public class StmtParser extends ExprParser {
     }
 
     public void applyMethod(List<Pair<LoxClass, String>> params, LoxClass targetClass, LoxClass superclass, LoxClass funcRetType) {
-        this.varAnalyser.push();
+        this.pushScope();
         this.funcRetType = funcRetType;
         if (targetClass != null) this.varAnalyser.add("this", targetClass, true, true);
         if (superclass != null) this.varAnalyser.add("super", superclass, true, true);
@@ -288,7 +318,7 @@ public class StmtParser extends ExprParser {
     }
 
     public void popMethod() {
-        this.varAnalyser.pop();
+        this.popScope();
         funcRetType = VarTypeManager.VOID;
     }
 }

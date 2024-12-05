@@ -3,7 +3,7 @@ package net.kapitencraft.lang.holder.ast;
 import java.util.Map;
 import java.util.List;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.tool.Pair;
+import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 public abstract class Expr {
@@ -70,12 +70,14 @@ public abstract class Expr {
         public final Expr left;
         public final Token operator;
         public final LoxClass executor;
+        public final Operand operand;
         public final Expr right;
 
-        public Binary(Expr left, Token operator, LoxClass executor, Expr right) {
+        public Binary(Expr left, Token operator, LoxClass executor, Operand operand, Expr right) {
             this.left = left;
             this.operator = operator;
             this.executor = executor;
+            this.operand = operand;
             this.right = right;
         }
 

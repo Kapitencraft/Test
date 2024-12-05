@@ -13,7 +13,7 @@ public class IntegerClass extends PrimitiveClass {
 
     @Override
     public LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
-        return other.is(VarTypeManager.NUMBER) ? other : null;
+        return other.isChildOf(VarTypeManager.NUMBER) ? other : VarTypeManager.VOID;
     }
 
     @Override

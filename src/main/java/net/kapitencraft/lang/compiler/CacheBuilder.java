@@ -59,6 +59,8 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         object.addProperty("TYPE", "binary");
         object.add("left", cache(expr.left));
         object.add("operator", expr.operator.toJson());
+        object.addProperty("executor", expr.executor.absoluteName());
+        object.addProperty("operand", expr.operand.name());
         object.add("right", cache(expr.right));
         return object;
     }
