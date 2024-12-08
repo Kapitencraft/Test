@@ -6,7 +6,7 @@ class ThrowTest {
         return ThrowTest.test(i-1);
     }
 
-    static void main(String args) {
+    static void main(String[] args) {
         try {
             ThrowTest.test(10);
         } catch (ArithmeticException e) {

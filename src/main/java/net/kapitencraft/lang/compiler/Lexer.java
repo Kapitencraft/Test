@@ -103,6 +103,8 @@ public class Lexer {
             case ')': addToken(BRACKET_C); break;
             case '{': addToken(C_BRACKET_O); break;
             case '}': addToken(C_BRACKET_C); break;
+            case '[': addToken(S_BRACKET_O); break;
+            case ']': addToken(S_BRACKET_C); break;
             case ',': addToken(COMMA); break;
             case '.': addToken(DOT); break;
             case ';': addToken(EOA); break;

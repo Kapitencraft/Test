@@ -90,9 +90,10 @@ public interface LoxClass {
         }
     }
 
-    default Object assignStaticFieldWithOperator(String name, Object val, Token type) {
+    default Object assignStaticFieldWithOperator(String name, Object val, Token type, LoxClass executor, Operand operand) {
         checkInit();
-        return this.assignStaticField(name, Math.merge(getStaticField(name), val, type));
+        Object newVal = Interpreter.INSTANCE.visitAlgebra(getStaticField(name), val, executor, type, operand);
+        return this.assignStaticField(name, newVal);
     }
 
     String name();

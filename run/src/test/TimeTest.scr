@@ -1,7 +1,7 @@
 package test;
 
 class TimeTest {
-    static void main(String args) {
+    static void main(String[] args) {
         for (int i = 0; i < 1000; i++) {
             System.print(i);
         }

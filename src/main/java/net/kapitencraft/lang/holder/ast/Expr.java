@@ -1,10 +1,10 @@
 package net.kapitencraft.lang.holder.ast;
 
-import java.util.Map;
 import java.util.List;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.run.algebra.Operand;
+import java.util.Map;
 
 public abstract class Expr {
 
@@ -38,11 +38,15 @@ public abstract class Expr {
         public final Token name;
         public final Expr value;
         public final Token type;
+        public final LoxClass executor;
+        public final Operand operand;
 
-        public Assign(Token name, Expr value, Token type) {
+        public Assign(Token name, Expr value, Token type, LoxClass executor, Operand operand) {
             this.name = name;
             this.value = value;
             this.type = type;
+            this.executor = executor;
+            this.operand = operand;
         }
 
         @Override
@@ -192,12 +196,16 @@ public abstract class Expr {
         public final Token name;
         public final Expr value;
         public final Token assignType;
+        public final LoxClass executor;
+        public final Operand operand;
 
-        public Set(Expr object, Token name, Expr value, Token assignType) {
+        public Set(Expr object, Token name, Expr value, Token assignType, LoxClass executor, Operand operand) {
             this.object = object;
             this.name = name;
             this.value = value;
             this.assignType = assignType;
+            this.executor = executor;
+            this.operand = operand;
         }
 
         @Override
@@ -211,12 +219,16 @@ public abstract class Expr {
         public final Token name;
         public final Expr value;
         public final Token assignType;
+        public final LoxClass executor;
+        public final Operand operand;
 
-        public StaticSet(LoxClass target, Token name, Expr value, Token assignType) {
+        public StaticSet(LoxClass target, Token name, Expr value, Token assignType, LoxClass executor, Operand operand) {
             this.target = target;
             this.name = name;
             this.value = value;
             this.assignType = assignType;
+            this.executor = executor;
+            this.operand = operand;
         }
 
         @Override
@@ -230,12 +242,16 @@ public abstract class Expr {
         public final Expr index;
         public final Expr value;
         public final Token assignType;
+        public final LoxClass executor;
+        public final Operand operand;
 
-        public ArraySet(Expr object, Expr index, Expr value, Token assignType) {
+        public ArraySet(Expr object, Expr index, Expr value, Token assignType, LoxClass executor, Operand operand) {
             this.object = object;
             this.index = index;
             this.value = value;
             this.assignType = assignType;
+            this.executor = executor;
+            this.operand = operand;
         }
 
         @Override

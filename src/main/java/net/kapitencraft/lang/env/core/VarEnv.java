@@ -1,11 +1,13 @@
 package net.kapitencraft.lang.env.core;
 
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.env.abst.Leveled;
 import net.kapitencraft.lang.run.Interpreter;
+import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.tool.Math;
 
 public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
@@ -35,10 +37,11 @@ public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
         }
     }
 
-    public Object assignWithOperator(Token type, Token name, Object value) {
+    public Object assignWithOperator(Token type, Token name, Object value, LoxClass executor, Operand operand) {
         Object current = get(name);
-        this.assign(name, Math.merge(current, value, type));
-        return get(name);
+        Object result = Interpreter.INSTANCE.visitAlgebra(current, value, executor, type, operand);
+        this.assign(name, result);
+        return result;
     }
 
     public Object specialAssign(Token name, Token type) {

@@ -1,10 +1,9 @@
 package net.kapitencraft.lang.holder.ast;
 
-import java.util.Map;
 import java.util.List;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.tool.Pair;
 
 public abstract class Stmt {
 

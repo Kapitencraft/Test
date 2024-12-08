@@ -66,7 +66,9 @@ public class CacheLoader {
         Expr index = readSubExpr(object, "index");
         Expr value = readSubExpr(object, "value");
         Token assign =Token.readFromSubObject(object, "assign");
-        return new Expr.ArraySet(obj, index, value, assign);
+        LoxClass executor = ClassLoader.loadClassReference(object, "executor");
+        Operand operand = Operand.fromJson(object, "operand");
+        return new Expr.ArraySet(obj, index, value, assign, executor, operand);
     }
 
     private static Expr readSpecialArraySet(JsonObject object) {
@@ -93,7 +95,9 @@ public class CacheLoader {
         Token name = Token.readFromSubObject(object, "name");
         Expr value = readSubExpr(object, "value");
         Token assignType = Token.readFromSubObject(object, "assignType");
-        return new Expr.StaticSet(target, name, value, assignType);
+        LoxClass executor = ClassLoader.loadClassReference(object, "executor");
+        Operand operand = Operand.fromJson(object, "operand");
+        return new Expr.StaticSet(target, name, value, assignType, executor, operand);
 
     }
 
@@ -116,7 +120,7 @@ public class CacheLoader {
         Expr left = readSubExpr(object, "left");
         Token operator = Token.readFromSubObject(object, "operator");
         LoxClass executor = ClassLoader.loadClassReference(object, "executor");
-        Operand operand = Operand.valueOf(GsonHelper.getAsString(object, "operand"));
+        Operand operand = Operand.fromJson(object, "operand");
         Expr right = readSubExpr(object, "right");
         return new Expr.Binary(left, operator, executor, operand, right);
     }
@@ -147,7 +151,9 @@ public class CacheLoader {
         Token name = Token.readFromSubObject(object, "name");
         Expr value = readSubExpr(object, "value");
         Token assignType = Token.readFromSubObject(object, "assignType");
-        return new Expr.Set(callee, name, value, assignType);
+        LoxClass executor = ClassLoader.loadClassReference(object, "executor");
+        Operand operand = Operand.fromJson(object, "operand");
+        return new Expr.Set(callee, name, value, assignType, executor, operand);
     }
 
     private static Expr readSpecialSet(JsonObject object) {
@@ -217,7 +223,9 @@ public class CacheLoader {
         Token name = Token.readFromSubObject(object, "name");
         Expr value = readSubExpr(object, "value");
         Token type = Token.readFromSubObject(object, "type");
-        return new Expr.Assign(name, value, type);
+        LoxClass executor = ClassLoader.loadClassReference(object, "executor");
+        Operand operand = Operand.valueOf(GsonHelper.getAsString(object, "operand"));
+        return new Expr.Assign(name, value, type, executor, operand);
     }
 
     private static Expr readSpecialAssign(JsonObject object) {

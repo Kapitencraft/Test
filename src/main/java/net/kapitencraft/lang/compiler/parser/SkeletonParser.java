@@ -29,13 +29,6 @@ public class SkeletonParser extends AbstractParser {
             .build();
     private final String fileName;
 
-    private LoxClass consumeVarType(VarTypeParser parser) {
-        Token token = consumeIdentifier();
-        LoxClass loxClass = parser.getClass(token.lexeme());
-        if (loxClass == null) error(token, "unknown symbol");
-        return loxClass;
-    }
-
     public SkeletonParser(Compiler.ErrorLogger errorLogger, String fileName) {
         super(errorLogger);
         this.fileName = fileName;
@@ -59,13 +52,13 @@ public class SkeletonParser extends AbstractParser {
 
         parser.addClass(target, null);
         LoxClass superClass = VarTypeManager.OBJECT.get();
-        if (match(EXTENDS)) superClass = consumeVarType(parser);
+        if (match(EXTENDS)) superClass = consumeVarType();
 
         List<LoxClass> implemented = new ArrayList<>();
 
         if (match(IMPLEMENTS)) {
             do {
-                implemented.add(consumeVarType(parser));
+                implemented.add(consumeVarType());
             } while (match(COMMA));
         }
 
@@ -84,14 +77,14 @@ public class SkeletonParser extends AbstractParser {
                 if (Objects.equals(peek().lexeme(), name.lexeme())) {
                     Token constName = consume(IDENTIFIER, "that shouldn't have happened... (expected class name to be identifier)");
                     consumeBracketOpen("constructors");
-                    MethodDecl decl = funcDecl(parser, VarTypeManager.VOID, constName, false, false, false);
+                    MethodDecl decl = funcDecl(VarTypeManager.VOID, constName, false, false, false);
                     constructors.add(decl);
                 } else {
                     ModifierScope.CLASS.check(this, modifiers);
-                    LoxClass type = consumeVarType(parser);
+                    LoxClass type = consumeVarType();
                     Token elementName = consumeIdentifier();
                     if (match(BRACKET_O)) {
-                        MethodDecl decl = funcDecl(parser, type, elementName, modifiers.isFinal(), modifiers.isStatic(), modifiers.isAbstract());
+                        MethodDecl decl = funcDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic(), modifiers.isAbstract());
                         methods.add(decl);
                     } else {
                         if (modifiers.isAbstract()) error(elementName, "fields may not be abstract");
@@ -130,7 +123,7 @@ public class SkeletonParser extends AbstractParser {
 
         if (match(EXTENDS)) {
             do {
-                parentInterfaces.add(consumeVarType(parser));
+                parentInterfaces.add(consumeVarType());
             } while (match(COMMA));
         }
 
@@ -144,11 +137,11 @@ public class SkeletonParser extends AbstractParser {
             ModifiersParser modifiers = CLASS_MODIFIERS;
             modifiers.parse();
             if (readClass(enclosed::add, pckID, modifiers)) {
-                LoxClass type = consumeVarType(parser);
+                LoxClass type = consumeVarType();
                 Token elementName = consumeIdentifier();
                 if (match(BRACKET_O)) {
                     ModifierScope.INTERFACE.check(this, modifiers);
-                    MethodDecl decl = funcDecl(parser, type, elementName, modifiers.isFinal(), modifiers.isStatic(), !modifiers.isDefault());
+                    MethodDecl decl = funcDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic(), !modifiers.isDefault());
                     methods.add(decl);
                 } else {
                     ModifierScope.INTERFACE_FIELD.check(this, modifiers);
@@ -176,7 +169,7 @@ public class SkeletonParser extends AbstractParser {
 
         if (match(IMPLEMENTS)) {
             do {
-                interfaces.add(consumeVarType(parser));
+                interfaces.add(consumeVarType());
             } while (match(COMMA));
         }
 
@@ -212,14 +205,14 @@ public class SkeletonParser extends AbstractParser {
                 if (Objects.equals(peek().lexeme(), name.lexeme())) {
                     Token constName = consume(IDENTIFIER, "that shouldn't have happened... (expected class name to be identifier)");
                     consumeBracketOpen("constructors");
-                    MethodDecl decl = funcDecl(parser, VarTypeManager.VOID, constName, false, false, false);
+                    MethodDecl decl = funcDecl(VarTypeManager.VOID, constName, false, false, false);
                     constructors.add(decl);
                 } else {
                     ModifierScope.CLASS.check(this, modifiers);
-                    LoxClass type = consumeVarType(parser);
+                    LoxClass type = consumeVarType();
                     Token elementName = consumeIdentifier();
                     if (match(BRACKET_O)) {
-                        MethodDecl decl = funcDecl(parser, type, elementName, modifiers.isFinal(), modifiers.isStatic(), modifiers.isAbstract());
+                        MethodDecl decl = funcDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic(), modifiers.isAbstract());
                         methods.add(decl);
                     } else {
                         if (modifiers.isAbstract()) error(elementName, "fields may not be abstract");
@@ -310,7 +303,7 @@ public class SkeletonParser extends AbstractParser {
         }
     }
 
-    private MethodDecl funcDecl(VarTypeParser parser, LoxClass type, Token name, boolean isFinal, boolean isStatic, boolean isAbstract) {
+    private MethodDecl funcDecl(LoxClass type, Token name, boolean isFinal, boolean isStatic, boolean isAbstract) {
 
         List<Pair<LoxClass, String>> parameters = new ArrayList<>();
         if (!check(BRACKET_C)) {
@@ -319,7 +312,7 @@ public class SkeletonParser extends AbstractParser {
                     error(peek(), "Can't have more than 255 parameters.");
                 }
 
-                LoxClass pType = consumeVarType(parser);
+                LoxClass pType = consumeVarType();
                 Token pName = consume(IDENTIFIER, "Expected parameter name.");
                 parameters.add(Pair.of(pType, pName.lexeme()));
             } while (match(COMMA));
