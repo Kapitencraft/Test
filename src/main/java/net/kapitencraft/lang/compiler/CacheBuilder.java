@@ -41,6 +41,8 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         object.add("name", expr.name.toJson());
         object.add("value", cache(expr.value));
         object.add("type", expr.type.toJson());
+        object.addProperty("executor", expr.executor.absoluteName());
+        object.addProperty("operand", expr.operand.name());
         return object;
     }
 
@@ -131,6 +133,8 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         object.add("name", expr.name.toJson());
         object.add("value", cache(expr.value));
         object.add("assignType", expr.assignType.toJson());
+        object.addProperty("executor", expr.executor.absoluteName());
+        object.addProperty("operand", expr.operand.name());
         return object;
     }
 
@@ -142,6 +146,8 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         object.add("name", expr.name.toJson());
         object.add("value", cache(expr.value));
         object.add("assignType", expr.assignType.toJson());
+        object.addProperty("executor", expr.executor.absoluteName());
+        object.addProperty("operand", expr.operand.name());
         return object;
     }
 
@@ -153,6 +159,8 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         object.add("index", cache(expr.index));
         object.add("value", cache(expr.value));
         object.add("assign", expr.assignType.toJson());
+        object.addProperty("executor", expr.executor.absoluteName());
+        object.addProperty("operand", expr.operand.name());
         return object;
     }
 

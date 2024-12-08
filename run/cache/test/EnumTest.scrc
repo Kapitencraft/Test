@@ -9,7 +9,7 @@
         "retType": "scripted.lang.void",
         "params": [
           {
-            "type": "scripted.lang.String",
+            "type": "scripted.lang.String[]",
             "name": "args"
           }
         ],
@@ -136,7 +136,9 @@
               "literal": {},
               "line": 12,
               "lineStartIndex": 16
-            }
+            },
+            "executor": "scripted.lang.void",
+            "operand": "LEFT"
           }
         },
         {
@@ -176,7 +178,9 @@
               "literal": {},
               "line": 13,
               "lineStartIndex": 19
-            }
+            },
+            "executor": "scripted.lang.void",
+            "operand": "LEFT"
           }
         }
       ],

@@ -9,7 +9,7 @@ class OverflowTest {
         OverflowTest.test();
     }
 
-    static void main(String args) {
+    static void main(String[] args) {
         OverflowTest.test();
     }
 }

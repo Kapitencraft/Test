@@ -79,13 +79,25 @@ public class ExprParser extends AbstractParser {
                 checkVarExistence(name, assign.type() != TokenType.ASSIGN,
                         false);
                 checkVarType(name, value);
-                if (assign.type() == TokenType.ASSIGN) varAnalyser.setHasValue(name.lexeme());
+                Pair<LoxClass, Operand> executor;
+                if (assign.type() == TokenType.ASSIGN) {
+                    varAnalyser.setHasValue(name.lexeme());
+                    executor = Pair.of(VarTypeManager.VOID, Operand.LEFT);
+                } else executor = getExecutor(varAnalyser.getType(name.lexeme()), assign, value);
 
-                return new Expr.Assign(name, value, assign);
+                return new Expr.Assign(name, value, assign, executor.left(), executor.right());
             } else if (expr instanceof Expr.Get get) {
                 LoxClass target = finder.findRetType(get.object);
                 expectType(get.name, target.getFieldType(get.name.lexeme()), finder.findRetType(value));
-                return new Expr.Set(get.object, get.name, value, assign);
+
+                Pair<LoxClass, Operand> executor;
+                if (assign.type() != ASSIGN) executor = getExecutor(target, assign, value);
+                else executor = Pair.of(VarTypeManager.VOID, Operand.LEFT);
+                return new Expr.Set(get.object, get.name, value, assign, executor.left(), executor.right());
+            } else if (expr instanceof Expr.ArrayGet get) {
+
+                Pair<LoxClass, Operand> executor = getExecutor(get, assign, value);
+                return new Expr.ArraySet(get.object, get.index, value, assign, executor.left(), executor.right());
             }
 
             error(assign, "Invalid assignment target.");
@@ -139,16 +151,15 @@ public class ExprParser extends AbstractParser {
         return expr;
     }
 
-    private Pair<LoxClass, Operand> getExecutor(Expr leftArg, Token operator, Expr rightArg) {
-        LoxClass left = finder.findRetType(leftArg);
-        LoxClass right = finder.findRetType(rightArg);
-
+    private Pair<LoxClass, Operand> getExecutor(LoxClass left, Token operator, LoxClass right) {
         Operand operand = Operand.LEFT;
         LoxClass executor = left;
-        LoxClass result = left.checkOperation(OperationType.of(operator), operand, right);
+        OperationType type = OperationType.of(operator);
+        assert type != null;
+        LoxClass result = left.checkOperation(type, operand, right);
         if (result == VarTypeManager.VOID) {
             operand = Operand.RIGHT;
-            result = right.checkOperation(OperationType.of(operator), operand, left);
+            result = right.checkOperation(type, operand, left);
             executor = right;
         }
         if (result == VarTypeManager.VOID) {
@@ -156,6 +167,14 @@ public class ExprParser extends AbstractParser {
             return Pair.of(VarTypeManager.VOID, Operand.LEFT);
         }
         return Pair.of(executor, operand);
+    }
+
+    private Pair<LoxClass, Operand> getExecutor(Expr leftArg, Token operator, Expr rightArg) {
+        return getExecutor(finder.findRetType(leftArg), operator, finder.findRetType(rightArg));
+    }
+
+    private Pair<LoxClass, Operand> getExecutor(LoxClass left, Token operator, Expr rightArg) {
+        return getExecutor(left, operator, finder.findRetType(rightArg));
     }
 
     private Expr equality() {
@@ -312,7 +331,8 @@ public class ExprParser extends AbstractParser {
     private Expr staticAssign(LoxClass target, Token name) {
         Token type = previous();
         Expr value = expression();
-        return new Expr.StaticSet(target, name, value, type);
+        Pair<LoxClass, Operand> executor = getExecutor(target.getStaticFieldType(name.lexeme()), type, value);
+        return new Expr.StaticSet(target, name, value, type, executor.left(), executor.right());
     }
 
     private Expr staticSpecialAssign(LoxClass target, Token name) {
@@ -340,11 +360,17 @@ public class ExprParser extends AbstractParser {
         Expr expr = primary();
 
         while (true) {
-            if (match(BRACKET_O)) {
+            if (match(S_BRACKET_O)) {
+                Token bracketO = previous();
+                Expr index = expression();
+                consume(S_BRACKET_C, "']' expected");
+                if (!finder.findRetType(expr).isArray()) error(bracketO, "array type expected");
+                expr = new Expr.ArrayGet(expr, index);
+            } else if (match(BRACKET_O)) {
                 if (expr instanceof Expr.Get get) expr = finishInstCall(get);
                 else error(locFinder.find(expr), "obj expected");
             } else if (match(DOT)) {
-                Token name = consume(IDENTIFIER, "Expect property name after '.'.");
+                Token name = consume(IDENTIFIER, "Expect property name after '.'");
                 LoxClass targetType = finder.findRetType(expr);
                 if (!check(BRACKET_O)) { //ensure not to check for field if it's a method
                     if (!targetType.hasField(name.lexeme())) error(name, "unknown symbol");

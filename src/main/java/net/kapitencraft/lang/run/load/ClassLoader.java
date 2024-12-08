@@ -9,7 +9,10 @@ import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -17,17 +20,17 @@ import java.util.function.BiFunction;
 public class ClassLoader {
     public static final File cacheLoc = new File("./run/cache");
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         PackageHolder pckSkeleton = load(cacheLoc, ".scrc", VMHolder::new);
         applyPreviews(pckSkeleton);
         generateSkeletons(pckSkeleton);
         generateClasses(pckSkeleton);
         System.out.println("Loading complete.");
         Interpreter interpreter = Interpreter.INSTANCE;
-        Scanner scanner = new Scanner(System.in);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String line = "";
         while (!"!exit".equals(line)) {
-            if (line.startsWith("!run ")) {
+            if (line != null && line.startsWith("!run ")) {
                 String data = line.substring(5);
                 String classRef;
                 if (data.contains(" ")) classRef = data.substring(0, data.indexOf(' '));
@@ -35,10 +38,12 @@ public class ClassLoader {
                 LoxClass target = VarTypeManager.getClassForName(classRef);
                 if (target == null) System.err.println("unable to find class for id '" + classRef + "'");
                 else {
-                    interpreter.runMainMethod(target, data.substring(data.indexOf(' ') + 1));
+                    if (data.contains(" ")) data = data.substring(data.indexOf(' ') + 1);
+                    else data = "";
+                    interpreter.runMainMethod(target, data);
                 }
             }
-            line = scanner.nextLine();
+            line = reader.readLine();
         }
     }
 

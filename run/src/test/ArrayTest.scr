@@ -1,0 +1,10 @@
+package test;
+
+class ArrayTest {
+
+    static void main(String[] args) {
+        for (String s : args) {
+            System.print(s);
+        }
+    }
+}

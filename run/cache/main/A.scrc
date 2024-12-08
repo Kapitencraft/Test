@@ -138,7 +138,9 @@
                 "literal": {},
                 "line": 21,
                 "lineStartIndex": 10
-              }
+              },
+              "executor": "scripted.lang.void",
+              "operand": "LEFT"
             }
           },
           {

@@ -6,6 +6,7 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.Interpreter;
+import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.tool.Math;
 
 import java.util.HashMap;
@@ -38,8 +39,9 @@ public class ClassInstance {
         return getField(name);
     }
 
-    public Object assignFieldWithOperator(String name, Object val, Token type) {
-        return this.assignField(name, Math.merge(getField(name), val, type));
+    public Object assignFieldWithOperator(String name, Object val, Token type, LoxClass executor, Operand operand) {
+        Object newVal = Interpreter.INSTANCE.visitAlgebra(getField(name), val, executor, type, operand);
+        return this.assignField(name, newVal);
     }
 
     public Object specialAssign(String name, Token assignType) {

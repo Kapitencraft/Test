@@ -6,10 +6,16 @@ import java.util.List;
 
 public class Main {
 
-    public static void main(String[] args) {
-        for (int i = 0; i < 255; i++) {
-            System.out.println(makeLatin(i));
+    public static void main(String[] args) throws InterruptedException {
+        System.out.print("Progress: 0%");
+        for (int i = 1; i <= 100; i++) {
+            Thread.sleep(50); // Simulating work
+            System.out.print("\rProgress: " + i + "%"); // Overwrites the line
         }
+        System.out.println("\nDone!");
+        //for (int i = 0; i < 255; i++) {
+        //    System.out.println(makeLatin(i));
+        //}
 
     }
 

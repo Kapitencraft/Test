@@ -4,7 +4,7 @@ import test.MultipleMethodsTest as MMT;
 
 class IntersectionTest {
 
-    static void main(String args) {
+    static void main(String[] args) {
         MMT mmt = new MMT("e", "a");
         mmt.test(5);
         mmt.test("Hello!");

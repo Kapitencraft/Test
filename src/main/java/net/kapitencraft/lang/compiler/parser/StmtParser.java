@@ -1,8 +1,6 @@
 package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.VarTypeParser;
-import net.kapitencraft.lang.compiler.visitor.ReturnScanner;
-import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -53,7 +51,6 @@ public class StmtParser extends ExprParser {
     private Stmt declaration() {
         if (seenReturn.peek()) {
             error(peek(), "unreachable statement");
-            return null;
         }
         try {
             if (match(FINAL)) return varDeclaration(true, consumeVarType());

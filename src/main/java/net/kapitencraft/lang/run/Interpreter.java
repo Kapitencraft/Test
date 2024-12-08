@@ -9,6 +9,8 @@ import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.exception.EscapeLoop;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.run.algebra.Operand;
+import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.tool.Math;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.Pair;
@@ -47,14 +49,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public void runMainMethod(LoxClass target, String data) {
         if (!target.hasStaticMethod("main")) return;
         suppressClassLoad = true;
-        Optional.ofNullable(target.getStaticMethod("main", List.of(VarTypeManager.STRING.get())))
+        Optional.ofNullable(target.getStaticMethod("main", List.of(VarTypeManager.STRING.get().array())))
                 .ifPresentOrElse(method -> {
                     suppressClassLoad = false;
                     this.pushCall(target.absoluteName(), "main", target.name());
                     try {
                         millisAtStart = System.currentTimeMillis();
                         this.environment.push();
-                        method.call(new Environment(), this, List.of(data));
+                        ArrayList<Object> obj = new ArrayList<>();
+                        obj.add(data.split(" "));
+                        method.call(new Environment(), this, obj);
                         System.out.println("\u001B[32mExecution finished\u001B[0m");
                     } catch (AbstractScriptedException e) {
                         System.err.println("Caused by: " + e.exceptionType.getType().absoluteName() + ": " + e.exceptionType.getField("message"));
@@ -285,7 +289,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Object visitAssignExpr(Expr.Assign expr) {
         Object value = evaluate(expr.value);
         if (expr.type.type() == TokenType.ASSIGN) environment.assignVar(expr.name, value);
-        else value = environment.assignVarWithOperator(expr.type, expr.name, value);
+        else value = environment.assignVarWithOperator(expr.type, expr.name, value, expr.executor, expr.operand);
         return value;
     }
 
@@ -298,46 +302,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Object visitBinaryExpr(Expr.Binary expr) {
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
-        try {
-            switch (expr.operator.type()) {
-                case GREATER:
-                    return Math.mergeGreater(left, right);
-                case GEQUAL:
-                    return Math.mergeGEqual(left, right);
-                case LESSER:
-                    return Math.mergeLesser(left, right);
-                case LEQUAL:
-                    return Math.mergeLEqual(left, right);
-                case NEQUAL:
-                    return !isEqual(left, right);
-                case EQUAL:
-                    return isEqual(left, right);
-                case POW:
-                    return Math.mergePow(left, right);
-                case SUB:
-                    return Math.mergeSub(left, right);
-                case DIV:
-                    return Math.mergeDiv(left, right);
-                case MUL:
-                    return Math.mergeMul(left, right);
-                case MOD:
-                    return Math.mergeMod(left, right);
-                case ADD:
-
-                    if (left instanceof String lS) {
-                        return lS + stringify(right);
-                    }
-                    if (right instanceof String rS) {
-                        return stringify(left) + rS;
-                    }
-
-                    return Math.mergeAdd(left, right);
-            }
-        } catch (ArithmeticException e) {
-            pushCallIndex(expr.operator.line());
-            throw AbstractScriptedException.createException(VarTypeManager.ARITHMETIC_EXCEPTION, e.getMessage());
-        }
-        return null;
+        return visitAlgebra(left, right, expr.executor, expr.operator, expr.operand);
     }
 
     @Override
@@ -443,7 +408,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (expr.assignType.type() == TokenType.ASSIGN) {
             return instance.assignField(expr.name.lexeme(), val);
         } else {
-            return instance.assignFieldWithOperator(expr.name.lexeme(), val, expr.assignType);
+            return instance.assignFieldWithOperator(expr.name.lexeme(), val, expr.assignType, null, null);
         }
     }
 
@@ -453,7 +418,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (expr.assignType.type() == TokenType.ASSIGN) {
             return expr.target.assignStaticField(expr.name.lexeme(), val);
         } else {
-            return expr.target.assignStaticFieldWithOperator(expr.name.lexeme(), val, expr.assignType);
+            return expr.target.assignStaticFieldWithOperator(expr.name.lexeme(), val, expr.assignType, null, null);
+        }
+    }
+
+    public Object visitAlgebra(Object left, Object right, LoxClass executor, Token operator, Operand operand) {
+        try {
+            return executor.doOperation(OperationType.of(operator), operand, operand == Operand.LEFT ? left : right, operand == Operand.LEFT ? right : left);
+        } catch (ArithmeticException e) {
+            pushCallIndex(operator.line());
+            throw AbstractScriptedException.createException(VarTypeManager.ARITHMETIC_EXCEPTION, e.getMessage());
         }
     }
 
@@ -465,7 +439,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             pushCallIndex(0);
             throw AbstractScriptedException.createException(VarTypeManager.INDEX_OUT_OF_BOUNDS_EXCEPTION, "index " + expr.index + " out of bounds for length " + array.length);
         }
-        return array[index] = Math.merge(array[index], evaluate(expr.value), expr.assignType);
+        return array[index] = Interpreter.INSTANCE.visitAlgebra(array[index], evaluate(expr.value), null, expr.assignType, null);
     }
 
     @Override

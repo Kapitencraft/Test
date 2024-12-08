@@ -94,10 +94,8 @@ public class AbstractParser {
 
     protected LoxClass expectType(Token errorLoc, LoxClass gotten, LoxClass expected) {
         if (expected == VarTypeManager.OBJECT.get()) return gotten;
-        if (expected == VarTypeManager.NUMBER && (gotten == VarTypeManager.INTEGER || gotten == VarTypeManager.FLOAT || gotten == VarTypeManager.DOUBLE)) return gotten;
         if (!expected.isParentOf(gotten)) error(errorLoc, "incompatible types: " + gotten.name() + " cannot be converted to " + expected.name());
-        return expected;
-
+        return gotten;
     }
 
     protected void createVar(Token name, LoxClass type, boolean hasValue, boolean isFinal) {
@@ -211,6 +209,10 @@ public class AbstractParser {
             loxClass = loxClass.getEnclosing(enclosingName);
         }
         if (loxClass == null) error(token, "unknown class '" + typeName + "'");
+        else while (match(S_BRACKET_O)) {
+            consume(S_BRACKET_C, "']' expected");
+            loxClass = loxClass.array();
+        }
         return loxClass;
     }
 

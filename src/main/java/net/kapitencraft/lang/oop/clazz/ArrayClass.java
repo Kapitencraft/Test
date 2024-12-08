@@ -26,6 +26,6 @@ public class ArrayClass extends PrimitiveClass {
 
     @Override
     public String absoluteName() {
-        return "[" + super.absoluteName();
+        return super.absoluteName();
     }
 }

@@ -35,7 +35,7 @@
         "retType": "scripted.lang.void",
         "params": [
           {
-            "type": "scripted.lang.String",
+            "type": "scripted.lang.String[]",
             "name": "args"
           }
         ],

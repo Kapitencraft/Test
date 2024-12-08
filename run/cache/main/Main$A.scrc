@@ -49,7 +49,9 @@
                 "literal": {},
                 "line": 17,
                 "lineStartIndex": 19
-              }
+              },
+              "executor": "scripted.lang.void",
+              "operand": "LEFT"
             }
           }
         ],

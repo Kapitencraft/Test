@@ -11,7 +11,7 @@ public class GenerateAst {
 
     public static void main(String[] args) throws IOException {
         defineAst("Expr", List.of(
-                "Assign        : Token name; Expr value; Token type",
+                "Assign        : Token name; Expr value; Token type; LoxClass executor; Operand operand",
                 "SpecialAssign : Token name; Token assignType",
                 "Binary        : Expr left; Token operator; LoxClass executor; Operand operand; Expr right",
                 "When          : Expr condition; Expr ifTrue; Expr ifFalse",
@@ -20,9 +20,9 @@ public class GenerateAst {
                 "Get           : Expr object; Token name",
                 "StaticGet     : LoxClass target; Token name",
                 "ArrayGet      : Expr object; Expr index",
-                "Set           : Expr object; Token name; Expr value; Token assignType",
-                "StaticSet     : LoxClass target; Token name; Expr value; Token assignType",
-                "ArraySet      : Expr object; Expr index; Expr value; Token assignType",
+                "Set           : Expr object; Token name; Expr value; Token assignType; LoxClass executor; Operand operand",
+                "StaticSet     : LoxClass target; Token name; Expr value; Token assignType; LoxClass executor; Operand operand",
+                "ArraySet      : Expr object; Expr index; Expr value; Token assignType; LoxClass executor; Operand operand",
                 "SpecialSet    : Expr callee; Token name; Token assignType",
                 "StaticSpecial : LoxClass target; Token name; Token assignType",
                 "ArraySpecial  : Expr object; Expr index; Token assignType",
@@ -37,7 +37,7 @@ public class GenerateAst {
                 "Constructor   : Token keyword; LoxClass target; List<Expr> params; int ordinal"
         ), List.of(
                 "net.kapitencraft.lang.run.algebra.Operand",
-                "java.util.map"
+                "java.util.Map"
         ));
         defineAst("Stmt",
                 List.of(
@@ -68,10 +68,8 @@ public class GenerateAst {
 
         writer.println("package net.kapitencraft.lang.holder.ast;");
         writer.println();
-        writer.println("import java.util.Map;");
         writer.println("import java.util.List;");
         writer.println("import net.kapitencraft.lang.holder.token.Token;");
-        writer.println("import net.kapitencraft.tool.Pair;");
         writer.println("import net.kapitencraft.lang.oop.clazz.LoxClass;");
         for (String s : imports) {
             writer.print("import ");
