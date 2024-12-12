@@ -5,6 +5,7 @@ import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.*;
+import net.kapitencraft.lang.oop.clazz.generated.GeneratedInterface;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;

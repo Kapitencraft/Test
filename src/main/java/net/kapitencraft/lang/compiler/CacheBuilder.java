@@ -8,7 +8,6 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
-import net.kapitencraft.lang.oop.clazz.GeneratedClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;

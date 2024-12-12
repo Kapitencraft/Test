@@ -8,10 +8,11 @@ import net.kapitencraft.lang.compiler.parser.SkeletonParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
-import net.kapitencraft.lang.holder.baked.BakedClass;
+import net.kapitencraft.lang.holder.baked.BakedAnnotation;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
+import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonAnnotation;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
@@ -26,22 +27,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public record ClassDecl(
+public record AnnotationDecl(
         VarTypeParser parser,
         Compiler.ErrorLogger logger,
-        boolean isAbstract, boolean isFinal,
         PreviewClass target,
-        Token name, String pck, LoxClass superclass,
-        LoxClass[] implemented,
-        SkeletonParser.MethodDecl[] constructors,
+        Token name, String pck,
         SkeletonParser.MethodDecl[] methods,
         SkeletonParser.FieldDecl[] fields,
         SkeletonParser.ClassConstructor<?>[] enclosed
-) implements SkeletonParser.ClassConstructor<BakedClass> {
+) implements SkeletonParser.ClassConstructor<BakedAnnotation> {
 
     @Override
-    public BakedClass construct(StmtParser stmtParser, ExprParser exprParser) {
-        List<Stmt.VarDecl> fields = new ArrayList<>();
+    public BakedAnnotation construct(StmtParser stmtParser, ExprParser exprParser) {
         List<Stmt.VarDecl> staticFields = new ArrayList<>();
         for (SkeletonParser.FieldDecl field : fields()) {
             Expr initializer = null;
@@ -50,8 +47,7 @@ public record ClassDecl(
                 initializer = exprParser.expression();
             }
             Stmt.VarDecl fieldDecl = new Stmt.VarDecl(field.name(), field.type(), initializer, field.isFinal());
-            if (field.isStatic()) staticFields.add(fieldDecl);
-            else fields.add(fieldDecl);
+            staticFields.add(fieldDecl);
         }
 
         List<Compiler.ClassBuilder> enclosed = new ArrayList<>();
@@ -65,7 +61,7 @@ public record ClassDecl(
             List<Stmt> body = null;
             if (!method.isAbstract()) {
                 stmtParser.apply(method.body(), parser);
-                stmtParser.applyMethod(method.params(), target(), superclass(), method.type());
+                stmtParser.applyMethod(method.params(), target(), VarTypeManager.ANNOTATION.get(), method.type());
                 body = stmtParser.parse();
                 stmtParser.popMethod();
             }
@@ -74,31 +70,15 @@ public record ClassDecl(
             else methods.add(Pair.of(method.name(), methodDecl));
         }
 
-        List<Pair<Token, GeneratedCallable>> constructors = new ArrayList<>();
-        for (SkeletonParser.MethodDecl method : this.constructors()) {
-            stmtParser.apply(method.body(), parser);
-            stmtParser.applyMethod(method.params(), target(), superclass(), VarTypeManager.VOID);
-            List<Stmt> body = stmtParser.parse();
-            GeneratedCallable constDecl = new GeneratedCallable(method.type(), method.params(), body, method.isFinal(), method.isAbstract());
-            stmtParser.popMethod();
-            constructors.add(Pair.of(method.name(), constDecl));
-        }
-
-        return new BakedClass(
+        return new BakedAnnotation(
                 this.logger(),
                 this.target(),
                 methods.toArray(new Pair[0]),
                 staticMethods.toArray(new Pair[0]),
-                constructors.toArray(new Pair[0]),
-                fields.toArray(new Stmt.VarDecl[0]),
                 staticFields.toArray(new Stmt.VarDecl[0]),
-                this.superclass(),
                 this.name(),
                 this.pck(),
-                this.implemented(),
-                enclosed.toArray(new Compiler.ClassBuilder[0]),
-                this.isAbstract(),
-                this.isFinal()
+                enclosed.toArray(new Compiler.ClassBuilder[0])
         );
     }
 
@@ -106,17 +86,11 @@ public record ClassDecl(
     public LoxClass createSkeleton() {
 
         //fields
-        ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
         ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
-        List<String> finalFields = new ArrayList<>();
         for (SkeletonParser.FieldDecl field : this.fields()) {
             SkeletonField skeletonField = new SkeletonField(field.type(), field.isFinal());
-            if (field.isStatic()) staticFields.put(field.name().lexeme(), skeletonField);
-            else {
-                fields.put(field.name().lexeme(), skeletonField);
-                if (skeletonField.isFinal() && field.body() == null) //add non-defaulted final fields to extra list to check constructors init
-                    finalFields.add(field.name().lexeme());
-            }
+            staticFields.put(field.name().lexeme(), skeletonField);
+
         }
 
         //enclosed classes
@@ -142,27 +116,13 @@ public record ClassDecl(
             }
         }
 
-        //constructors
-        ConstructorContainer.Builder constructorBuilder = new ConstructorContainer.Builder(finalFields, this.name());
-        for (SkeletonParser.MethodDecl constructor : this.constructors()) {
-            constructorBuilder.addMethod(
-                    logger,
-                    SkeletonMethod.create(constructor),
-                    constructor.name()
-            );
-        }
-
-        return new SkeletonClass(
+        return new SkeletonAnnotation(
                 this.name().lexeme(),
-                this.pck(), this.superclass(),
+                this.pck(),
                 staticFields.build(),
-                fields.build(),
                 enclosed.build(),
                 DataMethodContainer.bakeBuilders(methods),
-                DataMethodContainer.bakeBuilders(staticMethods),
-                constructorBuilder,
-                this.isAbstract(),
-                this.isFinal()
+                DataMethodContainer.bakeBuilders(staticMethods)
         );
     }
 }

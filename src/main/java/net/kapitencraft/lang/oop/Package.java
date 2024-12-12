@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.oop;
 
-import net.kapitencraft.lang.oop.clazz.GeneratedClass;
+import net.kapitencraft.lang.oop.clazz.generated.GeneratedClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.run.VarTypeManager;

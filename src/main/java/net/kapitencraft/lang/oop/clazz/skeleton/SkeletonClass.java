@@ -1,8 +1,10 @@
-package net.kapitencraft.lang.oop.clazz;
+package net.kapitencraft.lang.oop.clazz.skeleton;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.MethodMap;
@@ -11,10 +13,8 @@ import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
-import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
-import net.kapitencraft.tool.Util;
 
 import java.util.*;
 import java.util.function.Function;

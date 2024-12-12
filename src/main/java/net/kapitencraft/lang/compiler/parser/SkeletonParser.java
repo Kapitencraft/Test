@@ -3,7 +3,6 @@ import net.kapitencraft.lang.holder.decl.*;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
@@ -18,7 +17,7 @@ import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 @SuppressWarnings("ThrowableNotThrown")
 public class SkeletonParser extends AbstractParser {
-    private final ModifiersParser CLASS_MODIFIERS = new ModifiersParserBuilder()
+    private final ModifiersParser MODIFIERS = new ModifiersParserBuilder()
             .acceptsAll(FINAL, ABSTRACT, STATIC, DEFAULT)
             .illegalCombination(FINAL, DEFAULT)
             .illegalCombination(ABSTRACT, DEFAULT)
@@ -70,7 +69,7 @@ public class SkeletonParser extends AbstractParser {
         List<ClassConstructor<?>> enclosed = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
-            ModifiersParser modifiers = CLASS_MODIFIERS;
+            ModifiersParser modifiers = MODIFIERS;
             modifiers.parse();
             String enclosedId = pckID + name.lexeme() + "$";
             if (readClass(enclosed::add, enclosedId, modifiers)) {
@@ -134,7 +133,7 @@ public class SkeletonParser extends AbstractParser {
         List<ClassConstructor<?>> enclosed = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
-            ModifiersParser modifiers = CLASS_MODIFIERS;
+            ModifiersParser modifiers = MODIFIERS;
             modifiers.parse();
             if (readClass(enclosed::add, pckID, modifiers)) {
                 LoxClass type = consumeVarType();
@@ -198,7 +197,7 @@ public class SkeletonParser extends AbstractParser {
         List<FieldDecl> fields = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
-            ModifiersParser modifiers = CLASS_MODIFIERS;
+            ModifiersParser modifiers = MODIFIERS;
             modifiers.parse();
             String enclosedId = pckID + name.lexeme() + "$";
             if (readClass(enclosed::add, enclosedId, modifiers)) {
@@ -240,6 +239,51 @@ public class SkeletonParser extends AbstractParser {
         );
     }
 
+    private AnnotationDecl annotationDecl(String pckId, String fileId, PreviewClass target) {
+        consume(INTERFACE, "'interface' expected");
+
+        Token name = consumeIdentifier();
+
+        checkFileName(name, fileId);
+
+        if (target == null) target = new PreviewClass(name.lexeme(), false);
+
+        parser.addClass(target, null);
+
+        consumeCurlyOpen("annotation");
+
+        List<MethodDecl> methods = new ArrayList<>();
+        List<FieldDecl> fields = new ArrayList<>();
+        List<ClassConstructor<?>> enclosed = new ArrayList<>();
+
+        while (!check(C_BRACKET_C) && !isAtEnd()) {
+            ModifiersParser modifiers = MODIFIERS;
+            modifiers.parse();
+            String enclosedId = pckId + name.lexeme() + "$";
+            if (readClass(enclosed::add, enclosedId, modifiers)) {
+                ModifierScope.CLASS.check(this, modifiers);
+                LoxClass type = consumeVarType();
+                Token elementName = consumeIdentifier();
+                if (match(BRACKET_O)) {
+                    MethodDecl decl = funcDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic(), modifiers.isAbstract());
+                    methods.add(decl);
+                } else {
+                    if (modifiers.isAbstract()) error(elementName, "fields may not be abstract");
+                    FieldDecl decl = fieldDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic());
+                    fields.add(decl);
+                }
+            }
+        }
+        consumeCurlyClose("class");
+        return new AnnotationDecl(
+                parser, errorLogger,
+                target, name, pckId,
+                methods.toArray(new MethodDecl[0]),
+                fields.toArray(new FieldDecl[0]),
+                enclosed.toArray(new ClassConstructor<?>[0])
+        );
+    }
+
     public ClassConstructor<?> parse(PreviewClass target) {
         List<Token> pck = new ArrayList<>();
         try {
@@ -255,7 +299,7 @@ public class SkeletonParser extends AbstractParser {
         }
 
         parseImports();
-        ModifiersParser modifiersParser = CLASS_MODIFIERS;
+        ModifiersParser modifiersParser = MODIFIERS;
         modifiersParser.parse();
 
         String pckId = pck.stream().map(Token::lexeme).collect(Collectors.joining(".", "", "."));

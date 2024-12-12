@@ -1,57 +1,66 @@
-package net.kapitencraft.lang.oop.clazz;
+package net.kapitencraft.lang.oop.clazz.skeleton;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.field.GeneratedField;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.MethodMap;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
+import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.run.algebra.Operand;
-import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class SkeletonInterface implements LoxClass {
+public class SkeletonAnnotation implements LoxClass {
     private final String name;
     private final String pck;
-
-    private final LoxClass[] interfaces;
 
     private final Map<String, SkeletonField> staticFields;
 
     private final Map<String, PreviewClass> enclosed;
 
     private final MethodMap methods;
-    private final MethodMap staticMethods;
+    private final Map<String, DataMethodContainer> staticMethods;
 
-    public SkeletonInterface(String name, String pck, LoxClass[] interfaces, Map<String, SkeletonField> staticFields, Map<String, PreviewClass> enclosed, Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods) {
+    public SkeletonAnnotation(String name, String pck,
+                              Map<String, SkeletonField> staticFields,
+                              Map<String, PreviewClass> enclosed,
+                              Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods) {
         this.name = name;
         this.pck = pck;
-        this.interfaces = interfaces;
         this.staticFields = staticFields;
         this.enclosed = enclosed;
         this.methods = new MethodMap(methods);
-        this.staticMethods = new MethodMap(staticMethods);
+        this.staticMethods = staticMethods;
     }
 
-    public static LoxClass fromCache(JsonObject data, String pck, PreviewClass[] enclosed) {
+    public static SkeletonAnnotation fromCache(JsonObject data, String pck, PreviewClass[] enclosed) {
         String name = GsonHelper.getAsString(data, "name");
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
         ImmutableMap<String, DataMethodContainer> staticMethods = SkeletonMethod.readFromCache(data, "staticMethods");
 
+        ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
+        {
+            JsonObject fieldData = GsonHelper.getAsJsonObject(data, "fields");
+            fieldData.asMap().forEach((s, element) -> {
+                JsonObject object = element.getAsJsonObject();
+                fields.put(s, new SkeletonField(ClassLoader.loadClassReference(object, "type"), object.has("isFinal") && GsonHelper.getAsBoolean(object, "isFinal")));
+            });
+        }
         ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
         {
             JsonObject fieldData = GsonHelper.getAsJsonObject(data, "staticFields");
@@ -61,27 +70,21 @@ public class SkeletonInterface implements LoxClass {
             });
         }
 
-        LoxClass[] interfaces = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(LoxClass[]::new);
-
-        return new SkeletonInterface(
-                name,
-                pck,
-                interfaces,
+        return new SkeletonAnnotation(name, pck,
                 staticFields.build(),
                 Arrays.stream(enclosed).collect(Collectors.toMap(LoxClass::name, Function.identity())),
-                methods,
-                staticMethods
+                methods, staticMethods
         );
     }
 
     @Override
     public Object getStaticField(String name) {
-        return null;
+        throw new IllegalAccessError("cannot access field from skeleton");
     }
 
     @Override
     public Object assignStaticField(String name, Object val) {
-        return null;
+        throw new IllegalAccessError("cannot access field from skeleton");
     }
 
     @Override
@@ -106,7 +109,17 @@ public class SkeletonInterface implements LoxClass {
 
     @Override
     public String packageRepresentation() {
-        return pck;
+        return pck + "." + name;
+    }
+
+    @Override
+    public boolean hasField(String name) {
+        return false;
+    }
+
+    @Override
+    public LoxClass getFieldType(String name) {
+        return VarTypeManager.VOID;
     }
 
     @Override
@@ -120,18 +133,23 @@ public class SkeletonInterface implements LoxClass {
     }
 
     @Override
+    public ScriptedCallable getStaticMethod(String name, List<? extends LoxClass> args) {
+        return staticMethods.get(name).getMethod(args);
+    }
+
+    @Override
     public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return staticMethods.getMethodByOrdinal(name, ordinal);
+        return staticMethods.get(name).getMethodByOrdinal(ordinal);
     }
 
     @Override
     public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
-        return staticMethods.getMethodOrdinal(name, args);
+        return staticMethods.get(name).getMethodOrdinal(args);
     }
 
     @Override
     public boolean hasStaticMethod(String name) {
-        return staticMethods.has(name);
+        return staticMethods.containsKey(name);
     }
 
     @Override
@@ -141,12 +159,12 @@ public class SkeletonInterface implements LoxClass {
 
     @Override
     public boolean isAbstract() {
-        return true;
+        return false;
     }
 
     @Override
     public boolean isFinal() {
-        return false;
+        return true;
     }
 
     @Override
@@ -162,6 +180,11 @@ public class SkeletonInterface implements LoxClass {
     @Override
     public int getMethodOrdinal(String name, List<LoxClass> types) {
         return methods.getMethodOrdinal(name, types);
+    }
+
+    @Override
+    public boolean hasMethod(String name) {
+        return methods.has(name) || LoxClass.super.hasMethod(name);
     }
 
     @Override

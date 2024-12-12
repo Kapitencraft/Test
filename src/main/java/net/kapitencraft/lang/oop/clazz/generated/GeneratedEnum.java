@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.oop.clazz;
+package net.kapitencraft.lang.oop.clazz.generated;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
@@ -7,6 +7,9 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.oop.clazz.CacheableClass;
+import net.kapitencraft.lang.oop.clazz.EnumClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
 import net.kapitencraft.lang.oop.field.GeneratedField;

@@ -12,7 +12,7 @@ import net.kapitencraft.lang.holder.baked.BakedInterface;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
-import net.kapitencraft.lang.oop.clazz.SkeletonInterface;
+import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonInterface;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;

@@ -42,8 +42,6 @@ public class VarTypeManager {
 
     public static final Supplier<LoxClass> STRING = registerMain(StringClass::new, "String", String.class);
 
-
-
     public static final Supplier<LoxClass> THROWABLE = registerMain(() -> new ThrowableClass("Throwable", "scripted.lang", null), "Throwable");
     public static final Supplier<LoxClass> STACK_OVERFLOW_EXCEPTION = registerMain(StackOverflowExceptionClass::new, "StackOverflowException");
     public static final Supplier<LoxClass> MISSING_VAR_EXCEPTION = registerMain(MissingVarExceptionClass::new, "MissingVarException");

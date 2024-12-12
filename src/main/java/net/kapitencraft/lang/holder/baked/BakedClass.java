@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.GeneratedClass;
+import net.kapitencraft.lang.oop.clazz.generated.GeneratedClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.field.GeneratedField;

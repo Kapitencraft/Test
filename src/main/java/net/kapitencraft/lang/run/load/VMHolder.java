@@ -4,6 +4,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.internal.Streams;
 import com.google.gson.stream.JsonReader;
 import net.kapitencraft.lang.oop.clazz.*;
+import net.kapitencraft.lang.oop.clazz.generated.GeneratedClass;
+import net.kapitencraft.lang.oop.clazz.generated.GeneratedEnum;
+import net.kapitencraft.lang.oop.clazz.generated.GeneratedInterface;
+import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
+import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonEnum;
+import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonInterface;
 import net.kapitencraft.tool.GsonHelper;
 
 import java.io.File;

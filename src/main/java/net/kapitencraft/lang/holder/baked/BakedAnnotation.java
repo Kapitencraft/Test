@@ -4,9 +4,10 @@ import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.*;
-import net.kapitencraft.lang.oop.clazz.generated.GeneratedEnum;
-import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
+import net.kapitencraft.lang.oop.clazz.generated.GeneratedAnnotation;
+import net.kapitencraft.lang.oop.clazz.generated.GeneratedClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
@@ -19,20 +20,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public record BakedEnum(
+public record BakedAnnotation(
         Compiler.ErrorLogger logger,
         PreviewClass target,
-        Pair<Token, GeneratedCallable>[] constructors,
         Pair<Token, GeneratedCallable>[] methods,
         Pair<Token, GeneratedCallable>[] staticMethods,
-        LoxClass[] interfaces,
-        Map<String, GeneratedEnumConstant> constants,
-        Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields,
-        Token name, String pck, Compiler.ClassBuilder[] enclosed
-        ) implements Compiler.ClassBuilder {
+        Stmt.VarDecl[] staticFields,
+        Token name, String pck,
+        Compiler.ClassBuilder[] enclosed
+) implements Compiler.ClassBuilder {
 
     @Override
-    public CacheableClass build() {
+    public GeneratedAnnotation build() {
         ImmutableMap.Builder<String, LoxClass> enclosed = new ImmutableMap.Builder<>();
         for (int i = 0; i < this.enclosed().length; i++) {
             LoxClass loxClass = this.enclosed()[i].build();
@@ -53,36 +52,24 @@ public record BakedEnum(
             builder.addMethod(logger, method.right(), method.left());
         }
 
-        Map<String, GeneratedField> fields = Compiler.ClassBuilder.generateFields(this.fields());
-
-        List<String> finalFields = new ArrayList<>();
-        fields.forEach((name, field) -> {
-            if (field.isFinal() && !field.hasInit()) {
-                finalFields.add(name);
-            }
-        });
-
-        ConstructorContainer.Builder container = new ConstructorContainer.Builder(finalFields, this.name());
-        for (Pair<Token, GeneratedCallable> method : this.constructors()) {
-            container.addMethod(logger, method.right(), method.left());
-        }
-
-        return new GeneratedEnum(
-                DataMethodContainer.bakeBuilders(methods),
-                DataMethodContainer.bakeBuilders(staticMethods),
-                container,
-                fields,
-                constants(),
+        GeneratedAnnotation loxClass = new GeneratedAnnotation(
+                DataMethodContainer.bakeBuilders(methods), DataMethodContainer.bakeBuilders(staticMethods),
                 Compiler.ClassBuilder.generateFields(this.staticFields()),
                 enclosed.build(),
-                interfaces(),
-                name().lexeme(),
-                pck());
+                this.name().lexeme(),
+                this.pck()
+        );
+        this.target().apply(loxClass);
+        return loxClass;
     }
 
     @Override
     public LoxClass superclass() {
-        return VarTypeManager.ENUM.get();
+        return null;
+    }
+
+    @Override
+    public LoxClass[] interfaces() {
+        return new LoxClass[0];
     }
 }
-
