@@ -23,9 +23,6 @@ import java.util.Map;
 public record BakedAnnotation(
         Compiler.ErrorLogger logger,
         PreviewClass target,
-        Pair<Token, GeneratedCallable>[] methods,
-        Pair<Token, GeneratedCallable>[] staticMethods,
-        Stmt.VarDecl[] staticFields,
         Token name, String pck,
         Compiler.ClassBuilder[] enclosed
 ) implements Compiler.ClassBuilder {
@@ -38,23 +35,7 @@ public record BakedAnnotation(
             enclosed.put(loxClass.name(), loxClass);
         }
 
-        Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
-        for (Pair<Token, GeneratedCallable> method : this.methods()) {
-            methods.putIfAbsent(method.left().lexeme(), new DataMethodContainer.Builder(this.name()));
-            DataMethodContainer.Builder builder = methods.get(method.left().lexeme());
-            builder.addMethod(logger, method.right(), method.left());
-        }
-
-        Map<String, DataMethodContainer.Builder> staticMethods = new HashMap<>();
-        for (Pair<Token, GeneratedCallable> method : this.staticMethods()) {
-            staticMethods.putIfAbsent(method.left().lexeme(), new DataMethodContainer.Builder(this.name()));
-            DataMethodContainer.Builder builder = staticMethods.get(method.left().lexeme());
-            builder.addMethod(logger, method.right(), method.left());
-        }
-
         GeneratedAnnotation loxClass = new GeneratedAnnotation(
-                DataMethodContainer.bakeBuilders(methods), DataMethodContainer.bakeBuilders(staticMethods),
-                Compiler.ClassBuilder.generateFields(this.staticFields()),
                 enclosed.build(),
                 this.name().lexeme(),
                 this.pck()
@@ -66,6 +47,11 @@ public record BakedAnnotation(
     @Override
     public LoxClass superclass() {
         return null;
+    }
+
+    @Override
+    public Pair<Token, GeneratedCallable>[] methods() {
+        return new Pair[0];
     }
 
     @Override

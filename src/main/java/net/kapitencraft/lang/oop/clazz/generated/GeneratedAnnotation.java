@@ -27,29 +27,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class GeneratedAnnotation implements CacheableClass {
-    private final MethodMap methods;
-    private final MethodMap staticMethods;
-    private final Map<String, DataMethodContainer> allMethods;
-
     private final MethodLookup lookup;
-
-    private final Map<String, GeneratedField> allFields;
-    private final Map<String, GeneratedField> allStaticFields;
 
     private final Map<String, LoxClass> enclosing;
 
     private final String name;
     private final String packageRepresentation;
 
-    public GeneratedAnnotation(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
-                               Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
-                               Map<String, LoxClass> enclosing,
+    public GeneratedAnnotation(Map<String, LoxClass> enclosing,
                                String name, String packageRepresentation) {
-        this.methods = new MethodMap(methods);
-        this.allMethods = methods;
-        this.staticMethods = new MethodMap(staticMethods);
-        this.allFields = fields;
-        this.allStaticFields = staticFields;
         this.name = name;
         this.enclosing = enclosing;
         this.packageRepresentation = packageRepresentation;
@@ -59,17 +45,9 @@ public final class GeneratedAnnotation implements CacheableClass {
     public static LoxClass load(JsonObject data, List<LoxClass> enclosed, String pck) {
         String name = GsonHelper.getAsString(data, "name");
 
-        ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
-        ImmutableMap<String, DataMethodContainer> staticMethods = DataMethodContainer.load(data, name, "staticMethods");
-
-        ImmutableMap<String, GeneratedField> fields = GeneratedField.loadFieldMap(data, "fields");
-        ImmutableMap<String, GeneratedField> staticFields = GeneratedField.loadFieldMap(data, "staticFields");
-
         Map<String, LoxClass> enclosedClasses = enclosed.stream().collect(Collectors.toMap(LoxClass::name, Function.identity()));
 
         return new GeneratedAnnotation(
-                methods, staticMethods,
-                fields, staticFields,
                 enclosedClasses, name, pck
         );
     }
@@ -78,18 +56,6 @@ public final class GeneratedAnnotation implements CacheableClass {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "class");
         object.addProperty("name", name);
-        object.add("methods", methods.save(cacheBuilder));
-        object.add("staticMethods", staticMethods.save(cacheBuilder));
-        {
-            JsonObject fields = new JsonObject();
-            allFields.forEach((name, field) -> fields.add(name, field.cache(cacheBuilder)));
-            object.add("fields", fields);
-        }
-        {
-            JsonObject staticFields = new JsonObject();
-            allStaticFields.forEach((name, field) -> staticFields.add(name, field.cache(cacheBuilder)));
-            object.add("staticFields", staticFields);
-        }
 
         return object;
     }
@@ -101,42 +67,42 @@ public final class GeneratedAnnotation implements CacheableClass {
 
     @Override
     public LoxClass getStaticFieldType(String name) {
-        return allStaticFields.get(name).getType();
+        return VarTypeManager.VOID;
     }
 
     @Override
     public boolean hasField(String name) {
-        return allFields.containsKey(name) || CacheableClass.super.hasField(name);
+        return false;
     }
 
     @Override
     public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
-        return staticMethods.getMethodOrdinal(name, args);
+        return -1;
     }
 
     @Override
     public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return staticMethods.getMethodByOrdinal(name, ordinal);
+        return null;
     }
 
     @Override
     public ScriptedCallable getMethod(String name, List<LoxClass> args) {
-        return Optional.ofNullable(allMethods.get(name)).map(container -> container.getMethod(args)).orElse(CacheableClass.super.getMethod(name, args));
+        return null;
     }
 
     @Override
     public boolean hasStaticMethod(String name) {
-        return staticMethods.has(name);
+        return false;
     }
 
     @Override
     public boolean hasMethod(String name) {
-        return allMethods.containsKey(name) || CacheableClass.super.hasMethod(name);
+        return false;
     }
 
     @Override
     public Map<String, LoxField> getFields() {
-        return Util.mergeMaps(CacheableClass.super.getFields(), allFields);
+        return Map.of();
     }
 
     @Override
@@ -181,7 +147,7 @@ public final class GeneratedAnnotation implements CacheableClass {
 
     @Override
     public MethodMap getMethods() {
-        return methods;
+        return null;
     }
 
     boolean init = false;
@@ -208,7 +174,7 @@ public final class GeneratedAnnotation implements CacheableClass {
 
     @Override
     public Map<String, ? extends LoxField> staticFields() {
-        return allStaticFields;
+        return Map.of();
     }
 
     @Override
@@ -237,11 +203,7 @@ public final class GeneratedAnnotation implements CacheableClass {
     }
 
     @Override
-    public String toString() { //jesus
-        return "GeneratedClass{" + name + "}[" +
-                "methods=" + allMethods + ", " +
-                "staticMethods=" + staticMethods + ", " +
-                "fields=" + allFields + ", " +
-                "staticFields=" + allStaticFields + ']';
+    public String toString() {
+        return "GeneratedAnnotation{" + name + "}";
     }
 }

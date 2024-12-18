@@ -240,7 +240,7 @@ public class SkeletonParser extends AbstractParser {
     }
 
     private AnnotationDecl annotationDecl(String pckId, String fileId, PreviewClass target) {
-        consume(INTERFACE, "'interface' expected");
+        consume(INTERFACE, "'annotation' expected");
 
         Token name = consumeIdentifier();
 
@@ -252,8 +252,7 @@ public class SkeletonParser extends AbstractParser {
 
         consumeCurlyOpen("annotation");
 
-        List<MethodDecl> methods = new ArrayList<>();
-        List<FieldDecl> fields = new ArrayList<>();
+        List<AnnotationMethodDecl> methods = new ArrayList<>();
         List<ClassConstructor<?>> enclosed = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
@@ -261,27 +260,27 @@ public class SkeletonParser extends AbstractParser {
             modifiers.parse();
             String enclosedId = pckId + name.lexeme() + "$";
             if (readClass(enclosed::add, enclosedId, modifiers)) {
-                ModifierScope.CLASS.check(this, modifiers);
+                ModifierScope.ANNOTATION.check(this, modifiers);
                 LoxClass type = consumeVarType();
                 Token elementName = consumeIdentifier();
                 if (match(BRACKET_O)) {
-                    MethodDecl decl = funcDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic(), modifiers.isAbstract());
+                    AnnotationMethodDecl decl = annotationMethodDecl(type, elementName);
                     methods.add(decl);
-                } else {
-                    if (modifiers.isAbstract()) error(elementName, "fields may not be abstract");
-                    FieldDecl decl = fieldDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic());
-                    fields.add(decl);
-                }
+                } else error(peek(), "'(' expected");
             }
         }
-        consumeCurlyClose("class");
+        consumeCurlyClose("annotation");
         return new AnnotationDecl(
                 parser, errorLogger,
                 target, name, pckId,
-                methods.toArray(new MethodDecl[0]),
-                fields.toArray(new FieldDecl[0]),
+                methods.toArray(new AnnotationMethodDecl[0]),
                 enclosed.toArray(new ClassConstructor<?>[0])
         );
+    }
+
+    private AnnotationMethodDecl annotationMethodDecl(LoxClass type, Token elementName) {
+        Token[] fieldCode = getFieldCode();
+        return new AnnotationMethodDecl(, elementName, type, false);
     }
 
     public ClassConstructor<?> parse(PreviewClass target) {
@@ -330,8 +329,10 @@ public class SkeletonParser extends AbstractParser {
         } else if (check(ENUM)) {
             ModifierScope.ENUM.check(this, modifiers);
             sink.accept(enumDecl(pckID, null, null));
-        } else
-            return true;
+        } else if (check(ANNOTATION)) {
+            ModifierScope.ANNOTATION.check(this, modifiers);
+            sink.accept(annotationDecl(pckID, null, null));
+        } else return true;
         return false;
     }
 
@@ -342,6 +343,8 @@ public class SkeletonParser extends AbstractParser {
             return interfaceDecl(pckID, fileId, target);
         } else if (check(ENUM)) {
             return enumDecl(pckID, fileId, target);
+        } else if (check(ANNOTATION)) {
+            return annotationDecl(pckID, fileId, target);
         } else {
             throw error(peek(), "'class', 'interface' or 'enum' expected");
         }
@@ -441,6 +444,9 @@ public class SkeletonParser extends AbstractParser {
         return tokens.toArray(Token[]::new);
     }
 
+    public record AnnotationMethodDecl(Token[] body, Token name, LoxClass target, boolean defaulted) {
+
+    }
 
     public record MethodDecl(Token[] body, Token name, List<Pair<LoxClass, String>> params, LoxClass type, boolean isFinal, boolean isStatic, boolean isAbstract) {
 
@@ -568,7 +574,8 @@ public class SkeletonParser extends AbstractParser {
         CLASS(List.of(), DEFAULT),
         INTERFACE(List.of(), FINAL, ABSTRACT),
         INTERFACE_FIELD(List.of()),
-        ENUM(List.of(FINAL), ABSTRACT, DEFAULT);
+        ENUM(List.of(FINAL), ABSTRACT, DEFAULT),
+        ANNOTATION(List.of(FINAL), STATIC, DEFAULT);
 
         private final List<TokenType> illegalModifiers;
         private final List<TokenType> redundantModifiers;

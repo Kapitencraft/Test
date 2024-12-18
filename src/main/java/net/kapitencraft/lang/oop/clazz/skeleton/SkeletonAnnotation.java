@@ -28,23 +28,13 @@ public class SkeletonAnnotation implements LoxClass {
     private final String name;
     private final String pck;
 
-    private final Map<String, SkeletonField> staticFields;
-
     private final Map<String, PreviewClass> enclosed;
 
-    private final MethodMap methods;
-    private final Map<String, DataMethodContainer> staticMethods;
-
     public SkeletonAnnotation(String name, String pck,
-                              Map<String, SkeletonField> staticFields,
-                              Map<String, PreviewClass> enclosed,
-                              Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods) {
+                              Map<String, PreviewClass> enclosed) {
         this.name = name;
         this.pck = pck;
-        this.staticFields = staticFields;
         this.enclosed = enclosed;
-        this.methods = new MethodMap(methods);
-        this.staticMethods = staticMethods;
     }
 
     public static SkeletonAnnotation fromCache(JsonObject data, String pck, PreviewClass[] enclosed) {
@@ -71,9 +61,7 @@ public class SkeletonAnnotation implements LoxClass {
         }
 
         return new SkeletonAnnotation(name, pck,
-                staticFields.build(),
-                Arrays.stream(enclosed).collect(Collectors.toMap(LoxClass::name, Function.identity())),
-                methods, staticMethods
+                Arrays.stream(enclosed).collect(Collectors.toMap(LoxClass::name, Function.identity()))
         );
     }
 
@@ -99,7 +87,7 @@ public class SkeletonAnnotation implements LoxClass {
 
     @Override
     public Map<String, ? extends LoxField> staticFields() {
-        return staticFields;
+        return Map.of();
     }
 
     @Override
@@ -129,27 +117,27 @@ public class SkeletonAnnotation implements LoxClass {
 
     @Override
     public LoxClass getStaticFieldType(String name) {
-        return staticFields.get(name).getType();
+        return VarTypeManager.VOID;
     }
 
     @Override
     public ScriptedCallable getStaticMethod(String name, List<? extends LoxClass> args) {
-        return staticMethods.get(name).getMethod(args);
+        return null;
     }
 
     @Override
     public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return staticMethods.get(name).getMethodByOrdinal(ordinal);
+        return null;
     }
 
     @Override
     public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
-        return staticMethods.get(name).getMethodOrdinal(args);
+        return -1;
     }
 
     @Override
     public boolean hasStaticMethod(String name) {
-        return staticMethods.containsKey(name);
+        return false;
     }
 
     @Override
@@ -174,17 +162,17 @@ public class SkeletonAnnotation implements LoxClass {
 
     @Override
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return methods.getMethodByOrdinal(name, ordinal);
+        return null;
     }
 
     @Override
     public int getMethodOrdinal(String name, List<LoxClass> types) {
-        return methods.getMethodOrdinal(name, types);
+        return -1;
     }
 
     @Override
     public boolean hasMethod(String name) {
-        return methods.has(name) || LoxClass.super.hasMethod(name);
+        return false;
     }
 
     @Override
@@ -199,6 +187,6 @@ public class SkeletonAnnotation implements LoxClass {
 
     @Override
     public MethodMap getMethods() {
-        return methods;
+        return null;
     }
 }
