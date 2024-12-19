@@ -279,8 +279,10 @@ public class SkeletonParser extends AbstractParser {
     }
 
     private AnnotationMethodDecl annotationMethodDecl(LoxClass type, Token elementName) {
-        Token[] fieldCode = getFieldCode();
-        return new AnnotationMethodDecl(, elementName, type, false);
+        consumeBracketClose("annotation");
+        Token[] defaultCode = new Token[0];
+        if (match(DEFAULT)) defaultCode = getFieldCode();
+        return new AnnotationMethodDecl(defaultCode, elementName, type, false);
     }
 
     public ClassConstructor<?> parse(PreviewClass target) {
@@ -419,8 +421,7 @@ public class SkeletonParser extends AbstractParser {
     private Token[] getFieldCode() {
         List<Token> tokens = new ArrayList<>();
         do {
-            tokens.add(peek());
-            advance();
+            tokens.add(advance());
         } while (!match(EOA));
 
         return tokens.toArray(Token[]::new);
