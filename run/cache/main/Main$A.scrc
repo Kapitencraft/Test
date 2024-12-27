@@ -31,17 +31,9 @@
                 "lineStartIndex": 17
               },
               "value": {
-                "TYPE": "literal",
-                "value": {
-                  "type": "NUM",
-                  "lexeme": "0",
-                  "literal": {
-                    "type": "int",
-                    "value": 0
-                  },
-                  "line": 17,
-                  "lineStartIndex": 21
-                }
+                "type": "int",
+                "value": 0,
+                "TYPE": "literal"
               },
               "assignType": {
                 "type": "ASSIGN",

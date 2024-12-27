@@ -28,7 +28,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public record EnumDecl(VarTypeParser parser, Compiler.ErrorLogger logger, PreviewClass target, Token name, String pck, LoxClass[] interfaces, SkeletonParser.EnumConstDecl[] constants, SkeletonParser.MethodDecl[] constructors, SkeletonParser.MethodDecl[] methods, SkeletonParser.FieldDecl[] fields, SkeletonParser.ClassConstructor<?>[] enclosed) implements SkeletonParser.ClassConstructor<BakedEnum> {
+public record EnumDecl(VarTypeParser parser, Compiler.ErrorLogger logger,
+                       PreviewClass target, Token name, String pck, LoxClass[] interfaces,
+                       SkeletonParser.EnumConstDecl[] constants,
+                       SkeletonParser.MethodDecl[] constructors,
+                       SkeletonParser.MethodDecl[] methods,
+                       SkeletonParser.FieldDecl[] fields,
+                       SkeletonParser.ClassConstructor<?>[] enclosed,
+                       SkeletonParser.AnnotationObj[] annotations
+) implements SkeletonParser.ClassConstructor<BakedEnum> {
 
     @Override
     public BakedEnum construct(StmtParser stmtParser, ExprParser exprParser) {

@@ -94,13 +94,13 @@ public class AbstractParser {
 
     protected LoxClass expectType(Token errorLoc, LoxClass gotten, LoxClass expected) {
         if (expected == VarTypeManager.OBJECT.get()) return gotten;
-        if (!expected.isParentOf(gotten)) error(errorLoc, "incompatible types: " + gotten.name() + " cannot be converted to " + expected.name());
+        if (!expected.isParentOf(gotten)) errorLogger.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
         return gotten;
     }
 
     protected void createVar(Token name, LoxClass type, boolean hasValue, boolean isFinal) {
         if (varAnalyser.has(name.lexeme())) {
-            error(name, "Variable '" + name.lexeme() + "' already defined in current scope");
+            errorLogger.errorF(name, "Variable '%s' already defined in current scope", name.lexeme());
         }
         varAnalyser.add(name.lexeme(), type, hasValue, isFinal);
     }
@@ -132,7 +132,7 @@ public class AbstractParser {
     }
 
     /**
-     * same as {@link AbstractParser#check(TokenType) check} but consumes
+     * same as {@link AbstractParser#check(TokenType) check} but consumes token
      */
     protected boolean match(TokenType... types) {
         for (TokenType type : types) {
@@ -179,7 +179,7 @@ public class AbstractParser {
         if (loxClass != null && !check(DOT)) {
             return Optional.of(loxClass);
         } else
-        current--;
+            current--;
         return Optional.empty();
     }
 

@@ -1,16 +1,17 @@
 package net.kapitencraft.lang.oop.clazz.skeleton;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
+import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
+import net.kapitencraft.lang.oop.method.map.AnnotationMethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
-import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -18,9 +19,9 @@ import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -30,38 +31,28 @@ public class SkeletonAnnotation implements LoxClass {
 
     private final Map<String, PreviewClass> enclosed;
 
+    private final AnnotationMethodMap methods;
+
     public SkeletonAnnotation(String name, String pck,
-                              Map<String, PreviewClass> enclosed) {
+                              Map<String, PreviewClass> enclosed, Map<String, AnnotationCallable> methods) {
         this.name = name;
         this.pck = pck;
         this.enclosed = enclosed;
+        this.methods = new AnnotationMethodMap(methods);
     }
 
     public static SkeletonAnnotation fromCache(JsonObject data, String pck, PreviewClass[] enclosed) {
         String name = GsonHelper.getAsString(data, "name");
 
-        ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
-        ImmutableMap<String, DataMethodContainer> staticMethods = SkeletonMethod.readFromCache(data, "staticMethods");
+        JsonObject methodData = GsonHelper.getAsJsonObject(data, "methods");
 
-        ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
-        {
-            JsonObject fieldData = GsonHelper.getAsJsonObject(data, "fields");
-            fieldData.asMap().forEach((s, element) -> {
-                JsonObject object = element.getAsJsonObject();
-                fields.put(s, new SkeletonField(ClassLoader.loadClassReference(object, "type"), object.has("isFinal") && GsonHelper.getAsBoolean(object, "isFinal")));
-            });
-        }
-        ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
-        {
-            JsonObject fieldData = GsonHelper.getAsJsonObject(data, "staticFields");
-            fieldData.asMap().forEach((s, element) -> {
-                JsonObject object = element.getAsJsonObject();
-                staticFields.put(s, new SkeletonField(ClassLoader.loadClassReference(object, "type"), object.has("isFinal") && GsonHelper.getAsBoolean(object, "isFinal")));
-            });
-        }
+        ImmutableMap.Builder<String, AnnotationCallable> methods = new ImmutableMap.Builder<>();
+
+        methodData.asMap().forEach((string, jsonElement) -> methods.put(string, SkeletonAnnotationMethod.fromJson((JsonObject) jsonElement)));
 
         return new SkeletonAnnotation(name, pck,
-                Arrays.stream(enclosed).collect(Collectors.toMap(LoxClass::name, Function.identity()))
+                Arrays.stream(enclosed).collect(Collectors.toMap(LoxClass::name, Function.identity())),
+                methods.build()
         );
     }
 
@@ -83,6 +74,11 @@ public class SkeletonAnnotation implements LoxClass {
     @Override
     public void setInit() {
 
+    }
+
+    @Override
+    public LoxClass[] enclosed() {
+        return enclosed.values().toArray(new PreviewClass[0]);
     }
 
     @Override
@@ -186,7 +182,7 @@ public class SkeletonAnnotation implements LoxClass {
     }
 
     @Override
-    public MethodMap getMethods() {
+    public GeneratedMethodMap getMethods() {
         return null;
     }
 }

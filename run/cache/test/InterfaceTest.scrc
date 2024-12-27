@@ -17,17 +17,9 @@
               "lineStartIndex": 8
             },
             "value": {
-              "TYPE": "literal",
-              "value": {
-                "type": "STR",
-                "lexeme": "\"a\"",
-                "literal": {
-                  "type": "String",
-                  "value": "a"
-                },
-                "line": 9,
-                "lineStartIndex": 15
-              }
+              "type": "String",
+              "value": "a",
+              "TYPE": "literal"
             }
           }
         ],

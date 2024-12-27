@@ -45,17 +45,9 @@
               "executor": "scripted.lang.int",
               "operand": "LEFT",
               "right": {
-                "TYPE": "literal",
-                "value": {
-                  "type": "NUM",
-                  "lexeme": "8",
-                  "literal": {
-                    "type": "int",
-                    "value": 8
-                  },
-                  "line": 14,
-                  "lineStartIndex": 24
-                }
+                "type": "int",
+                "value": 8,
+                "TYPE": "literal"
               }
             }
           }

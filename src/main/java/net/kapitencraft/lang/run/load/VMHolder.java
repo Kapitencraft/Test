@@ -4,9 +4,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.internal.Streams;
 import com.google.gson.stream.JsonReader;
 import net.kapitencraft.lang.oop.clazz.*;
+import net.kapitencraft.lang.oop.clazz.generated.GeneratedAnnotation;
 import net.kapitencraft.lang.oop.clazz.generated.GeneratedClass;
 import net.kapitencraft.lang.oop.clazz.generated.GeneratedEnum;
 import net.kapitencraft.lang.oop.clazz.generated.GeneratedInterface;
+import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonAnnotation;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonEnum;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonInterface;
@@ -29,7 +31,7 @@ public class VMHolder extends ClassHolder {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-        this.type =GsonHelper.getAsString(data, "TYPE");
+        this.type = GsonHelper.getAsString(data, "TYPE");
     }
 
     @Override
@@ -48,6 +50,8 @@ public class VMHolder extends ClassHolder {
             return SkeletonInterface.fromCache(data, pck(), enclosedClasses);
         else if ("enum".equals(type))
             return SkeletonEnum.fromCache(data, pck(), enclosedClasses);
+        else if ("annotation".equals(type))
+            return SkeletonAnnotation.fromCache(data, pck(), enclosedClasses);
         else
             return SkeletonClass.fromCache(data, pck(), enclosedClasses);
     }
@@ -60,6 +64,8 @@ public class VMHolder extends ClassHolder {
             target = GeneratedInterface.load(data, enclosed, pck());
         else if ("enum".equals(type))
             target = GeneratedEnum.load(data, enclosed, pck());
+        else if ("annotation".equals(type))
+            target = GeneratedAnnotation.load(data, enclosed, pck());
         else
             target = GeneratedClass.load(data, enclosed, pck());
 

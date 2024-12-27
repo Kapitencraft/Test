@@ -1,6 +1,8 @@
 package net.kapitencraft.lang.holder.ast;
 
 import java.util.List;
+
+import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.algebra.Operand;
@@ -361,10 +363,10 @@ public abstract class Expr {
     }
 
     public static class Literal extends Expr {
-        public final Token value;
+        public final LiteralHolder holder;
 
-        public Literal(Token value) {
-            this.value = value;
+        public Literal(LiteralHolder holder) {
+            this.holder = holder;
         }
 
         @Override

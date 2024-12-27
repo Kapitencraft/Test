@@ -12,7 +12,7 @@ import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.LoxInterface;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.field.LoxField;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -25,10 +25,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GeneratedInterface implements LoxInterface, CacheableClass {
-    private final MethodMap methods;
+    private final GeneratedMethodMap methods;
     private final MethodLookup lookup;
     private final Map<String, DataMethodContainer> allMethods;
-    private final MethodMap staticMethods;
+    private final GeneratedMethodMap staticMethods;
     private final Map<String, GeneratedField> allStaticFields;
 
     private final LoxClass[] parentInterfaces;
@@ -39,9 +39,9 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     private final String packageRepresentation;
 
     public GeneratedInterface(Map<String, DataMethodContainer> allMethods, Map<String, DataMethodContainer> allStaticMethods, Map<String, GeneratedField> allStaticFields, LoxClass[] parentInterfaces, Map<String, LoxClass> enclosing, String name, String packageRepresentation) {
-        this.methods = new MethodMap(allMethods);
+        this.methods = new GeneratedMethodMap(allMethods);
         this.allMethods = allMethods;
-        this.staticMethods = new MethodMap(allStaticMethods);
+        this.staticMethods = new GeneratedMethodMap(allStaticMethods);
         this.allStaticFields = allStaticFields;
         this.parentInterfaces = parentInterfaces;
         this.enclosing = enclosing;
@@ -79,16 +79,6 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     @Override
     public void setInit() {
         init = true;
-    }
-
-    @Override
-    public void clInit() {
-        if (Interpreter.suppressClassLoad) return;
-        Interpreter.INSTANCE.pushCallIndex(-1);
-        Interpreter.INSTANCE.pushCall(this.absoluteName(), "<clinit>", this.name());
-        LoxInterface.super.clInit();
-        this.enclosing.values().forEach(LoxClass::clInit);
-        Interpreter.INSTANCE.popCall();
     }
 
     @Override
@@ -161,7 +151,7 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     }
 
     @Override
-    public MethodMap getMethods() {
+    public GeneratedMethodMap getMethods() {
         return methods;
     }
 
@@ -187,7 +177,7 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
 
     @SuppressWarnings("SuspiciousToArrayCall")
     @Override
-    public CacheableClass[] enclosing() {
+    public CacheableClass[] enclosed() {
         return enclosing.values().toArray(new CacheableClass[0]);
     }
 

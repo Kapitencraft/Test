@@ -194,30 +194,14 @@
       "constructorOrdinal": 0,
       "args": [
         {
-          "TYPE": "literal",
-          "value": {
-            "type": "STR",
-            "lexeme": "\"a\"",
-            "literal": {
-              "type": "String",
-              "value": "a"
-            },
-            "line": 4,
-            "lineStartIndex": 6
-          }
+          "type": "String",
+          "value": "a",
+          "TYPE": "literal"
         },
         {
-          "TYPE": "literal",
-          "value": {
-            "type": "NUM",
-            "lexeme": "0",
-            "literal": {
-              "type": "int",
-              "value": 0
-            },
-            "line": 4,
-            "lineStartIndex": 11
-          }
+          "type": "int",
+          "value": 0,
+          "TYPE": "literal"
         }
       ]
     },
@@ -227,30 +211,14 @@
       "constructorOrdinal": 0,
       "args": [
         {
-          "TYPE": "literal",
-          "value": {
-            "type": "STR",
-            "lexeme": "\"b\"",
-            "literal": {
-              "type": "String",
-              "value": "b"
-            },
-            "line": 5,
-            "lineStartIndex": 6
-          }
+          "type": "String",
+          "value": "b",
+          "TYPE": "literal"
         },
         {
-          "TYPE": "literal",
-          "value": {
-            "type": "NUM",
-            "lexeme": "1",
-            "literal": {
-              "type": "int",
-              "value": 1
-            },
-            "line": 5,
-            "lineStartIndex": 11
-          }
+          "type": "int",
+          "value": 1,
+          "TYPE": "literal"
         }
       ]
     },
@@ -260,30 +228,14 @@
       "constructorOrdinal": 0,
       "args": [
         {
-          "TYPE": "literal",
-          "value": {
-            "type": "STR",
-            "lexeme": "\"c\"",
-            "literal": {
-              "type": "String",
-              "value": "c"
-            },
-            "line": 6,
-            "lineStartIndex": 6
-          }
+          "type": "String",
+          "value": "c",
+          "TYPE": "literal"
         },
         {
-          "TYPE": "literal",
-          "value": {
-            "type": "NUM",
-            "lexeme": "2",
-            "literal": {
-              "type": "int",
-              "value": 2
-            },
-            "line": 6,
-            "lineStartIndex": 11
-          }
+          "type": "int",
+          "value": 2,
+          "TYPE": "literal"
         }
       ]
     }

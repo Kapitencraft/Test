@@ -1,15 +1,12 @@
 package net.kapitencraft.lang.natives.scripted.lang;
 
 import net.kapitencraft.lang.func.NativeMethodImpl;
-import net.kapitencraft.lang.oop.clazz.NativeClass;
-import net.kapitencraft.lang.oop.field.NativeField;
-import net.kapitencraft.lang.oop.method.MethodMap;
-import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.oop.clazz.wrapper.NativeClass;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
-import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
@@ -161,7 +158,7 @@ public class ThrowableClass extends NativeClass {
     }
 
     @Override
-    public MethodMap getMethods() {
+    public GeneratedMethodMap getMethods() {
         return null;
     }
 }

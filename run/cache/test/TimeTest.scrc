@@ -28,17 +28,9 @@
               },
               "targetType": "scripted.lang.int",
               "initializer": {
-                "TYPE": "literal",
-                "value": {
-                  "type": "NUM",
-                  "lexeme": "0",
-                  "literal": {
-                    "type": "int",
-                    "value": 0
-                  },
-                  "line": 5,
-                  "lineStartIndex": 21
-                }
+                "type": "int",
+                "value": 0,
+                "TYPE": "literal"
               },
               "isFinal": false
             },
@@ -64,17 +56,9 @@
               "executor": "scripted.lang.int",
               "operand": "LEFT",
               "right": {
-                "TYPE": "literal",
-                "value": {
-                  "type": "NUM",
-                  "lexeme": "1000",
-                  "literal": {
-                    "type": "int",
-                    "value": 1000
-                  },
-                  "line": 5,
-                  "lineStartIndex": 28
-                }
+                "type": "int",
+                "value": 1000,
+                "TYPE": "literal"
               }
             },
             "increment": {
@@ -153,17 +137,9 @@
                   "left": {
                     "TYPE": "binary",
                     "left": {
-                      "TYPE": "literal",
-                      "value": {
-                        "type": "STR",
-                        "lexeme": "\"counting to 1000 took \"",
-                        "literal": {
-                          "type": "String",
-                          "value": "counting to 1000 took "
-                        },
-                        "line": 8,
-                        "lineStartIndex": 21
-                      }
+                      "type": "String",
+                      "value": "counting to 1000 took ",
+                      "TYPE": "literal"
                     },
                     "operator": {
                       "type": "ADD",
@@ -198,17 +174,9 @@
                   "executor": "scripted.lang.String",
                   "operand": "LEFT",
                   "right": {
-                    "TYPE": "literal",
-                    "value": {
-                      "type": "STR",
-                      "lexeme": "\"ms\"",
-                      "literal": {
-                        "type": "String",
-                        "value": "ms"
-                      },
-                      "line": 8,
-                      "lineStartIndex": 64
-                    }
+                    "type": "String",
+                    "value": "ms",
+                    "TYPE": "literal"
                   }
                 }
               ]

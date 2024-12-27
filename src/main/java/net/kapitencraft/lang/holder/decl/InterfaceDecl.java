@@ -21,7 +21,13 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.*;
 
-public record InterfaceDecl(VarTypeParser parser, Compiler.ErrorLogger logger, PreviewClass target, Token name, String pck, LoxClass[] parentInterfaces, SkeletonParser.MethodDecl[] methods, SkeletonParser.FieldDecl[] fields, SkeletonParser.ClassConstructor<?>[] enclosed) implements SkeletonParser.ClassConstructor<BakedInterface> {
+public record InterfaceDecl(
+        VarTypeParser parser, Compiler.ErrorLogger logger,
+        PreviewClass target, Token name, String pck, LoxClass[] parentInterfaces,
+        SkeletonParser.MethodDecl[] methods, SkeletonParser.FieldDecl[] fields,
+        SkeletonParser.ClassConstructor<?>[] enclosed,
+        SkeletonParser.AnnotationObj[] annotations
+) implements SkeletonParser.ClassConstructor<BakedInterface> {
 
     @Override
     public BakedInterface construct(StmtParser stmtParser, ExprParser exprParser) {

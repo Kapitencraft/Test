@@ -30,30 +30,14 @@
               "target": "test.MultipleMethodsTest",
               "args": [
                 {
-                  "TYPE": "literal",
-                  "value": {
-                    "type": "STR",
-                    "lexeme": "\"e\"",
-                    "literal": {
-                      "type": "String",
-                      "value": "e"
-                    },
-                    "line": 8,
-                    "lineStartIndex": 26
-                  }
+                  "type": "String",
+                  "value": "e",
+                  "TYPE": "literal"
                 },
                 {
-                  "TYPE": "literal",
-                  "value": {
-                    "type": "STR",
-                    "lexeme": "\"a\"",
-                    "literal": {
-                      "type": "String",
-                      "value": "a"
-                    },
-                    "line": 8,
-                    "lineStartIndex": 31
-                  }
+                  "type": "String",
+                  "value": "a",
+                  "TYPE": "literal"
                 }
               ],
               "keyword": {
@@ -91,17 +75,9 @@
               "ordinal": 1,
               "args": [
                 {
-                  "TYPE": "literal",
-                  "value": {
-                    "type": "NUM",
-                    "lexeme": "5",
-                    "literal": {
-                      "type": "int",
-                      "value": 5
-                    },
-                    "line": 9,
-                    "lineStartIndex": 17
-                  }
+                  "type": "int",
+                  "value": 5,
+                  "TYPE": "literal"
                 }
               ]
             }
@@ -130,17 +106,9 @@
               "ordinal": 0,
               "args": [
                 {
-                  "TYPE": "literal",
-                  "value": {
-                    "type": "STR",
-                    "lexeme": "\"Hello!\"",
-                    "literal": {
-                      "type": "String",
-                      "value": "Hello!"
-                    },
-                    "line": 10,
-                    "lineStartIndex": 17
-                  }
+                  "type": "String",
+                  "value": "Hello!",
+                  "TYPE": "literal"
                 }
               ]
             }

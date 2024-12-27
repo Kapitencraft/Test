@@ -1,9 +1,10 @@
-package net.kapitencraft.lang.oop.clazz;
+package net.kapitencraft.lang.oop.clazz.wrapper;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.natives.scripted.lang.ObjectClass;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.field.NativeField;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -12,14 +13,14 @@ import java.util.List;
 import java.util.Map;
 
 public class NativeClass extends NativeUtilClass {
-    private final MethodMap methods;
+    private final GeneratedMethodMap methods;
     private final DataMethodContainer constructor;
     private final LoxClass superclass;
     private final boolean isAbstract, isFinal, isInterface;
 
     public NativeClass(String name, String pck, Map<String, DataMethodContainer> staticMethods, Map<String, NativeField> staticFields, Map<String, DataMethodContainer> methods, DataMethodContainer constructor, LoxClass superclass, boolean isAbstract, boolean isFinal, boolean isInterface) {
         super(staticMethods, staticFields, name, pck);
-        this.methods = new MethodMap(methods);
+        this.methods = new GeneratedMethodMap(methods);
         this.constructor = constructor;
         this.superclass = superclass == null && this.getClass() != ObjectClass.class ? VarTypeManager.OBJECT.get() : superclass;
         this.isAbstract = isAbstract;
@@ -78,7 +79,7 @@ public class NativeClass extends NativeUtilClass {
     }
 
     @Override
-    public MethodMap getMethods() {
+    public GeneratedMethodMap getMethods() {
         return methods;
     }
 }

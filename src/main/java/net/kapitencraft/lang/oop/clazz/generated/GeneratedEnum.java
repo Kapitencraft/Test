@@ -15,7 +15,7 @@ import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
@@ -32,8 +32,8 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     private Map<String, ClassInstance> constants;
     ClassInstance[] constantData;
 
-    private final MethodMap methods;
-    private final MethodMap staticMethods;
+    private final GeneratedMethodMap methods;
+    private final GeneratedMethodMap staticMethods;
 
     private final MethodLookup lookup;
 
@@ -50,8 +50,8 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     private final String packageRepresentation;
 
     public GeneratedEnum(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor, Map<String, GeneratedField> allFields, Map<String, GeneratedEnumConstant> enumConstants, Map<String, GeneratedField> allStaticFields, Map<String, LoxClass> enclosing, LoxClass[] implemented, String name, String packageRepresentation) {
-        this.methods = new MethodMap(methods);
-        this.staticMethods = new MethodMap(staticMethods);
+        this.methods = new GeneratedMethodMap(methods);
+        this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.constructor = constructor.build(this);
         this.allFields = allFields;
         this.enumConstants = enumConstants;
@@ -69,8 +69,8 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
                          Function<LoxClass, Map<String, GeneratedEnumConstant>> enumConstants,
                          Map<String, GeneratedField> allStaticFields,
                          Map<String, LoxClass> enclosing, LoxClass[] implemented, String name, String packageRepresentation) {
-        this.methods = new MethodMap(methods);
-        this.staticMethods = new MethodMap(staticMethods);
+        this.methods = new GeneratedMethodMap(methods);
+        this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.constructor = ConstructorContainer.fromCache(constructorData, this);
         this.allFields = allFields;
         this.enumConstants = enumConstants.apply(this);
@@ -142,7 +142,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public CacheableClass[] enclosing() {
+    public CacheableClass[] enclosed() {
         return new CacheableClass[0];
     }
 
@@ -259,16 +259,6 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public void clInit() {
-        if (Interpreter.suppressClassLoad) return;
-        Interpreter.INSTANCE.pushCallIndex(-1);
-        Interpreter.INSTANCE.pushCall(this.absoluteName(), "<clinit>", this.name());
-        EnumClass.super.clInit();
-        this.enclosing.values().forEach(LoxClass::clInit);
-        Interpreter.INSTANCE.popCall();
-    }
-
-    @Override
     public boolean hasEnclosing(String name) {
         return enclosing.containsKey(name);
     }
@@ -279,7 +269,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public MethodMap getMethods() {
+    public GeneratedMethodMap getMethods() {
         return methods;
     }
 }

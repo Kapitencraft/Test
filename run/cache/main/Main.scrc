@@ -78,17 +78,9 @@
                       "left": {
                         "TYPE": "binary",
                         "left": {
-                          "TYPE": "literal",
-                          "value": {
-                            "type": "NUM",
-                            "lexeme": "4",
-                            "literal": {
-                              "type": "int",
-                              "value": 4
-                            },
-                            "line": 7,
-                            "lineStartIndex": 22
-                          }
+                          "type": "int",
+                          "value": 4,
+                          "TYPE": "literal"
                         },
                         "operator": {
                           "type": "POW",
@@ -100,17 +92,9 @@
                         "executor": "scripted.lang.int",
                         "operand": "LEFT",
                         "right": {
-                          "TYPE": "literal",
-                          "value": {
-                            "type": "NUM",
-                            "lexeme": "0",
-                            "literal": {
-                              "type": "int",
-                              "value": 0
-                            },
-                            "line": 7,
-                            "lineStartIndex": 25
-                          }
+                          "type": "int",
+                          "value": 0,
+                          "TYPE": "literal"
                         }
                       },
                       "operator": {
@@ -125,17 +109,9 @@
                       "right": {
                         "TYPE": "binary",
                         "left": {
-                          "TYPE": "literal",
-                          "value": {
-                            "type": "NUM",
-                            "lexeme": "64",
-                            "literal": {
-                              "type": "int",
-                              "value": 64
-                            },
-                            "line": 7,
-                            "lineStartIndex": 29
-                          }
+                          "type": "int",
+                          "value": 64,
+                          "TYPE": "literal"
                         },
                         "operator": {
                           "type": "POW",
@@ -147,17 +123,9 @@
                         "executor": "scripted.lang.int",
                         "operand": "LEFT",
                         "right": {
-                          "TYPE": "literal",
-                          "value": {
-                            "type": "NUM",
-                            "lexeme": "0.5",
-                            "literal": {
-                              "type": "double",
-                              "value": 0.5
-                            },
-                            "line": 7,
-                            "lineStartIndex": 33
-                          }
+                          "type": "double",
+                          "value": 0.5,
+                          "TYPE": "literal"
                         }
                       }
                     }
@@ -181,17 +149,9 @@
                       "lineStartIndex": 39
                     },
                     "arg": {
-                      "TYPE": "literal",
-                      "value": {
-                        "type": "NUM",
-                        "lexeme": "2",
-                        "literal": {
-                          "type": "int",
-                          "value": 2
-                        },
-                        "line": 7,
-                        "lineStartIndex": 40
-                      }
+                      "type": "int",
+                      "value": 2,
+                      "TYPE": "literal"
                     }
                   }
                 }

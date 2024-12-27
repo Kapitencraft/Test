@@ -5,7 +5,8 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
@@ -18,17 +19,17 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class MethodLookup {
-    private final List<Pair<LoxClass, MethodMap>> lookup;
-    private final MethodMap exposed; //TODO make a new one for method lookup k
+    private final List<Pair<LoxClass, AbstractMethodMap>> lookup;
+    private final AbstractMethodMap exposed; //TODO make a new one for method lookup k
 
-    public MethodLookup(List<Pair<LoxClass, MethodMap>> lookup) {
+    public MethodLookup(List<Pair<LoxClass, AbstractMethodMap>> lookup) {
         this.lookup = lookup;
         exposed = this.createExposed();
     }
 
     public void checkFinal(Compiler.ErrorLogger logger, Pair<Token, GeneratedCallable>[] map) {
         for (Pair<Token, GeneratedCallable> pair : map) {
-            for (Pair<LoxClass, MethodMap> lookupElement : lookup) {
+            for (Pair<LoxClass, AbstractMethodMap> lookupElement : lookup) {
                 Map<String, DataMethodContainer> methodMap = lookupElement.right().asMap();
                 if (!methodMap.containsKey(pair.left().lexeme())) continue; //no method with name found, continuing
                 for (ScriptedCallable method : methodMap.get(pair.left().lexeme()).getMethods()) {
@@ -43,7 +44,7 @@ public class MethodLookup {
 
     public void checkAbstract(Compiler.ErrorLogger logger, Token className, Pair<Token, GeneratedCallable>[] map) {
         Map<String, List<Pair<LoxClass, ScriptedCallable>>> abstracts = new HashMap<>();
-        for (Pair<LoxClass, MethodMap> methods : lookup) {
+        for (Pair<LoxClass, AbstractMethodMap> methods : lookup) {
             methods.right().asMap().forEach((s, dataMethodContainer) -> {
                 a: for (ScriptedCallable method : dataMethodContainer.getMethods()) {
                     List<Pair<LoxClass, ScriptedCallable>> classData = abstracts.computeIfAbsent(s, k -> new ArrayList<>());
@@ -90,7 +91,7 @@ public class MethodLookup {
             addInterfaces(parent, allParents::add);
             allParents.add(parent);
         }
-        List<Pair<LoxClass, MethodMap>> lookup = allParents.stream().collect(Util.toPairList(Function.identity(), LoxClass::getMethods));
+        List<Pair<LoxClass, AbstractMethodMap>> lookup = allParents.stream().collect(Util.toPairList(Function.identity(), LoxClass::getMethods));
         return new MethodLookup(lookup);
     }
 
@@ -110,9 +111,9 @@ public class MethodLookup {
         return Util.invert(parents);
     }
 
-    private MethodMap createExposed() {
+    private GeneratedMethodMap createExposed() {
         Map<String, DataMethodContainer> map = new HashMap<>();
-        for (Pair<LoxClass, MethodMap> pair : lookup) {
+        for (Pair<LoxClass, AbstractMethodMap> pair : lookup) {
             pair.right().asMap().forEach((s, dataMethodContainer) -> {
                 if (!map.containsKey(s)) map.put(s, dataMethodContainer);
                 else {
@@ -133,7 +134,7 @@ public class MethodLookup {
                 }
             });
         }
-        return new MethodMap(ImmutableMap.copyOf(map));
+        return new GeneratedMethodMap(ImmutableMap.copyOf(map));
     }
 
     public int getMethodOrdinal(String name, List<? extends LoxClass> args) {

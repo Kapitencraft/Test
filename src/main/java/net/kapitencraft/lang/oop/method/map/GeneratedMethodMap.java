@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.oop.method;
+package net.kapitencraft.lang.oop.method.map;
 
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
@@ -9,10 +9,10 @@ import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import java.util.List;
 import java.util.Map;
 
-public class MethodMap {
+public class GeneratedMethodMap implements AbstractMethodMap {
     private final Map<String, DataMethodContainer> methods;
 
-    public MethodMap(Map<String, DataMethodContainer> methods) {
+    public GeneratedMethodMap(Map<String, DataMethodContainer> methods) {
         this.methods = methods;
     }
 

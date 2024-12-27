@@ -110,7 +110,7 @@ public class Compiler {
         FileWriter writer = new FileWriter(cacheTarget);
         writer.write(GsonHelper.GSON.toJson(object));
         writer.close();
-        for (CacheableClass loxClass : target.enclosing()) {
+        for (CacheableClass loxClass : target.enclosed()) {
             cache(cacheBase, builder, path, loxClass, name + "$" + loxClass.name());
         }
     }

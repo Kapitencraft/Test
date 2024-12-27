@@ -6,6 +6,7 @@ import net.kapitencraft.lang.natives.scripted.lang.*;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.natives.scripted.lang.IndexOutOfBoundsException;
 import net.kapitencraft.lang.natives.scripted.lang.SystemClass;
+import net.kapitencraft.lang.natives.scripted.lang.annotation.OverrideAnnotation;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
@@ -51,6 +52,8 @@ public class VarTypeManager {
 
     public static final Supplier<LoxClass> SYSTEM = registerMain(SystemClass::new, "System");
     public static final Supplier<LoxClass> MATH = registerMain(MathClass::new, "Math");
+
+    public static final Supplier<LoxClass> OVERRIDE = registerMain(OverrideAnnotation::new, "Override");
 
     static {
         loadClasses();

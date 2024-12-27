@@ -7,7 +7,8 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.field.LoxField;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.map.AnnotationMethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedAnnotationMethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -22,11 +23,14 @@ public final class GeneratedAnnotation implements CacheableClass {
 
     private final Map<String, LoxClass> enclosing;
 
+    private final GeneratedAnnotationMethodMap methods;
+
     private final String name;
     private final String packageRepresentation;
 
-    public GeneratedAnnotation(Map<String, LoxClass> enclosing,
+    public GeneratedAnnotation(Map<String, LoxClass> enclosing, GeneratedAnnotationMethodMap methods,
                                String name, String packageRepresentation) {
+        this.methods = methods;
         this.name = name;
         this.enclosing = enclosing;
         this.packageRepresentation = packageRepresentation;
@@ -38,15 +42,18 @@ public final class GeneratedAnnotation implements CacheableClass {
 
         Map<String, LoxClass> enclosedClasses = enclosed.stream().collect(Collectors.toMap(LoxClass::name, Function.identity()));
 
+        GeneratedAnnotationMethodMap methodMap = GeneratedAnnotationMethodMap.read(data, "methods");
+
         return new GeneratedAnnotation(
-                enclosedClasses, name, pck
-        );
+                enclosedClasses, methodMap, name,
+                pck);
     }
 
     public JsonObject save(CacheBuilder cacheBuilder) {
         JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "class");
+        object.addProperty("TYPE", "annotation");
         object.addProperty("name", name);
+        object.add("methods", this.methods.save(cacheBuilder));
 
         return object;
     }
@@ -77,18 +84,13 @@ public final class GeneratedAnnotation implements CacheableClass {
     }
 
     @Override
-    public ScriptedCallable getMethod(String name, List<LoxClass> args) {
-        return null;
-    }
-
-    @Override
     public boolean hasStaticMethod(String name) {
         return false;
     }
 
     @Override
     public boolean hasMethod(String name) {
-        return false;
+        return methods.has(name);
     }
 
     @Override
@@ -137,8 +139,8 @@ public final class GeneratedAnnotation implements CacheableClass {
     }
 
     @Override
-    public MethodMap getMethods() {
-        return null;
+    public AnnotationMethodMap getMethods() {
+        return methods;
     }
 
     boolean init = false;
@@ -154,13 +156,8 @@ public final class GeneratedAnnotation implements CacheableClass {
     }
 
     @Override
-    public void clInit() {
-        if (Interpreter.suppressClassLoad) return;
-        Interpreter.INSTANCE.pushCallIndex(-1);
-        Interpreter.INSTANCE.pushCall(this.absoluteName(), "<clinit>", this.name());
-        CacheableClass.super.clInit();
-        this.enclosing.values().forEach(LoxClass::clInit);
-        Interpreter.INSTANCE.popCall();
+    public LoxClass[] interfaces() {
+        return new LoxClass[0];
     }
 
     @Override
@@ -184,7 +181,7 @@ public final class GeneratedAnnotation implements CacheableClass {
     }
 
     @SuppressWarnings("SuspiciousToArrayCall")
-    public CacheableClass[] enclosing() {
+    public CacheableClass[] enclosed() {
         return enclosing.values().toArray(new CacheableClass[0]);
     }
 

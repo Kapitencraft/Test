@@ -10,7 +10,7 @@ import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -35,7 +35,7 @@ public class SkeletonEnum implements EnumClass {
 
     private final Map<String, PreviewClass> enclosed;
 
-    private final MethodMap methods;
+    private final GeneratedMethodMap methods;
     private final Map<String, DataMethodContainer> staticMethods;
     private final ConstructorContainer constructor;
 
@@ -48,7 +48,7 @@ public class SkeletonEnum implements EnumClass {
         this.staticFields = staticFields;
         this.fields = fields;
         this.enclosed = enclosed;
-        this.methods = new MethodMap(methods);
+        this.methods = new GeneratedMethodMap(methods);
         this.staticMethods = staticMethods;
         this.constructor = constructor.build(this);
     }
@@ -63,7 +63,7 @@ public class SkeletonEnum implements EnumClass {
         this.staticFields = staticFields;
         this.fields = fields;
         this.enclosed = enclosed;
-        this.methods = new MethodMap(methods);
+        this.methods = new GeneratedMethodMap(methods);
         this.staticMethods = staticMethods;
         this.constructor = constructor;
     }
@@ -124,6 +124,11 @@ public class SkeletonEnum implements EnumClass {
     @Override
     public void setInit() {
 
+    }
+
+    @Override
+    public LoxClass[] enclosed() {
+        return enclosed.values().toArray(new PreviewClass[0]);
     }
 
     @Override
@@ -242,7 +247,7 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public MethodMap getMethods() {
+    public GeneratedMethodMap getMethods() {
         return methods;
     }
 

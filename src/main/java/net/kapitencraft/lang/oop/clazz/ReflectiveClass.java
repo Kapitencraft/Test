@@ -7,7 +7,7 @@ import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.field.ReflectiveField;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.clazz.inst.ReflectiveClassInstance;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -16,7 +16,6 @@ import net.kapitencraft.lang.oop.method.ReflectiveMethod;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
-import net.kapitencraft.lang.run.algebra.OperationType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -33,7 +32,7 @@ public class ReflectiveClass<T> implements LoxClass {
     private final ConstructorContainer constructor;
     private final Map<String, ReflectiveField> fields;
     private final Map<String, ReflectiveField> staticFields;
-    private final MethodMap methods;
+    private final GeneratedMethodMap methods;
     private final Map<String, DataMethodContainer> staticMethods;
 
     public ReflectiveClass(Class<T> target) {
@@ -60,7 +59,7 @@ public class ReflectiveClass<T> implements LoxClass {
         this.fields = loadFields(fields);
         this.staticFields = loadFields(staticFields);
 
-        this.methods = new MethodMap(loadMethods(methods));
+        this.methods = new GeneratedMethodMap(loadMethods(methods));
         this.staticMethods = loadMethods(staticMethods);
         this.constructor = new ConstructorContainer(Arrays.stream(target.getDeclaredConstructors()).map(ReflectiveConstructor::new).toArray(ReflectiveConstructor[]::new));
     }
@@ -97,6 +96,11 @@ public class ReflectiveClass<T> implements LoxClass {
     @Override
     public void setInit() {
 
+    }
+
+    @Override
+    public LoxClass[] enclosed() {
+        return new LoxClass[0];
     }
 
     @Override
@@ -180,7 +184,7 @@ public class ReflectiveClass<T> implements LoxClass {
     }
 
     @Override
-    public MethodMap getMethods() {
+    public GeneratedMethodMap getMethods() {
         return methods;
     }
 

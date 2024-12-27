@@ -17,21 +17,13 @@
               "type": "RETURN",
               "lexeme": "return",
               "literal": {},
-              "line": 9,
+              "line": 10,
               "lineStartIndex": 8
             },
             "value": {
-              "TYPE": "literal",
-              "value": {
-                "type": "STR",
-                "lexeme": "\"e\"",
-                "literal": {
-                  "type": "String",
-                  "value": "e"
-                },
-                "line": 9,
-                "lineStartIndex": 15
-              }
+              "type": "String",
+              "value": "e",
+              "TYPE": "literal"
             }
           }
         ],

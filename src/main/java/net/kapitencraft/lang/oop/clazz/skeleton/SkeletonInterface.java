@@ -8,7 +8,7 @@ import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
@@ -32,8 +32,8 @@ public class SkeletonInterface implements LoxClass {
 
     private final Map<String, PreviewClass> enclosed;
 
-    private final MethodMap methods;
-    private final MethodMap staticMethods;
+    private final GeneratedMethodMap methods;
+    private final GeneratedMethodMap staticMethods;
 
     public SkeletonInterface(String name, String pck, LoxClass[] interfaces, Map<String, SkeletonField> staticFields, Map<String, PreviewClass> enclosed, Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods) {
         this.name = name;
@@ -41,8 +41,8 @@ public class SkeletonInterface implements LoxClass {
         this.interfaces = interfaces;
         this.staticFields = staticFields;
         this.enclosed = enclosed;
-        this.methods = new MethodMap(methods);
-        this.staticMethods = new MethodMap(staticMethods);
+        this.methods = new GeneratedMethodMap(methods);
+        this.staticMethods = new GeneratedMethodMap(staticMethods);
     }
 
     public static LoxClass fromCache(JsonObject data, String pck, PreviewClass[] enclosed) {
@@ -91,6 +91,11 @@ public class SkeletonInterface implements LoxClass {
     @Override
     public void setInit() {
 
+    }
+
+    @Override
+    public LoxClass[] enclosed() {
+        return enclosed.values().toArray(new PreviewClass[0]);
     }
 
     @Override
@@ -174,7 +179,7 @@ public class SkeletonInterface implements LoxClass {
     }
 
     @Override
-    public MethodMap getMethods() {
+    public GeneratedMethodMap getMethods() {
         return methods;
     }
 }

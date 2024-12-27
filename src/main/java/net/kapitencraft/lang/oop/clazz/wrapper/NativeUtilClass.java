@@ -1,25 +1,25 @@
-package net.kapitencraft.lang.oop.clazz;
+package net.kapitencraft.lang.oop.clazz.wrapper;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.oop.field.NativeField;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.run.algebra.OperationType;
 
 import java.util.List;
 import java.util.Map;
 
 public class NativeUtilClass implements LoxClass {
-    private final MethodMap staticMethods;
+    private final GeneratedMethodMap staticMethods;
     private final Map<String, NativeField> staticFields;
     private final String name;
     private final String pck;
 
     public NativeUtilClass(Map<String, DataMethodContainer> staticMethods, Map<String, NativeField> staticFields, String name, String pck) {
-        this.staticMethods = new MethodMap(staticMethods);
+        this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.staticFields = staticFields;
         this.name = name;
         this.pck = pck;
@@ -35,6 +35,11 @@ public class NativeUtilClass implements LoxClass {
     @Override
     public void setInit() {
         init = true;
+    }
+
+    @Override
+    public LoxClass[] enclosed() {
+        return new LoxClass[0];
     }
 
     @Override
@@ -123,7 +128,7 @@ public class NativeUtilClass implements LoxClass {
     }
 
     @Override
-    public MethodMap getMethods() {
+    public GeneratedMethodMap getMethods() {
         return null;
     }
 }

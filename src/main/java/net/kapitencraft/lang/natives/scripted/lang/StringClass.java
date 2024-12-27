@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.natives.scripted.lang;
 
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.NativeClass;
+import net.kapitencraft.lang.oop.clazz.wrapper.NativeClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;

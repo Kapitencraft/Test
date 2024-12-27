@@ -1,0 +1,34 @@
+{
+  "TYPE": "annotation",
+  "name": "AnnotationTest",
+  "methods": {
+    "name": {
+      "type": "scripted.lang.String",
+      "val": {
+        "type": "String",
+        "value": "",
+        "TYPE": "literal"
+      }
+    },
+    "max": {
+      "type": "scripted.lang.int"
+    },
+    "min": {
+      "type": "scripted.lang.int"
+    },
+    "test": {
+      "type": "test.EnumTest",
+      "val": {
+        "TYPE": "staticGet",
+        "target": "test.EnumTest",
+        "name": {
+          "type": "IDENTIFIER",
+          "lexeme": "A",
+          "literal": {},
+          "line": 12,
+          "lineStartIndex": 25
+        }
+      }
+    }
+  }
+}

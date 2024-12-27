@@ -233,7 +233,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitLiteralExpr(Expr.Literal expr) {
-        return expr.value.literal().value();
+        return expr.holder.value();
     }
 
     @Override

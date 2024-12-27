@@ -23,12 +23,14 @@ public interface EnumClass extends LoxClass {
 
     @Override
     default void clInit() {
+        startClInit();
         LoxClass.super.clInit();
         ImmutableMap.Builder<String, ClassInstance> constants = new ImmutableMap.Builder<>();
         this.enumConstants().forEach((s, loxField) -> {
             constants.put(s, (ClassInstance) loxField.initialize(null, Interpreter.INSTANCE));
         });
         setConstantValues(constants.build());
+        endClInit();
     }
 
     @Override

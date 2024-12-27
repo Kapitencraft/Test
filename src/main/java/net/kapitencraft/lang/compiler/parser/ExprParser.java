@@ -35,6 +35,17 @@ public class ExprParser extends AbstractParser {
         return when();
     }
 
+    public Expr literalOrReference() {
+        //TODO add annotation support
+        if (match(PRIMITIVE)) {
+            return new Expr.Literal(previous().literal());
+        }
+        LoxClass target = consumeVarType();
+        Token name = previous();
+
+        return new Expr.StaticGet(target, name);
+    }
+
     private Expr when() {
         Expr expr = castCheck();
         if (match(QUESTION_MARK)) {
@@ -163,7 +174,7 @@ public class ExprParser extends AbstractParser {
             executor = right;
         }
         if (result == VarTypeManager.VOID) {
-            error(operator, "operator '" + operator.lexeme() + "' not possible for argument types " + left.absoluteName() + " and " + right.absoluteName());
+            errorLogger.errorF(operator, "operator '%s' not possible for argument types %s and %s", operator.lexeme(), left.absoluteName(), right.absoluteName());
             return Pair.of(VarTypeManager.VOID, Operand.LEFT);
         }
         return Pair.of(executor, operand);
@@ -259,7 +270,7 @@ public class ExprParser extends AbstractParser {
         while (!check(C_BRACKET_C)) {
             if (match(CASE)) {
                 Object key = literal();
-                if (params.containsKey(key)) error(previous(), "Duplicate case key '" + previous().lexeme() + "'");
+                if (params.containsKey(key)) errorLogger.errorF(previous(), "Duplicate case key '%s'", previous().lexeme());
                 consume(LAMBDA, "not a statement");
                 Expr expr = expression();
                 consumeEndOfArg();
@@ -389,7 +400,7 @@ public class ExprParser extends AbstractParser {
         List<? extends LoxClass> expectedTypes = target.argTypes();
         List<? extends LoxClass> givenTypes = argTypes(args);
         if (expectedTypes.size() != givenTypes.size()) {
-            error(loc, String.format("constructor for %s cannot be applied to given types;", loc.lexeme()));
+            errorLogger.errorF(loc, "constructor for %s cannot be applied to given types;", loc.lexeme());
 
             errorLogger.logError("required: " + expectedTypes.stream().map(LoxClass::name).collect(Collectors.joining(",")));
             errorLogger.logError("found:    " + givenTypes.stream().map(LoxClass::name).collect(Collectors.joining(",")));
@@ -430,7 +441,7 @@ public class ExprParser extends AbstractParser {
         }
 
         if (match(PRIMITIVE)) {
-            return new Expr.Literal(previous());
+            return new Expr.Literal(previous().literal());
         }
 
         if (match(IDENTIFIER)) {
@@ -451,6 +462,6 @@ public class ExprParser extends AbstractParser {
             return new Expr.Grouping(expr);
         }
 
-        throw error(peek(), "Expression expected.");
+        throw error(peek(), "Illegal start of expression");
     }
 }

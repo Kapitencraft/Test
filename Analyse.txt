@@ -2,6 +2,12 @@ Scripted:
 Eine java-ähnliche Programmiersprache und gleichzeitig eine Forge Mod für Minecraft
 
 
+Preview (Existenz check)
+File -> Decl //applyConstructor
+Create Skeletons (method signature, field types...) //generateSkeletons
+generate method contents //construct
+Abschließen //generateClass
+Speichern //cache
 
 Enthält alle Probleme samt lösung
 

@@ -36,7 +36,8 @@ public record ClassDecl(
         SkeletonParser.MethodDecl[] constructors,
         SkeletonParser.MethodDecl[] methods,
         SkeletonParser.FieldDecl[] fields,
-        SkeletonParser.ClassConstructor<?>[] enclosed
+        SkeletonParser.ClassConstructor<?>[] enclosed,
+        SkeletonParser.AnnotationObj[] annotations
 ) implements SkeletonParser.ClassConstructor<BakedClass> {
 
     @Override

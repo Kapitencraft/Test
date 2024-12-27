@@ -24,17 +24,9 @@
               "ordinal": 0,
               "args": [
                 {
-                  "TYPE": "literal",
-                  "value": {
-                    "type": "STR",
-                    "lexeme": "\"test!\"",
-                    "literal": {
-                      "type": "String",
-                      "value": "test!"
-                    },
-                    "line": 6,
-                    "lineStartIndex": 21
-                  }
+                  "type": "String",
+                  "value": "test!",
+                  "TYPE": "literal"
                 }
               ]
             }

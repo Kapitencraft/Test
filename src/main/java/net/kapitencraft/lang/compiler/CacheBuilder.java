@@ -110,6 +110,7 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     @Override
     public JsonElement visitStaticGetExpr(Expr.StaticGet expr) {
         JsonObject object = new JsonObject();
+        object.addProperty("TYPE", "staticGet");
         object.addProperty("target", expr.target.absoluteName());
         object.add("name", expr.name.toJson());
         return object;
@@ -228,9 +229,8 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
 
     @Override
     public JsonElement visitLiteralExpr(Expr.Literal expr) {
-        JsonObject object = new JsonObject();
+        JsonObject object = expr.holder.toJson();
         object.addProperty("TYPE", "literal");
-        object.add("value", expr.value.toJson());
         return object;
     }
 

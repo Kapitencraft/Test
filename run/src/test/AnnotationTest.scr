@@ -1,0 +1,13 @@
+package test;
+
+import test.EnumTest as ET;
+
+annotation AnnotationTest {
+    String name() default "";
+
+    int max();
+
+    int min();
+
+    ET test() default ET.A;
+}

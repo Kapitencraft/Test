@@ -1,7 +1,8 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
@@ -13,7 +14,6 @@ import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
-import net.kapitencraft.tool.Math;
 
 import java.util.HashMap;
 import java.util.List;
@@ -67,14 +67,29 @@ public interface LoxClass {
 
     void setInit();
 
-    default void clInit() {
+    default void startClInit() {
         setInit();
-        //Interpreter.INSTANCE.pushCall(this.absoluteName(), "<clinit>", this.name());
+        Interpreter.INSTANCE.pushCallIndex(-1);
+        Interpreter.INSTANCE.pushCall(this.absoluteName(), "<clinit>", this.name());
+    }
+
+    default void endClInit() {
+        Interpreter.INSTANCE.popCall();
+    }
+
+    default void clInit() {
+
+        if (Interpreter.suppressClassLoad) return;
         this.staticFields().forEach((s, loxField) -> {
             assignStaticField(s, loxField.initialize(null, Interpreter.INSTANCE));
         });
-        //Interpreter.INSTANCE.popCall();
+
+        for (LoxClass loxClass : this.enclosed()) {
+            loxClass.clInit();
+        }
     }
+
+    LoxClass[] enclosed();
 
     Map<String, ? extends LoxField> staticFields();
 
@@ -168,7 +183,7 @@ public interface LoxClass {
 
     default boolean isParentOf(LoxClass suspectedChild) {
         if (suspectedChild instanceof PreviewClass previewClass) suspectedChild = previewClass.getTarget();
-        if (suspectedChild.is(this) || !suspectedChild.isInterface() && VarTypeManager.OBJECT.get().is(this)) return true;
+        if (suspectedChild.is(this) || (!suspectedChild.isInterface() && VarTypeManager.OBJECT.get().is(this))) return true;
         while (suspectedChild != null && suspectedChild != VarTypeManager.OBJECT.get()  && !suspectedChild.is(this)) {
             suspectedChild = suspectedChild.superclass();
         }
@@ -198,5 +213,5 @@ public interface LoxClass {
 
     LoxClass getEnclosing(String name);
 
-    MethodMap getMethods();
+    AbstractMethodMap getMethods();
 }

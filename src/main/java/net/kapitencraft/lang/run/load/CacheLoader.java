@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
@@ -192,7 +193,7 @@ public class CacheLoader {
     }
 
     private static Expr readLiteral(JsonObject object) {
-        return new Expr.Literal(Token.readFromSubObject(object, "value"));
+        return new Expr.Literal(LiteralHolder.fromJson(object));
     }
 
     private static Expr readLogical(JsonObject object) {

@@ -9,7 +9,7 @@ import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -27,8 +27,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class GeneratedClass implements CacheableClass {
-    private final MethodMap methods;
-    private final MethodMap staticMethods;
+    private final GeneratedMethodMap methods;
+    private final GeneratedMethodMap staticMethods;
     private final Map<String, DataMethodContainer> allMethods;
 
     private final MethodLookup lookup;
@@ -51,9 +51,9 @@ public final class GeneratedClass implements CacheableClass {
                           Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
                           Map<String, LoxClass> enclosing,
                           LoxClass superclass, LoxClass[] implemented, String name, String packageRepresentation, boolean isAbstract, boolean isFinal) {
-        this.methods = new MethodMap(methods);
+        this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
-        this.staticMethods = new MethodMap(staticMethods);
+        this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.constructor = constructor.build(this);
         this.allFields = fields;
         this.allStaticFields = staticFields;
@@ -72,9 +72,9 @@ public final class GeneratedClass implements CacheableClass {
                           LoxClass superclass, String name, String packageRepresentation,
                           Map<String, LoxClass> enclosing, LoxClass[] implemented,
                           boolean isAbstract, boolean isFinal) {
-        this.methods = new MethodMap(methods);
+        this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
-        this.staticMethods = new MethodMap(staticMethods);
+        this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.constructor = ConstructorContainer.fromCache(constructorData, this);
         this.allFields = fields;
         this.allStaticFields = staticFields;
@@ -238,7 +238,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public MethodMap getMethods() {
+    public GeneratedMethodMap getMethods() {
         return methods;
     }
 
@@ -260,16 +260,6 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public void clInit() {
-        if (Interpreter.suppressClassLoad) return;
-        Interpreter.INSTANCE.pushCallIndex(-1);
-        Interpreter.INSTANCE.pushCall(this.absoluteName(), "<clinit>", this.name());
-        CacheableClass.super.clInit();
-        this.enclosing.values().forEach(LoxClass::clInit);
-        Interpreter.INSTANCE.popCall();
-    }
-
-    @Override
     public Map<String, ? extends LoxField> staticFields() {
         return allStaticFields;
     }
@@ -285,7 +275,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @SuppressWarnings("SuspiciousToArrayCall")
-    public CacheableClass[] enclosing() {
+    public CacheableClass[] enclosed() {
         return enclosing.values().toArray(new CacheableClass[0]);
     }
 

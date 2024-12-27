@@ -30,14 +30,15 @@ public class GenerateAst {
                 "CastCheck     : Expr object; LoxClass targetType; Token patternVarName",
                 "Grouping      : Expr expression",
                 //"Lambda   : List<Token> params, Stmt body",
-                "Literal       : Token value",
+                "Literal       : LiteralHolder holder",
                 "Logical       : Expr left; Token operator; Expr right",
                 "Unary         : Token operator; Expr right",
                 "VarRef        : Token name",
                 "Constructor   : Token keyword; LoxClass target; List<Expr> params; int ordinal"
         ), List.of(
                 "net.kapitencraft.lang.run.algebra.Operand",
-                "java.util.Map"
+                "java.util.Map",
+                "net.kapitencraft.lang.holder.LiteralHolder"
         ));
         defineAst("Stmt",
                 List.of(

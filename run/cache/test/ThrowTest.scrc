@@ -39,17 +39,9 @@
               "executor": "scripted.lang.int",
               "operand": "LEFT",
               "right": {
-                "TYPE": "literal",
-                "value": {
-                  "type": "NUM",
-                  "lexeme": "0",
-                  "literal": {
-                    "type": "int",
-                    "value": 0
-                  },
-                  "line": 5,
-                  "lineStartIndex": 17
-                }
+                "type": "int",
+                "value": 0,
+                "TYPE": "literal"
               }
             },
             "then": {
@@ -66,17 +58,9 @@
                 "target": "scripted.lang..ArithmeticException",
                 "args": [
                   {
-                    "TYPE": "literal",
-                    "value": {
-                      "type": "STR",
-                      "lexeme": "\"EEE\"",
-                      "literal": {
-                        "type": "String",
-                        "value": "EEE"
-                      },
-                      "line": 5,
-                      "lineStartIndex": 50
-                    }
+                    "type": "String",
+                    "value": "EEE",
+                    "TYPE": "literal"
                   }
                 ],
                 "keyword": {
@@ -141,17 +125,9 @@
                   "executor": "scripted.lang.int",
                   "operand": "LEFT",
                   "right": {
-                    "TYPE": "literal",
-                    "value": {
-                      "type": "NUM",
-                      "lexeme": "1",
-                      "literal": {
-                        "type": "int",
-                        "value": 1
-                      },
-                      "line": 6,
-                      "lineStartIndex": 32
-                    }
+                    "type": "int",
+                    "value": 1,
+                    "TYPE": "literal"
                   }
                 }
               ]
@@ -191,17 +167,9 @@
                     "ordinal": 0,
                     "args": [
                       {
-                        "TYPE": "literal",
-                        "value": {
-                          "type": "NUM",
-                          "lexeme": "10",
-                          "literal": {
-                            "type": "int",
-                            "value": 10
-                          },
-                          "line": 11,
-                          "lineStartIndex": 27
-                        }
+                        "type": "int",
+                        "value": 10,
+                        "TYPE": "literal"
                       }
                     ]
                   }
@@ -242,17 +210,9 @@
                           {
                             "TYPE": "binary",
                             "left": {
-                              "TYPE": "literal",
-                              "value": {
-                                "type": "STR",
-                                "lexeme": "\"Error: \"",
-                                "literal": {
-                                  "type": "String",
-                                  "value": "Error: "
-                                },
-                                "line": 13,
-                                "lineStartIndex": 25
-                              }
+                              "type": "String",
+                              "value": "Error: ",
+                              "TYPE": "literal"
                             },
                             "operator": {
                               "type": "ADD",

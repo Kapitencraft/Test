@@ -1,11 +1,10 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.method.MethodMap;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.field.LoxField;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.run.algebra.OperationType;
 
 import java.util.List;
 import java.util.Map;
@@ -162,11 +161,16 @@ public abstract class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public MethodMap getMethods() {
+    public GeneratedMethodMap getMethods() {
         return null;
     }
 
     public Object defaultValue() {
         return defaultValue;
+    }
+
+    @Override
+    public LoxClass[] enclosed() {
+        return new LoxClass[0];
     }
 }

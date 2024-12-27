@@ -25,6 +25,11 @@ public class ArrayClass extends PrimitiveClass {
     }
 
     @Override
+    public LoxClass[] enclosed() {
+        return new LoxClass[0];
+    }
+
+    @Override
     public String absoluteName() {
         return super.absoluteName();
     }

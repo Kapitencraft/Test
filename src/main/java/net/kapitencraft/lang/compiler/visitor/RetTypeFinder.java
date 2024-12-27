@@ -117,7 +117,7 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
 
     @Override
     public LoxClass visitLiteralExpr(Expr.Literal expr) {
-        return expr.value.literal().type();
+        return expr.holder.type();
     }
 
     @Override

@@ -39,7 +39,7 @@ public class SkeletonParser extends AbstractParser {
         }
     }
 
-    public ClassDecl classDecl(boolean classAbstract, boolean classFinal, String pckID, @Nullable String fileId, PreviewClass target) {
+    private ClassDecl classDecl(boolean classAbstract, boolean classFinal, String pckID, @Nullable String fileId, PreviewClass target, AnnotationObj[] classAnnotations) {
 
         consume(CLASS, "'class' expected");
 
@@ -69,25 +69,26 @@ public class SkeletonParser extends AbstractParser {
         List<ClassConstructor<?>> enclosed = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
+            AnnotationObj[] annotations = parseAnnotations();
             ModifiersParser modifiers = MODIFIERS;
             modifiers.parse();
             String enclosedId = pckID + name.lexeme() + "$";
-            if (readClass(enclosed::add, enclosedId, modifiers)) {
+            if (readClass(enclosed::add, enclosedId, modifiers, annotations)) {
                 if (Objects.equals(peek().lexeme(), name.lexeme())) {
                     Token constName = consume(IDENTIFIER, "that shouldn't have happened... (expected class name to be identifier)");
                     consumeBracketOpen("constructors");
-                    MethodDecl decl = funcDecl(VarTypeManager.VOID, constName, false, false, false);
+                    MethodDecl decl = funcDecl(VarTypeManager.VOID, annotations, constName, false, false, false);
                     constructors.add(decl);
                 } else {
                     ModifierScope.CLASS.check(this, modifiers);
                     LoxClass type = consumeVarType();
                     Token elementName = consumeIdentifier();
                     if (match(BRACKET_O)) {
-                        MethodDecl decl = funcDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic(), modifiers.isAbstract());
+                        MethodDecl decl = funcDecl(type, annotations, elementName, modifiers.isFinal(), modifiers.isStatic(), modifiers.isAbstract());
                         methods.add(decl);
                     } else {
                         if (modifiers.isAbstract()) error(elementName, "fields may not be abstract");
-                        FieldDecl decl = fieldDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic());
+                        FieldDecl decl = fieldDecl(type, annotations, elementName, modifiers.isFinal(), modifiers.isStatic());
                         fields.add(decl);
                     }
                 }
@@ -102,12 +103,13 @@ public class SkeletonParser extends AbstractParser {
                 constructors.toArray(new MethodDecl[0]),
                 methods.toArray(new MethodDecl[0]),
                 fields.toArray(new FieldDecl[0]),
-                enclosed.toArray(new ClassConstructor<?>[0])
+                enclosed.toArray(new ClassConstructor<?>[0]),
+                classAnnotations
         );
     }
 
     @SuppressWarnings("SuspiciousToArrayCall")
-    private InterfaceDecl interfaceDecl(String pckID, String fileId, PreviewClass target) {
+    private InterfaceDecl interfaceDecl(String pckID, String fileId, PreviewClass target, AnnotationObj[] interfaceAnnotations) {
         consume(INTERFACE, "'interface' expected");
 
         Token name = consumeIdentifier();
@@ -134,26 +136,30 @@ public class SkeletonParser extends AbstractParser {
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             ModifiersParser modifiers = MODIFIERS;
+            AnnotationObj[] annotations = parseAnnotations();
             modifiers.parse();
-            if (readClass(enclosed::add, pckID, modifiers)) {
+            if (readClass(enclosed::add, pckID, modifiers, annotations)) {
                 LoxClass type = consumeVarType();
                 Token elementName = consumeIdentifier();
                 if (match(BRACKET_O)) {
                     ModifierScope.INTERFACE.check(this, modifiers);
-                    MethodDecl decl = funcDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic(), !modifiers.isDefault());
+                    MethodDecl decl = funcDecl(type, annotations, elementName, modifiers.isFinal(), modifiers.isStatic(), !modifiers.isDefault());
                     methods.add(decl);
                 } else {
                     ModifierScope.INTERFACE_FIELD.check(this, modifiers);
-                    FieldDecl decl = fieldDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic());
+                    FieldDecl decl = fieldDecl(type, annotations, elementName, modifiers.isFinal(), modifiers.isStatic());
                     fields.add(decl);
                 }
             }
         }
         consumeCurlyClose("class");
-        return new InterfaceDecl(parser, errorLogger, target, name, pckID, parentInterfaces.toArray(new LoxClass[0]), methods.toArray(new MethodDecl[0]), fields.toArray(new FieldDecl[0]), enclosed.toArray(new ClassDecl[0]));
+        return new InterfaceDecl(parser, errorLogger, target, name, pckID,
+                parentInterfaces.toArray(new LoxClass[0]), methods.toArray(new MethodDecl[0]),
+                fields.toArray(new FieldDecl[0]), enclosed.toArray(new ClassDecl[0]), interfaceAnnotations
+        );
     }
 
-    private EnumDecl enumDecl(String pckID, String fileId, PreviewClass target) {
+    private EnumDecl enumDecl(String pckID, String fileId, PreviewClass target, AnnotationObj[] enumAnnotations) {
         consume(ENUM, "'enum' expected");
 
         Token name = consumeIdentifier();
@@ -198,24 +204,25 @@ public class SkeletonParser extends AbstractParser {
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             ModifiersParser modifiers = MODIFIERS;
+            AnnotationObj[] annotations = parseAnnotations();
             modifiers.parse();
             String enclosedId = pckID + name.lexeme() + "$";
-            if (readClass(enclosed::add, enclosedId, modifiers)) {
+            if (readClass(enclosed::add, enclosedId, modifiers, annotations)) {
                 if (Objects.equals(peek().lexeme(), name.lexeme())) {
                     Token constName = consume(IDENTIFIER, "that shouldn't have happened... (expected class name to be identifier)");
                     consumeBracketOpen("constructors");
-                    MethodDecl decl = funcDecl(VarTypeManager.VOID, constName, false, false, false);
+                    MethodDecl decl = funcDecl(VarTypeManager.VOID, annotations, constName, false, false, false);
                     constructors.add(decl);
                 } else {
                     ModifierScope.CLASS.check(this, modifiers);
                     LoxClass type = consumeVarType();
                     Token elementName = consumeIdentifier();
                     if (match(BRACKET_O)) {
-                        MethodDecl decl = funcDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic(), modifiers.isAbstract());
+                        MethodDecl decl = funcDecl(type, annotations, elementName, modifiers.isFinal(), modifiers.isStatic(), modifiers.isAbstract());
                         methods.add(decl);
                     } else {
                         if (modifiers.isAbstract()) error(elementName, "fields may not be abstract");
-                        FieldDecl decl = fieldDecl(type, elementName, modifiers.isFinal(), modifiers.isStatic());
+                        FieldDecl decl = fieldDecl(type, annotations, elementName, modifiers.isFinal(), modifiers.isStatic());
                         fields.add(decl);
                     }
                 }
@@ -225,22 +232,20 @@ public class SkeletonParser extends AbstractParser {
         consumeCurlyClose("enum");
 
         return new EnumDecl(
-                parser,
-                errorLogger,
-                target,
-                name,
-                pckID,
+                parser, errorLogger,
+                target, name, pckID,
                 interfaces.toArray(new LoxClass[0]),
                 enumConstants.toArray(new EnumConstDecl[0]),
                 constructors.toArray(new MethodDecl[0]),
                 methods.toArray(new MethodDecl[0]),
                 fields.toArray(new FieldDecl[0]),
-                enclosed.toArray(new ClassConstructor<?>[0])
+                enclosed.toArray(new ClassConstructor<?>[0]),
+                enumAnnotations
         );
     }
 
-    private AnnotationDecl annotationDecl(String pckId, String fileId, PreviewClass target) {
-        consume(INTERFACE, "'annotation' expected");
+    private AnnotationDecl annotationDecl(String pckId, String fileId, PreviewClass target, AnnotationObj[] annotationAnnotations) {
+        consume(ANNOTATION, "'annotation' expected");
 
         Token name = consumeIdentifier();
 
@@ -257,14 +262,15 @@ public class SkeletonParser extends AbstractParser {
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             ModifiersParser modifiers = MODIFIERS;
+            AnnotationObj[] annotations = parseAnnotations();
             modifiers.parse();
             String enclosedId = pckId + name.lexeme() + "$";
-            if (readClass(enclosed::add, enclosedId, modifiers)) {
+            if (readClass(enclosed::add, enclosedId, modifiers, annotations)) {
                 ModifierScope.ANNOTATION.check(this, modifiers);
                 LoxClass type = consumeVarType();
                 Token elementName = consumeIdentifier();
                 if (match(BRACKET_O)) {
-                    AnnotationMethodDecl decl = annotationMethodDecl(type, elementName);
+                    AnnotationMethodDecl decl = annotationMethodDecl(type, annotations, elementName);
                     methods.add(decl);
                 } else error(peek(), "'(' expected");
             }
@@ -274,15 +280,21 @@ public class SkeletonParser extends AbstractParser {
                 parser, errorLogger,
                 target, name, pckId,
                 methods.toArray(new AnnotationMethodDecl[0]),
-                enclosed.toArray(new ClassConstructor<?>[0])
+                enclosed.toArray(new ClassConstructor<?>[0]),
+                annotationAnnotations
         );
     }
 
-    private AnnotationMethodDecl annotationMethodDecl(LoxClass type, Token elementName) {
+    private AnnotationMethodDecl annotationMethodDecl(LoxClass type, AnnotationObj[] annotations, Token elementName) {
         consumeBracketClose("annotation");
         Token[] defaultCode = new Token[0];
-        if (match(DEFAULT)) defaultCode = getFieldCode();
-        return new AnnotationMethodDecl(defaultCode, elementName, type, false);
+        boolean defaulted = false;
+        if (match(DEFAULT)) {
+            defaultCode = getFieldCode();
+            defaulted = true;
+        }
+        else consumeEndOfArg();
+        return new AnnotationMethodDecl(defaultCode, annotations, elementName, type, defaulted);
     }
 
     public ClassConstructor<?> parse(PreviewClass target) {
@@ -304,8 +316,9 @@ public class SkeletonParser extends AbstractParser {
         modifiersParser.parse();
 
         String pckId = pck.stream().map(Token::lexeme).collect(Collectors.joining(".", "", "."));
+        AnnotationObj[] annotations = parseAnnotations();
         try {
-            return readClass(pckId, fileName, modifiersParser, target);
+            return readClass(pckId, fileName, modifiersParser, target, annotations);
         } catch (ParseError error) {
             synchronize();
             return null;
@@ -321,38 +334,38 @@ public class SkeletonParser extends AbstractParser {
     /**
      * @return true if it didn't read a class, false otherwise
      */
-    private boolean readClass(Consumer<ClassConstructor<?>> sink, String pckID, ModifiersParser modifiers) {
+    private boolean readClass(Consumer<ClassConstructor<?>> sink, String pckID, ModifiersParser modifiers, AnnotationObj[] annotations) {
         if (check(CLASS)) {
             ModifierScope.CLASS.check(this, modifiers);
-            sink.accept(classDecl(modifiers.isAbstract(), modifiers.isFinal(), pckID, null, null));
+            sink.accept(classDecl(modifiers.isAbstract(), modifiers.isFinal(), pckID, null, null, annotations));
         } else if (check(INTERFACE)) {
             ModifierScope.INTERFACE.check(this, modifiers);
-            sink.accept(interfaceDecl(pckID, null, null));
+            sink.accept(interfaceDecl(pckID, null, null, annotations));
         } else if (check(ENUM)) {
             ModifierScope.ENUM.check(this, modifiers);
-            sink.accept(enumDecl(pckID, null, null));
+            sink.accept(enumDecl(pckID, null, null, annotations));
         } else if (check(ANNOTATION)) {
             ModifierScope.ANNOTATION.check(this, modifiers);
-            sink.accept(annotationDecl(pckID, null, null));
+            sink.accept(annotationDecl(pckID, null, null, annotations));
         } else return true;
         return false;
     }
 
-    private ClassConstructor<?> readClass(String pckID, String fileId, ModifiersParser modifiers, PreviewClass target) {
+    private ClassConstructor<?> readClass(String pckID, String fileId, ModifiersParser modifiers, PreviewClass target, AnnotationObj[] annotations) {
         if (check(CLASS)) {
-            return classDecl(modifiers.isAbstract(), modifiers.isFinal(), pckID, fileId, target);
+            return classDecl(modifiers.isAbstract(), modifiers.isFinal(), pckID, fileId, target, annotations);
         } else if (check(INTERFACE)) {
-            return interfaceDecl(pckID, fileId, target);
+            return interfaceDecl(pckID, fileId, target, annotations);
         } else if (check(ENUM)) {
-            return enumDecl(pckID, fileId, target);
+            return enumDecl(pckID, fileId, target, annotations);
         } else if (check(ANNOTATION)) {
-            return annotationDecl(pckID, fileId, target);
+            return annotationDecl(pckID, fileId, target, annotations);
         } else {
             throw error(peek(), "'class', 'interface' or 'enum' expected");
         }
     }
 
-    private MethodDecl funcDecl(LoxClass type, Token name, boolean isFinal, boolean isStatic, boolean isAbstract) {
+    private MethodDecl funcDecl(LoxClass type, AnnotationObj[] annotations, Token name, boolean isFinal, boolean isStatic, boolean isAbstract) {
 
         List<Pair<LoxClass, String>> parameters = new ArrayList<>();
         if (!check(BRACKET_C)) {
@@ -377,16 +390,16 @@ public class SkeletonParser extends AbstractParser {
 
             consumeCurlyClose("method body");
         } else consumeEndOfArg();
-        return new MethodDecl(code, name, parameters, type, isFinal, isStatic, isAbstract);
+        return new MethodDecl(code, annotations, name, parameters, type, isFinal, isStatic, isAbstract);
     }
 
-    private FieldDecl fieldDecl(LoxClass type, Token name, boolean isFinal, boolean isStatic) {
+    private FieldDecl fieldDecl(LoxClass type, AnnotationObj[] annotations, Token name, boolean isFinal, boolean isStatic) {
         Token[] code = null;
 
         if (match(ASSIGN)) code = getFieldCode();
         else consumeEndOfArg();
 
-        return new FieldDecl(code, name, type, isFinal, isStatic);
+        return new FieldDecl(code, annotations, name, type, isFinal, isStatic);
     }
 
     private void importStmt() {
@@ -414,6 +427,26 @@ public class SkeletonParser extends AbstractParser {
         return packages;
     }
 
+    private AnnotationObj[] parseAnnotations() {
+        List<AnnotationObj> list = new ArrayList<>();
+        while (match(AT)) {
+            list.add(parseAnnotationObject());
+        }
+        return list.toArray(new AnnotationObj[0]);
+    }
+
+    private AnnotationObj parseAnnotationObject() {
+        Token name = consumeIdentifier();
+        List<Token> properties = new ArrayList<>();
+        if (match(BRACKET_O)) {
+            while (!match(BRACKET_C, EOF)) {
+                properties.add(advance());
+            }
+        }
+        return new AnnotationObj(name, properties.toArray(new Token[0]));
+    }
+
+
     private Token[] getMethodCode() {
         return getScopedCode(C_BRACKET_O, C_BRACKET_C);
     }
@@ -422,8 +455,9 @@ public class SkeletonParser extends AbstractParser {
         List<Token> tokens = new ArrayList<>();
         do {
             tokens.add(advance());
-        } while (!match(EOA));
+        } while (!check(EOA));
 
+        tokens.add(advance());
         return tokens.toArray(Token[]::new);
     }
 
@@ -445,15 +479,15 @@ public class SkeletonParser extends AbstractParser {
         return tokens.toArray(Token[]::new);
     }
 
-    public record AnnotationMethodDecl(Token[] body, Token name, LoxClass target, boolean defaulted) {
+    public record AnnotationMethodDecl(Token[] body, AnnotationObj[] annotations, Token name, LoxClass target, boolean defaulted) {
 
     }
 
-    public record MethodDecl(Token[] body, Token name, List<Pair<LoxClass, String>> params, LoxClass type, boolean isFinal, boolean isStatic, boolean isAbstract) {
+    public record MethodDecl(Token[] body, AnnotationObj[] annotations, Token name, List<Pair<LoxClass, String>> params, LoxClass type, boolean isFinal, boolean isStatic, boolean isAbstract) {
 
     }
 
-    public record FieldDecl(Token[] body, Token name, LoxClass type, boolean isFinal, boolean isStatic) {
+    public record FieldDecl(Token[] body, AnnotationObj[] annotations, Token name, LoxClass type, boolean isFinal, boolean isStatic) {
 
     }
 
@@ -481,11 +515,10 @@ public class SkeletonParser extends AbstractParser {
     }
 
     public class ModifiersParser {
-
         private final Map<TokenType, Token> encountered = new HashMap<>();
         private final List<TokenType> acceptable = new ArrayList<>();
         private final Map<TokenType, List<TokenType>> illegalCombinations = new HashMap<>();
-        private final TokenType[] interrupt = {IDENTIFIER, CLASS, INTERFACE, ENUM, EOF};
+        private final TokenType[] interrupt = {IDENTIFIER, CLASS, INTERFACE, ANNOTATION, ENUM, EOF};
 
         public ModifiersParser(List<TokenType> acceptable, Map<TokenType, List<TokenType>> combinations) {
             this.acceptable.addAll(acceptable);
@@ -597,5 +630,8 @@ public class SkeletonParser extends AbstractParser {
                     .filter(Objects::nonNull)
                     .forEach(token -> skeletonParser.warn(token, String.format("redundant modifier '%s'", token.lexeme())));
         }
+    }
+
+    public record AnnotationObj(Token name, Token[] params) {
     }
 }

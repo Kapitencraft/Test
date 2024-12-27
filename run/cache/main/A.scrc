@@ -91,17 +91,9 @@
                   "ordinal": 0,
                   "args": [
                     {
-                      "TYPE": "literal",
-                      "value": {
-                        "type": "NUM",
-                        "lexeme": "5",
-                        "literal": {
-                          "type": "int",
-                          "value": 5
-                        },
-                        "line": 20,
-                        "lineStartIndex": 28
-                      }
+                      "type": "int",
+                      "value": 5,
+                      "TYPE": "literal"
                     }
                   ]
                 }
@@ -179,17 +171,9 @@
                   "ordinal": 0,
                   "args": [
                     {
-                      "TYPE": "literal",
-                      "value": {
-                        "type": "NUM",
-                        "lexeme": "5",
-                        "literal": {
-                          "type": "int",
-                          "value": 5
-                        },
-                        "line": 22,
-                        "lineStartIndex": 28
-                      }
+                      "type": "int",
+                      "value": 5,
+                      "TYPE": "literal"
                     }
                   ]
                 }

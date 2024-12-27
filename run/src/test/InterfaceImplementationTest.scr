@@ -5,6 +5,7 @@ import test.FinalTest;
 
 class InterfaceImplementationTest extends FinalTest implements IT {
 
+    @Override
     String e() {
         return "e";
     }
