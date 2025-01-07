@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.run.load;
 
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.*;
 
 import java.io.File;
@@ -9,13 +10,13 @@ import java.util.Objects;
 public abstract class ClassHolder {
     public final File file;
     protected final ClassHolder[] children;
-    public final PreviewClass previewClass;
+    public final ClassReference reference;
 
     public ClassHolder(File file, ClassHolder[] children) {
         this.file = file;
         this.children = children;
         String[] enclosed = file.getName().replace(".scrc", "").split("\\$");
-        this.previewClass = new PreviewClass(enclosed[enclosed.length-1].replace(".scr", ""), isInterface());
+        this.reference = new ClassReference(enclosed[enclosed.length-1].replace(".scr", ""));
         //TODO fix call before constructors end
     }
 

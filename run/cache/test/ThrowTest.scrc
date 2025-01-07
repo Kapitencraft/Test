@@ -55,7 +55,7 @@
               },
               "value": {
                 "TYPE": "constructors",
-                "target": "scripted.lang..ArithmeticException",
+                "target": "scripted.lang.ArithmeticException",
                 "args": [
                   {
                     "type": "String",
@@ -180,7 +180,7 @@
               {
                 "initData": {
                   "classes": [
-                    "scripted.lang..ArithmeticException"
+                    "scripted.lang.ArithmeticException"
                   ],
                   "name": {
                     "type": "IDENTIFIER",

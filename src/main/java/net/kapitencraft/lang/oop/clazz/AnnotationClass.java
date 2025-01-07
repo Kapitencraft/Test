@@ -1,22 +1,24 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.field.LoxField;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.AnnotationMethodMap;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
 
-public class AnnotationClass implements LoxClass {
+public class AnnotationClass implements AbstractAnnotationClass {
     private final String name, pck;
 
     protected final AnnotationMethodMap methods;
 
-    private final Map<String, LoxClass> enclosed;
+    private final Map<String, ClassReference> enclosed;
 
-    public AnnotationClass(String name, String pck, AnnotationMethodMap methods, Map<String, LoxClass> enclosed) {
+    public AnnotationClass(String name, String pck, AnnotationMethodMap methods, Map<String, ClassReference> enclosed) {
         this.name = name;
         this.pck = pck;
         this.methods = methods;
@@ -34,12 +36,12 @@ public class AnnotationClass implements LoxClass {
     }
 
     @Override
-    public LoxClass[] enclosed() {
-        return enclosed.values().toArray(new LoxClass[0]);
+    public ClassReference[] enclosed() {
+        return enclosed.values().toArray(new ClassReference[0]);
     }
 
     @Override
-    public Map<String, ? extends LoxField> staticFields() {
+    public Map<String, ? extends ScriptedField> staticFields() {
         return Map.of();
     }
 
@@ -54,7 +56,7 @@ public class AnnotationClass implements LoxClass {
     }
 
     @Override
-    public LoxClass superclass() {
+    public @Nullable ClassReference superclass() {
         return null;
     }
 
@@ -64,7 +66,7 @@ public class AnnotationClass implements LoxClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
         return -1;
     }
 
@@ -99,7 +101,7 @@ public class AnnotationClass implements LoxClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<LoxClass> types) {
+    public int getMethodOrdinal(String name, List<ClassReference> types) {
         return methods.getMethodOrdinal(name, types);
     }
 
@@ -109,12 +111,17 @@ public class AnnotationClass implements LoxClass {
     }
 
     @Override
-    public LoxClass getEnclosing(String name) {
+    public ClassReference getEnclosing(String name) {
         return enclosed.get(name);
     }
 
     @Override
     public AbstractMethodMap getMethods() {
         return methods;
+    }
+
+    @Override
+    public List<String> getAbstracts() {
+        return methods.getAbstracts();
     }
 }

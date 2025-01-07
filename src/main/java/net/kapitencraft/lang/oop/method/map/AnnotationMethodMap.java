@@ -2,10 +2,11 @@ package net.kapitencraft.lang.oop.method.map;
 
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,16 +14,22 @@ import java.util.Map;
 public class AnnotationMethodMap implements AbstractMethodMap {
     private final Map<String, AnnotationCallable> methods;
     private final Map<String, DataMethodContainer> forLookup;
+    private final List<String> abstracts;
 
     public AnnotationMethodMap(Map<String, AnnotationCallable> methods) {
         this.methods = methods;
         Map<String, DataMethodContainer> map = new HashMap<>();
-        methods.forEach((string, annotationCallable) -> map.put(string, new DataMethodContainer(new ScriptedCallable[]{annotationCallable})));
+        List<String> abstractMethodKeys = new ArrayList<>();
+        methods.forEach((string, annotationCallable) -> {
+            map.put(string, new DataMethodContainer(new ScriptedCallable[]{annotationCallable}));
+            if (annotationCallable.isAbstract()) abstractMethodKeys.add(string);
+        });
+        abstracts = abstractMethodKeys;
         this.forLookup = ImmutableMap.copyOf(map);
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<? extends LoxClass> args) {
+    public int getMethodOrdinal(String name, List<ClassReference> args) {
         return args.isEmpty() && methods.containsKey(name) ? 0 : -1;
     }
 
@@ -43,5 +50,9 @@ public class AnnotationMethodMap implements AbstractMethodMap {
 
     protected Map<String, AnnotationCallable> getMethods() {
         return methods;
+    }
+
+    public List<String> getAbstracts() {
+        return abstracts;
     }
 }

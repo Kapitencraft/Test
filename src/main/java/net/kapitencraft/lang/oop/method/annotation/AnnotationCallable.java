@@ -2,25 +2,24 @@ package net.kapitencraft.lang.oop.method.annotation;
 
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 public class AnnotationCallable implements ScriptedCallable {
-    private final LoxClass type;
+    private final ClassReference type;
     private final @Nullable Object value;
 
-    public AnnotationCallable(LoxClass type, @Nullable Object value) {
+    public AnnotationCallable(ClassReference type, @Nullable Object value) {
         this.type = type;
         this.value = value;
     }
 
     @Override
-    public LoxClass type() {
+    public ClassReference type() {
         return type;
     }
 
@@ -29,7 +28,7 @@ public class AnnotationCallable implements ScriptedCallable {
     }
 
     @Override
-    public List<? extends LoxClass> argTypes() {
+    public List<ClassReference> argTypes() {
         return List.of();
     }
 
@@ -49,22 +48,22 @@ public class AnnotationCallable implements ScriptedCallable {
     }
 
     public static AnnotationCallable intType(@Nullable Integer value) {
-        return new AnnotationCallable(VarTypeManager.INTEGER, value);
+        return new AnnotationCallable(ClassReference.of(VarTypeManager.INTEGER), value);
     }
 
     public static AnnotationCallable doubleType(@Nullable Double value) {
-        return new AnnotationCallable(VarTypeManager.DOUBLE, value);
+        return new AnnotationCallable(ClassReference.of(VarTypeManager.DOUBLE), value);
     }
 
     public static AnnotationCallable boolType(@Nullable Boolean value) {
-        return new AnnotationCallable(VarTypeManager.BOOLEAN, value);
+        return new AnnotationCallable(ClassReference.of(VarTypeManager.BOOLEAN), value);
     }
 
     public static AnnotationCallable stringType(@Nullable String value) {
-        return new AnnotationCallable(VarTypeManager.STRING.get(), value);
+        return new AnnotationCallable(ClassReference.of(VarTypeManager.STRING.get()), value);
     }
 
-    public static AnnotationCallable enumType(Supplier<LoxClass> type) { //TODO fix
-        return new AnnotationCallable(type.get(), null);
+    public static AnnotationCallable enumType(ClassReference type) { //TODO fix
+        return new AnnotationCallable(type, null);
     }
 }

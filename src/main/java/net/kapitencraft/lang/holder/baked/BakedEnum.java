@@ -2,6 +2,7 @@ package net.kapitencraft.lang.holder.baked;
 
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.*;
@@ -21,11 +22,11 @@ import java.util.Map;
 
 public record BakedEnum(
         Compiler.ErrorLogger logger,
-        PreviewClass target,
+        ClassReference target,
         Pair<Token, GeneratedCallable>[] constructors,
         Pair<Token, GeneratedCallable>[] methods,
         Pair<Token, GeneratedCallable>[] staticMethods,
-        LoxClass[] interfaces,
+        ClassReference[] interfaces,
         Map<String, GeneratedEnumConstant> constants,
         Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields,
         Token name, String pck, Compiler.ClassBuilder[] enclosed
@@ -33,9 +34,9 @@ public record BakedEnum(
 
     @Override
     public CacheableClass build() {
-        ImmutableMap.Builder<String, LoxClass> enclosed = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
         for (int i = 0; i < this.enclosed().length; i++) {
-            LoxClass loxClass = this.enclosed()[i].build();
+            ClassReference loxClass = this.enclosed()[i].build().reference();
             enclosed.put(loxClass.name(), loxClass);
         }
 
@@ -81,8 +82,8 @@ public record BakedEnum(
     }
 
     @Override
-    public LoxClass superclass() {
-        return VarTypeManager.ENUM.get();
+    public ClassReference superclass() {
+        return VarTypeManager.ENUM;
     }
 }
 

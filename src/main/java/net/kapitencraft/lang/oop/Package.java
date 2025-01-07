@@ -1,8 +1,7 @@
 package net.kapitencraft.lang.oop;
 
-import net.kapitencraft.lang.oop.clazz.generated.GeneratedClass;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.run.VarTypeManager;
 
 import java.util.Collection;
@@ -11,7 +10,7 @@ import java.util.Map;
 
 public class Package {
     private final String name;
-    private final Map<String, LoxClass> classes = new HashMap<>();
+    private final Map<String, ClassReference> classes = new HashMap<>();
     private final Map<String, Package> packages = new HashMap<>();
 
     public Package(String name) {
@@ -30,22 +29,19 @@ public class Package {
         return packages.get(name);
     }
 
-    public LoxClass getClass(String name) {
+    public ClassReference getClass(String name) {
         return classes.get(name);
     }
 
-    public void addClass(Class<?> clazz) {
-        String name = clazz.getSimpleName();
-        this.addClass(name, VarTypeManager.reflectiveLoader.register(clazz, this.name));
+    public void addClass(String name, LoxClass cl) {
+        if (!classes.containsKey(name))
+            classes.put(name, ClassReference.of(cl));
+        else
+            classes.get(name).setTarget(cl);
     }
 
-    public void addClass(String name, LoxClass cl) {
-        if (classes.get(name) instanceof PreviewClass previewClass) {
-            previewClass.apply(cl);
-            if (cl instanceof GeneratedClass) classes.put(name, cl);
-        } else {
-            classes.put(name, cl);
-        }
+    public void addClass(String name, ClassReference reference) {
+        this.classes.put(name, reference);
     }
 
     //use getOrCreatePackage instead
@@ -60,7 +56,11 @@ public class Package {
         return getPackage(name);
     }
 
-    public Collection<LoxClass> allClasses() {
+    public Collection<ClassReference> allClasses() {
         return classes.values();
+    }
+
+    public Collection<Package> allPackages() {
+        return packages.values();
     }
 }

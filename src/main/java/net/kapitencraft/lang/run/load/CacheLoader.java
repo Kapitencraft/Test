@@ -7,6 +7,7 @@ import com.google.gson.JsonPrimitive;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -67,7 +68,7 @@ public class CacheLoader {
         Expr index = readSubExpr(object, "index");
         Expr value = readSubExpr(object, "value");
         Token assign =Token.readFromSubObject(object, "assign");
-        LoxClass executor = ClassLoader.loadClassReference(object, "executor");
+        ClassReference executor = ClassLoader.loadClassReference(object, "executor");
         Operand operand = Operand.fromJson(object, "operand");
         return new Expr.ArraySet(obj, index, value, assign, executor, operand);
     }
@@ -86,31 +87,31 @@ public class CacheLoader {
     }
 
     private static Expr readStaticGet(JsonObject object) {
-        LoxClass target = ClassLoader.loadClassReference(object, "target");
+        ClassReference target = ClassLoader.loadClassReference(object, "target");
         Token name = Token.readFromSubObject(object, "name");
         return new Expr.StaticGet(target, name);
     }
 
     private static Expr readStaticSet(JsonObject object) {
-        LoxClass target = ClassLoader.loadClassReference(object, "target");
+        ClassReference target = ClassLoader.loadClassReference(object, "target");
         Token name = Token.readFromSubObject(object, "name");
         Expr value = readSubExpr(object, "value");
         Token assignType = Token.readFromSubObject(object, "assignType");
-        LoxClass executor = ClassLoader.loadClassReference(object, "executor");
+        ClassReference executor = ClassLoader.loadClassReference(object, "executor");
         Operand operand = Operand.fromJson(object, "operand");
         return new Expr.StaticSet(target, name, value, assignType, executor, operand);
 
     }
 
     private static Expr readSpecialStaticSet(JsonObject object) {
-        LoxClass target = ClassLoader.loadClassReference(object, "target");
+        ClassReference target = ClassLoader.loadClassReference(object, "target");
         Token name = Token.readFromSubObject(object, "name");
         Token assignType = Token.readFromSubObject(object, "assignType");
         return new Expr.StaticSpecial(target, name, assignType);
     }
 
     private static Expr readStaticCall(JsonObject object) {
-        LoxClass target = ClassLoader.loadClassReference(object, "target");
+        ClassReference target = ClassLoader.loadClassReference(object, "target");
         Token name = Token.readFromSubObject(object, "name");
         int ordinal = GsonHelper.getAsInt(object, "ordinal");
         List<Expr> args = readArgs(object, "args");
@@ -120,7 +121,7 @@ public class CacheLoader {
     private static Expr readBinary(JsonObject object) {
         Expr left = readSubExpr(object, "left");
         Token operator = Token.readFromSubObject(object, "operator");
-        LoxClass executor = ClassLoader.loadClassReference(object, "executor");
+        ClassReference executor = ClassLoader.loadClassReference(object, "executor");
         Operand operand = Operand.fromJson(object, "operand");
         Expr right = readSubExpr(object, "right");
         return new Expr.Binary(left, operator, executor, operand, right);
@@ -152,7 +153,7 @@ public class CacheLoader {
         Token name = Token.readFromSubObject(object, "name");
         Expr value = readSubExpr(object, "value");
         Token assignType = Token.readFromSubObject(object, "assignType");
-        LoxClass executor = ClassLoader.loadClassReference(object, "executor");
+        ClassReference executor = ClassLoader.loadClassReference(object, "executor");
         Operand operand = Operand.fromJson(object, "operand");
         return new Expr.Set(callee, name, value, assignType, executor, operand);
     }
@@ -184,7 +185,7 @@ public class CacheLoader {
     private static Expr readCastCheck(JsonObject object) {
         Expr obj = readSubExpr(object, "object");
         Token patternVarName = object.has("patternVarName") ? Token.readFromSubObject(object, "patternVarName") : null;
-        LoxClass target = ClassLoader.loadClassReference(object, "target");
+        ClassReference target = ClassLoader.loadClassReference(object, "target");
         return new Expr.CastCheck(obj, target, patternVarName);
     }
 
@@ -214,7 +215,7 @@ public class CacheLoader {
     }
 
     private static Expr readConstructor(JsonObject object) {
-        LoxClass target = ClassLoader.loadClassReference(object, "target");
+        ClassReference target = ClassLoader.loadClassReference(object, "target");
         List<Expr> args = readArgs(object, "args");
         int ordinal = GsonHelper.getAsInt(object, "ordinal");
         return new Expr.Constructor(Token.readFromSubObject(object, "keyword"), target, args, ordinal);
@@ -224,7 +225,7 @@ public class CacheLoader {
         Token name = Token.readFromSubObject(object, "name");
         Expr value = readSubExpr(object, "value");
         Token type = Token.readFromSubObject(object, "type");
-        LoxClass executor = ClassLoader.loadClassReference(object, "executor");
+        ClassReference executor = ClassLoader.loadClassReference(object, "executor");
         Operand operand = Operand.valueOf(GsonHelper.getAsString(object, "operand"));
         return new Expr.Assign(name, value, type, executor, operand);
     }
@@ -254,7 +255,7 @@ public class CacheLoader {
     }
 
     private static Stmt readForEach(JsonObject object) {
-        LoxClass type = ClassLoader.loadClassReference(object, "type");
+        ClassReference type = ClassLoader.loadClassReference(object, "type");
         Token name = Token.readFromSubObject(object, "name");
         Expr init = readSubExpr(object, "init");
         Stmt body = readStmt(GsonHelper.getAsJsonObject(object, "body"));
@@ -263,13 +264,13 @@ public class CacheLoader {
 
     private static Stmt readTry(JsonObject object) {
         Stmt.Block body = readBlock(GsonHelper.getAsJsonObject(object, "body"));
-        List<Pair<Pair<List<LoxClass>, Token>, Stmt.Block>> catches = new ArrayList<>();
+        List<Pair<Pair<List<ClassReference>, Token>, Stmt.Block>> catches = new ArrayList<>();
         {
             GsonHelper.getAsJsonArray(object, "catches").asList().stream()
                     .map(JsonElement::getAsJsonObject)
                     .forEach(obj -> {
                         JsonObject initData = GsonHelper.getAsJsonObject(obj, "initData");
-                        List<LoxClass> targets = GsonHelper.getAsJsonArray(initData, "classes")
+                        List<ClassReference> targets = GsonHelper.getAsJsonArray(initData, "classes")
                                 .asList()
                                 .stream()
                                 .map(JsonElement::getAsString)
@@ -329,7 +330,7 @@ public class CacheLoader {
 
     private static Stmt readVarDecl(JsonObject object) {
         Token name = Token.readFromSubObject(object, "name");
-        LoxClass type = ClassLoader.loadClassReference(object, "targetType");
+        ClassReference type = ClassLoader.loadClassReference(object, "targetType");
         Expr init = object.has("initializer") ? readSubExpr(object, "initializer") : null;
         boolean isFinal = GsonHelper.getAsBoolean(object, "isFinal");
         return new Stmt.VarDecl(name, type, init, isFinal);

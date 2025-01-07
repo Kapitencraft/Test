@@ -7,16 +7,17 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.LoxInterface;
 import net.kapitencraft.lang.oop.field.GeneratedField;
-import net.kapitencraft.lang.oop.field.LoxField;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,14 +32,14 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     private final GeneratedMethodMap staticMethods;
     private final Map<String, GeneratedField> allStaticFields;
 
-    private final LoxClass[] parentInterfaces;
+    private final ClassReference[] parentInterfaces;
 
-    private final Map<String, LoxClass> enclosing;
+    private final Map<String, ClassReference> enclosing;
 
     private final String name;
     private final String packageRepresentation;
 
-    public GeneratedInterface(Map<String, DataMethodContainer> allMethods, Map<String, DataMethodContainer> allStaticMethods, Map<String, GeneratedField> allStaticFields, LoxClass[] parentInterfaces, Map<String, LoxClass> enclosing, String name, String packageRepresentation) {
+    public GeneratedInterface(Map<String, DataMethodContainer> allMethods, Map<String, DataMethodContainer> allStaticMethods, Map<String, GeneratedField> allStaticFields, ClassReference[] parentInterfaces, Map<String, ClassReference> enclosing, String name, String packageRepresentation) {
         this.methods = new GeneratedMethodMap(allMethods);
         this.allMethods = allMethods;
         this.staticMethods = new GeneratedMethodMap(allStaticMethods);
@@ -50,24 +51,26 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
         this.lookup = MethodLookup.createFromClass(this);
     }
 
-    public static LoxClass load(JsonObject data, List<LoxClass> enclosed, String pck) {
+    public static LoxClass load(JsonObject data, List<ClassReference> enclosed, String pck) {
         String name = GsonHelper.getAsString(data, "name");
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
         ImmutableMap<String, DataMethodContainer> staticMethods = DataMethodContainer.load(data, name, "staticMethods");
 
         ImmutableMap<String, GeneratedField> staticFields = GeneratedField.loadFieldMap(data, "staticFields");
 
-        LoxClass[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(LoxClass[]::new);
+        ClassReference[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(ClassReference[]::new);
         return new GeneratedInterface(
                 methods,
                 staticMethods,
                 staticFields,
                 implemented,
-                enclosed.stream().collect(Collectors.toMap(LoxClass::name, Function.identity())),
+                enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity())),
                 name,
                 pck
         );
     }
+
+    //TODO complete ClassReference Transfer
 
     boolean init = false;
 
@@ -82,7 +85,7 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     }
 
     @Override
-    public Map<String, ? extends LoxField> staticFields() {
+    public Map<String, ? extends ScriptedField> staticFields() {
         return allStaticFields;
     }
 
@@ -97,12 +100,12 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     }
 
     @Override
-    public LoxClass superclass() {
+    public @Nullable ClassReference superclass() {
         return null;
     }
 
     @Override
-    public LoxClass getStaticFieldType(String name) {
+    public ClassReference getStaticFieldType(String name) {
         return allStaticFields.get(name).getType();
     }
 
@@ -113,7 +116,7 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
         checkInit();
         return staticMethods.getMethodOrdinal(name, args);
     }
@@ -130,13 +133,13 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<LoxClass> types) {
+    public int getMethodOrdinal(String name, List<ClassReference> types) {
         checkInit();
         return lookup.getMethodOrdinal(name, types);
     }
 
     @Override
-    public LoxClass[] interfaces() {
+    public ClassReference[] interfaces() {
         return parentInterfaces;
     }
 
@@ -146,7 +149,7 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
     }
 
     @Override
-    public LoxClass getEnclosing(String name) {
+    public ClassReference getEnclosing(String name) {
         return enclosing.get(name);
     }
 
@@ -164,7 +167,7 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
         object.add("staticMethods", staticMethods.save(cacheBuilder));
         {
             JsonArray parentInterfaces = new JsonArray();
-            Arrays.stream(this.parentInterfaces).map(LoxClass::absoluteName).forEach(parentInterfaces::add);
+            Arrays.stream(this.parentInterfaces).map(ClassReference::absoluteName).forEach(parentInterfaces::add);
             object.add("interfaces", parentInterfaces);
         }
         {
@@ -175,10 +178,9 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
         return object;
     }
 
-    @SuppressWarnings("SuspiciousToArrayCall")
     @Override
-    public CacheableClass[] enclosed() {
-        return enclosing.values().toArray(new CacheableClass[0]);
+    public ClassReference[] enclosed() {
+        return enclosing.values().toArray(new ClassReference[0]);
     }
 
     @Override

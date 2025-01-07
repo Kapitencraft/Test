@@ -44,7 +44,7 @@ public class CompilerHolder extends ClassHolder {
         SkeletonParser parser = new SkeletonParser(logger, fileName);
         parser.apply(tokens.toArray(new Token[0]), varTypeParser);
 
-        SkeletonParser.ClassConstructor<?> decl = parser.parse(this.previewClass);
+        SkeletonParser.ClassConstructor<?> decl = parser.parse(this.reference);
 
         if (decl == null) return;
 
@@ -102,7 +102,7 @@ public class CompilerHolder extends ClassHolder {
         if (!checkConstructorCreated()) return null;
 
         if (builder.superclass() != null) {
-            MethodLookup lookup = MethodLookup.createFromClass(builder.superclass(), builder.interfaces());
+            MethodLookup lookup = MethodLookup.createFromClass(builder.superclass().get(), builder.interfaces());
             lookup.checkAbstract(logger, builder.name(), builder.methods());
             if (builder instanceof BakedClass) {
                 lookup.checkFinal(logger, builder.methods());

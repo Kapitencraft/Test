@@ -7,12 +7,12 @@ import net.kapitencraft.lang.compiler.parser.ExprParser;
 import net.kapitencraft.lang.compiler.parser.SkeletonParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.baked.BakedEnum;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonEnum;
 import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
 import net.kapitencraft.lang.oop.field.SkeletonField;
@@ -29,7 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 public record EnumDecl(VarTypeParser parser, Compiler.ErrorLogger logger,
-                       PreviewClass target, Token name, String pck, LoxClass[] interfaces,
+                       ClassReference target, Token name, String pck,
+                       ClassReference[] interfaces,
                        SkeletonParser.EnumConstDecl[] constants,
                        SkeletonParser.MethodDecl[] constructors,
                        SkeletonParser.MethodDecl[] methods,
@@ -65,7 +66,7 @@ public record EnumDecl(VarTypeParser parser, Compiler.ErrorLogger logger,
             List<Stmt> body = null;
             if (!method.isAbstract()) {
                 stmtParser.apply(method.body(), parser);
-                stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM.get(), method.type());
+                stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, method.type());
                 body = stmtParser.parse();
                 stmtParser.popMethod();
             }
@@ -77,7 +78,7 @@ public record EnumDecl(VarTypeParser parser, Compiler.ErrorLogger logger,
         List<Pair<Token, GeneratedCallable>> constructors = new ArrayList<>();
         for (SkeletonParser.MethodDecl method : this.constructors()) {
             stmtParser.apply(method.body(), parser);
-            stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM.get(), VarTypeManager.VOID);
+            stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, ClassReference.of(VarTypeManager.VOID));
             List<Stmt> body = stmtParser.parse();
             GeneratedCallable constDecl = new GeneratedCallable(method.type(), method.params(), body, method.isFinal(), method.isAbstract());
             stmtParser.popMethod();
@@ -96,12 +97,12 @@ public record EnumDecl(VarTypeParser parser, Compiler.ErrorLogger logger,
                 args = exprParser.args();
             }
 
-            int ordinal = target.getConstructor().getMethodOrdinal(exprParser.argTypes(args));
-            ScriptedCallable callable = target.getConstructor().getMethodByOrdinal(ordinal);
+            int ordinal = target.get().getConstructor().getMethodOrdinal(exprParser.argTypes(args));
+            ScriptedCallable callable = target.get().getConstructor().getMethodByOrdinal(ordinal);
 
             exprParser.checkArguments(args, callable, decl.name());
 
-            enumConstants.put(decl.name().lexeme(), new GeneratedEnumConstant(target, decl.ordinal(), decl.name().lexeme(), ordinal, args));
+            enumConstants.put(decl.name().lexeme(), new GeneratedEnumConstant(target.get(), decl.ordinal(), decl.name().lexeme(), ordinal, args));
         }
 
 
@@ -137,10 +138,10 @@ public record EnumDecl(VarTypeParser parser, Compiler.ErrorLogger logger,
         }
 
         //enclosed classes
-        ImmutableMap.Builder<String, PreviewClass> enclosed = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
         for (SkeletonParser.ClassConstructor<?> enclosedDecl : this.enclosed()) {
             LoxClass generated = enclosedDecl.createSkeleton();
-            enclosedDecl.target().apply(generated);
+            enclosedDecl.target().setTarget(generated);
             enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
         }
 

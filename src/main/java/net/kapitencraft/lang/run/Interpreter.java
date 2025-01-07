@@ -1,8 +1,9 @@
 package net.kapitencraft.lang.run;
 
 import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.AbstractClassInstance;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.exception.CancelBlock;
@@ -49,7 +50,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public void runMainMethod(LoxClass target, String data) {
         if (!target.hasStaticMethod("main")) return;
         suppressClassLoad = true;
-        Optional.ofNullable(target.getStaticMethod("main", List.of(VarTypeManager.STRING.get().array())))
+        Optional.ofNullable(target.getStaticMethod("main", List.of(VarTypeManager.STRING.array())))
                 .ifPresentOrElse(method -> {
                     suppressClassLoad = false;
                     this.pushCall(target.absoluteName(), "main", target.name());
@@ -118,7 +119,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitThrowStmt(Stmt.Throw stmt) {
-        AbstractScriptedException exception = new AbstractScriptedException((ClassInstance) evaluate(stmt.value));
+        AbstractScriptedException exception = new AbstractScriptedException((AbstractClassInstance) evaluate(stmt.value));
         pushCallIndex(stmt.keyword.line());
         throw exception;
     }
@@ -206,11 +207,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         } catch (AbstractScriptedException e) {
             this.callStack.resetToSize(stackIndex);
             boolean handled = false;
-            a: for (Pair<Pair<List<LoxClass>, Token>, Stmt.Block> pair : stmt.catches) {
-                Pair<List<LoxClass>, Token> constData = pair.left();
+            a: for (Pair<Pair<List<ClassReference>, Token>, Stmt.Block> pair : stmt.catches) {
+                Pair<List<ClassReference>, Token> constData = pair.left();
                 LoxClass causer = e.exceptionType.getType();
-                for (LoxClass loxClass : constData.left()) {
-                    if (causer.isChildOf(loxClass)) {
+                for (ClassReference loxClass : constData.left()) {
+                    if (causer.isChildOf(loxClass.get())) {
                         environment.push();
                         environment.defineVar(constData.right().lexeme(), e.exceptionType);
                         visitBlockStmt(pair.right());
@@ -289,7 +290,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Object visitAssignExpr(Expr.Assign expr) {
         Object value = evaluate(expr.value);
         if (expr.type.type() == TokenType.ASSIGN) environment.assignVar(expr.name, value);
-        else value = environment.assignVarWithOperator(expr.type, expr.name, value, expr.executor, expr.operand);
+        else value = environment.assignVarWithOperator(expr.type, expr.name, value, expr.executor.get(), expr.operand);
         return value;
     }
 
@@ -302,7 +303,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Object visitBinaryExpr(Expr.Binary expr) {
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
-        return visitAlgebra(left, right, expr.executor, expr.operator, expr.operand);
+        return visitAlgebra(left, right, expr.executor.get(), expr.operator, expr.operand);
     }
 
     @Override
@@ -319,9 +320,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitCastCheckExpr(Expr.CastCheck expr) {
         Object object = evaluate(expr.object);
-        if (object instanceof ClassInstance instance) {
+        if (object instanceof AbstractClassInstance instance) {
             LoxClass type = instance.getType();
-            if (type.isParentOf(expr.targetType)) {
+            if (type.isParentOf(expr.targetType.get())) {
                 if (expr.patternVarName != null) {
                     environment.defineVar(expr.patternVarName.lexeme(), instance);
                 }
@@ -346,7 +347,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitInstCallExpr(Expr.InstCall expr) {
-        ClassInstance inst = (ClassInstance) evaluate(expr.callee);
+        AbstractClassInstance inst = (AbstractClassInstance) evaluate(expr.callee);
         pushCallIndex(expr.name.line());
         pushCall(inst.getType().absoluteName(), expr.name.lexeme(), inst.getType().name());
         Object data = inst.executeMethod(expr.name.lexeme(), expr.methodOrdinal, this.visitArgs(expr.args), this);
@@ -357,8 +358,8 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitStaticCallExpr(Expr.StaticCall expr) {
         pushCallIndex(expr.name.line());
-        pushCall(expr.target.absoluteName(), expr.name.lexeme(), expr.target.name());
-        Object data = staticCall(expr.target, expr.name.lexeme(), expr.methodOrdinal, visitArgs(expr.args));
+        pushCall(expr.target.get().absoluteName(), expr.name.lexeme(), expr.target.get().name());
+        Object data = staticCall(expr.target.get(), expr.name.lexeme(), expr.methodOrdinal, visitArgs(expr.args));
         popCall();
         return data;
     }
@@ -374,20 +375,20 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitConstructorExpr(Expr.Constructor expr) {
         pushCallIndex(expr.keyword.line());
-        pushCall(expr.target.absoluteName(), "<init>", expr.target.name());
-        Object data = expr.target.createInst(expr.params, expr.ordinal, this);
+        pushCall(expr.target.get().absoluteName(), "<init>", expr.target.name());
+        Object data = expr.target.get().createInst(expr.params, expr.ordinal, this);
         popCall();
         return data;
     }
 
     @Override
     public Object visitGetExpr(Expr.Get expr) {
-        return ((ClassInstance) evaluate(expr.object)).getField(expr.name.lexeme());
+        return ((AbstractClassInstance) evaluate(expr.object)).getField(expr.name.lexeme());
     }
 
     @Override
     public Object visitStaticGetExpr(Expr.StaticGet expr) {
-        return expr.target.getStaticField(expr.name.lexeme());
+        return expr.target.get().getStaticField(expr.name.lexeme());
     }
 
     @Override
@@ -404,7 +405,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitSetExpr(Expr.Set expr) {
         Object val = evaluate(expr.value);
-        ClassInstance instance = (ClassInstance) evaluate(expr.object);
+        AbstractClassInstance instance = (AbstractClassInstance) evaluate(expr.object);
         if (expr.assignType.type() == TokenType.ASSIGN) {
             return instance.assignField(expr.name.lexeme(), val);
         } else {
@@ -416,9 +417,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Object visitStaticSetExpr(Expr.StaticSet expr) {
         Object val = evaluate(expr.value);
         if (expr.assignType.type() == TokenType.ASSIGN) {
-            return expr.target.assignStaticField(expr.name.lexeme(), val);
+            return expr.target.get().assignStaticField(expr.name.lexeme(), val);
         } else {
-            return expr.target.assignStaticFieldWithOperator(expr.name.lexeme(), val, expr.assignType, null, null);
+            return expr.target.get().assignStaticFieldWithOperator(expr.name.lexeme(), val, expr.assignType, null, null);
         }
     }
 
@@ -444,12 +445,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitSpecialSetExpr(Expr.SpecialSet expr) {
-        return ((ClassInstance) evaluate(expr.callee)).specialAssign(expr.name.lexeme(), expr.assignType);
+        return ((AbstractClassInstance) evaluate(expr.callee)).specialAssign(expr.name.lexeme(), expr.assignType);
     }
 
     @Override
     public Object visitStaticSpecialExpr(Expr.StaticSpecial expr) {
-        return expr.target.staticSpecialAssign(expr.name.lexeme(), expr.assignType);
+        return expr.target.get().staticSpecialAssign(expr.name.lexeme(), expr.assignType);
     }
 
     @Override

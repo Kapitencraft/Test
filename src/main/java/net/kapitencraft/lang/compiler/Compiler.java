@@ -2,12 +2,12 @@ package net.kapitencraft.lang.compiler;
 
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.visitor.LocationFinder;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.oop.field.GeneratedField;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.load.CompilerHolder;
@@ -110,8 +110,8 @@ public class Compiler {
         FileWriter writer = new FileWriter(cacheTarget);
         writer.write(GsonHelper.GSON.toJson(object));
         writer.close();
-        for (CacheableClass loxClass : target.enclosed()) {
-            cache(cacheBase, builder, path, loxClass, name + "$" + loxClass.name());
+        for (ClassReference loxClass : target.enclosed()) {
+            cache(cacheBase, builder, path, (CacheableClass) loxClass.get(), name + "$" + loxClass.get().name());
         }
     }
 
@@ -158,12 +158,12 @@ public class Compiler {
             return Arrays.stream(declarations).collect(Collectors.toMap(dec -> dec.name.lexeme(), decl -> new GeneratedField(decl.type, decl.initializer, decl.isFinal)));
         }
 
-        LoxClass superclass();
+        ClassReference superclass();
 
         Token name();
 
         Pair<Token, GeneratedCallable>[] methods();
 
-        LoxClass[] interfaces();
+        ClassReference[] interfaces();
     }
 }

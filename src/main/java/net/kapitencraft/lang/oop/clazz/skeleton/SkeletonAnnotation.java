@@ -3,23 +3,19 @@ package net.kapitencraft.lang.oop.clazz.skeleton;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.PreviewClass;
-import net.kapitencraft.lang.oop.field.LoxField;
-import net.kapitencraft.lang.oop.field.SkeletonField;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
 import net.kapitencraft.lang.oop.method.map.AnnotationMethodMap;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
-import net.kapitencraft.lang.oop.method.SkeletonMethod;
-import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -29,19 +25,19 @@ public class SkeletonAnnotation implements LoxClass {
     private final String name;
     private final String pck;
 
-    private final Map<String, PreviewClass> enclosed;
+    private final Map<String, ClassReference> enclosed;
 
     private final AnnotationMethodMap methods;
 
     public SkeletonAnnotation(String name, String pck,
-                              Map<String, PreviewClass> enclosed, Map<String, AnnotationCallable> methods) {
+                              Map<String, ClassReference> enclosed, Map<String, AnnotationCallable> methods) {
         this.name = name;
         this.pck = pck;
         this.enclosed = enclosed;
         this.methods = new AnnotationMethodMap(methods);
     }
 
-    public static SkeletonAnnotation fromCache(JsonObject data, String pck, PreviewClass[] enclosed) {
+    public static SkeletonAnnotation fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
         String name = GsonHelper.getAsString(data, "name");
 
         JsonObject methodData = GsonHelper.getAsJsonObject(data, "methods");
@@ -51,7 +47,7 @@ public class SkeletonAnnotation implements LoxClass {
         methodData.asMap().forEach((string, jsonElement) -> methods.put(string, SkeletonAnnotationMethod.fromJson((JsonObject) jsonElement)));
 
         return new SkeletonAnnotation(name, pck,
-                Arrays.stream(enclosed).collect(Collectors.toMap(LoxClass::name, Function.identity())),
+                Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
                 methods.build()
         );
     }
@@ -77,12 +73,12 @@ public class SkeletonAnnotation implements LoxClass {
     }
 
     @Override
-    public LoxClass[] enclosed() {
-        return enclosed.values().toArray(new PreviewClass[0]);
+    public ClassReference[] enclosed() {
+        return enclosed.values().toArray(new ClassReference[0]);
     }
 
     @Override
-    public Map<String, ? extends LoxField> staticFields() {
+    public Map<String, ? extends ScriptedField> staticFields() {
         return Map.of();
     }
 
@@ -102,22 +98,22 @@ public class SkeletonAnnotation implements LoxClass {
     }
 
     @Override
-    public LoxClass getFieldType(String name) {
-        return VarTypeManager.VOID;
+    public ClassReference getFieldType(String name) {
+        return VarTypeManager.VOID.reference();
     }
 
     @Override
-    public LoxClass superclass() {
+    public @Nullable ClassReference superclass() {
         return null;
     }
 
     @Override
-    public LoxClass getStaticFieldType(String name) {
-        return VarTypeManager.VOID;
+    public ClassReference getStaticFieldType(String name) {
+        return VarTypeManager.VOID.reference();
     }
 
     @Override
-    public ScriptedCallable getStaticMethod(String name, List<? extends LoxClass> args) {
+    public ScriptedCallable getStaticMethod(String name, List<ClassReference> args) {
         return null;
     }
 
@@ -127,7 +123,7 @@ public class SkeletonAnnotation implements LoxClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
         return -1;
     }
 
@@ -162,7 +158,7 @@ public class SkeletonAnnotation implements LoxClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<LoxClass> types) {
+    public int getMethodOrdinal(String name, List<ClassReference> types) {
         return -1;
     }
 
@@ -177,7 +173,7 @@ public class SkeletonAnnotation implements LoxClass {
     }
 
     @Override
-    public LoxClass getEnclosing(String name) {
+    public ClassReference getEnclosing(String name) {
         return enclosed.get(name);
     }
 

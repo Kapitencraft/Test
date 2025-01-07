@@ -1,36 +1,50 @@
 package net.kapitencraft.lang.oop.clazz.wrapper;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.natives.scripted.lang.ObjectClass;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.field.NativeField;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
 
 public class NativeClass extends NativeUtilClass {
     private final GeneratedMethodMap methods;
+    private final Map<String, ScriptedField> fields;
     private final DataMethodContainer constructor;
-    private final LoxClass superclass;
+    private final ClassReference superclass;
     private final boolean isAbstract, isFinal, isInterface;
 
-    public NativeClass(String name, String pck, Map<String, DataMethodContainer> staticMethods, Map<String, NativeField> staticFields, Map<String, DataMethodContainer> methods, DataMethodContainer constructor, LoxClass superclass, boolean isAbstract, boolean isFinal, boolean isInterface) {
+    public NativeClass(String name, String pck, Map<String, DataMethodContainer> staticMethods, Map<String, NativeField> staticFields, Map<String, DataMethodContainer> methods, Map<String, ScriptedField> fields, DataMethodContainer constructor, ClassReference superclass, boolean isAbstract, boolean isFinal, boolean isInterface) {
         super(staticMethods, staticFields, name, pck);
         this.methods = new GeneratedMethodMap(methods);
+        this.fields = fields;
         this.constructor = constructor;
-        this.superclass = superclass == null && this.getClass() != ObjectClass.class ? VarTypeManager.OBJECT.get() : superclass;
+        this.superclass = superclass == null && this.getClass() != ObjectClass.class ? VarTypeManager.OBJECT : superclass;
         this.isAbstract = isAbstract;
         this.isFinal = isFinal;
         this.isInterface = isInterface;
     }
 
     @Override
-    public LoxClass superclass() {
+    public @Nullable ClassReference superclass() {
         return superclass;
+    }
+
+    @Override
+    public ClassReference getFieldType(String name) {
+        return fields.containsKey(name) ? fields.get(name).getType() : null;
+    }
+
+    @Override
+    public boolean hasField(String name) {
+        return fields.containsKey(name);
     }
 
     @Override
@@ -59,7 +73,7 @@ public class NativeClass extends NativeUtilClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<LoxClass> types) {
+    public int getMethodOrdinal(String name, List<ClassReference> types) {
         return methods.getMethodOrdinal(name, types);
     }
 
@@ -74,8 +88,13 @@ public class NativeClass extends NativeUtilClass {
     }
 
     @Override
-    public LoxClass getEnclosing(String name) {
+    public ClassReference getEnclosing(String name) {
         return null;
+    }
+
+    @Override
+    public Map<String, ScriptedField> getFields() {
+        return fields;
     }
 
     @Override

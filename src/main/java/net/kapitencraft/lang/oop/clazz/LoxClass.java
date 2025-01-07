@@ -1,8 +1,8 @@
 package net.kapitencraft.lang.oop.clazz;
 
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
-import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
@@ -10,10 +10,12 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
-import net.kapitencraft.lang.oop.field.LoxField;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
+import org.checkerframework.checker.units.qual.C;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,11 +32,16 @@ public interface LoxClass {
         return new ArrayClass(this);
     }
 
+    default ClassReference reference() {
+        return ClassReference.of(this);
+    }
+
     default Object getStaticField(String name) {
         checkInit();
         return staticFieldData.get(name);
     }
 
+    //TODO move to reference?
     default LoxClass getComponentType() {
         return null;
     }
@@ -45,7 +52,7 @@ public interface LoxClass {
      * @return the resulting type or {@link VarTypeManager#VOID}, if this operation is not possible (must return {@link VarTypeManager#BOOLEAN} or {@link VarTypeManager#VOID} for comparators)
      * <br><br>API note: it's recommended to call {@code super.checkOperation(...)} due to the given equality check
      */
-    default LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
+    default LoxClass checkOperation(OperationType type, Operand operand, ClassReference other) {
         return type.is(TokenTypeCategory.EQUALITY) && other.is(this) ? VarTypeManager.BOOLEAN : VarTypeManager.VOID;
     }
 
@@ -54,7 +61,7 @@ public interface LoxClass {
     }
 
     default void checkInit() {
-        if (!hasInit()) clInit();
+        if (!hasInit() && !Interpreter.suppressClassLoad) clInit();
     }
 
     default Object assignStaticField(String name, Object val) {
@@ -79,19 +86,18 @@ public interface LoxClass {
 
     default void clInit() {
 
-        if (Interpreter.suppressClassLoad) return;
         this.staticFields().forEach((s, loxField) -> {
             assignStaticField(s, loxField.initialize(null, Interpreter.INSTANCE));
         });
 
-        for (LoxClass loxClass : this.enclosed()) {
-            loxClass.clInit();
+        for (ClassReference loxClass : this.enclosed()) {
+            loxClass.get().clInit();
         }
     }
 
-    LoxClass[] enclosed();
+    ClassReference[] enclosed();
 
-    Map<String, ? extends LoxField> staticFields();
+    Map<String, ? extends ScriptedField> staticFields();
 
     default Object staticSpecialAssign(String name, Token assignType) {
         checkInit();
@@ -119,40 +125,41 @@ public interface LoxClass {
         return packageRepresentation() + name();
     }
 
-    LoxClass superclass();
+    @Nullable ClassReference superclass();
 
-    default LoxClass[] interfaces() {
-        return superclass().interfaces();
+    default ClassReference[] interfaces() {
+        return superclass() != null ? superclass().get().interfaces() : new ClassReference[0];
     }
 
-    default LoxClass getFieldType(String name) {
-        return superclass().getFieldType(name);
+    default ClassReference getFieldType(String name) {
+        return superclass() != null ? superclass().get().getFieldType(name) : null;
     }
 
-    default LoxClass getStaticFieldType(String name) {
+    default ClassReference getStaticFieldType(String name) {
         return staticFields().get(name).getType();
     }
 
     default boolean hasField(String name) {
-        return superclass().hasField(name);
+        return superclass() != null && superclass().get().hasField(name);
     }
 
-    default ScriptedCallable getStaticMethod(String name, List<? extends LoxClass> args) {
+    //TODO extract to custom class?
+    default ScriptedCallable getStaticMethod(String name, List<ClassReference> args) {
         return getStaticMethodByOrdinal(name, getStaticMethodOrdinal(name, args));
     }
 
     ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal);
 
-    int getStaticMethodOrdinal(String name, List<? extends LoxClass> args);
+    int getStaticMethodOrdinal(String name, List<ClassReference> args);
 
-    default ScriptedCallable getMethod(String name, List<LoxClass> args) {
+    default ScriptedCallable getMethod(String name, List<ClassReference> args) {
         return getMethodByOrdinal(name, getMethodOrdinal(name, args));
     }
 
     boolean hasStaticMethod(String name);
 
     default boolean hasMethod(String name) {
-        return superclass().hasMethod(name);
+        return superclass() != null && superclass().get().hasMethod(name);
     }
 
     default ClassInstance createInst(List<Expr> params, int ordinal, Interpreter interpreter) {
@@ -165,8 +172,8 @@ public interface LoxClass {
         return instance;
     }
 
-    default Map<String, LoxField> getFields() {
-        return superclass().getFields();
+    default Map<String, ScriptedField> getFields() {
+        return superclass() != null ? superclass().get().getFields() : Map.of();
     }
 
     MethodContainer getConstructor();
@@ -182,10 +189,9 @@ public interface LoxClass {
     }
 
     default boolean isParentOf(LoxClass suspectedChild) {
-        if (suspectedChild instanceof PreviewClass previewClass) suspectedChild = previewClass.getTarget();
         if (suspectedChild.is(this) || (!suspectedChild.isInterface() && VarTypeManager.OBJECT.get().is(this))) return true;
-        while (suspectedChild != null && suspectedChild != VarTypeManager.OBJECT.get()  && !suspectedChild.is(this)) {
-            suspectedChild = suspectedChild.superclass();
+        while (suspectedChild != null && suspectedChild.superclass() != null && suspectedChild != VarTypeManager.OBJECT.get()  && !suspectedChild.is(this)) {
+            suspectedChild = suspectedChild.superclass().get();
         }
         return suspectedChild != null && suspectedChild.is(this);
     }
@@ -207,11 +213,11 @@ public interface LoxClass {
      * @param types argument types
      * @return the ID of the given method name and argument types; -1 if none could be found
      */
-    int getMethodOrdinal(String name, List<LoxClass> types);
+    int getMethodOrdinal(String name, List<ClassReference> types);
 
     boolean hasEnclosing(String name);
 
-    LoxClass getEnclosing(String name);
+    ClassReference getEnclosing(String name);
 
     AbstractMethodMap getMethods();
 }

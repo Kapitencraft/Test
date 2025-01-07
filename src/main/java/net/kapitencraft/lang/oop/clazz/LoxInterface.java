@@ -1,8 +1,10 @@
 package net.kapitencraft.lang.oop.clazz;
 
-import net.kapitencraft.lang.oop.field.LoxField;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
@@ -14,13 +16,13 @@ public interface LoxInterface extends LoxClass {
     }
 
     @Override
-    default Map<String, LoxField> getFields() {
+    default Map<String, ScriptedField> getFields() {
         return Map.of();
     }
 
     @Override
-    default LoxClass getFieldType(String name) {
-        return VarTypeManager.VOID;
+    default ClassReference getFieldType(String name) {
+        return VarTypeManager.VOID.reference();
     }
 
     @Override
@@ -44,7 +46,7 @@ public interface LoxInterface extends LoxClass {
     }
 
     @Override
-    default LoxClass superclass() {
-        return VarTypeManager.VOID;
+    default @Nullable ClassReference superclass() {
+        return ClassReference.of(VarTypeManager.VOID);
     }
 }

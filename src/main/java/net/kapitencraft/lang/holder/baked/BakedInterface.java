@@ -2,6 +2,7 @@ package net.kapitencraft.lang.holder.baked;
 
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.*;
@@ -14,13 +15,13 @@ import net.kapitencraft.tool.Pair;
 import java.util.HashMap;
 import java.util.Map;
 
-public record BakedInterface(Compiler.ErrorLogger logger, PreviewClass target, Pair<Token, GeneratedCallable>[] methods, Pair<Token, GeneratedCallable>[] staticMethods, Stmt.VarDecl[] staticFields, LoxClass[] interfaces, Token name, String pck, Compiler.ClassBuilder[] enclosed) implements Compiler.ClassBuilder {
+public record BakedInterface(Compiler.ErrorLogger logger, ClassReference target, Pair<Token, GeneratedCallable>[] methods, Pair<Token, GeneratedCallable>[] staticMethods, Stmt.VarDecl[] staticFields, ClassReference[] interfaces, Token name, String pck, Compiler.ClassBuilder[] enclosed) implements Compiler.ClassBuilder {
 
     @Override
     public CacheableClass build() {
-        ImmutableMap.Builder<String, LoxClass> enclosed = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
         for (int i = 0; i < this.enclosed().length; i++) {
-            LoxClass loxClass = this.enclosed()[i].build();
+            ClassReference loxClass = this.enclosed()[i].build().reference();
             enclosed.put(loxClass.name(), loxClass);
         }
 
@@ -53,7 +54,7 @@ public record BakedInterface(Compiler.ErrorLogger logger, PreviewClass target, P
     }
 
     @Override
-    public LoxClass superclass() {
+    public ClassReference superclass() {
         return null;
     }
 }

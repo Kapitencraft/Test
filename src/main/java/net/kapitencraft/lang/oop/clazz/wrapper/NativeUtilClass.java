@@ -1,13 +1,15 @@
 package net.kapitencraft.lang.oop.clazz.wrapper;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.field.LoxField;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
@@ -38,12 +40,12 @@ public class NativeUtilClass implements LoxClass {
     }
 
     @Override
-    public LoxClass[] enclosed() {
-        return new LoxClass[0];
+    public ClassReference[] enclosed() {
+        return new ClassReference[0];
     }
 
     @Override
-    public Map<String, ? extends LoxField> staticFields() {
+    public Map<String, ? extends ScriptedField> staticFields() {
         return staticFields;
     }
 
@@ -63,12 +65,12 @@ public class NativeUtilClass implements LoxClass {
     }
 
     @Override
-    public LoxClass superclass() {
-        return VarTypeManager.OBJECT.get();
+    public @Nullable ClassReference superclass() {
+        return VarTypeManager.OBJECT;
     }
 
     @Override
-    public LoxClass getStaticFieldType(String name) {
+    public ClassReference getStaticFieldType(String name) {
         return staticFields.get(name).getType();
     }
 
@@ -78,7 +80,7 @@ public class NativeUtilClass implements LoxClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
         return staticMethods.getMethodOrdinal(name, args);
     }
 
@@ -113,7 +115,7 @@ public class NativeUtilClass implements LoxClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<LoxClass> types) {
+    public int getMethodOrdinal(String name, List<ClassReference> types) {
         return 0;
     }
 
@@ -123,7 +125,7 @@ public class NativeUtilClass implements LoxClass {
     }
 
     @Override
-    public LoxClass getEnclosing(String name) {
+    public ClassReference getEnclosing(String name) {
         return null;
     }
 

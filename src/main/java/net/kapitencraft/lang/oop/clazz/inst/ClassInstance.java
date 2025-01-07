@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ClassInstance {
+public class ClassInstance implements AbstractClassInstance {
     private final Environment environment;
     private final Map<String, Object> fields = new HashMap<>();
     private final LoxClass type;

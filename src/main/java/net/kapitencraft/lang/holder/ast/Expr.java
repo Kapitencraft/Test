@@ -1,12 +1,11 @@
 package net.kapitencraft.lang.holder.ast;
 
 import java.util.List;
-
-import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.algebra.Operand;
 import java.util.Map;
+import net.kapitencraft.lang.holder.LiteralHolder;
 
 public abstract class Expr {
 
@@ -40,10 +39,10 @@ public abstract class Expr {
         public final Token name;
         public final Expr value;
         public final Token type;
-        public final LoxClass executor;
+        public final ClassReference executor;
         public final Operand operand;
 
-        public Assign(Token name, Expr value, Token type, LoxClass executor, Operand operand) {
+        public Assign(Token name, Expr value, Token type, ClassReference executor, Operand operand) {
             this.name = name;
             this.value = value;
             this.type = type;
@@ -75,11 +74,11 @@ public abstract class Expr {
     public static class Binary extends Expr {
         public final Expr left;
         public final Token operator;
-        public final LoxClass executor;
+        public final ClassReference executor;
         public final Operand operand;
         public final Expr right;
 
-        public Binary(Expr left, Token operator, LoxClass executor, Operand operand, Expr right) {
+        public Binary(Expr left, Token operator, ClassReference executor, Operand operand, Expr right) {
             this.left = left;
             this.operator = operator;
             this.executor = executor;
@@ -130,12 +129,12 @@ public abstract class Expr {
     }
 
     public static class StaticCall extends Expr {
-        public final LoxClass target;
+        public final ClassReference target;
         public final Token name;
         public final int methodOrdinal;
         public final List<Expr> args;
 
-        public StaticCall(LoxClass target, Token name, int methodOrdinal, List<Expr> args) {
+        public StaticCall(ClassReference target, Token name, int methodOrdinal, List<Expr> args) {
             this.target = target;
             this.name = name;
             this.methodOrdinal = methodOrdinal;
@@ -164,10 +163,10 @@ public abstract class Expr {
     }
 
     public static class StaticGet extends Expr {
-        public final LoxClass target;
+        public final ClassReference target;
         public final Token name;
 
-        public StaticGet(LoxClass target, Token name) {
+        public StaticGet(ClassReference target, Token name) {
             this.target = target;
             this.name = name;
         }
@@ -198,10 +197,10 @@ public abstract class Expr {
         public final Token name;
         public final Expr value;
         public final Token assignType;
-        public final LoxClass executor;
+        public final ClassReference executor;
         public final Operand operand;
 
-        public Set(Expr object, Token name, Expr value, Token assignType, LoxClass executor, Operand operand) {
+        public Set(Expr object, Token name, Expr value, Token assignType, ClassReference executor, Operand operand) {
             this.object = object;
             this.name = name;
             this.value = value;
@@ -217,14 +216,14 @@ public abstract class Expr {
     }
 
     public static class StaticSet extends Expr {
-        public final LoxClass target;
+        public final ClassReference target;
         public final Token name;
         public final Expr value;
         public final Token assignType;
-        public final LoxClass executor;
+        public final ClassReference executor;
         public final Operand operand;
 
-        public StaticSet(LoxClass target, Token name, Expr value, Token assignType, LoxClass executor, Operand operand) {
+        public StaticSet(ClassReference target, Token name, Expr value, Token assignType, ClassReference executor, Operand operand) {
             this.target = target;
             this.name = name;
             this.value = value;
@@ -244,10 +243,10 @@ public abstract class Expr {
         public final Expr index;
         public final Expr value;
         public final Token assignType;
-        public final LoxClass executor;
+        public final ClassReference executor;
         public final Operand operand;
 
-        public ArraySet(Expr object, Expr index, Expr value, Token assignType, LoxClass executor, Operand operand) {
+        public ArraySet(Expr object, Expr index, Expr value, Token assignType, ClassReference executor, Operand operand) {
             this.object = object;
             this.index = index;
             this.value = value;
@@ -280,11 +279,11 @@ public abstract class Expr {
     }
 
     public static class StaticSpecial extends Expr {
-        public final LoxClass target;
+        public final ClassReference target;
         public final Token name;
         public final Token assignType;
 
-        public StaticSpecial(LoxClass target, Token name, Token assignType) {
+        public StaticSpecial(ClassReference target, Token name, Token assignType) {
             this.target = target;
             this.name = name;
             this.assignType = assignType;
@@ -334,10 +333,10 @@ public abstract class Expr {
 
     public static class CastCheck extends Expr {
         public final Expr object;
-        public final LoxClass targetType;
+        public final ClassReference targetType;
         public final Token patternVarName;
 
-        public CastCheck(Expr object, LoxClass targetType, Token patternVarName) {
+        public CastCheck(Expr object, ClassReference targetType, Token patternVarName) {
             this.object = object;
             this.targetType = targetType;
             this.patternVarName = patternVarName;
@@ -422,11 +421,11 @@ public abstract class Expr {
 
     public static class Constructor extends Expr {
         public final Token keyword;
-        public final LoxClass target;
+        public final ClassReference target;
         public final List<Expr> params;
         public final int ordinal;
 
-        public Constructor(Token keyword, LoxClass target, List<Expr> params, int ordinal) {
+        public Constructor(Token keyword, ClassReference target, List<Expr> params, int ordinal) {
             this.keyword = keyword;
             this.target = target;
             this.params = params;

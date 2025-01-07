@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.method.builder;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
@@ -23,12 +24,12 @@ public class ConstructorContainer extends DataMethodContainer {
             methods.add(new ScriptedCallable() {
 
                 @Override
-                public LoxClass type() {
-                    return targetClass;
+                public ClassReference type() {
+                    return ClassReference.of(targetClass);
                 }
 
                 @Override
-                public List<? extends LoxClass> argTypes() {
+                public List<ClassReference> argTypes() {
                     return List.of();
                 }
 
@@ -62,9 +63,9 @@ public class ConstructorContainer extends DataMethodContainer {
         }
 
         public void addMethod(Compiler.ErrorLogger errorLogger, ScriptedCallable callable, Token constructorLocation) {
-            List<? extends List<? extends LoxClass>> appliedTypes = methods.stream().map(ScriptedCallable::argTypes).toList();
-            List<? extends LoxClass> argTypes = callable.argTypes();
-            for (List<? extends LoxClass> appliedType : appliedTypes) {
+            List<? extends List<ClassReference>> appliedTypes = methods.stream().map(ScriptedCallable::argTypes).toList();
+            List<ClassReference> argTypes = callable.argTypes();
+            for (List<ClassReference> appliedType : appliedTypes) {
                 if (Util.matchArgs(argTypes, appliedType)) {
                     errorLogger.errorF(constructorLocation, "duplicate constructors with args %s in class %s", Util.getDescriptor(argTypes), className.lexeme());
                     return;
@@ -78,12 +79,12 @@ public class ConstructorContainer extends DataMethodContainer {
                 if (finalVars.isEmpty()) {
                     methods.add(new ScriptedCallable() {
                         @Override
-                        public LoxClass type() {
-                            return targetClass;
+                        public ClassReference type() {
+                            return ClassReference.of(targetClass);
                         }
 
                         @Override
-                        public List<? extends LoxClass> argTypes() {
+                        public List<ClassReference> argTypes() {
                             return List.of();
                         }
 

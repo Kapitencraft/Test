@@ -4,11 +4,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
 
@@ -40,7 +40,7 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         object.add("name", expr.name.toJson());
         object.add("value", cache(expr.value));
         object.add("type", expr.type.toJson());
-        object.addProperty("executor", expr.executor.absoluteName());
+        object.addProperty("executor", expr.executor.get().absoluteName());
         object.addProperty("operand", expr.operand.name());
         return object;
     }
@@ -387,10 +387,10 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         JsonArray array = new JsonArray();
         stmt.catches.forEach(pair -> {
             JsonObject pairDat = new JsonObject();
-            Pair<List<LoxClass>, Token> pair1 = pair.left();
+            Pair<List<ClassReference>, Token> pair1 = pair.left();
             JsonObject pair1Dat = new JsonObject();
             JsonArray classes = new JsonArray();
-            pair1.left().stream().map(LoxClass::absoluteName).forEach(classes::add);
+            pair1.left().stream().map(ClassReference::absoluteName).forEach(classes::add);
             pair1Dat.add("classes", classes);
             pair1Dat.add("name", pair1.right().toJson());
             pairDat.add("initData", pair1Dat);

@@ -2,11 +2,11 @@ package net.kapitencraft.lang.holder.baked;
 
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.generated.GeneratedClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
@@ -17,23 +17,23 @@ import java.util.*;
 
 public record BakedClass(
         Compiler.ErrorLogger logger,
-        PreviewClass target,
+        ClassReference target,
         Pair<Token, GeneratedCallable>[] methods,
         Pair<Token, GeneratedCallable>[] staticMethods,
         Pair<Token, GeneratedCallable>[] constructors,
         Stmt.VarDecl[] fields,
         Stmt.VarDecl[] staticFields,
-        LoxClass superclass, Token name, String pck,
-        LoxClass[] interfaces,
+        ClassReference superclass, Token name, String pck,
+        ClassReference[] interfaces,
         Compiler.ClassBuilder[] enclosed,
         boolean isAbstract, boolean isFinal
 ) implements Compiler.ClassBuilder {
 
     @Override
     public GeneratedClass build() {
-        ImmutableMap.Builder<String, LoxClass> enclosed = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
         for (int i = 0; i < this.enclosed().length; i++) {
-            LoxClass loxClass = this.enclosed()[i].build();
+            ClassReference loxClass = this.enclosed()[i].build().reference();
             enclosed.put(loxClass.name(), loxClass);
         }
 
@@ -79,7 +79,7 @@ public record BakedClass(
                 this.isAbstract(),
                 this.isFinal()
         );
-        this.target().apply(loxClass);
+        this.target().setTarget(loxClass);
         return loxClass;
     }
 }

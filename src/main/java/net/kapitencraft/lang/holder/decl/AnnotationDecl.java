@@ -6,15 +6,17 @@ import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.compiler.parser.ExprParser;
 import net.kapitencraft.lang.compiler.parser.SkeletonParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
-import net.kapitencraft.lang.holder.LiteralHolder;
+import net.kapitencraft.lang.env.core.Environment;
+import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.baked.BakedAnnotation;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonAnnotation;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
+import net.kapitencraft.lang.run.Interpreter;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -23,7 +25,7 @@ import java.util.List;
 public record AnnotationDecl(
         VarTypeParser parser,
         Compiler.ErrorLogger logger,
-        PreviewClass target,
+        ClassReference target,
         Token name, String pck,
         SkeletonParser.AnnotationMethodDecl[] annotationMethods,
         SkeletonParser.ClassConstructor<?>[] enclosed,
@@ -57,17 +59,36 @@ public record AnnotationDecl(
         );
     }
 
-    public record MethodWrapper(@Nullable Expr val, LoxClass type) {
+    public record MethodWrapper(@Nullable Expr val, ClassReference type) implements ScriptedCallable {
 
+        @Override
+        public List<ClassReference> argTypes() {
+            return List.of();
+        }
+
+        @Override
+        public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+            return val == null ? null : interpreter.evaluate(val);
+        }
+
+        @Override
+        public boolean isAbstract() {
+            return val == null;
+        }
+
+        @Override
+        public boolean isFinal() {
+            return false;
+        }
     }
 
     @Override
     public LoxClass createSkeleton() {
         //enclosed classes
-        ImmutableMap.Builder<String, PreviewClass> enclosed = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
         for (SkeletonParser.ClassConstructor<?> enclosedDecl : this.enclosed()) {
             LoxClass generated = enclosedDecl.createSkeleton();
-            enclosedDecl.target().apply(generated);
+            enclosedDecl.target().setTarget(generated);
             enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
         }
 

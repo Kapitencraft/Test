@@ -2,22 +2,21 @@ package net.kapitencraft.lang.holder.baked;
 
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.decl.AnnotationDecl;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.generated.GeneratedAnnotation;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.GeneratedAnnotationCallable;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
-import net.kapitencraft.lang.oop.method.map.GeneratedAnnotationMethodMap;
 import net.kapitencraft.tool.Pair;
 
 import java.util.Map;
 
 public record BakedAnnotation(
         Compiler.ErrorLogger logger,
-        PreviewClass target,
+        ClassReference target,
         Token name, String pck,
         Map<String, AnnotationDecl.MethodWrapper> methodWrappers,
         Compiler.ClassBuilder[] enclosed
@@ -25,9 +24,9 @@ public record BakedAnnotation(
 
     @Override
     public GeneratedAnnotation build() {
-        ImmutableMap.Builder<String, LoxClass> enclosed = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
         for (Compiler.ClassBuilder builder : enclosed()) {
-            LoxClass loxClass = builder.build();
+            ClassReference loxClass = builder.build().reference();
             enclosed.put(loxClass.name(), loxClass);
         }
 
@@ -35,15 +34,15 @@ public record BakedAnnotation(
         methodWrappers.forEach((string, wrapper) -> builder.put(string, new GeneratedAnnotationCallable(wrapper.type(), wrapper.val())));
 
         GeneratedAnnotation loxClass = new GeneratedAnnotation(
-                enclosed.build(), new GeneratedAnnotationMethodMap(builder.build()),
+                enclosed.build(), methodWrappers,
                 this.name().lexeme(),
                 this.pck());
-        this.target().apply(loxClass);
+        this.target().setTarget(loxClass);
         return loxClass;
     }
 
     @Override
-    public LoxClass superclass() {
+    public ClassReference superclass() {
         return null;
     }
 
@@ -53,7 +52,7 @@ public record BakedAnnotation(
     }
 
     @Override
-    public LoxClass[] interfaces() {
-        return new LoxClass[0];
+    public ClassReference[] interfaces() {
+        return new ClassReference[0];
     }
 }

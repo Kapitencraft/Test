@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.MethodLookup;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
@@ -15,12 +16,12 @@ import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.field.GeneratedField;
-import net.kapitencraft.lang.oop.field.LoxField;
-import net.kapitencraft.lang.run.Interpreter;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Util;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
@@ -38,10 +39,10 @@ public final class GeneratedClass implements CacheableClass {
     private final Map<String, GeneratedField> allFields;
     private final Map<String, GeneratedField> allStaticFields;
 
-    private final Map<String, LoxClass> enclosing;
+    private final Map<String, ClassReference> enclosing;
 
-    private final LoxClass superclass;
-    private final LoxClass[] implemented;
+    private final ClassReference superclass;
+    private final ClassReference[] implemented;
     private final String name;
     private final String packageRepresentation;
 
@@ -49,8 +50,8 @@ public final class GeneratedClass implements CacheableClass {
 
     public GeneratedClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor,
                           Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
-                          Map<String, LoxClass> enclosing,
-                          LoxClass superclass, LoxClass[] implemented, String name, String packageRepresentation, boolean isAbstract, boolean isFinal) {
+                          Map<String, ClassReference> enclosing,
+                          ClassReference superclass, ClassReference[] implemented, String name, String packageRepresentation, boolean isAbstract, boolean isFinal) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
         this.staticMethods = new GeneratedMethodMap(staticMethods);
@@ -69,8 +70,8 @@ public final class GeneratedClass implements CacheableClass {
 
     public GeneratedClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, List<ScriptedCallable> constructorData,
                           Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
-                          LoxClass superclass, String name, String packageRepresentation,
-                          Map<String, LoxClass> enclosing, LoxClass[] implemented,
+                          ClassReference superclass, String name, String packageRepresentation,
+                          Map<String, ClassReference> enclosing, ClassReference[] implemented,
                           boolean isAbstract, boolean isFinal) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
@@ -88,10 +89,10 @@ public final class GeneratedClass implements CacheableClass {
         this.lookup = MethodLookup.createFromClass(this);
     }
 
-    public static LoxClass load(JsonObject data, List<LoxClass> enclosed, String pck) {
+    public static LoxClass load(JsonObject data, List<ClassReference> enclosed, String pck) {
         String name = GsonHelper.getAsString(data, "name");
-        LoxClass superclass = ClassLoader.loadClassReference(data, "superclass");
-        LoxClass[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(LoxClass[]::new);
+        ClassReference superclass = ClassLoader.loadClassReference(data, "superclass");
+        ClassReference[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(ClassReference[]::new);
 
         if (superclass == null) throw new IllegalArgumentException(String.format("could not find parent class for class '%s': '%s'", name, GsonHelper.getAsString(data, "superclass")));
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
@@ -105,7 +106,7 @@ public final class GeneratedClass implements CacheableClass {
 
         List<String> flags = GsonHelper.getAsJsonArray(data, "flags").asList().stream().map(JsonElement::getAsString).toList();
 
-        Map<String, LoxClass> enclosedClasses = enclosed.stream().collect(Collectors.toMap(LoxClass::name, Function.identity()));
+        Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));
 
         return new GeneratedClass(
                 methods, staticMethods, constructorData,
@@ -125,7 +126,7 @@ public final class GeneratedClass implements CacheableClass {
         object.addProperty("superclass", superclass.absoluteName());
         {
             JsonArray parentInterfaces = new JsonArray();
-            Arrays.stream(this.implemented).map(LoxClass::absoluteName).forEach(parentInterfaces::add);
+            Arrays.stream(this.implemented).map(ClassReference::absoluteName).forEach(parentInterfaces::add);
             object.add("interfaces", parentInterfaces);
         }
         object.add("methods", methods.save(cacheBuilder));
@@ -154,12 +155,12 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public LoxClass getFieldType(String name) {
-        return Optional.ofNullable(getFields().get(name)).map(LoxField::getType).orElse(CacheableClass.super.getFieldType(name));
+    public ClassReference getFieldType(String name) {
+        return Optional.ofNullable(getFields().get(name)).map(ScriptedField::getType).orElse(CacheableClass.super.getFieldType(name));
     }
 
     @Override
-    public LoxClass getStaticFieldType(String name) {
+    public ClassReference getStaticFieldType(String name) {
         return allStaticFields.get(name).getType();
     }
 
@@ -169,7 +170,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
         return staticMethods.getMethodOrdinal(name, args);
     }
 
@@ -179,7 +180,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public ScriptedCallable getMethod(String name, List<LoxClass> args) {
+    public ScriptedCallable getMethod(String name, List<ClassReference> args) {
         return Optional.ofNullable(allMethods.get(name)).map(container -> container.getMethod(args)).orElse(CacheableClass.super.getMethod(name, args));
     }
 
@@ -194,7 +195,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public Map<String, LoxField> getFields() {
+    public Map<String, ScriptedField> getFields() {
         return Util.mergeMaps(CacheableClass.super.getFields(), allFields);
     }
 
@@ -223,7 +224,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<LoxClass> types) {
+    public int getMethodOrdinal(String name, List<ClassReference> types) {
         return lookup.getMethodOrdinal(name, types);
     }
 
@@ -233,7 +234,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public LoxClass getEnclosing(String name) {
+    public ClassReference getEnclosing(String name) {
         return null;
     }
 
@@ -243,7 +244,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public LoxClass superclass() {
+    public @Nullable ClassReference superclass() {
         return superclass;
     }
 
@@ -260,7 +261,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public Map<String, ? extends LoxField> staticFields() {
+    public Map<String, ? extends ScriptedField> staticFields() {
         return allStaticFields;
     }
 
@@ -274,9 +275,8 @@ public final class GeneratedClass implements CacheableClass {
         return packageRepresentation;
     }
 
-    @SuppressWarnings("SuspiciousToArrayCall")
-    public CacheableClass[] enclosed() {
-        return enclosing.values().toArray(new CacheableClass[0]);
+    public ClassReference[] enclosed() {
+        return enclosing.values().toArray(new ClassReference[0]);
     }
 
     @Override
@@ -295,7 +295,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public LoxClass[] interfaces() {
+    public ClassReference[] interfaces() {
         return implemented;
     }
 }

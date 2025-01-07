@@ -1,14 +1,14 @@
 package net.kapitencraft.lang.oop.field;
 
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.Interpreter;
 
-public class SkeletonField extends LoxField {
-    private final LoxClass type;
+public class SkeletonField extends ScriptedField {
+    private final ClassReference type;
     private final boolean isFinal;
 
-    public SkeletonField(LoxClass type, boolean isFinal) {
+    public SkeletonField(ClassReference type, boolean isFinal) {
         this.type = type;
         this.isFinal = isFinal;
     }
@@ -19,7 +19,7 @@ public class SkeletonField extends LoxField {
     }
 
     @Override
-    public LoxClass getType() {
+    public ClassReference getType() {
         return type;
     }
 

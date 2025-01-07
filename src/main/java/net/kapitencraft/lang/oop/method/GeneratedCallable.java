@@ -7,7 +7,7 @@ import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.Interpreter;
@@ -18,12 +18,12 @@ import net.kapitencraft.tool.Pair;
 import java.util.List;
 
 public class GeneratedCallable implements ScriptedCallable {
-    private final LoxClass retType;
-    private final List<Pair<LoxClass,String>> params;
+    private final ClassReference retType;
+    private final List<Pair<ClassReference, String>> params;
     private final List<Stmt> body;
     private final boolean isFinal, isAbstract;
 
-    public GeneratedCallable(LoxClass retType, List<Pair<LoxClass, String>> params, List<Stmt> body, boolean isFinal, boolean isAbstract) {
+    public GeneratedCallable(ClassReference retType, List<Pair<ClassReference, String>> params, List<Stmt> body, boolean isFinal, boolean isAbstract) {
         this.retType = retType;
         this.params = params;
         this.body = body;
@@ -60,11 +60,11 @@ public class GeneratedCallable implements ScriptedCallable {
     }
 
     public static GeneratedCallable load(JsonObject object) {
-        LoxClass retType = ClassLoader.loadClassReference(object, "retType");
+        ClassReference retType = ClassLoader.loadClassReference(object, "retType");
         JsonArray paramData = GsonHelper.getAsJsonArray(object, "params");
 
-        List<Pair<LoxClass, String>> params = paramData.asList().stream().map(JsonElement::getAsJsonObject).map(object1 -> {
-            LoxClass type = ClassLoader.loadClassReference(object1, "type");
+        List<Pair<ClassReference, String>> params = paramData.asList().stream().map(JsonElement::getAsJsonObject).map(object1 -> {
+            ClassReference type = ClassLoader.loadClassReference(object1, "type");
             String argName = GsonHelper.getAsString(object1, "name");
             return Pair.of(type, argName);
         }).toList();
@@ -107,12 +107,12 @@ public class GeneratedCallable implements ScriptedCallable {
     }
 
     @Override
-    public LoxClass type() {
+    public ClassReference type() {
         return retType;
     }
 
     @Override
-    public List<? extends LoxClass> argTypes() {
+    public List<ClassReference> argTypes() {
         return params.stream().map(Pair::left).toList();
     }
 }

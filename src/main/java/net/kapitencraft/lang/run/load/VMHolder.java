@@ -3,6 +3,7 @@ package net.kapitencraft.lang.run.load;
 import com.google.gson.JsonObject;
 import com.google.gson.internal.Streams;
 import com.google.gson.stream.JsonReader;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.*;
 import net.kapitencraft.lang.oop.clazz.generated.GeneratedAnnotation;
 import net.kapitencraft.lang.oop.clazz.generated.GeneratedClass;
@@ -41,11 +42,11 @@ public class VMHolder extends ClassHolder {
 
     @Override
     public LoxClass createSkeleton()  {
-        List<PreviewClass> enclosed = Arrays.stream(children).map(classHolder -> {
-            classHolder.previewClass.apply(classHolder.createSkeleton());
-            return classHolder.previewClass;
+        List<ClassReference> enclosed = Arrays.stream(children).map(classHolder -> {
+            classHolder.reference.setTarget(classHolder.createSkeleton());
+            return classHolder.reference;
         }).toList();
-        PreviewClass[] enclosedClasses = enclosed.toArray(new PreviewClass[0]);
+        ClassReference[] enclosedClasses = enclosed.toArray(new ClassReference[0]);
         if (isInterface())
             return SkeletonInterface.fromCache(data, pck(), enclosedClasses);
         else if ("enum".equals(type))
@@ -58,7 +59,7 @@ public class VMHolder extends ClassHolder {
 
     @Override
     public LoxClass loadClass()  {
-        List<LoxClass> enclosed = Arrays.stream(children).map(ClassHolder::loadClass).toList();
+        List<ClassReference> enclosed = Arrays.stream(children).map(ClassHolder::loadClass).map(ClassReference::of).toList();
         LoxClass target;
         if (isInterface())
             target = GeneratedInterface.load(data, enclosed, pck());
@@ -69,6 +70,7 @@ public class VMHolder extends ClassHolder {
         else
             target = GeneratedClass.load(data, enclosed, pck());
 
-        return this.previewClass.apply(target);
+        this.reference.setTarget(target);
+        return target;
     }
 }

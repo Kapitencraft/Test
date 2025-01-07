@@ -11,30 +11,30 @@ public class GenerateAst {
 
     public static void main(String[] args) throws IOException {
         defineAst("Expr", List.of(
-                "Assign        : Token name; Expr value; Token type; LoxClass executor; Operand operand",
+                "Assign        : Token name; Expr value; Token type; ClassReference executor; Operand operand",
                 "SpecialAssign : Token name; Token assignType",
-                "Binary        : Expr left; Token operator; LoxClass executor; Operand operand; Expr right",
+                "Binary        : Expr left; Token operator; ClassReference executor; Operand operand; Expr right",
                 "When          : Expr condition; Expr ifTrue; Expr ifFalse",
                 "InstCall      : Expr callee; Token name; int methodOrdinal; List<Expr> args",
-                "StaticCall    : LoxClass target; Token name; int methodOrdinal; List<Expr> args",
+                "StaticCall    : ClassReference target; Token name; int methodOrdinal; List<Expr> args",
                 "Get           : Expr object; Token name",
-                "StaticGet     : LoxClass target; Token name",
+                "StaticGet     : ClassReference target; Token name",
                 "ArrayGet      : Expr object; Expr index",
-                "Set           : Expr object; Token name; Expr value; Token assignType; LoxClass executor; Operand operand",
-                "StaticSet     : LoxClass target; Token name; Expr value; Token assignType; LoxClass executor; Operand operand",
-                "ArraySet      : Expr object; Expr index; Expr value; Token assignType; LoxClass executor; Operand operand",
+                "Set           : Expr object; Token name; Expr value; Token assignType; ClassReference executor; Operand operand",
+                "StaticSet     : ClassReference target; Token name; Expr value; Token assignType; ClassReference executor; Operand operand",
+                "ArraySet      : Expr object; Expr index; Expr value; Token assignType; ClassReference executor; Operand operand",
                 "SpecialSet    : Expr callee; Token name; Token assignType",
-                "StaticSpecial : LoxClass target; Token name; Token assignType",
+                "StaticSpecial : ClassReference target; Token name; Token assignType",
                 "ArraySpecial  : Expr object; Expr index; Token assignType",
                 "Switch        : Expr provider; Map<Object,Expr> params; Expr defaulted; Token keyword",
-                "CastCheck     : Expr object; LoxClass targetType; Token patternVarName",
+                "CastCheck     : Expr object; ClassReference targetType; Token patternVarName",
                 "Grouping      : Expr expression",
                 //"Lambda   : List<Token> params, Stmt body",
                 "Literal       : LiteralHolder holder",
                 "Logical       : Expr left; Token operator; Expr right",
                 "Unary         : Token operator; Expr right",
                 "VarRef        : Token name",
-                "Constructor   : Token keyword; LoxClass target; List<Expr> params; int ordinal"
+                "Constructor   : Token keyword; ClassReference target; List<Expr> params; int ordinal"
         ), List.of(
                 "net.kapitencraft.lang.run.algebra.Operand",
                 "java.util.Map",
@@ -47,12 +47,12 @@ public class GenerateAst {
                 "If               : Expr condition; Stmt thenBranch; Stmt elseBranch; List<Pair<Expr,Stmt>> elifs; Token keyword",
                 "Return           : Token keyword; Expr value",
                 "Throw            : Token keyword; Expr value",
-                "VarDecl          : Token name; LoxClass type; Expr initializer; boolean isFinal",
+                "VarDecl          : Token name; ClassReference type; Expr initializer; boolean isFinal",
                 "While            : Expr condition; Stmt body; Token keyword",
                 "For              : Stmt init; Expr condition; Expr increment; Stmt body; Token keyword",
-                "ForEach          : LoxClass type; Token name; Expr initializer; Stmt body",
+                "ForEach          : ClassReference type; Token name; Expr initializer; Stmt body",
                 "LoopInterruption : Token type",
-                "Try              : Block body; List<Pair<Pair<List<LoxClass>,Token>,Block>> catches; Block finale"
+                "Try              : Block body; List<Pair<Pair<List<ClassReference>,Token>,Block>> catches; Block finale"
         ), List.of(
                 "net.kapitencraft.tool.Pair"
         ));
@@ -71,7 +71,7 @@ public class GenerateAst {
         writer.println();
         writer.println("import java.util.List;");
         writer.println("import net.kapitencraft.lang.holder.token.Token;");
-        writer.println("import net.kapitencraft.lang.oop.clazz.LoxClass;");
+        writer.println("import net.kapitencraft.lang.holder.class_ref.ClassReference;");
         for (String s : imports) {
             writer.print("import ");
             writer.print(s);

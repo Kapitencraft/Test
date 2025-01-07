@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.run;
 
-import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.func.NativeMethodImpl;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.RegistryClassReference;
 import net.kapitencraft.lang.natives.scripted.lang.*;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.natives.scripted.lang.IndexOutOfBoundsException;
@@ -9,25 +9,16 @@ import net.kapitencraft.lang.natives.scripted.lang.SystemClass;
 import net.kapitencraft.lang.natives.scripted.lang.annotation.OverrideAnnotation;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.Package;
-import net.kapitencraft.lang.oop.clazz.PreviewClass;
-import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
-import net.kapitencraft.lang.oop.clazz.ReflectiveClass;
 import net.kapitencraft.lang.oop.clazz.primitive.*;
-import net.kapitencraft.lang.run.natives.NativeClass;
-import net.kapitencraft.lang.run.natives.NativeMethod;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 public class VarTypeManager {
-    private static final List<ClassData<?>> data = new ArrayList<>();
+    private static final List<RegistryClassReference> data = new ArrayList<>();
     private static final Package root = new Package("");
     private static final Package langRoot = getOrCreatePackage("scripted.lang");
-    private static final Map<Class<?>, LoxClass> classLookup = new HashMap<>();
-    public static final ReflectiveLoader reflectiveLoader = new ReflectiveLoader();
 
     public static final LoxClass NUMBER = new NumberClass();
     public static final LoxClass INTEGER = new IntegerClass();
@@ -37,91 +28,52 @@ public class VarTypeManager {
     public static final LoxClass CHAR = new CharacterClass();
     public static final LoxClass VOID = new VoidClass();
 
-    public static final Supplier<LoxClass> OBJECT = registerMain(ObjectClass::new, "Object");
+    public static final ClassReference OBJECT = registerMain(ObjectClass::new, "Object");
 
-    public static final Supplier<LoxClass> ENUM = registerMain(EnumClass::new, "Enum");
+    public static final ClassReference ENUM = registerMain(EnumClass::new, "Enum");
 
-    public static final Supplier<LoxClass> STRING = registerMain(StringClass::new, "String", String.class);
+    public static final ClassReference STRING = registerMain(StringClass::new, "String", String.class);
 
-    public static final Supplier<LoxClass> THROWABLE = registerMain(() -> new ThrowableClass("Throwable", "scripted.lang", null), "Throwable");
-    public static final Supplier<LoxClass> STACK_OVERFLOW_EXCEPTION = registerMain(StackOverflowExceptionClass::new, "StackOverflowException");
-    public static final Supplier<LoxClass> MISSING_VAR_EXCEPTION = registerMain(MissingVarExceptionClass::new, "MissingVarException");
-    public static final Supplier<LoxClass> ARITHMETIC_EXCEPTION = registerMain(ArithmeticExceptionClass::new, "ArithmeticException");
-    public static final Supplier<LoxClass> FUNCTION_CALL_ERROR = registerMain(FunctionCallErrorClass::new, "FunctionCallError");
-    public static final Supplier<LoxClass> INDEX_OUT_OF_BOUNDS_EXCEPTION = registerMain(IndexOutOfBoundsException::new, "IndexOutOfBoundsException");
+    public static final ClassReference THROWABLE = registerMain(() -> new ThrowableClass("Throwable", "scripted.lang"), "Throwable");
+    public static final ClassReference STACK_OVERFLOW_EXCEPTION = registerMain(StackOverflowExceptionClass::new, "StackOverflowException");
+    public static final ClassReference MISSING_VAR_EXCEPTION = registerMain(MissingVarExceptionClass::new, "MissingVarException");
+    public static final ClassReference ARITHMETIC_EXCEPTION = registerMain(ArithmeticExceptionClass::new, "ArithmeticException");
+    public static final ClassReference FUNCTION_CALL_ERROR = registerMain(FunctionCallErrorClass::new, "FunctionCallError");
+    public static final ClassReference INDEX_OUT_OF_BOUNDS_EXCEPTION = registerMain(IndexOutOfBoundsException::new, "IndexOutOfBoundsException");
 
-    public static final Supplier<LoxClass> SYSTEM = registerMain(SystemClass::new, "System");
-    public static final Supplier<LoxClass> MATH = registerMain(MathClass::new, "Math");
+    public static final ClassReference SYSTEM = registerMain(SystemClass::new, "System");
+    public static final ClassReference MATH = registerMain(MathClass::new, "Math");
 
-    public static final Supplier<LoxClass> OVERRIDE = registerMain(OverrideAnnotation::new, "Override");
+    public static final ClassReference OVERRIDE = registerMain(OverrideAnnotation::new, "Override");
 
     static {
         loadClasses();
     }
 
     private static void loadClasses() {
-        data.forEach(ClassData::create);
+        data.forEach(RegistryClassReference::create);
     }
 
-    private static final class ClassData<T extends LoxClass> implements Supplier<LoxClass> {
-        private final Package pck;
-        private final Supplier<T> sup;
-        private final Class<?> target;
-        private final PreviewClass preview;
-        private LoxClass value;
-
-        private ClassData(Package pck, Supplier<T> sup, Class<?> target, PreviewClass preview) {
-            this.pck = pck;
-            this.sup = sup;
-            this.target = target;
-            this.preview = preview;
-            this.value = preview;
-        }
-
-            public void create() {
-                LoxClass val = sup.get(); //bruh
-                this.value = val;
-                preview.apply(val);
-                pck.addClass(val.name(), val);
-            }
-
-            @Override
-            public LoxClass get() {
-                return this.value;
-            }
-
-        @Override
-        public String toString() {
-            return "ClassData[" +
-                    "pck=" + pck + ", " +
-                    "sup=" + sup + ", " +
-                    "target=" + target + ", " +
-                    "preview=" + preview + ']';
-        }
-
-        }
-
-    public static <T extends LoxClass> Supplier<LoxClass> register(Package pck, String name, Supplier<T> sup, Class<?> target) {
-        PreviewClass preview = new PreviewClass(name, false);
-        ClassData<T> targetData = new ClassData<>(pck, sup, target, preview);
-        data.add(targetData);
-        pck.addClass(name, preview);
-        return targetData;
+    public static ClassReference register(Package pck, String name, Supplier<LoxClass> sup, Class<?> target) {
+        RegistryClassReference classReference = new RegistryClassReference(name, sup);
+        data.add(classReference);
+        pck.addClass(name, classReference);
+        return classReference;
     }
 
-    public static <T extends LoxClass> Supplier<LoxClass> register(Package pck, String name, Supplier<T> sup) {
+    public static ClassReference register(Package pck, String name, Supplier<LoxClass> sup) {
         return register(pck, name, sup, null);
     }
 
-    private static <T extends LoxClass> Supplier<LoxClass> registerMain(Supplier<T> sup, String name) {
+    private static ClassReference registerMain(Supplier<LoxClass> sup, String name) {
         return register(langRoot, name, sup);
     }
 
-    private static <T extends LoxClass> Supplier<LoxClass> registerMain(Supplier<T> sup, String name, Class<?> target) {
+    private static ClassReference registerMain(Supplier<LoxClass> sup, String name, Class<?> target) {
         return register(langRoot, name, sup, target);
     }
 
-    public static LoxClass getClassForName(String type) {
+    public static ClassReference getClassForName(String type) {
         int arrayCount = 0;
         while (type.charAt(type.length() - 1 - arrayCount * 2) == '[') arrayCount++;
         type = type.substring(0, type.length() - arrayCount * 2);
@@ -131,11 +83,11 @@ public class VarTypeManager {
             String name = packages[i];
             if (i == packages.length - 1) {
                 String[] subClasses = name.split("\\$");
-                LoxClass loxClass = pg.getClass(subClasses[0].replace("[]", ""));
-                if (loxClass == null) return null;
+                ClassReference loxClass = pg.getClass(subClasses[0].replace("[]", ""));
+                if (loxClass == null) return null; //TODO fix enclosed classes not working exposed
                 for (int j = 1; j < subClasses.length; j++) {
-                    if (!loxClass.hasEnclosing(subClasses[j])) return null;
-                    loxClass = loxClass.getEnclosing(subClasses[j]);
+                    if (!loxClass.get().hasEnclosing(subClasses[j])) return null;
+                    loxClass = loxClass.get().getEnclosing(subClasses[j]);
                 }
                 for (; arrayCount > 0; arrayCount--) {
                     loxClass = loxClass.array();
@@ -181,7 +133,7 @@ public class VarTypeManager {
         return p;
     }
 
-    public static LoxClass getClass(List<Token> s, BiConsumer<Token, String> error) {
+    public static ClassReference getClass(List<Token> s, BiConsumer<Token, String> error) {
         Package pg = rootPackage();
         for (int i = 0; i < s.size(); i++) {
             Token token = s.get(i);
@@ -201,44 +153,5 @@ public class VarTypeManager {
             }
         }
         return null;
-    }
-
-    public static LoxClass lookupClass(Class<?> aClass) {
-        if (!classLookup.containsKey(aClass)) throw new RuntimeException("class not registered");
-        return classLookup.get(aClass);
-    }
-
-    public static <T> ReflectiveClass<? super T> createOrGetLookup(Class<? super T> superclass) {
-        if (!classLookup.containsKey(superclass)) {
-            ReflectiveClass<? super T> loaded = new ReflectiveClass<>(superclass);
-            classLookup.put(superclass, loaded);
-        }
-        return (ReflectiveClass<? super T>) classLookup.get(superclass);
-    }
-
-    public static void createNativeClass(Class<?> clazz) {
-        //TODO complete
-
-        if (clazz.isAnnotationPresent(NativeClass.class)) {
-            NativeClass nativeClass = clazz.getAnnotation(NativeClass.class);
-            String pck = nativeClass.pck();
-            String name = nativeClass.name();
-            List<NativeMethodImpl> list = new ArrayList<>();
-            for (Method declaredMethod : clazz.getDeclaredMethods()) {
-                if (declaredMethod.isAnnotationPresent(NativeMethod.class)) {
-                    NativeMethodImpl impl = new NativeMethodImpl(
-                            Arrays.stream(declaredMethod.getParameterTypes()).map(VarTypeManager::lookupClass).toList(),
-                            lookupClass(declaredMethod.getReturnType()),
-                            Modifier.isFinal(declaredMethod.getModifiers()),
-                            Modifier.isAbstract(declaredMethod.getModifiers())
-                    ) {
-                        @Override
-                        public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                            return null;
-                        }
-                    };
-                }
-            }
-        } else System.err.printf("can not create native class for '%s': class not annotated with 'NativeClass'", clazz.getCanonicalName());
     }
 }

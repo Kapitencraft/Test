@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.oop.clazz.primitive;
 
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -13,9 +14,9 @@ public class NumberClass extends PrimitiveClass {
     }
 
     @Override
-    public LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
-        if (other.isChildOf(VarTypeManager.NUMBER)) {
-            return type.isComparator() ? VarTypeManager.BOOLEAN : other;
+    public LoxClass checkOperation(OperationType type, Operand operand, ClassReference other) {
+        if (other.get().isChildOf(VarTypeManager.NUMBER)) {
+            return type.isComparator() ? VarTypeManager.BOOLEAN : other.get();
         }
         return VarTypeManager.VOID;
     }

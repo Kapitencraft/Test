@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.VarTypeParser;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -24,7 +25,7 @@ public class StmtParser extends ExprParser {
         super(errorLogger);
     }
 
-    private LoxClass funcRetType = VarTypeManager.VOID;
+    private ClassReference funcRetType = ClassReference.of(VarTypeManager.VOID);
     private final Stack<Boolean> seenReturn = new Stack<>();
     private int loopIndex = 0;
 
@@ -56,7 +57,7 @@ public class StmtParser extends ExprParser {
             if (match(FINAL)) return varDeclaration(true, consumeVarType());
             if (match(IDENTIFIER)) {
                 Token id = previous();
-                LoxClass loxClass = parser.getClass(id.lexeme());
+                ClassReference loxClass = parser.getClass(id.lexeme());
                 if (loxClass != null && !check(DOT)) return varDeclaration(false, loxClass);
                 current--; //jump back if it isn't a var decl
             }
@@ -68,7 +69,7 @@ public class StmtParser extends ExprParser {
         }
     }
 
-    private Stmt.VarDecl varDecl(boolean isFinal, LoxClass type, Token name) {
+    private Stmt.VarDecl varDecl(boolean isFinal, ClassReference type, Token name) {
 
         Expr initializer = null;
         if (match(ASSIGN)) {
@@ -85,7 +86,7 @@ public class StmtParser extends ExprParser {
         return new Stmt.VarDecl(name, type, initializer, isFinal);
     }
 
-    private Stmt varDeclaration(boolean isFinal, LoxClass type) {
+    private Stmt varDeclaration(boolean isFinal, ClassReference type) {
         Token name = consume(IDENTIFIER, "Expected variable name.");
         return varDecl(isFinal, type, name);
     }
@@ -101,7 +102,7 @@ public class StmtParser extends ExprParser {
             if (match(WHILE)) return whileStatement();
             if (match(C_BRACKET_O)) return new Stmt.Block(block("block"));
             if (check(IDENTIFIER)) {
-                Optional<LoxClass> type = tryConsumeVarType();
+                Optional<ClassReference> type = tryConsumeVarType();
                 if (type.isPresent()) {
                     return varDeclaration(false, type.get());
                 }
@@ -119,9 +120,9 @@ public class StmtParser extends ExprParser {
         Stmt.Block tryBlock = new Stmt.Block(block("try statement"));
         Token brClose = previous();
 
-        List<Pair<Pair<List<LoxClass>,Token>, Stmt.Block>> catches = new ArrayList<>(); //what an insane varType
+        List<Pair<Pair<List<ClassReference>,Token>, Stmt.Block>> catches = new ArrayList<>(); //what an insane varType
         while (match(CATCH)) {
-            List<LoxClass> targets = new ArrayList<>();
+            List<ClassReference> targets = new ArrayList<>();
             consumeBracketOpen("catch");
             do {
                 targets.add(consumeVarType());
@@ -129,7 +130,7 @@ public class StmtParser extends ExprParser {
             pushScope();
             Token name = consumeIdentifier();
             consumeBracketClose("catch");
-            createVar(name, VarTypeManager.THROWABLE.get(), true, false);
+            createVar(name, VarTypeManager.THROWABLE, true, false);
             consumeCurlyOpen("catch statement");
             Stmt.Block block = new Stmt.Block(block("catch statement"));
             popScope();
@@ -151,9 +152,9 @@ public class StmtParser extends ExprParser {
 
     private Stmt thrStatement() {
         Token keyword = previous();
-        expectType(VarTypeManager.THROWABLE.get());
+        expectType(VarTypeManager.THROWABLE);
         Expr val = expression();
-        expectType(val, VarTypeManager.THROWABLE.get());
+        expectType(val, VarTypeManager.THROWABLE);
         consumeEndOfArg();
         popExpectation();
         seenReturn();
@@ -191,13 +192,13 @@ public class StmtParser extends ExprParser {
         pushScope();
         loopIndex++;
 
-        Optional<LoxClass> type = tryConsumeVarType();
+        Optional<ClassReference> type = tryConsumeVarType();
 
         Stmt initializer;
         if (type.isPresent()) {
             Token name = consumeIdentifier();
             if (match(COLON)) {
-                LoxClass arrayType = type.get().array();
+                ClassReference arrayType = type.get().array();
                 expectType(arrayType);
                 Expr init = expression();
                 popExpectation();
@@ -304,18 +305,26 @@ public class StmtParser extends ExprParser {
         return stmts;
     }
 
-    public void applyMethod(List<Pair<LoxClass, String>> params, LoxClass targetClass, LoxClass superclass, LoxClass funcRetType) {
+    public void applyMethod(List<Pair<ClassReference, String>> params, ClassReference targetClass, ClassReference superclass, ClassReference funcRetType) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (targetClass != null) this.varAnalyser.add("this", targetClass, true, true);
         if (superclass != null) this.varAnalyser.add("super", superclass, true, true);
-        for (Pair<LoxClass, String> param : params) {
+        for (Pair<ClassReference, String> param : params) {
             varAnalyser.add(param.right(), param.left(), true, false);
         }
     }
 
     public void popMethod() {
         this.popScope();
-        funcRetType = VarTypeManager.VOID;
+        funcRetType = VarTypeManager.VOID.reference();
+    }
+
+    public void applyStaticMethod(List<Pair<ClassReference, String>> params, ClassReference funcRetType) {
+        this.pushScope();
+        this.funcRetType = funcRetType;
+        for (Pair<ClassReference, String> param : params) {
+            varAnalyser.add(param.right(), param.left(), true, false);
+        }
     }
 }

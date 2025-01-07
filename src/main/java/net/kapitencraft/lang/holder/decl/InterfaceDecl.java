@@ -6,12 +6,12 @@ import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.compiler.parser.ExprParser;
 import net.kapitencraft.lang.compiler.parser.SkeletonParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.baked.BakedInterface;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonInterface;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
@@ -23,7 +23,7 @@ import java.util.*;
 
 public record InterfaceDecl(
         VarTypeParser parser, Compiler.ErrorLogger logger,
-        PreviewClass target, Token name, String pck, LoxClass[] parentInterfaces,
+        ClassReference target, Token name, String pck, ClassReference[] parentInterfaces,
         SkeletonParser.MethodDecl[] methods, SkeletonParser.FieldDecl[] fields,
         SkeletonParser.ClassConstructor<?>[] enclosed,
         SkeletonParser.AnnotationObj[] annotations
@@ -85,10 +85,10 @@ public record InterfaceDecl(
         }
 
         //enclosed classes
-        ImmutableMap.Builder<String, PreviewClass> enclosed = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
         for (SkeletonParser.ClassConstructor<?> enclosedDecl : this.enclosed()) {
             LoxClass generated = enclosedDecl.createSkeleton();
-            enclosedDecl.target().apply(generated);
+            enclosedDecl.target().setTarget(generated);
             enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
         }
 

@@ -2,7 +2,7 @@ package net.kapitencraft.lang.holder.ast;
 
 import java.util.List;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.tool.Pair;
 
 public abstract class Stmt {
@@ -100,11 +100,11 @@ public abstract class Stmt {
 
     public static class VarDecl extends Stmt {
         public final Token name;
-        public final LoxClass type;
+        public final ClassReference type;
         public final Expr initializer;
         public final boolean isFinal;
 
-        public VarDecl(Token name, LoxClass type, Expr initializer, boolean isFinal) {
+        public VarDecl(Token name, ClassReference type, Expr initializer, boolean isFinal) {
             this.name = name;
             this.type = type;
             this.initializer = initializer;
@@ -156,12 +156,12 @@ public abstract class Stmt {
     }
 
     public static class ForEach extends Stmt {
-        public final LoxClass type;
+        public final ClassReference type;
         public final Token name;
         public final Expr initializer;
         public final Stmt body;
 
-        public ForEach(LoxClass type, Token name, Expr initializer, Stmt body) {
+        public ForEach(ClassReference type, Token name, Expr initializer, Stmt body) {
             this.type = type;
             this.name = name;
             this.initializer = initializer;
@@ -189,10 +189,10 @@ public abstract class Stmt {
 
     public static class Try extends Stmt {
         public final Block body;
-        public final List<Pair<Pair<List<LoxClass>,Token>,Block>> catches;
+        public final List<Pair<Pair<List<ClassReference>,Token>,Block>> catches;
         public final Block finale;
 
-        public Try(Block body, List<Pair<Pair<List<LoxClass>,Token>,Block>> catches, Block finale) {
+        public Try(Block body, List<Pair<Pair<List<ClassReference>,Token>,Block>> catches, Block finale) {
             this.body = body;
             this.catches = catches;
             this.finale = finale;

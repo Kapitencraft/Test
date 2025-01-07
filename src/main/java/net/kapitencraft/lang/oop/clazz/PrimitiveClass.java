@@ -1,10 +1,12 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
-import net.kapitencraft.lang.oop.field.LoxField;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.VarTypeManager;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
@@ -46,7 +48,7 @@ public abstract class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public Map<String, ? extends LoxField> staticFields() {
+    public Map<String, ? extends ScriptedField> staticFields() {
         return Map.of();
     }
 
@@ -66,17 +68,17 @@ public abstract class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public LoxClass superclass() {
-        return superclass;
+    public @Nullable ClassReference superclass() {
+        return superclass == null ? null : superclass.reference();
     }
 
     @Override
-    public LoxClass getFieldType(String name) {
+    public ClassReference getFieldType(String name) {
         return null;
     }
 
     @Override
-    public LoxClass getStaticFieldType(String name) {
+    public ClassReference getStaticFieldType(String name) {
         return null;
     }
 
@@ -86,7 +88,7 @@ public abstract class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public ScriptedCallable getStaticMethod(String name, List<? extends LoxClass> args) {
+    public ScriptedCallable getStaticMethod(String name, List<ClassReference> args) {
         return null;
     }
 
@@ -96,12 +98,12 @@ public abstract class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
         return 0;
     }
 
     @Override
-    public ScriptedCallable getMethod(String name, List<LoxClass> args) {
+    public ScriptedCallable getMethod(String name, List<ClassReference> args) {
         return null;
     }
 
@@ -116,7 +118,7 @@ public abstract class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public Map<String, LoxField> getFields() {
+    public Map<String, ScriptedField> getFields() {
         return Map.of();
     }
 
@@ -146,7 +148,7 @@ public abstract class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<LoxClass> types) {
+    public int getMethodOrdinal(String name, List<ClassReference> types) {
         return -1;
     }
 
@@ -156,7 +158,7 @@ public abstract class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public LoxClass getEnclosing(String name) {
+    public ClassReference getEnclosing(String name) {
         return null;
     }
 
@@ -170,7 +172,12 @@ public abstract class PrimitiveClass implements LoxClass {
     }
 
     @Override
-    public LoxClass[] enclosed() {
-        return new LoxClass[0];
+    public ClassReference[] enclosed() {
+        return new ClassReference[0];
+    }
+
+    @Override
+    public ClassReference[] interfaces() {
+        return new ClassReference[0];
     }
 }

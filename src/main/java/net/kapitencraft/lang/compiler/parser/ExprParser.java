@@ -1,5 +1,10 @@
 package net.kapitencraft.lang.compiler.parser;
 
+import net.kapitencraft.lang.compiler.VarTypeParser;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -10,6 +15,7 @@ import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.tool.Pair;
+import net.kapitencraft.tool.Util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,14 +42,71 @@ public class ExprParser extends AbstractParser {
     }
 
     public Expr literalOrReference() {
-        //TODO add annotation support
+        if (match(AT)) {
+            AbstractAnnotationClass target = parseAnnotationClass();
+            Token errorPoint = previous();
+            if (match(BRACKET_O)) {
+                parseAnnotationProperties(target, errorPoint);
+            }
+        }
         if (match(PRIMITIVE)) {
             return new Expr.Literal(previous().literal());
         }
-        LoxClass target = consumeVarType();
+        ClassReference target = consumeVarType();
         Token name = previous();
 
         return new Expr.StaticGet(target, name);
+    }
+
+    public AnnotationClassInstance parseAnnotation(SkeletonParser.AnnotationObj obj, VarTypeParser varTypeParser) {
+        this.apply(obj.params(), varTypeParser);
+        return parseAnnotationProperties(obj.type(), obj.errorPoint());
+    }
+
+    public AnnotationClassInstance parseAnnotationProperties(AbstractAnnotationClass type, Token errorPoint) {
+        List<String> abstracts = type.getAbstracts();
+        if (isAtEnd()) {
+            if (!abstracts.isEmpty()) {
+                errorMissingProperties(errorPoint, abstracts);
+            }
+            return AnnotationClassInstance.noAbstract(type);
+        }
+        Expr singleProperty;
+        if (!check(IDENTIFIER)) {
+            singleProperty = literalOrReference();
+        } else {
+            advance();
+            if (check(EQUAL)) {
+                current--;
+                Map<String, Expr> properties = new HashMap<>();
+                do {
+                    Token propertyName = consumeIdentifier();
+                    if (properties.containsKey(propertyName.lexeme())) errorLogger.errorF(propertyName, "duplicate annotation property with name %s", propertyName.lexeme());
+                    consume(EQUAL, "'=' expected");
+                    Expr property = literalOrReference();
+                    properties.put(propertyName.lexeme(), property);
+                } while (match(COMMA));
+                List<String> requiredProperties = new ArrayList<>(abstracts);
+                requiredProperties.removeAll(properties.keySet());
+                if (!requiredProperties.isEmpty()) errorMissingProperties(errorPoint, requiredProperties);
+                return AnnotationClassInstance.fromPropertyMap(type, properties);
+            } else {
+                current--;
+                singleProperty = literalOrReference();
+            }
+        }
+        if (abstracts.size() > 1) {
+            ArrayList<String> c = new ArrayList<>(abstracts);
+            c.remove("value");
+            errorMissingProperties(errorPoint, c);
+        } else if (!abstracts.contains("value")) {
+            error(previous(), "can not find annotation method 'value'");
+        }
+        return AnnotationClassInstance.fromSingleProperty(type, singleProperty);
+    }
+
+    private void errorMissingProperties(Token errorPoint, List<String> propertyNames) {
+        error(errorPoint, propertyNames.stream().map(s -> "'" + s + "'").collect(Collectors.joining(", ")) + " missing though required");
     }
 
     private Expr when() {
@@ -53,9 +116,9 @@ public class ExprParser extends AbstractParser {
             Expr ifTrue = expression();
             consume(TokenType.COLON, "':' expected");
             Expr ifFalse = expression();
-            LoxClass ifTrueClass = finder.findRetType(ifTrue);
-            LoxClass ifFalseClass = finder.findRetType(ifFalse);
-            if (!(ifTrueClass.isParentOf(ifFalseClass) || ifFalseClass.isParentOf(ifTrueClass))) error(locFinder.find(ifTrue), "both expressions on when statement must return the same type");
+            ClassReference ifTrueClass = finder.findRetType(ifTrue);
+            ClassReference ifFalseClass = finder.findRetType(ifFalse);
+            if (!(ifTrueClass.get().isParentOf(ifFalseClass.get()) || ifFalseClass.get().isParentOf(ifTrueClass.get()))) error(locFinder.find(ifTrue), "both expressions on when statement must return the same type");
             expr = new Expr.When(expr, ifTrue, ifFalse);
         }
 
@@ -65,7 +128,7 @@ public class ExprParser extends AbstractParser {
     private Expr castCheck() {
         Expr expr = assignment();
         if (match(INSTANCEOF)) {
-            LoxClass loxClass = consumeVarType();
+            ClassReference loxClass = consumeVarType();
             Token patternVar = null;
             if (match(IDENTIFIER)) {
                 patternVar = previous();
@@ -90,24 +153,24 @@ public class ExprParser extends AbstractParser {
                 checkVarExistence(name, assign.type() != TokenType.ASSIGN,
                         false);
                 checkVarType(name, value);
-                Pair<LoxClass, Operand> executor;
+                Pair<ClassReference, Operand> executor;
                 if (assign.type() == TokenType.ASSIGN) {
                     varAnalyser.setHasValue(name.lexeme());
-                    executor = Pair.of(VarTypeManager.VOID, Operand.LEFT);
+                    executor = Pair.of(VarTypeManager.VOID.reference(), Operand.LEFT);
                 } else executor = getExecutor(varAnalyser.getType(name.lexeme()), assign, value);
 
                 return new Expr.Assign(name, value, assign, executor.left(), executor.right());
             } else if (expr instanceof Expr.Get get) {
-                LoxClass target = finder.findRetType(get.object);
-                expectType(get.name, target.getFieldType(get.name.lexeme()), finder.findRetType(value));
+                ClassReference target = finder.findRetType(get.object);
+                expectType(get.name, target.get().getFieldType(get.name.lexeme()), finder.findRetType(value));
 
-                Pair<LoxClass, Operand> executor;
+                Pair<ClassReference, Operand> executor;
                 if (assign.type() != ASSIGN) executor = getExecutor(target, assign, value);
-                else executor = Pair.of(VarTypeManager.VOID, Operand.LEFT);
+                else executor = Pair.of(VarTypeManager.VOID.reference(), Operand.LEFT);
                 return new Expr.Set(get.object, get.name, value, assign, executor.left(), executor.right());
             } else if (expr instanceof Expr.ArrayGet get) {
 
-                Pair<LoxClass, Operand> executor = getExecutor(get, assign, value);
+                Pair<ClassReference, Operand> executor = getExecutor(get, assign, value);
                 return new Expr.ArraySet(get.object, get.index, value, assign, executor.left(), executor.right());
             }
 
@@ -162,29 +225,29 @@ public class ExprParser extends AbstractParser {
         return expr;
     }
 
-    private Pair<LoxClass, Operand> getExecutor(LoxClass left, Token operator, LoxClass right) {
+    private Pair<ClassReference, Operand> getExecutor(ClassReference left, Token operator, ClassReference right) {
         Operand operand = Operand.LEFT;
-        LoxClass executor = left;
+        ClassReference executor = left;
         OperationType type = OperationType.of(operator);
         assert type != null;
-        LoxClass result = left.checkOperation(type, operand, right);
+        LoxClass result = left.get().checkOperation(type, operand, right);
         if (result == VarTypeManager.VOID) {
             operand = Operand.RIGHT;
-            result = right.checkOperation(type, operand, left);
+            result = right.get().checkOperation(type, operand, left);
             executor = right;
         }
         if (result == VarTypeManager.VOID) {
             errorLogger.errorF(operator, "operator '%s' not possible for argument types %s and %s", operator.lexeme(), left.absoluteName(), right.absoluteName());
-            return Pair.of(VarTypeManager.VOID, Operand.LEFT);
+            return Pair.of(ClassReference.of(VarTypeManager.VOID), Operand.LEFT);
         }
         return Pair.of(executor, operand);
     }
 
-    private Pair<LoxClass, Operand> getExecutor(Expr leftArg, Token operator, Expr rightArg) {
+    private Pair<ClassReference, Operand> getExecutor(Expr leftArg, Token operator, Expr rightArg) {
         return getExecutor(finder.findRetType(leftArg), operator, finder.findRetType(rightArg));
     }
 
-    private Pair<LoxClass, Operand> getExecutor(LoxClass left, Token operator, Expr rightArg) {
+    private Pair<ClassReference, Operand> getExecutor(ClassReference left, Token operator, Expr rightArg) {
         return getExecutor(left, operator, finder.findRetType(rightArg));
     }
 
@@ -194,7 +257,7 @@ public class ExprParser extends AbstractParser {
         while (match(EQUALITY)) {
             Token operator = previous();
             Expr right = comparison();
-            Pair<LoxClass, Operand> executorInfo = getExecutor(expr, operator, right);
+            Pair<ClassReference, Operand> executorInfo = getExecutor(expr, operator, right);
             expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
         }
 
@@ -207,7 +270,7 @@ public class ExprParser extends AbstractParser {
         while (match(COMPARATORS)) {
             Token operator = previous();
             Expr right = term();
-            Pair<LoxClass, Operand> executorInfo = getExecutor(expr, operator, right);
+            Pair<ClassReference, Operand> executorInfo = getExecutor(expr, operator, right);
             expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
         }
 
@@ -221,7 +284,7 @@ public class ExprParser extends AbstractParser {
             Token operator = previous();
             Expr right = factor();
 
-            Pair<LoxClass, Operand> executorInfo = getExecutor(expr, operator, right);
+            Pair<ClassReference, Operand> executorInfo = getExecutor(expr, operator, right);
             expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
         }
 
@@ -234,7 +297,7 @@ public class ExprParser extends AbstractParser {
         while (match(DIV, MUL, MOD, POW)) {
             Token operator = previous();
             Expr right = unary();
-            Pair<LoxClass, Operand> executorInfo = getExecutor(expr, operator, right);
+            Pair<ClassReference, Operand> executorInfo = getExecutor(expr, operator, right);
             expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
         }
 
@@ -246,7 +309,7 @@ public class ExprParser extends AbstractParser {
             Token operator = previous();
             Expr right = unary();
             if (operator.type() == NOT) expectCondition(right);
-            else expectType(right, VarTypeManager.NUMBER);
+            else expectType(right, VarTypeManager.NUMBER.reference());
             return new Expr.Unary(operator, right);
         }
 
@@ -257,7 +320,7 @@ public class ExprParser extends AbstractParser {
         Token keyword = previous();
         consumeBracketOpen("switch");
 
-        expectType(VarTypeManager.ENUM.get(), VarTypeManager.STRING.get(), VarTypeManager.INTEGER, VarTypeManager.DOUBLE, VarTypeManager.FLOAT, VarTypeManager.CHAR);
+        expectType(VarTypeManager.ENUM, VarTypeManager.STRING, VarTypeManager.INTEGER.reference(), VarTypeManager.DOUBLE.reference(), VarTypeManager.FLOAT.reference(), VarTypeManager.CHAR.reference());
         Expr provider = expression();
         popExpectation();
 
@@ -292,16 +355,16 @@ public class ExprParser extends AbstractParser {
     private Expr finishInstCall(Expr.Get get) {
         List<Expr> arguments = args();
 
-        List<LoxClass> givenTypes = arguments.stream().map(this.finder::findRetType).toList();
-        LoxClass targetClass = this.finder.findRetType(get.object);
+        List<ClassReference> givenTypes = arguments.stream().map(this.finder::findRetType).toList();
+        ClassReference targetClass = this.finder.findRetType(get.object);
 
-        int ordinal = targetClass.getMethodOrdinal(get.name.lexeme(), givenTypes);
+        int ordinal = targetClass.get().getMethodOrdinal(get.name.lexeme(), givenTypes);
         if (ordinal == -1) {
             error(get.name, "unknown symbol");
             consumeBracketClose("arguments");
             return new Expr.InstCall(get.object, get.name, ordinal, arguments);
         }
-        ScriptedCallable callable = targetClass.getMethodByOrdinal(get.name.lexeme(), ordinal);
+        ScriptedCallable callable = targetClass.get().getMethodByOrdinal(get.name.lexeme(), ordinal);
 
         checkArguments(arguments, callable, get.name);
 
@@ -311,7 +374,7 @@ public class ExprParser extends AbstractParser {
     }
 
     private Expr statics() {
-        LoxClass target = consumeVarType();
+        ClassReference target = consumeVarType();
         Token name = previous();
         if (check(BRACKET_O)) return staticCall(target, name);
         if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
@@ -319,19 +382,19 @@ public class ExprParser extends AbstractParser {
         return new Expr.StaticGet(target, name);
     }
 
-    private Expr staticCall(LoxClass target, Token name) {
+    private Expr staticCall(ClassReference target, Token name) {
         consumeBracketOpen("static call");
         List<Expr> args = args();
 
 
-        int ordinal = target.getStaticMethodOrdinal(name.lexeme(), argTypes(args));
+        int ordinal = target.get().getStaticMethodOrdinal(name.lexeme(), argTypes(args));
         if (ordinal == -1) {
             error(name, "unknown symbol");
             consumeBracketClose("static call");
             return new Expr.StaticCall(target, name, ordinal, args);
         }
 
-        ScriptedCallable callable = target.getStaticMethodByOrdinal(name.lexeme(), ordinal);
+        ScriptedCallable callable = target.get().getStaticMethodByOrdinal(name.lexeme(), ordinal);
         checkArguments(args, callable, name);
 
         consumeBracketClose("static call");
@@ -339,14 +402,14 @@ public class ExprParser extends AbstractParser {
         return new Expr.StaticCall(target, name, ordinal, args);
     }
 
-    private Expr staticAssign(LoxClass target, Token name) {
+    private Expr staticAssign(ClassReference target, Token name) {
         Token type = previous();
         Expr value = expression();
-        Pair<LoxClass, Operand> executor = getExecutor(target.getStaticFieldType(name.lexeme()), type, value);
+        Pair<ClassReference, Operand> executor = getExecutor(target.get().getStaticFieldType(name.lexeme()), type, value);
         return new Expr.StaticSet(target, name, value, type, executor.left(), executor.right());
     }
 
-    private Expr staticSpecialAssign(LoxClass target, Token name) {
+    private Expr staticSpecialAssign(ClassReference target, Token name) {
         return new Expr.StaticSpecial(target, name, previous());
     }
 
@@ -362,7 +425,7 @@ public class ExprParser extends AbstractParser {
         return arguments;
     }
 
-    public List<? extends LoxClass> argTypes(List<Expr> args) {
+    public List<ClassReference> argTypes(List<Expr> args) {
         return args.stream().map(this.finder::findRetType).toList();
     }
 
@@ -375,14 +438,14 @@ public class ExprParser extends AbstractParser {
                 Token bracketO = previous();
                 Expr index = expression();
                 consume(S_BRACKET_C, "']' expected");
-                if (!finder.findRetType(expr).isArray()) error(bracketO, "array type expected");
+                if (!finder.findRetType(expr).get().isArray()) error(bracketO, "array type expected");
                 expr = new Expr.ArrayGet(expr, index);
             } else if (match(BRACKET_O)) {
                 if (expr instanceof Expr.Get get) expr = finishInstCall(get);
                 else error(locFinder.find(expr), "obj expected");
             } else if (match(DOT)) {
                 Token name = consume(IDENTIFIER, "Expect property name after '.'");
-                LoxClass targetType = finder.findRetType(expr);
+                LoxClass targetType = finder.findRetType(expr).get();
                 if (!check(BRACKET_O)) { //ensure not to check for field if it's a method
                     if (!targetType.hasField(name.lexeme())) error(name, "unknown symbol");
                 } else
@@ -397,13 +460,13 @@ public class ExprParser extends AbstractParser {
     }
 
     public void checkArguments(List<Expr> args, ScriptedCallable target, Token loc) {
-        List<? extends LoxClass> expectedTypes = target.argTypes();
-        List<? extends LoxClass> givenTypes = argTypes(args);
+        List<ClassReference> expectedTypes = target.argTypes();
+        List<ClassReference> givenTypes = argTypes(args);
         if (expectedTypes.size() != givenTypes.size()) {
             errorLogger.errorF(loc, "constructor for %s cannot be applied to given types;", loc.lexeme());
 
-            errorLogger.logError("required: " + expectedTypes.stream().map(LoxClass::name).collect(Collectors.joining(",")));
-            errorLogger.logError("found:    " + givenTypes.stream().map(LoxClass::name).collect(Collectors.joining(",")));
+            errorLogger.logError("required: " + Util.getDescriptor(expectedTypes));
+            errorLogger.logError("found:    " + Util.getDescriptor(givenTypes));
             errorLogger.logError("reason: actual and formal argument lists differ in length");
         } else {
             for (int i = 0; i < givenTypes.size(); i++) {
@@ -427,13 +490,14 @@ public class ExprParser extends AbstractParser {
 
     private Expr primary() {
         if (match(NEW)) {
-            LoxClass loxClass = consumeVarType();
+            ClassReference loxClass = consumeVarType();
             Token loc = previous();
             consumeBracketOpen("constructors");
             List<Expr> args = args();
             consumeBracketClose("constructors");
-            int ordinal = loxClass.getConstructor().getMethodOrdinal(argTypes(args));
-            ScriptedCallable callable = loxClass.getConstructor().getMethodByOrdinal(ordinal);
+            MethodContainer constructorContainer = loxClass.get().getConstructor();
+            int ordinal = constructorContainer.getMethodOrdinal(argTypes(args));
+            ScriptedCallable callable = constructorContainer.getMethodByOrdinal(ordinal);
 
             checkArguments(args, callable, loc);
 

@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler;
 
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
@@ -11,10 +12,7 @@ import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -80,12 +78,12 @@ public class MethodLookup {
         });
     }
 
-    public static MethodLookup createFromClass(LoxClass loxClass, LoxClass... interfaces) {
+    public static MethodLookup createFromClass(LoxClass loxClass, ClassReference... interfaces) {
         List<LoxClass> parentMap = createParentMap(loxClass);
         List<LoxClass> allParents = new ArrayList<>();
-        for (LoxClass i : interfaces) {
-            addInterfaces(i, allParents::add);
-            allParents.add(i);
+        for (ClassReference i : interfaces) {
+            addInterfaces(i.get(), allParents::add);
+            allParents.add(i.get());
         }
         for (LoxClass parent : parentMap) {
             addInterfaces(parent, allParents::add);
@@ -96,18 +94,21 @@ public class MethodLookup {
     }
 
     private static void addInterfaces(LoxClass target, Consumer<LoxClass> sink) {
-        if (target.interfaces() != null) for (LoxClass anInterface : target.interfaces()) {
-            addInterfaces(anInterface, sink);
-            sink.accept(anInterface);
+        if (target.interfaces() != null) for (ClassReference anInterface : target.interfaces()) {
+            addInterfaces(anInterface.get(), sink);
+            sink.accept(anInterface.get());
         }
     }
 
     private static List<LoxClass> createParentMap(LoxClass loxClass) {
+        Objects.requireNonNull(loxClass, "Can not create parent map for null class!");
         List<LoxClass> parents = new ArrayList<>();
-        do {
-            parents.add(loxClass);
-            loxClass = loxClass.superclass();
-        } while (loxClass != null);
+        if (loxClass.superclass() != null) {
+            do {
+                parents.add(loxClass);
+                loxClass = loxClass.superclass().get();
+            } while (loxClass != null && loxClass.superclass() != null);
+        }
         return Util.invert(parents);
     }
 
@@ -137,7 +138,7 @@ public class MethodLookup {
         return new GeneratedMethodMap(ImmutableMap.copyOf(map));
     }
 
-    public int getMethodOrdinal(String name, List<? extends LoxClass> args) {
+    public int getMethodOrdinal(String name, List<ClassReference> args) {
         return exposed.getMethodOrdinal(name, args);
     }
 

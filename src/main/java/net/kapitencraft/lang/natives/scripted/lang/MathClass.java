@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.natives.scripted.lang;
 
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.func.NativeMethodImpl;
+import net.kapitencraft.lang.run.natives.impl.NativeMethodImpl;
 import net.kapitencraft.lang.oop.clazz.wrapper.NativeUtilClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.Interpreter;
@@ -13,19 +13,19 @@ import java.util.Map;
 public class MathClass extends NativeUtilClass {
     private static final Map<String, DataMethodContainer> METHODS = Map.of(
             "abs", DataMethodContainer.of(
-                    new NativeMethodImpl(List.of(VarTypeManager.INTEGER), VarTypeManager.INTEGER, true, false) {
+                    new NativeMethodImpl(List.of(VarTypeManager.INTEGER.reference()), VarTypeManager.INTEGER.reference(), true, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                             return Math.abs((Integer) arguments.get(0));
                         }
                     },
-                    new NativeMethodImpl(List.of(VarTypeManager.FLOAT), VarTypeManager.FLOAT, true, false) {
+                    new NativeMethodImpl(List.of(VarTypeManager.FLOAT.reference()), VarTypeManager.FLOAT.reference(), true, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                             return Math.abs((Float) arguments.get(0));
                         }
                     },
-                    new NativeMethodImpl(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE, true, false) {
+                    new NativeMethodImpl(List.of(VarTypeManager.DOUBLE.reference()), VarTypeManager.DOUBLE.reference(), true, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                             return Math.abs((Double) arguments.get(0));
@@ -33,7 +33,7 @@ public class MathClass extends NativeUtilClass {
                     }
             ),
             "sqrt", DataMethodContainer.of(
-                    new NativeMethodImpl(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE, true, false) {
+                    new NativeMethodImpl(List.of(VarTypeManager.DOUBLE.reference()), VarTypeManager.DOUBLE.reference(), true, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                             return Math.sqrt((Double) arguments.get(0));
@@ -41,7 +41,7 @@ public class MathClass extends NativeUtilClass {
                     }
             ),
             "log", DataMethodContainer.of(
-                    new NativeMethodImpl(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE, true, false) {
+                    new NativeMethodImpl(List.of(VarTypeManager.DOUBLE.reference()), VarTypeManager.DOUBLE.reference(), true, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                             return Math.log((Double) arguments.get(0));
@@ -49,7 +49,7 @@ public class MathClass extends NativeUtilClass {
                     }
             ),
             "log10", DataMethodContainer.of(
-                    new NativeMethodImpl(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE, true, false) {
+                    new NativeMethodImpl(List.of(VarTypeManager.DOUBLE.reference()), VarTypeManager.DOUBLE.reference(), true, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                             return Math.log10((Double) arguments.get(0));
@@ -57,7 +57,7 @@ public class MathClass extends NativeUtilClass {
                     }
             ),
             "sin", DataMethodContainer.of(
-                    new NativeMethodImpl(List.of(VarTypeManager.DOUBLE), VarTypeManager.DOUBLE, true, false) {
+                    new NativeMethodImpl(List.of(VarTypeManager.DOUBLE.reference()), VarTypeManager.DOUBLE.reference(), true, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                             return Math.sin((Double) arguments.get(0));

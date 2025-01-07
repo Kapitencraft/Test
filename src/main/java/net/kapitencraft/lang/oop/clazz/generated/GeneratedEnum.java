@@ -7,22 +7,23 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.EnumClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
 import net.kapitencraft.lang.oop.field.GeneratedField;
-import net.kapitencraft.lang.oop.field.LoxField;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Util;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
@@ -43,13 +44,13 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     private final Map<String, GeneratedEnumConstant> enumConstants;
     private final Map<String, GeneratedField> allStaticFields;
 
-    private final Map<String, LoxClass> enclosing;
+    private final Map<String, ClassReference> enclosing;
 
-    private final LoxClass[] implemented;
+    private final ClassReference[] implemented;
     private final String name;
     private final String packageRepresentation;
 
-    public GeneratedEnum(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor, Map<String, GeneratedField> allFields, Map<String, GeneratedEnumConstant> enumConstants, Map<String, GeneratedField> allStaticFields, Map<String, LoxClass> enclosing, LoxClass[] implemented, String name, String packageRepresentation) {
+    public GeneratedEnum(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor, Map<String, GeneratedField> allFields, Map<String, GeneratedEnumConstant> enumConstants, Map<String, GeneratedField> allStaticFields, Map<String, ClassReference> enclosing, ClassReference[] implemented, String name, String packageRepresentation) {
         this.methods = new GeneratedMethodMap(methods);
         this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.constructor = constructor.build(this);
@@ -68,7 +69,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
                          Map<String, GeneratedField> allFields,
                          Function<LoxClass, Map<String, GeneratedEnumConstant>> enumConstants,
                          Map<String, GeneratedField> allStaticFields,
-                         Map<String, LoxClass> enclosing, LoxClass[] implemented, String name, String packageRepresentation) {
+                         Map<String, ClassReference> enclosing, ClassReference[] implemented, String name, String packageRepresentation) {
         this.methods = new GeneratedMethodMap(methods);
         this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.constructor = ConstructorContainer.fromCache(constructorData, this);
@@ -82,9 +83,9 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
         this.lookup = MethodLookup.createFromClass(this);
     }
 
-    public static GeneratedEnum load(JsonObject data, List<LoxClass> enclosed, String pck) {
+    public static GeneratedEnum load(JsonObject data, List<ClassReference> enclosed, String pck) {
         String name = GsonHelper.getAsString(data, "name");
-        LoxClass[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(LoxClass[]::new);
+        ClassReference[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(ClassReference[]::new);
 
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
         ImmutableMap<String, DataMethodContainer> staticMethods = DataMethodContainer.load(data, name, "staticMethods");
@@ -96,7 +97,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
         ImmutableMap<String, GeneratedField> staticFields = GeneratedField.loadFieldMap(data, "staticFields");
         Function<LoxClass, Map<String, GeneratedEnumConstant>> enumConstants = GeneratedEnumConstant.loadFieldMap(data, "enumConstants");
 
-        Map<String, LoxClass> enclosedClasses = enclosed.stream().collect(Collectors.toMap(LoxClass::name, Function.identity()));
+        Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));
 
         return new GeneratedEnum(
                 methods, staticMethods, constructorData,
@@ -116,7 +117,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
         object.addProperty("name", name);
         {
             JsonArray parentInterfaces = new JsonArray();
-            Arrays.stream(this.implemented).map(LoxClass::absoluteName).forEach(parentInterfaces::add);
+            Arrays.stream(this.implemented).map(ClassReference::absoluteName).forEach(parentInterfaces::add);
             object.add("interfaces", parentInterfaces);
         }
         object.add("methods", methods.save(cacheBuilder));
@@ -142,8 +143,8 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public CacheableClass[] enclosed() {
-        return new CacheableClass[0];
+    public ClassReference[] enclosed() {
+        return new ClassReference[0];
     }
 
     @Override
@@ -152,7 +153,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public Map<String, ? extends LoxField> enumConstants() {
+    public Map<String, ? extends ScriptedField> enumConstants() {
         return enumConstants;
     }
 
@@ -185,7 +186,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public Map<String, ? extends LoxField> staticFields() {
+    public Map<String, ? extends ScriptedField> staticFields() {
         return Util.mergeMaps(allStaticFields, enumConstants);
     }
 
@@ -200,12 +201,12 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public LoxClass superclass() {
-        return VarTypeManager.ENUM.get();
+    public @Nullable ClassReference superclass() {
+        return VarTypeManager.ENUM;
     }
 
     @Override
-    public LoxClass getStaticFieldType(String name) {
+    public ClassReference getStaticFieldType(String name) {
         return allStaticFields.get(name).getType();
     }
 
@@ -216,7 +217,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
         checkInit();
         return staticMethods.has(name) ? staticMethods.getMethodOrdinal(name, args) : EnumClass.super.getStaticMethodOrdinal(name, args);
     }
@@ -253,7 +254,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<LoxClass> types) {
+    public int getMethodOrdinal(String name, List<ClassReference> types) {
         checkInit();
         return lookup.getMethodOrdinal(name, types);
     }
@@ -264,7 +265,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public LoxClass getEnclosing(String name) {
+    public ClassReference getEnclosing(String name) {
         return enclosing.get(name);
     }
 

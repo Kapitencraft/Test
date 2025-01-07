@@ -6,12 +6,12 @@ import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.compiler.parser.ExprParser;
 import net.kapitencraft.lang.compiler.parser.SkeletonParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
@@ -30,9 +30,9 @@ public record ClassDecl(
         VarTypeParser parser,
         Compiler.ErrorLogger logger,
         boolean isAbstract, boolean isFinal,
-        PreviewClass target,
-        Token name, String pck, LoxClass superclass,
-        LoxClass[] implemented,
+        ClassReference target,
+        Token name, String pck, ClassReference superclass,
+        ClassReference[] implemented,
         SkeletonParser.MethodDecl[] constructors,
         SkeletonParser.MethodDecl[] methods,
         SkeletonParser.FieldDecl[] fields,
@@ -66,7 +66,10 @@ public record ClassDecl(
             List<Stmt> body = null;
             if (!method.isAbstract()) {
                 stmtParser.apply(method.body(), parser);
-                stmtParser.applyMethod(method.params(), target(), superclass(), method.type());
+                if (method.isStatic())
+                    stmtParser.applyStaticMethod(method.params(), method.type());
+                else
+                    stmtParser.applyMethod(method.params(), target(), superclass(), method.type());
                 body = stmtParser.parse();
                 stmtParser.popMethod();
             }
@@ -78,11 +81,15 @@ public record ClassDecl(
         List<Pair<Token, GeneratedCallable>> constructors = new ArrayList<>();
         for (SkeletonParser.MethodDecl method : this.constructors()) {
             stmtParser.apply(method.body(), parser);
-            stmtParser.applyMethod(method.params(), target(), superclass(), VarTypeManager.VOID);
+            stmtParser.applyMethod(method.params(), target(), superclass(), ClassReference.of(VarTypeManager.VOID));
             List<Stmt> body = stmtParser.parse();
             GeneratedCallable constDecl = new GeneratedCallable(method.type(), method.params(), body, method.isFinal(), method.isAbstract());
             stmtParser.popMethod();
             constructors.add(Pair.of(method.name(), constDecl));
+        }
+
+        for (SkeletonParser.AnnotationObj obj : this.annotations()) {
+            exprParser.parseAnnotation(obj, this.parser());
         }
 
         return new BakedClass(
@@ -121,10 +128,10 @@ public record ClassDecl(
         }
 
         //enclosed classes
-        ImmutableMap.Builder<String, PreviewClass> enclosed = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
         for (SkeletonParser.ClassConstructor<?> enclosedDecl : this.enclosed()) {
             LoxClass generated = enclosedDecl.createSkeleton();
-            enclosedDecl.target().apply(generated);
+            enclosedDecl.target().setTarget(generated);
             enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
         }
 

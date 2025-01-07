@@ -1,7 +1,9 @@
 package net.kapitencraft.lang.compiler.parser;
 
 import com.google.common.collect.ImmutableList;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.Package;
+import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.VarTypeParser;
@@ -35,7 +37,7 @@ public class AbstractParser {
     protected VarTypeParser parser;
     protected RetTypeFinder finder;
     protected final LocationFinder locFinder = new LocationFinder();
-    protected final Deque<List<LoxClass>> args = new ArrayDeque<>(); //TODO either use or remove
+    protected final Deque<List<ClassReference>> args = new ArrayDeque<>(); //TODO either use or remove
     protected final Compiler.ErrorLogger errorLogger;
     protected VarAnalyser varAnalyser;
 
@@ -55,7 +57,7 @@ public class AbstractParser {
         expectType(name, value, varAnalyser.getType(name.lexeme()));
     }
 
-    protected void expectType(LoxClass... types) {
+    protected void expectType(ClassReference... types) {
         args.push(List.of(types));
     }
 
@@ -63,42 +65,42 @@ public class AbstractParser {
         args.pop();
     }
 
-    protected boolean typeAllowed(LoxClass target) {
+    protected boolean typeAllowed(ClassReference target) {
         return searched().contains(target);
     }
 
-    protected List<LoxClass> searched() {
+    protected List<ClassReference> searched() {
         return args.getLast();
     }
 
-    protected void expectType(List<LoxClass> types) {
+    protected void expectType(List<ClassReference> types) {
         args.push(ImmutableList.copyOf(types));
     }
 
-    protected LoxClass expectType(Token errorLoc, Expr value, LoxClass type) {
-        LoxClass got = finder.findRetType(value);
+    protected ClassReference expectType(Token errorLoc, Expr value, ClassReference type) {
+        ClassReference got = finder.findRetType(value);
         return expectType(errorLoc, got, type);
     }
 
-    protected LoxClass expectType(Expr value, LoxClass type) {
+    protected ClassReference expectType(Expr value, ClassReference type) {
         return expectType(this.locFinder.find(value), value, type);
     }
 
     protected void expectCondition(Token errorLoc, Expr gotten) {
-        expectType(errorLoc, gotten, VarTypeManager.BOOLEAN);
+        expectType(errorLoc, gotten, VarTypeManager.BOOLEAN.reference());
     }
 
     protected void expectCondition(Expr gotten) {
         expectCondition(locFinder.find(gotten), gotten);
     }
 
-    protected LoxClass expectType(Token errorLoc, LoxClass gotten, LoxClass expected) {
-        if (expected == VarTypeManager.OBJECT.get()) return gotten;
-        if (!expected.isParentOf(gotten)) errorLogger.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
+    protected ClassReference expectType(Token errorLoc, ClassReference gotten, ClassReference expected) {
+        if (expected == VarTypeManager.OBJECT) return gotten;
+        if (!expected.get().isParentOf(gotten.get())) errorLogger.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
         return gotten;
     }
 
-    protected void createVar(Token name, LoxClass type, boolean hasValue, boolean isFinal) {
+    protected void createVar(Token name, ClassReference type, boolean hasValue, boolean isFinal) {
         if (varAnalyser.has(name.lexeme())) {
             errorLogger.errorF(name, "Variable '%s' already defined in current scope", name.lexeme());
         }
@@ -169,13 +171,13 @@ public class AbstractParser {
         throw error(peek(), message);
     }
 
-    protected Optional<LoxClass> tryConsumeVarType() {
+    protected Optional<ClassReference> tryConsumeVarType() {
         if (VarTypeManager.hasPackage(peek().lexeme())) {
             if (!varAnalyser.has(peek().lexeme())) {
                 return Optional.of(consumeVarType());
             }
         }
-        LoxClass loxClass = parser.getClass(advance().lexeme());
+        ClassReference loxClass = parser.getClass(advance().lexeme());
         if (loxClass != null && !check(DOT)) {
             return Optional.of(loxClass);
         } else
@@ -183,11 +185,11 @@ public class AbstractParser {
         return Optional.empty();
     }
 
-    protected LoxClass consumeVarType() {
+    protected ClassReference consumeVarType() {
         StringBuilder typeName = new StringBuilder();
         Token token = consumeIdentifier();
         typeName.append(token.lexeme());
-        LoxClass loxClass = parser.getClass(token.lexeme());
+        ClassReference loxClass = parser.getClass(token.lexeme());
         if (loxClass == null) {
             Package p = VarTypeManager.getPackage(token.lexeme());
             while (match(DOT)) {
@@ -200,13 +202,14 @@ public class AbstractParser {
                 p = p.getPackage(id);
             }
         }
+
         while (match(DOT) && loxClass != null) {
             String enclosingName = consumeIdentifier().lexeme();
             typeName.append(".").append(enclosingName);
-            if (!loxClass.hasEnclosing(enclosingName)) {
+            if (!loxClass.get().hasEnclosing(enclosingName)) {
                 return loxClass;
             }
-            loxClass = loxClass.getEnclosing(enclosingName);
+            loxClass = loxClass.get().getEnclosing(enclosingName);
         }
         if (loxClass == null) error(token, "unknown class '" + typeName + "'");
         else while (match(S_BRACKET_O)) {
@@ -214,6 +217,20 @@ public class AbstractParser {
             loxClass = loxClass.array();
         }
         return loxClass;
+    }
+
+    protected AbstractAnnotationClass parseAnnotationClass() {
+        ClassReference type = consumeVarType();
+        AbstractAnnotationClass target = null;
+        if (type.get() instanceof AbstractAnnotationClass annotationClass) {
+            target = annotationClass;
+        } else if (type instanceof AbstractAnnotationClass annotationClass) {
+            target = annotationClass;
+        }
+        if (target == null) {
+            error(previous(), "expected annotation class");
+        }
+        return target;
     }
 
     protected Token consumeIdentifier() {

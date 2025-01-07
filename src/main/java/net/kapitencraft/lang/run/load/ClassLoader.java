@@ -2,6 +2,7 @@ package net.kapitencraft.lang.run.load;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.*;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.run.Interpreter;
@@ -35,12 +36,12 @@ public class ClassLoader {
                 String classRef;
                 if (data.contains(" ")) classRef = data.substring(0, data.indexOf(' '));
                 else classRef = data;
-                LoxClass target = VarTypeManager.getClassForName(classRef);
+                ClassReference target = VarTypeManager.getClassForName(classRef);
                 if (target == null) System.err.println("unable to find class for id '" + classRef + "'");
                 else {
                     if (data.contains(" ")) data = data.substring(data.indexOf(' ') + 1);
                     else data = "";
-                    interpreter.runMainMethod(target, data);
+                    interpreter.runMainMethod(target.get(), data);
                 }
             }
             line = reader.readLine();
@@ -93,7 +94,7 @@ public class ClassLoader {
     }
 
     public static void applyPreviews(PackageHolder root) {
-        useClasses(root, (classes, pck) -> classes.forEach((name, classHolder) -> pck.addClass(name, classHolder.previewClass)));
+        useClasses(root, (classes, pck) -> classes.forEach((name, classHolder) -> pck.addClass(name, classHolder.reference)));
     }
 
     public static void generateSkeletons(PackageHolder root) {
@@ -136,7 +137,7 @@ public class ClassLoader {
         }
     }
 
-    public static LoxClass loadClassReference(JsonObject object, String elementName) {
+    public static ClassReference loadClassReference(JsonObject object, String elementName) {
         return VarTypeManager.getClassForName(GsonHelper.getAsString(object, elementName));
     }
 

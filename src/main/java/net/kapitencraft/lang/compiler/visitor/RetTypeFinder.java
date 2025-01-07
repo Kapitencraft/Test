@@ -1,23 +1,19 @@
 package net.kapitencraft.lang.compiler.visitor;
 
-import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.holder.token.TokenTypeCategory;
-import net.kapitencraft.lang.oop.clazz.ArrayClass;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.analyser.VarAnalyser;
 import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 
-import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
-import static net.kapitencraft.lang.holder.token.TokenTypeCategory.EQUALITY;
-
-public class RetTypeFinder implements Expr.Visitor<LoxClass> {
+public class RetTypeFinder implements Expr.Visitor<ClassReference> {
     private final VarAnalyser varAnalyser;
 
-    public LoxClass findRetType(Expr expr) {
+    //STAGE: Skeleton
+
+    public ClassReference findRetType(Expr expr) {
         return expr.accept(this);
     }
 
@@ -26,117 +22,117 @@ public class RetTypeFinder implements Expr.Visitor<LoxClass> {
     }
 
     @Override
-    public LoxClass visitAssignExpr(Expr.Assign expr) {
+    public ClassReference visitAssignExpr(Expr.Assign expr) {
         return varAnalyser.getType(expr.name.lexeme());
     }
 
     @Override
-    public LoxClass visitSpecialAssignExpr(Expr.SpecialAssign expr) {
+    public ClassReference visitSpecialAssignExpr(Expr.SpecialAssign expr) {
         return varAnalyser.getType(expr.name.lexeme());
     }
 
     @Override
-    public LoxClass visitBinaryExpr(Expr.Binary expr) {
-        return expr.executor.checkOperation(OperationType.of(expr.operator), expr.operand, findRetType(expr.operand == Operand.LEFT ? expr.right : expr.left));
+    public ClassReference visitBinaryExpr(Expr.Binary expr) {
+        return expr.executor.get().checkOperation(OperationType.of(expr.operator), expr.operand, findRetType(expr.operand == Operand.LEFT ? expr.right : expr.left)).reference();
     }
 
     @Override
-    public LoxClass visitWhenExpr(Expr.When expr) {
+    public ClassReference visitWhenExpr(Expr.When expr) {
         return findRetType(expr.ifTrue);
     }
 
     @Override
-    public LoxClass visitInstCallExpr(Expr.InstCall expr) {
-        return findRetType(expr.callee).getMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).type();
+    public ClassReference visitInstCallExpr(Expr.InstCall expr) {
+        return findRetType(expr.callee).get().getMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).type();
     }
 
     @Override
-    public LoxClass visitStaticCallExpr(Expr.StaticCall expr) {
-        return expr.target.getStaticMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).type();
+    public ClassReference visitStaticCallExpr(Expr.StaticCall expr) {
+        return expr.target.get().getStaticMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).type();
     }
 
     @Override
-    public LoxClass visitGetExpr(Expr.Get expr) {
-        return findRetType(expr.object).getFieldType(expr.name.lexeme());
+    public ClassReference visitGetExpr(Expr.Get expr) {
+        return findRetType(expr.object).get().getFieldType(expr.name.lexeme());
     }
 
     @Override
-    public LoxClass visitStaticGetExpr(Expr.StaticGet expr) {
-        return expr.target.getStaticFieldType(expr.name.lexeme());
+    public ClassReference visitStaticGetExpr(Expr.StaticGet expr) {
+        return expr.target.get().getStaticFieldType(expr.name.lexeme());
     }
 
     @Override
-    public LoxClass visitArrayGetExpr(Expr.ArrayGet expr) {
-        return findRetType(expr.object).getComponentType();
+    public ClassReference visitArrayGetExpr(Expr.ArrayGet expr) {
+        return findRetType(expr.object).get().getComponentType().reference();
     }
 
     @Override
-    public LoxClass visitSetExpr(Expr.Set expr) {
-        return findRetType(expr.object).getFieldType(expr.name.lexeme());
+    public ClassReference visitSetExpr(Expr.Set expr) {
+        return findRetType(expr.object).get().getFieldType(expr.name.lexeme());
     }
 
     @Override
-    public LoxClass visitStaticSetExpr(Expr.StaticSet expr) {
-        return expr.target.getStaticFieldType(expr.name.lexeme());
+    public ClassReference visitStaticSetExpr(Expr.StaticSet expr) {
+        return expr.target.get().getStaticFieldType(expr.name.lexeme());
     }
 
     @Override
-    public LoxClass visitArraySetExpr(Expr.ArraySet expr) {
-        return findRetType(expr.object).getComponentType();
+    public ClassReference visitArraySetExpr(Expr.ArraySet expr) {
+        return findRetType(expr.object).get().getComponentType().reference();
     }
 
     @Override
-    public LoxClass visitSpecialSetExpr(Expr.SpecialSet expr) {
-        return findRetType(expr.callee).getFieldType(expr.name.lexeme());
+    public ClassReference visitSpecialSetExpr(Expr.SpecialSet expr) {
+        return findRetType(expr.callee).get().getFieldType(expr.name.lexeme());
     }
 
     @Override
-    public LoxClass visitStaticSpecialExpr(Expr.StaticSpecial expr) {
-        return expr.target.getStaticFieldType(expr.name.lexeme());
+    public ClassReference visitStaticSpecialExpr(Expr.StaticSpecial expr) {
+        return expr.target.get().getStaticFieldType(expr.name.lexeme());
     }
 
     @Override
-    public LoxClass visitArraySpecialExpr(Expr.ArraySpecial expr) {
+    public ClassReference visitArraySpecialExpr(Expr.ArraySpecial expr) {
         return null;
     }
 
     @Override
-    public LoxClass visitSwitchExpr(Expr.Switch expr) {
+    public ClassReference visitSwitchExpr(Expr.Switch expr) {
         return findRetType(expr.defaulted);
     }
 
     @Override
-    public LoxClass visitCastCheckExpr(Expr.CastCheck expr) {
-        return VarTypeManager.BOOLEAN;
+    public ClassReference visitCastCheckExpr(Expr.CastCheck expr) {
+        return VarTypeManager.BOOLEAN.reference();
     }
 
     @Override
-    public LoxClass visitGroupingExpr(Expr.Grouping expr) {
+    public ClassReference visitGroupingExpr(Expr.Grouping expr) {
         return findRetType(expr.expression);
     }
 
     @Override
-    public LoxClass visitLiteralExpr(Expr.Literal expr) {
-        return expr.holder.type();
+    public ClassReference visitLiteralExpr(Expr.Literal expr) {
+        return expr.holder.type().reference();
     }
 
     @Override
-    public LoxClass visitLogicalExpr(Expr.Logical expr) {
-        return VarTypeManager.BOOLEAN;
+    public ClassReference visitLogicalExpr(Expr.Logical expr) {
+        return VarTypeManager.BOOLEAN.reference();
     }
 
     @Override
-    public LoxClass visitUnaryExpr(Expr.Unary expr) {
+    public ClassReference visitUnaryExpr(Expr.Unary expr) {
         return findRetType(expr.right);
     }
 
     @Override
-    public LoxClass visitVarRefExpr(Expr.VarRef expr) {
+    public ClassReference visitVarRefExpr(Expr.VarRef expr) {
         return varAnalyser.getType(expr.name.lexeme());
     }
 
     @Override
-    public LoxClass visitConstructorExpr(Expr.Constructor expr) {
+    public ClassReference visitConstructorExpr(Expr.Constructor expr) {
         return expr.target;
     }
 }

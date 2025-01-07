@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.natives.scripted.lang;
 
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.wrapper.NativeClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -16,11 +17,11 @@ public class StringClass extends NativeClass {
     );
 
     public StringClass() {
-        super("String", "scripted.lang", Map.of(), Map.of(), METHODS, DataMethodContainer.of(), VarTypeManager.OBJECT.get(), false, false, false);
+        super("String", "scripted.lang", Map.of(), Map.of(), METHODS, Map.of(), DataMethodContainer.of(), VarTypeManager.OBJECT, false, false, false);
     }
 
     @Override
-    public LoxClass checkOperation(OperationType type, Operand operand, LoxClass other) {
+    public LoxClass checkOperation(OperationType type, Operand operand, ClassReference other) {
         return type == OperationType.ADDITION ? VarTypeManager.STRING.get() : super.checkOperation(type, operand, other);
     }
 

@@ -3,7 +3,7 @@ package net.kapitencraft.tool;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -34,19 +34,19 @@ public class Util {
         return main != null ? main : other;
     }
 
-    public static boolean matchArgs(List<? extends LoxClass> got, List<? extends LoxClass> expected) {
+    public static boolean matchArgs(List<ClassReference> got, List<ClassReference> expected) {
         if (got.size() != expected.size()) {
             return false;
         }
         if (got.isEmpty()) return true;
         for (int i = 0; i < got.size(); i++) {
-            if (!got.get(i).isChildOf(expected.get(i))) return false;
+            if (!got.get(i).get().isChildOf(expected.get(i).get())) return false;
         }
         return true;
     }
 
-    public static String getDescriptor(List<? extends LoxClass> args) {
-        return args.stream().map(LoxClass::name).collect(Collectors.joining(","));
+    public static String getDescriptor(List<ClassReference> args) {
+        return args.stream().map(ClassReference::name).collect(Collectors.joining(","));
     }
 
     /**

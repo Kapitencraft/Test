@@ -3,7 +3,7 @@ package net.kapitencraft.lang.oop.method.map;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public class GeneratedMethodMap implements AbstractMethodMap {
         return methods;
     }
 
-    public int getMethodOrdinal(String name, List<? extends LoxClass> args) {
+    public int getMethodOrdinal(String name, List<ClassReference> args) {
         return methods.get(name).getMethodOrdinal(args);
     }
 

@@ -4,11 +4,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.EnumClass;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
-import net.kapitencraft.lang.oop.field.LoxField;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
@@ -18,6 +17,7 @@ import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Util;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,7 +33,7 @@ public class SkeletonEnum implements EnumClass {
     private final Map<String, SkeletonField> fields;
     private final Map<String, SkeletonField> staticFields;
 
-    private final Map<String, PreviewClass> enclosed;
+    private final Map<String, ClassReference> enclosed;
 
     private final GeneratedMethodMap methods;
     private final Map<String, DataMethodContainer> staticMethods;
@@ -41,7 +41,7 @@ public class SkeletonEnum implements EnumClass {
 
     public SkeletonEnum(String name, String pck,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
-                         Map<String, PreviewClass> enclosed,
+                         Map<String, ClassReference> enclosed,
                          Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor) {
         this.name = name;
         this.pck = pck;
@@ -55,7 +55,7 @@ public class SkeletonEnum implements EnumClass {
 
     public SkeletonEnum(String name, String pck,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
-                         Map<String, PreviewClass> enclosed,
+                         Map<String, ClassReference> enclosed,
                          Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
                         ConstructorContainer constructor) {
         this.name = name;
@@ -68,7 +68,7 @@ public class SkeletonEnum implements EnumClass {
         this.constructor = constructor;
     }
 
-    public static SkeletonEnum fromCache(JsonObject data, String pck, PreviewClass[] enclosed) {
+    public static SkeletonEnum fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
         String name = GsonHelper.getAsString(data, "name");
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
@@ -100,7 +100,7 @@ public class SkeletonEnum implements EnumClass {
 
         return new SkeletonEnum(name, pck,
                 staticFields.build(), fields.build(),
-                Arrays.stream(enclosed).collect(Collectors.toMap(LoxClass::name, Function.identity())),
+                Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
                 methods, staticMethods,
                 constructorContainer
         );
@@ -127,12 +127,12 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public LoxClass[] enclosed() {
-        return enclosed.values().toArray(new PreviewClass[0]);
+    public ClassReference[] enclosed() {
+        return enclosed.values().toArray(new ClassReference[0]);
     }
 
     @Override
-    public Map<String, ? extends LoxField> enumConstants() {
+    public Map<String, ? extends ScriptedField> enumConstants() {
         return Map.of();
     }
 
@@ -152,7 +152,7 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public Map<String, ? extends LoxField> staticFields() {
+    public Map<String, ? extends ScriptedField> staticFields() {
         return staticFields;
     }
 
@@ -172,22 +172,22 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public LoxClass getFieldType(String name) {
+    public ClassReference getFieldType(String name) {
         return Util.nonNullElse(fields.get(name).getType(), EnumClass.super.getFieldType(name));
     }
 
     @Override
-    public LoxClass superclass() {
-        return VarTypeManager.ENUM.get();
+    public @Nullable ClassReference superclass() {
+        return VarTypeManager.ENUM;
     }
 
     @Override
-    public LoxClass getStaticFieldType(String name) {
+    public ClassReference getStaticFieldType(String name) {
         return staticFields.get(name).getType();
     }
 
     @Override
-    public ScriptedCallable getStaticMethod(String name, List<? extends LoxClass> args) {
+    public ScriptedCallable getStaticMethod(String name, List<ClassReference> args) {
         return staticMethods.get(name).getMethod(args);
     }
 
@@ -197,7 +197,7 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
         return Optional.ofNullable(staticMethods.get(name)).map(c -> c.getMethodOrdinal(args)).orElseGet(() -> EnumClass.super.getStaticMethodOrdinal(name, args));
     }
 
@@ -232,7 +232,7 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<LoxClass> types) {
+    public int getMethodOrdinal(String name, List<ClassReference> types) {
         return methods.getMethodOrdinal(name, types);
     }
 
@@ -242,7 +242,7 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public LoxClass getEnclosing(String name) {
+    public ClassReference getEnclosing(String name) {
         return enclosed.get(name);
     }
 

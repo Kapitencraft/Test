@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.parser.SkeletonParser;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.load.ClassLoader;
@@ -16,11 +17,11 @@ import net.kapitencraft.tool.Pair;
 import java.util.List;
 
 public class SkeletonMethod implements ScriptedCallable {
-    private final List<? extends LoxClass> args;
-    private final LoxClass retType;
+    private final List<ClassReference> args;
+    private final ClassReference retType;
     private final boolean isAbstract, isFinal;
 
-    public SkeletonMethod(List<? extends LoxClass> args, LoxClass retType, boolean isAbstract, boolean isFinal) {
+    public SkeletonMethod(List<ClassReference> args, ClassReference retType, boolean isAbstract, boolean isFinal) {
         this.args = args;
         this.retType = retType;
         this.isAbstract = isAbstract;
@@ -32,8 +33,8 @@ public class SkeletonMethod implements ScriptedCallable {
     }
 
     public static SkeletonMethod fromJson(JsonObject object) {
-        LoxClass retType = ClassLoader.loadClassReference(object, "retType");
-        List<? extends LoxClass> args = GsonHelper.getAsJsonArray(object, "params").asList().stream()
+        ClassReference retType = ClassLoader.loadClassReference(object, "retType");
+        List<ClassReference> args = GsonHelper.getAsJsonArray(object, "params").asList().stream()
                 .map(JsonElement::getAsJsonObject)
                 .map(object1 -> ClassLoader.loadClassReference(object1, "type"))
                 .toList();
@@ -54,12 +55,12 @@ public class SkeletonMethod implements ScriptedCallable {
     }
 
     @Override
-    public LoxClass type() {
+    public ClassReference type() {
         return retType;
     }
 
     @Override
-    public List<? extends LoxClass> argTypes() {
+    public List<ClassReference> argTypes() {
         return args;
     }
 

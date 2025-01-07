@@ -5,20 +5,20 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.env.core.Environment;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.tool.GsonHelper;
 
-public class GeneratedField extends LoxField {
-    private final LoxClass type;
+public class GeneratedField extends ScriptedField {
+    private final ClassReference type;
     private final Expr init;
     private final boolean isFinal;
 
-    public GeneratedField(LoxClass type, Expr init, boolean isFinal) {
+    public GeneratedField(ClassReference type, Expr init, boolean isFinal) {
         this.type = type;
         this.init = init;
         this.isFinal = isFinal;
@@ -27,7 +27,7 @@ public class GeneratedField extends LoxField {
     @Override
     public Object initialize(Environment environment, Interpreter interpreter) {
         if (!hasInit()) {
-            if (type instanceof PrimitiveClass prim) {
+            if (type.get() instanceof PrimitiveClass prim) {
                 return prim.defaultValue();
             }
             return null;
@@ -40,7 +40,7 @@ public class GeneratedField extends LoxField {
     }
 
     @Override
-    public LoxClass getType() {
+    public ClassReference getType() {
         return type;
     }
 
@@ -53,7 +53,7 @@ public class GeneratedField extends LoxField {
     }
 
     public static GeneratedField fromJson(JsonObject object) {
-        LoxClass type = ClassLoader.loadClassReference(object, "type");
+        ClassReference type = ClassLoader.loadClassReference(object, "type");
         Expr init = object.has("init") ? CacheLoader.readSubExpr(object, "init") : null;
         boolean isFinal = object.has("isFinal") && GsonHelper.getAsBoolean(object, "isFinal");
         return new GeneratedField(type, init, isFinal);

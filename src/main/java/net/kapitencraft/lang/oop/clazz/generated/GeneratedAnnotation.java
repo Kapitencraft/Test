@@ -1,71 +1,99 @@
 package net.kapitencraft.lang.oop.clazz.generated;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.decl.AnnotationDecl;
+import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.field.LoxField;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.AnnotationMethodMap;
-import net.kapitencraft.lang.oop.method.map.GeneratedAnnotationMethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.run.load.CacheLoader;
+import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public final class GeneratedAnnotation implements CacheableClass {
-    private final MethodLookup lookup;
+public final class GeneratedAnnotation implements CacheableClass, AbstractAnnotationClass {
 
-    private final Map<String, LoxClass> enclosing;
+    private final Map<String, ClassReference> enclosing;
 
-    private final GeneratedAnnotationMethodMap methods;
+    private final Map<String, AnnotationDecl.MethodWrapper> methods;
+    private final List<String> abstracts;
 
     private final String name;
     private final String packageRepresentation;
 
-    public GeneratedAnnotation(Map<String, LoxClass> enclosing, GeneratedAnnotationMethodMap methods,
+    public GeneratedAnnotation(Map<String, ClassReference> enclosing, Map<String, AnnotationDecl.MethodWrapper> methods,
                                String name, String packageRepresentation) {
         this.methods = methods;
+        List<String> abstracts = new ArrayList<>();
+        methods.forEach((string, methodWrapper) -> {
+            if (methodWrapper.isAbstract()) abstracts.add(string);
+        });
+        this.abstracts = abstracts;
         this.name = name;
         this.enclosing = enclosing;
         this.packageRepresentation = packageRepresentation;
-        this.lookup = MethodLookup.createFromClass(this);
     }
 
-    public static LoxClass load(JsonObject data, List<LoxClass> enclosed, String pck) {
+    public static LoxClass load(JsonObject data, List<ClassReference> enclosed, String pck) {
         String name = GsonHelper.getAsString(data, "name");
 
-        Map<String, LoxClass> enclosedClasses = enclosed.stream().collect(Collectors.toMap(LoxClass::name, Function.identity()));
-
-        GeneratedAnnotationMethodMap methodMap = GeneratedAnnotationMethodMap.read(data, "methods");
+        Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));
 
         return new GeneratedAnnotation(
-                enclosedClasses, methodMap, name,
+                enclosedClasses, readMethods(data), name,
                 pck);
+    }
+
+    private static Map<String, AnnotationDecl.MethodWrapper> readMethods(JsonObject object) {
+        JsonObject sub = GsonHelper.getAsJsonObject(object, "methods");
+        ImmutableMap.Builder<String, AnnotationDecl.MethodWrapper> builder = new ImmutableMap.Builder<>();
+        sub.asMap().forEach((string, jsonElement) -> {
+            JsonObject e = (JsonObject) jsonElement;
+            builder.put(string, new AnnotationDecl.MethodWrapper(e.has("value") ? CacheLoader.readExpr(GsonHelper.getAsJsonObject(e, "value")) : null, ClassLoader.loadClassReference(e, "type")));
+        });
+        return builder.build();
+    }
+
+    private JsonObject addMethodData(CacheBuilder builder) {
+        JsonObject methods = new JsonObject();
+        this.methods.forEach((string, methodWrapper) -> {
+            JsonObject method = new JsonObject();
+            if (methodWrapper.val() != null) method.add("value", builder.cache(methodWrapper.val()));
+            method.addProperty("type", methodWrapper.type().absoluteName());
+            methods.add(string, method);
+        });
+        return methods;
     }
 
     public JsonObject save(CacheBuilder cacheBuilder) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "annotation");
         object.addProperty("name", name);
-        object.add("methods", this.methods.save(cacheBuilder));
+        object.add("methods", this.addMethodData(cacheBuilder));
 
         return object;
     }
 
     @Override
-    public LoxClass getFieldType(String name) {
-        return Optional.ofNullable(getFields().get(name)).map(LoxField::getType).orElse(CacheableClass.super.getFieldType(name));
+    public ClassReference getFieldType(String name) {
+        return Optional.ofNullable(getFields().get(name)).map(ScriptedField::getType).orElse(CacheableClass.super.getFieldType(name));
     }
 
     @Override
-    public LoxClass getStaticFieldType(String name) {
-        return VarTypeManager.VOID;
+    public ClassReference getStaticFieldType(String name) {
+        return VarTypeManager.VOID.reference();
     }
 
     @Override
@@ -74,7 +102,7 @@ public final class GeneratedAnnotation implements CacheableClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<? extends LoxClass> args) {
+    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
         return -1;
     }
 
@@ -90,11 +118,11 @@ public final class GeneratedAnnotation implements CacheableClass {
 
     @Override
     public boolean hasMethod(String name) {
-        return methods.has(name);
+        return methods.containsKey(name);
     }
 
     @Override
-    public Map<String, LoxField> getFields() {
+    public Map<String, ScriptedField> getFields() {
         return Map.of();
     }
 
@@ -120,12 +148,12 @@ public final class GeneratedAnnotation implements CacheableClass {
 
     @Override
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return lookup.getMethodByOrdinal(name, ordinal);
+        return methods.get(name);
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<LoxClass> types) {
-        return lookup.getMethodOrdinal(name, types);
+    public int getMethodOrdinal(String name, List<ClassReference> types) {
+        return types.isEmpty() && hasMethod(name) ? 0 : -1;
     }
 
     @Override
@@ -134,13 +162,13 @@ public final class GeneratedAnnotation implements CacheableClass {
     }
 
     @Override
-    public LoxClass getEnclosing(String name) {
+    public ClassReference getEnclosing(String name) {
         return null;
     }
 
     @Override
     public AnnotationMethodMap getMethods() {
-        return methods;
+        return null;
     }
 
     boolean init = false;
@@ -156,12 +184,12 @@ public final class GeneratedAnnotation implements CacheableClass {
     }
 
     @Override
-    public LoxClass[] interfaces() {
-        return new LoxClass[0];
+    public ClassReference[] interfaces() {
+        return new ClassReference[0];
     }
 
     @Override
-    public Map<String, ? extends LoxField> staticFields() {
+    public Map<String, ? extends ScriptedField> staticFields() {
         return Map.of();
     }
 
@@ -176,22 +204,27 @@ public final class GeneratedAnnotation implements CacheableClass {
     }
 
     @Override
-    public LoxClass superclass() {
+    public @Nullable ClassReference superclass() {
         return null;
     }
 
     @SuppressWarnings("SuspiciousToArrayCall")
-    public CacheableClass[] enclosed() {
-        return enclosing.values().toArray(new CacheableClass[0]);
+    public ClassReference[] enclosed() {
+        return enclosing.values().toArray(new ClassReference[0]);
     }
 
     @Override
     public MethodLookup methods() {
-        return lookup;
+        return null;
     }
 
     @Override
     public String toString() {
         return "GeneratedAnnotation{" + name + "}";
+    }
+
+    @Override
+    public List<String> getAbstracts() {
+        return abstracts;
     }
 }

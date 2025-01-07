@@ -3,12 +3,12 @@
   "name": "AnnotationTest",
   "methods": {
     "name": {
-      "type": "scripted.lang.String",
-      "val": {
+      "value": {
         "type": "String",
         "value": "",
         "TYPE": "literal"
-      }
+      },
+      "type": "scripted.lang.String"
     },
     "max": {
       "type": "scripted.lang.int"
@@ -17,8 +17,7 @@
       "type": "scripted.lang.int"
     },
     "test": {
-      "type": "test.EnumTest",
-      "val": {
+      "value": {
         "TYPE": "staticGet",
         "target": "test.EnumTest",
         "name": {
@@ -28,7 +27,8 @@
           "line": 12,
           "lineStartIndex": 25
         }
-      }
+      },
+      "type": "test.EnumTest"
     }
   }
 }

@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.env.core.Environment;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.PreviewClass;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.load.CacheLoader;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public class GeneratedEnumConstant extends LoxField {
+public class GeneratedEnumConstant extends ScriptedField {
 
     private final LoxClass target;
     private final int ordinal;
@@ -43,7 +43,7 @@ public class GeneratedEnumConstant extends LoxField {
     }
 
     @Override
-    public LoxClass getType() {
+    public ClassReference getType() {
         return null;
     }
 
