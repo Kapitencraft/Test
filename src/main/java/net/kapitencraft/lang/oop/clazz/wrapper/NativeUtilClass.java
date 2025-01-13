@@ -2,7 +2,7 @@ package net.kapitencraft.lang.oop.clazz.wrapper;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 
-public class NativeUtilClass implements LoxClass {
+public class NativeUtilClass implements ScriptedClass {
     private final GeneratedMethodMap staticMethods;
     private final Map<String, NativeField> staticFields;
     private final String name;

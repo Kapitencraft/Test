@@ -1,9 +1,9 @@
 package net.kapitencraft.lang.oop.clazz;
 
 public class ArrayClass extends PrimitiveClass {
-    private final LoxClass component;
+    private final ScriptedClass component;
 
-    public ArrayClass(LoxClass component) {
+    public ArrayClass(ScriptedClass component) {
         super(component.name() + "[]", null);
         this.component = component;
     }
@@ -14,13 +14,13 @@ public class ArrayClass extends PrimitiveClass {
     }
 
     @Override
-    public boolean is(LoxClass other) {
+    public boolean is(ScriptedClass other) {
         return other instanceof ArrayClass arrayClass ? arrayClass.component.is(this.component) :
                 other instanceof PrimitiveClass primitiveClass && primitiveClass.is(this);
     }
 
     @Override
-    public LoxClass getComponentType() {
+    public ScriptedClass getComponentType() {
         return component;
     }
 

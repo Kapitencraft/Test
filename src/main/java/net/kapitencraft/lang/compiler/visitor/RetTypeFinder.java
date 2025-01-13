@@ -4,7 +4,6 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.analyser.VarAnalyser;
 import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 

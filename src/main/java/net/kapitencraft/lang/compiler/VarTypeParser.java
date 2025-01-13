@@ -2,7 +2,7 @@ package net.kapitencraft.lang.compiler;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +13,7 @@ public class VarTypeParser {
     private final Map<String, ClassReference> implemented = new HashMap<>();
 
     public VarTypeParser() {
-        implemented.putAll(VarTypeManager.getPackage("scripted.lang").allClasses().stream().map(ClassReference::get).collect(Collectors.toMap(LoxClass::name, LoxClass::reference)));
+        implemented.putAll(VarTypeManager.getPackage("scripted.lang").allClasses().stream().map(ClassReference::get).collect(Collectors.toMap(ScriptedClass::name, ScriptedClass::reference)));
     }
 
     public boolean hasClass(String clazz) {

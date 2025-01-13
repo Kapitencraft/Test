@@ -2,7 +2,7 @@ package net.kapitencraft.lang.oop.clazz;
 
 import java.util.List;
 
-public interface AbstractAnnotationClass extends LoxClass {
+public interface AbstractAnnotationClass extends ScriptedClass {
 
     List<String> getAbstracts();
 

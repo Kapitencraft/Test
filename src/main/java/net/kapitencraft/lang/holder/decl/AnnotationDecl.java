@@ -12,7 +12,7 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.baked.BakedAnnotation;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonAnnotation;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
@@ -83,11 +83,11 @@ public record AnnotationDecl(
     }
 
     @Override
-    public LoxClass createSkeleton() {
+    public ScriptedClass createSkeleton() {
         //enclosed classes
         ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
         for (SkeletonParser.ClassConstructor<?> enclosedDecl : this.enclosed()) {
-            LoxClass generated = enclosedDecl.createSkeleton();
+            ScriptedClass generated = enclosedDecl.createSkeleton();
             enclosedDecl.target().setTarget(generated);
             enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
         }

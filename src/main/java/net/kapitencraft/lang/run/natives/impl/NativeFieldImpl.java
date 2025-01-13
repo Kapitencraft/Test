@@ -2,7 +2,6 @@ package net.kapitencraft.lang.run.natives.impl;
 
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.Interpreter;
 

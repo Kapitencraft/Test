@@ -1,12 +1,12 @@
 package net.kapitencraft.lang.holder.class_ref;
 
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public class ClassReference implements Supplier<LoxClass> {
-    private LoxClass target;
+public class ClassReference implements Supplier<ScriptedClass> {
+    private ScriptedClass target;
     private final String name;
 
     public ClassReference(String name) {
@@ -17,7 +17,7 @@ public class ClassReference implements Supplier<LoxClass> {
         return get().absoluteName();
     }
 
-    public static ClassReference of(LoxClass setTarget) {
+    public static ClassReference of(ScriptedClass setTarget) {
         ClassReference reference = new ClassReference(setTarget.name());
         reference.setTarget(setTarget);
         return reference;
@@ -27,11 +27,11 @@ public class ClassReference implements Supplier<LoxClass> {
         return name;
     }
 
-    public void setTarget(LoxClass target) {
+    public void setTarget(ScriptedClass target) {
         this.target = target;
     }
 
-    public LoxClass get() {
+    public ScriptedClass get() {
         return Objects.requireNonNull(target, "ScriptedClass not present: " + this.name);
     }
 
@@ -39,8 +39,8 @@ public class ClassReference implements Supplier<LoxClass> {
         return this.get().is(other.get());
     }
 
-    public boolean is(LoxClass loxClass) {
-        return this.get().is(loxClass);
+    public boolean is(ScriptedClass scriptedClass) {
+        return this.get().is(scriptedClass);
     }
 
     public ClassReference array() {

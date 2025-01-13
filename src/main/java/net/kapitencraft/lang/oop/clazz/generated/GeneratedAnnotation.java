@@ -9,7 +9,7 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.decl.AnnotationDecl;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.AnnotationMethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
@@ -46,7 +46,7 @@ public final class GeneratedAnnotation implements CacheableClass, AbstractAnnota
         this.packageRepresentation = packageRepresentation;
     }
 
-    public static LoxClass load(JsonObject data, List<ClassReference> enclosed, String pck) {
+    public static ScriptedClass load(JsonObject data, List<ClassReference> enclosed, String pck) {
         String name = GsonHelper.getAsString(data, "name");
 
         Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));

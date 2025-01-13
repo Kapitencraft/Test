@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class SkeletonInterface implements LoxClass {
+public class SkeletonInterface implements ScriptedClass {
     private final String name;
     private final String pck;
 
@@ -46,7 +46,7 @@ public class SkeletonInterface implements LoxClass {
         this.staticMethods = new GeneratedMethodMap(staticMethods);
     }
 
-    public static LoxClass fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
+    public static ScriptedClass fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
         String name = GsonHelper.getAsString(data, "name");
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");

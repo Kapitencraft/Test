@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
-public interface LoxInterface extends LoxClass {
+public interface ScriptedInterface extends ScriptedClass {
 
     @Override
     default MethodContainer getConstructor() {

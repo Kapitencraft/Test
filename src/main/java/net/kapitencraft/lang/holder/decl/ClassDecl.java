@@ -11,7 +11,7 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
@@ -111,7 +111,7 @@ public record ClassDecl(
     }
 
     @Override
-    public LoxClass createSkeleton() {
+    public ScriptedClass createSkeleton() {
 
         //fields
         ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
@@ -130,7 +130,7 @@ public record ClassDecl(
         //enclosed classes
         ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
         for (SkeletonParser.ClassConstructor<?> enclosedDecl : this.enclosed()) {
-            LoxClass generated = enclosedDecl.createSkeleton();
+            ScriptedClass generated = enclosedDecl.createSkeleton();
             enclosedDecl.target().setTarget(generated);
             enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
         }

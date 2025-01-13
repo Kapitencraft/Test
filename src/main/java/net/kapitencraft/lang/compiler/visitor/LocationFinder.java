@@ -3,10 +3,6 @@ package net.kapitencraft.lang.compiler.visitor;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.run.algebra.Operand;
-import net.kapitencraft.lang.run.algebra.OperationType;
 
 public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> {
 

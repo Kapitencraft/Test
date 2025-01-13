@@ -14,21 +14,20 @@ import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
-import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public interface LoxClass {
+public interface ScriptedClass {
     Map<String, Object> staticFieldData = new HashMap<>();
 
     default boolean isArray() {
         return false;
     }
 
-    default LoxClass array() {
+    default ScriptedClass array() {
         return new ArrayClass(this);
     }
 
@@ -42,7 +41,7 @@ public interface LoxClass {
     }
 
     //TODO move to reference?
-    default LoxClass getComponentType() {
+    default ScriptedClass getComponentType() {
         return null;
     }
 
@@ -52,7 +51,7 @@ public interface LoxClass {
      * @return the resulting type or {@link VarTypeManager#VOID}, if this operation is not possible (must return {@link VarTypeManager#BOOLEAN} or {@link VarTypeManager#VOID} for comparators)
      * <br><br>API note: it's recommended to call {@code super.checkOperation(...)} due to the given equality check
      */
-    default LoxClass checkOperation(OperationType type, Operand operand, ClassReference other) {
+    default ScriptedClass checkOperation(OperationType type, Operand operand, ClassReference other) {
         return type.is(TokenTypeCategory.EQUALITY) && other.is(this) ? VarTypeManager.BOOLEAN : VarTypeManager.VOID;
     }
 
@@ -111,7 +110,7 @@ public interface LoxClass {
         }
     }
 
-    default Object assignStaticFieldWithOperator(String name, Object val, Token type, LoxClass executor, Operand operand) {
+    default Object assignStaticFieldWithOperator(String name, Object val, Token type, ScriptedClass executor, Operand operand) {
         checkInit();
         Object newVal = Interpreter.INSTANCE.visitAlgebra(getStaticField(name), val, executor, type, operand);
         return this.assignStaticField(name, newVal);
@@ -184,11 +183,11 @@ public interface LoxClass {
 
     boolean isInterface();
 
-    default boolean is(LoxClass other) {
+    default boolean is(ScriptedClass other) {
         return other == this;
     }
 
-    default boolean isParentOf(LoxClass suspectedChild) {
+    default boolean isParentOf(ScriptedClass suspectedChild) {
         if (suspectedChild.is(this) || (!suspectedChild.isInterface() && VarTypeManager.OBJECT.get().is(this))) return true;
         while (suspectedChild != null && suspectedChild.superclass() != null && suspectedChild != VarTypeManager.OBJECT.get()  && !suspectedChild.is(this)) {
             suspectedChild = suspectedChild.superclass().get();
@@ -196,7 +195,7 @@ public interface LoxClass {
         return suspectedChild != null && suspectedChild.is(this);
     }
 
-    default boolean isChildOf(LoxClass suspectedParent) {
+    default boolean isChildOf(ScriptedClass suspectedParent) {
         return suspectedParent.isParentOf(this);
     }
 

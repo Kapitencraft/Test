@@ -6,7 +6,7 @@ import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.natives.impl.NativeFieldImpl;
 import net.kapitencraft.lang.run.natives.impl.NativeMethodImpl;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.natives.NativeExcluded;
 import net.kapitencraft.lang.run.natives.NativeClass;
 import org.reflections.Reflections;
@@ -18,7 +18,7 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 
 public class NativeClassLoader {
-    private static final Map<Class<?>, LoxClass> classLookup = new HashMap<>();
+    private static final Map<Class<?>, ScriptedClass> classLookup = new HashMap<>();
 
     static {
         classLookup.put(Number.class, VarTypeManager.NUMBER);

@@ -26,9 +26,9 @@ public abstract class ClassHolder {
         return ClassLoader.pck(file);
     }
 
-    public abstract LoxClass createSkeleton();
+    public abstract ScriptedClass createSkeleton();
 
-    public abstract LoxClass loadClass();
+    public abstract ScriptedClass loadClass();
 
     @Override
     public boolean equals(Object obj) {

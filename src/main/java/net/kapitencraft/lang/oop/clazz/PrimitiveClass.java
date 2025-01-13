@@ -11,12 +11,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 
-public abstract class PrimitiveClass implements LoxClass {
+public abstract class PrimitiveClass implements ScriptedClass {
     private final String name;
-    private final LoxClass superclass;
+    private final ScriptedClass superclass;
     private final Object defaultValue;
 
-    public PrimitiveClass(LoxClass superclass, String name, Object defaultValue) {
+    public PrimitiveClass(ScriptedClass superclass, String name, Object defaultValue) {
         this.name = name;
         this.superclass = superclass;
         this.defaultValue = defaultValue;

@@ -1,8 +1,7 @@
 package net.kapitencraft.lang.exception.runtime;
 
 import net.kapitencraft.lang.oop.clazz.inst.AbstractClassInstance;
-import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.Interpreter;
 
 import java.util.List;
@@ -18,7 +17,7 @@ public class AbstractScriptedException extends RuntimeException {
         this.exceptionType = exceptionType;
     }
 
-    public static AbstractScriptedException createException(Supplier<LoxClass> clazz, String msg) {
+    public static AbstractScriptedException createException(Supplier<ScriptedClass> clazz, String msg) {
         return new AbstractScriptedException(clazz.get().createNativeInst(List.of(msg), 0, Interpreter.INSTANCE));
     }
 }

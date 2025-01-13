@@ -2,7 +2,6 @@ package net.kapitencraft.lang.run.natives.impl;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 import java.util.List;
 

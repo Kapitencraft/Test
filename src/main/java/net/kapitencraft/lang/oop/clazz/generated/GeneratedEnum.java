@@ -10,7 +10,7 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.EnumClass;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
 import net.kapitencraft.lang.oop.field.GeneratedField;
@@ -67,7 +67,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     public GeneratedEnum(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
                          List<ScriptedCallable> constructorData,
                          Map<String, GeneratedField> allFields,
-                         Function<LoxClass, Map<String, GeneratedEnumConstant>> enumConstants,
+                         Function<ScriptedClass, Map<String, GeneratedEnumConstant>> enumConstants,
                          Map<String, GeneratedField> allStaticFields,
                          Map<String, ClassReference> enclosing, ClassReference[] implemented, String name, String packageRepresentation) {
         this.methods = new GeneratedMethodMap(methods);
@@ -95,7 +95,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
 
         ImmutableMap<String, GeneratedField> fields = GeneratedField.loadFieldMap(data, "fields");
         ImmutableMap<String, GeneratedField> staticFields = GeneratedField.loadFieldMap(data, "staticFields");
-        Function<LoxClass, Map<String, GeneratedEnumConstant>> enumConstants = GeneratedEnumConstant.loadFieldMap(data, "enumConstants");
+        Function<ScriptedClass, Map<String, GeneratedEnumConstant>> enumConstants = GeneratedEnumConstant.loadFieldMap(data, "enumConstants");
 
         Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));
 

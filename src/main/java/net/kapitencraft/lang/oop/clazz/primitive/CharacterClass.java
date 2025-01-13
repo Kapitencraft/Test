@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.oop.clazz.primitive;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.algebra.Operand;
@@ -13,7 +13,7 @@ public class CharacterClass extends PrimitiveClass {
     }
 
     @Override
-    public LoxClass checkOperation(OperationType type, Operand operand, ClassReference other) {
+    public ScriptedClass checkOperation(OperationType type, Operand operand, ClassReference other) {
         if (other.is(VarTypeManager.INTEGER)) {
             return type.isComparator() ? VarTypeManager.BOOLEAN : VarTypeManager.INTEGER;
         }

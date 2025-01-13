@@ -9,6 +9,8 @@ generate method contents //construct
 Abschließen //generateClass
 Speichern //cache
 
+TODO add python slices because sick
+
 Enthält alle Probleme samt lösung
 
 Problem 1:

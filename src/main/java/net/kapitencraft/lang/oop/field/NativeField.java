@@ -1,7 +1,6 @@
 package net.kapitencraft.lang.oop.field;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
 
 public abstract class NativeField extends ScriptedField {
     private final ClassReference type;

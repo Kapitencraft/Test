@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.env.core;
 
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 
 public class Environment {
@@ -39,7 +39,7 @@ public class Environment {
         vars.assign(name, value);
     }
 
-    public Object assignVarWithOperator(Token type, Token name, Object value, LoxClass executor, Operand operand) {
+    public Object assignVarWithOperator(Token type, Token name, Object value, ScriptedClass executor, Operand operand) {
         return vars.assignWithOperator(type, name, value, executor, operand);
     }
 

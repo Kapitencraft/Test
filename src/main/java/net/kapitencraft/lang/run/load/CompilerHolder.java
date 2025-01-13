@@ -8,7 +8,7 @@ import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,13 +92,13 @@ public class CompilerHolder extends ClassHolder {
     }
 
     @Override
-    public LoxClass createSkeleton() {
+    public ScriptedClass createSkeleton() {
         if (!checkConstructorCreated()) return null;
         return constructor.applySkeleton();
     }
 
     @Override
-    public LoxClass loadClass() {
+    public ScriptedClass loadClass() {
         if (!checkConstructorCreated()) return null;
 
         if (builder.superclass() != null) {

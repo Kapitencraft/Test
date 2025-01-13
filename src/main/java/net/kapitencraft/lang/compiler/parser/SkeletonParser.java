@@ -6,7 +6,7 @@ import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -497,7 +497,7 @@ public class SkeletonParser extends AbstractParser {
 
         I construct(StmtParser stmtParser, ExprParser exprParser);
 
-        LoxClass createSkeleton();
+        ScriptedClass createSkeleton();
 
         ClassReference target();
 
@@ -507,7 +507,7 @@ public class SkeletonParser extends AbstractParser {
 
         Compiler.ErrorLogger logger();
 
-        default LoxClass applySkeleton() {
+        default ScriptedClass applySkeleton() {
             this.target().setTarget(createSkeleton());
             return this.target().get();
         }

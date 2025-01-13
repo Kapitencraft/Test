@@ -41,7 +41,7 @@ public class VMHolder extends ClassHolder {
     }
 
     @Override
-    public LoxClass createSkeleton()  {
+    public ScriptedClass createSkeleton()  {
         List<ClassReference> enclosed = Arrays.stream(children).map(classHolder -> {
             classHolder.reference.setTarget(classHolder.createSkeleton());
             return classHolder.reference;
@@ -58,9 +58,9 @@ public class VMHolder extends ClassHolder {
     }
 
     @Override
-    public LoxClass loadClass()  {
+    public ScriptedClass loadClass()  {
         List<ClassReference> enclosed = Arrays.stream(children).map(ClassHolder::loadClass).map(ClassReference::of).toList();
-        LoxClass target;
+        ScriptedClass target;
         if (isInterface())
             target = GeneratedInterface.load(data, enclosed, pck());
         else if ("enum".equals(type))

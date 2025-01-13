@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class SkeletonClass implements LoxClass {
+public class SkeletonClass implements ScriptedClass {
     private final String name;
     private final String pck;
 
@@ -157,7 +157,7 @@ public class SkeletonClass implements LoxClass {
 
     @Override
     public boolean hasField(String name) {
-        return this.fields.containsKey(name) || LoxClass.super.hasField(name);
+        return this.fields.containsKey(name) || ScriptedClass.super.hasField(name);
     }
 
     @Override
@@ -227,7 +227,7 @@ public class SkeletonClass implements LoxClass {
 
     @Override
     public boolean hasMethod(String name) {
-        return methods.has(name) || LoxClass.super.hasMethod(name);
+        return methods.has(name) || ScriptedClass.super.hasMethod(name);
     }
 
     @Override

@@ -11,7 +11,7 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.tool.Pair;
@@ -230,7 +230,7 @@ public class ExprParser extends AbstractParser {
         ClassReference executor = left;
         OperationType type = OperationType.of(operator);
         assert type != null;
-        LoxClass result = left.get().checkOperation(type, operand, right);
+        ScriptedClass result = left.get().checkOperation(type, operand, right);
         if (result == VarTypeManager.VOID) {
             operand = Operand.RIGHT;
             result = right.get().checkOperation(type, operand, left);
@@ -445,7 +445,7 @@ public class ExprParser extends AbstractParser {
                 else error(locFinder.find(expr), "obj expected");
             } else if (match(DOT)) {
                 Token name = consume(IDENTIFIER, "Expect property name after '.'");
-                LoxClass targetType = finder.findRetType(expr).get();
+                ScriptedClass targetType = finder.findRetType(expr).get();
                 if (!check(BRACKET_O)) { //ensure not to check for field if it's a method
                     if (!targetType.hasField(name.lexeme())) error(name, "unknown symbol");
                 } else

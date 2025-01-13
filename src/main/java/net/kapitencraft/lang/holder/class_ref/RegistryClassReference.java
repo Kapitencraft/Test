@@ -1,19 +1,19 @@
 package net.kapitencraft.lang.holder.class_ref;
 
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 import java.util.function.Supplier;
 
 public class RegistryClassReference extends ClassReference {
-    private final Supplier<LoxClass> sup;
+    private final Supplier<ScriptedClass> sup;
 
-    public RegistryClassReference(String name, Supplier<LoxClass> sup) {
+    public RegistryClassReference(String name, Supplier<ScriptedClass> sup) {
         super(name);
         this.sup = sup;
     }
 
     public void create() {
-        LoxClass val = sup.get(); //bruh
+        ScriptedClass val = sup.get(); //bruh
         this.setTarget(val);
     }
 }

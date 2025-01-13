@@ -3,7 +3,7 @@ package net.kapitencraft.lang.compiler;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.holder.LiteralHolder;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 
@@ -76,7 +76,7 @@ public class Lexer {
         else addToken(type, LiteralHolder.EMPTY);
     }
 
-    private void addToken(TokenType type, Object literal, LoxClass literalClass) {
+    private void addToken(TokenType type, Object literal, ScriptedClass literalClass) {
         this.addToken(type, new LiteralHolder(literal, literalClass));
     }
 

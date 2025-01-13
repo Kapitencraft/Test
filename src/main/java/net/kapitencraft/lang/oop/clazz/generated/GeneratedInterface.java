@@ -9,8 +9,8 @@ import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.oop.clazz.LoxInterface;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedInterface;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class GeneratedInterface implements LoxInterface, CacheableClass {
+public class GeneratedInterface implements ScriptedInterface, CacheableClass {
     private final GeneratedMethodMap methods;
     private final MethodLookup lookup;
     private final Map<String, DataMethodContainer> allMethods;
@@ -51,7 +51,7 @@ public class GeneratedInterface implements LoxInterface, CacheableClass {
         this.lookup = MethodLookup.createFromClass(this);
     }
 
-    public static LoxClass load(JsonObject data, List<ClassReference> enclosed, String pck) {
+    public static ScriptedClass load(JsonObject data, List<ClassReference> enclosed, String pck) {
         String name = GsonHelper.getAsString(data, "name");
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
         ImmutableMap<String, DataMethodContainer> staticMethods = DataMethodContainer.load(data, name, "staticMethods");

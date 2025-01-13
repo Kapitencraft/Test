@@ -12,7 +12,7 @@ import net.kapitencraft.lang.run.Interpreter;
 import java.util.List;
 import java.util.Map;
 
-public interface EnumClass extends LoxClass {
+public interface EnumClass extends ScriptedClass {
 
     Map<String, ? extends ScriptedField> enumConstants();
 
@@ -25,7 +25,7 @@ public interface EnumClass extends LoxClass {
     @Override
     default void clInit() {
         startClInit();
-        LoxClass.super.clInit();
+        ScriptedClass.super.clInit();
         ImmutableMap.Builder<String, ClassInstance> constants = new ImmutableMap.Builder<>();
         this.enumConstants().forEach((s, loxField) -> {
             constants.put(s, (ClassInstance) loxField.initialize(null, Interpreter.INSTANCE));

@@ -7,7 +7,7 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.natives.scripted.lang.IndexOutOfBoundsException;
 import net.kapitencraft.lang.natives.scripted.lang.SystemClass;
 import net.kapitencraft.lang.natives.scripted.lang.annotation.OverrideAnnotation;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.primitive.*;
 
@@ -20,13 +20,13 @@ public class VarTypeManager {
     private static final Package root = new Package("");
     private static final Package langRoot = getOrCreatePackage("scripted.lang");
 
-    public static final LoxClass NUMBER = new NumberClass();
-    public static final LoxClass INTEGER = new IntegerClass();
-    public static final LoxClass FLOAT = new FloatClass();
-    public static final LoxClass DOUBLE = new DoubleClass();
-    public static final LoxClass BOOLEAN = new BooleanClass();
-    public static final LoxClass CHAR = new CharacterClass();
-    public static final LoxClass VOID = new VoidClass();
+    public static final ScriptedClass NUMBER = new NumberClass();
+    public static final ScriptedClass INTEGER = new IntegerClass();
+    public static final ScriptedClass FLOAT = new FloatClass();
+    public static final ScriptedClass DOUBLE = new DoubleClass();
+    public static final ScriptedClass BOOLEAN = new BooleanClass();
+    public static final ScriptedClass CHAR = new CharacterClass();
+    public static final ScriptedClass VOID = new VoidClass();
 
     public static final ClassReference OBJECT = registerMain(ObjectClass::new, "Object");
 
@@ -54,22 +54,22 @@ public class VarTypeManager {
         data.forEach(RegistryClassReference::create);
     }
 
-    public static ClassReference register(Package pck, String name, Supplier<LoxClass> sup, Class<?> target) {
+    public static ClassReference register(Package pck, String name, Supplier<ScriptedClass> sup, Class<?> target) {
         RegistryClassReference classReference = new RegistryClassReference(name, sup);
         data.add(classReference);
         pck.addClass(name, classReference);
         return classReference;
     }
 
-    public static ClassReference register(Package pck, String name, Supplier<LoxClass> sup) {
+    public static ClassReference register(Package pck, String name, Supplier<ScriptedClass> sup) {
         return register(pck, name, sup, null);
     }
 
-    private static ClassReference registerMain(Supplier<LoxClass> sup, String name) {
+    private static ClassReference registerMain(Supplier<ScriptedClass> sup, String name) {
         return register(langRoot, name, sup);
     }
 
-    private static ClassReference registerMain(Supplier<LoxClass> sup, String name, Class<?> target) {
+    private static ClassReference registerMain(Supplier<ScriptedClass> sup, String name, Class<?> target) {
         return register(langRoot, name, sup, target);
     }
 

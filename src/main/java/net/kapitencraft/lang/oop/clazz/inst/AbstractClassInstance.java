@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.oop.clazz.inst;
 
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.algebra.Operand;
 
@@ -11,7 +11,7 @@ public interface AbstractClassInstance {
 
     Object assignField(String name, Object val);
 
-    Object assignFieldWithOperator(String name, Object val, Token type, LoxClass executor, Operand operand);
+    Object assignFieldWithOperator(String name, Object val, Token type, ScriptedClass executor, Operand operand);
 
     Object specialAssign(String name, Token assignType);
 
@@ -21,5 +21,5 @@ public interface AbstractClassInstance {
 
     Object executeMethod(String name, int ordinal, List<Object> arguments, Interpreter interpreter);
 
-    LoxClass getType();
+    ScriptedClass getType();
 }

@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -17,17 +17,17 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class MethodLookup {
-    private final List<Pair<LoxClass, AbstractMethodMap>> lookup;
+    private final List<Pair<ScriptedClass, AbstractMethodMap>> lookup;
     private final AbstractMethodMap exposed; //TODO make a new one for method lookup k
 
-    public MethodLookup(List<Pair<LoxClass, AbstractMethodMap>> lookup) {
+    public MethodLookup(List<Pair<ScriptedClass, AbstractMethodMap>> lookup) {
         this.lookup = lookup;
         exposed = this.createExposed();
     }
 
     public void checkFinal(Compiler.ErrorLogger logger, Pair<Token, GeneratedCallable>[] map) {
         for (Pair<Token, GeneratedCallable> pair : map) {
-            for (Pair<LoxClass, AbstractMethodMap> lookupElement : lookup) {
+            for (Pair<ScriptedClass, AbstractMethodMap> lookupElement : lookup) {
                 Map<String, DataMethodContainer> methodMap = lookupElement.right().asMap();
                 if (!methodMap.containsKey(pair.left().lexeme())) continue; //no method with name found, continuing
                 for (ScriptedCallable method : methodMap.get(pair.left().lexeme()).getMethods()) {
@@ -41,19 +41,19 @@ public class MethodLookup {
     }
 
     public void checkAbstract(Compiler.ErrorLogger logger, Token className, Pair<Token, GeneratedCallable>[] map) {
-        Map<String, List<Pair<LoxClass, ScriptedCallable>>> abstracts = new HashMap<>();
-        for (Pair<LoxClass, AbstractMethodMap> methods : lookup) {
+        Map<String, List<Pair<ScriptedClass, ScriptedCallable>>> abstracts = new HashMap<>();
+        for (Pair<ScriptedClass, AbstractMethodMap> methods : lookup) {
             methods.right().asMap().forEach((s, dataMethodContainer) -> {
                 a: for (ScriptedCallable method : dataMethodContainer.getMethods()) {
-                    List<Pair<LoxClass, ScriptedCallable>> classData = abstracts.computeIfAbsent(s, k -> new ArrayList<>());
+                    List<Pair<ScriptedClass, ScriptedCallable>> classData = abstracts.computeIfAbsent(s, k -> new ArrayList<>());
                     if (method.isAbstract()) {
-                        for (Pair<LoxClass, ScriptedCallable> pair : classData) {
+                        for (Pair<ScriptedClass, ScriptedCallable> pair : classData) {
                             if (Util.matchArgs(pair.right().argTypes(), method.argTypes())) continue a;
                         }
                         classData.add(Pair.of(methods.left(), method));
                     } else {
                         for (int i = 0; i < classData.size(); i++) {
-                            Pair<LoxClass, ScriptedCallable> pair = classData.get(i);
+                            Pair<ScriptedClass, ScriptedCallable> pair = classData.get(i);
                             if (Util.matchArgs(pair.right().argTypes(), method.argTypes())) {
                                 classData.remove(i);
                                 continue a;
@@ -64,7 +64,7 @@ public class MethodLookup {
             });
         }
         for (Pair<Token, GeneratedCallable> pair : map) {
-            List<Pair<LoxClass, ScriptedCallable>> methods = abstracts.get(pair.left().lexeme());
+            List<Pair<ScriptedClass, ScriptedCallable>> methods = abstracts.get(pair.left().lexeme());
             if (methods == null) continue; //no abstract method for that name, continuing
             methods.removeIf(callablePair -> Util.matchArgs(pair.right().argTypes(), callablePair.right().argTypes()));
         }
@@ -78,43 +78,43 @@ public class MethodLookup {
         });
     }
 
-    public static MethodLookup createFromClass(LoxClass loxClass, ClassReference... interfaces) {
-        List<LoxClass> parentMap = createParentMap(loxClass);
-        List<LoxClass> allParents = new ArrayList<>();
+    public static MethodLookup createFromClass(ScriptedClass scriptedClass, ClassReference... interfaces) {
+        List<ScriptedClass> parentMap = createParentMap(scriptedClass);
+        List<ScriptedClass> allParents = new ArrayList<>();
         for (ClassReference i : interfaces) {
             addInterfaces(i.get(), allParents::add);
             allParents.add(i.get());
         }
-        for (LoxClass parent : parentMap) {
+        for (ScriptedClass parent : parentMap) {
             addInterfaces(parent, allParents::add);
             allParents.add(parent);
         }
-        List<Pair<LoxClass, AbstractMethodMap>> lookup = allParents.stream().collect(Util.toPairList(Function.identity(), LoxClass::getMethods));
+        List<Pair<ScriptedClass, AbstractMethodMap>> lookup = allParents.stream().collect(Util.toPairList(Function.identity(), ScriptedClass::getMethods));
         return new MethodLookup(lookup);
     }
 
-    private static void addInterfaces(LoxClass target, Consumer<LoxClass> sink) {
+    private static void addInterfaces(ScriptedClass target, Consumer<ScriptedClass> sink) {
         if (target.interfaces() != null) for (ClassReference anInterface : target.interfaces()) {
             addInterfaces(anInterface.get(), sink);
             sink.accept(anInterface.get());
         }
     }
 
-    private static List<LoxClass> createParentMap(LoxClass loxClass) {
-        Objects.requireNonNull(loxClass, "Can not create parent map for null class!");
-        List<LoxClass> parents = new ArrayList<>();
-        if (loxClass.superclass() != null) {
+    private static List<ScriptedClass> createParentMap(ScriptedClass scriptedClass) {
+        Objects.requireNonNull(scriptedClass, "Can not create parent map for null class!");
+        List<ScriptedClass> parents = new ArrayList<>();
+        if (scriptedClass.superclass() != null) {
             do {
-                parents.add(loxClass);
-                loxClass = loxClass.superclass().get();
-            } while (loxClass != null && loxClass.superclass() != null);
+                parents.add(scriptedClass);
+                scriptedClass = scriptedClass.superclass().get();
+            } while (scriptedClass != null && scriptedClass.superclass() != null);
         }
         return Util.invert(parents);
     }
 
     private GeneratedMethodMap createExposed() {
         Map<String, DataMethodContainer> map = new HashMap<>();
-        for (Pair<LoxClass, AbstractMethodMap> pair : lookup) {
+        for (Pair<ScriptedClass, AbstractMethodMap> pair : lookup) {
             pair.right().asMap().forEach((s, dataMethodContainer) -> {
                 if (!map.containsKey(s)) map.put(s, dataMethodContainer);
                 else {

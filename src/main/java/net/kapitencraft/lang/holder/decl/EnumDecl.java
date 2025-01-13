@@ -12,7 +12,7 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.baked.BakedEnum;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonEnum;
 import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
 import net.kapitencraft.lang.oop.field.SkeletonField;
@@ -123,7 +123,7 @@ public record EnumDecl(VarTypeParser parser, Compiler.ErrorLogger logger,
     }
 
     @Override
-    public LoxClass createSkeleton() {
+    public ScriptedClass createSkeleton() {
         ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
         ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
         List<String> finalFields = new ArrayList<>();
@@ -140,7 +140,7 @@ public record EnumDecl(VarTypeParser parser, Compiler.ErrorLogger logger,
         //enclosed classes
         ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
         for (SkeletonParser.ClassConstructor<?> enclosedDecl : this.enclosed()) {
-            LoxClass generated = enclosedDecl.createSkeleton();
+            ScriptedClass generated = enclosedDecl.createSkeleton();
             enclosedDecl.target().setTarget(generated);
             enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
         }

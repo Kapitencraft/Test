@@ -9,7 +9,6 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.tool.GsonHelper;

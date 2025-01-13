@@ -1,12 +1,11 @@
 package net.kapitencraft.lang.holder;
 
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.tool.GsonHelper;
 
-public record LiteralHolder(Object value, LoxClass type) {
+public record LiteralHolder(Object value, ScriptedClass type) {
 
     public static final LiteralHolder EMPTY = new LiteralHolder(null, null);
 
@@ -38,7 +37,7 @@ public record LiteralHolder(Object value, LoxClass type) {
     public static LiteralHolder fromJson(JsonObject object) {
         if (object.isEmpty()) return EMPTY;
         String type = GsonHelper.getAsString(object, "type");
-        LoxClass target = switch (type) {
+        ScriptedClass target = switch (type) {
             case "int" -> VarTypeManager.INTEGER;
             case "float" -> VarTypeManager.FLOAT;
             case "double" -> VarTypeManager.DOUBLE;

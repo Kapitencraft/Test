@@ -3,8 +3,7 @@ package net.kapitencraft.lang.oop.clazz.inst;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.holder.token.TokenType;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.tool.Math;
@@ -16,13 +15,13 @@ import java.util.Map;
 public class ClassInstance implements AbstractClassInstance {
     private final Environment environment;
     private final Map<String, Object> fields = new HashMap<>();
-    private final LoxClass type;
+    private final ScriptedClass type;
 
-    public LoxClass getType() {
+    public ScriptedClass getType() {
         return type;
     }
 
-    public ClassInstance(LoxClass type, Interpreter interpreter) {
+    public ClassInstance(ScriptedClass type, Interpreter interpreter) {
         this.environment = new Environment();
         environment.defineVar("this", this);
         environment.defineVar("super", this); //TODO add scoped method map
@@ -39,7 +38,7 @@ public class ClassInstance implements AbstractClassInstance {
         return getField(name);
     }
 
-    public Object assignFieldWithOperator(String name, Object val, Token type, LoxClass executor, Operand operand) {
+    public Object assignFieldWithOperator(String name, Object val, Token type, ScriptedClass executor, Operand operand) {
         Object newVal = Interpreter.INSTANCE.visitAlgebra(getField(name), val, executor, type, operand);
         return this.assignField(name, newVal);
     }

@@ -9,7 +9,7 @@ import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.exception.EscapeLoop;
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.tool.Math;
@@ -47,7 +47,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return object.toString();
     }
 
-    public void runMainMethod(LoxClass target, String data) {
+    public void runMainMethod(ScriptedClass target, String data) {
         if (!target.hasStaticMethod("main")) return;
         suppressClassLoad = true;
         Optional.ofNullable(target.getStaticMethod("main", List.of(VarTypeManager.STRING.array())))
@@ -209,7 +209,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             boolean handled = false;
             a: for (Pair<Pair<List<ClassReference>, Token>, Stmt.Block> pair : stmt.catches) {
                 Pair<List<ClassReference>, Token> constData = pair.left();
-                LoxClass causer = e.exceptionType.getType();
+                ScriptedClass causer = e.exceptionType.getType();
                 for (ClassReference loxClass : constData.left()) {
                     if (causer.isChildOf(loxClass.get())) {
                         environment.push();
@@ -321,7 +321,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Object visitCastCheckExpr(Expr.CastCheck expr) {
         Object object = evaluate(expr.object);
         if (object instanceof AbstractClassInstance instance) {
-            LoxClass type = instance.getType();
+            ScriptedClass type = instance.getType();
             if (type.isParentOf(expr.targetType.get())) {
                 if (expr.patternVarName != null) {
                     environment.defineVar(expr.patternVarName.lexeme(), instance);
@@ -364,7 +364,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return data;
     }
 
-    private Object staticCall(LoxClass target, String name, int ordinal, List<Object> args) {
+    private Object staticCall(ScriptedClass target, String name, int ordinal, List<Object> args) {
         return target.getStaticMethodByOrdinal(name, ordinal).call(new Environment(), this, args);
     }
 
@@ -423,7 +423,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
     }
 
-    public Object visitAlgebra(Object left, Object right, LoxClass executor, Token operator, Operand operand) {
+    public Object visitAlgebra(Object left, Object right, ScriptedClass executor, Token operator, Operand operand) {
         try {
             return executor.doOperation(OperationType.of(operator), operand, operand == Operand.LEFT ? left : right, operand == Operand.LEFT ? right : left);
         } catch (ArithmeticException e) {
