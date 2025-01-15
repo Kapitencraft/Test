@@ -3,8 +3,7 @@ package net.kapitencraft.lang.oop.clazz.inst;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
-import net.kapitencraft.lang.oop.clazz.AnnotationClass;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.algebra.Operand;
 
@@ -39,7 +38,7 @@ public class AnnotationClassInstance implements AbstractClassInstance {
     }
 
     @Override
-    public Object assignFieldWithOperator(String name, Object val, Token type, LoxClass executor, Operand operand) {
+    public Object assignFieldWithOperator(String name, Object val, Token type, ScriptedClass executor, Operand operand) {
         throw new IllegalAccessError("can not assign field of annotation");
     }
 
@@ -64,7 +63,7 @@ public class AnnotationClassInstance implements AbstractClassInstance {
     }
 
     @Override
-    public LoxClass getType() {
+    public ScriptedClass getType() {
         return type;
     }
 }

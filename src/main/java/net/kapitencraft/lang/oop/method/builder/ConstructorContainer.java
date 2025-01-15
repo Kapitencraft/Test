@@ -6,7 +6,7 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.tool.Util;
 
@@ -19,7 +19,7 @@ public class ConstructorContainer extends DataMethodContainer {
         super(methods);
     }
 
-    public static ConstructorContainer fromCache(List<ScriptedCallable> methods, LoxClass targetClass) {
+    public static ConstructorContainer fromCache(List<ScriptedCallable> methods, ScriptedClass targetClass) {
         if (methods.isEmpty()) {
             methods.add(new ScriptedCallable() {
 
@@ -74,7 +74,7 @@ public class ConstructorContainer extends DataMethodContainer {
             methods.add(callable);
         }
 
-        public ConstructorContainer build(LoxClass targetClass) {
+        public ConstructorContainer build(ScriptedClass targetClass) {
             if (methods.isEmpty()) {
                 if (finalVars.isEmpty()) {
                     methods.add(new ScriptedCallable() {

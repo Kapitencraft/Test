@@ -1,8 +1,7 @@
 package net.kapitencraft.lang.oop;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.LoxClass;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ public class Package {
         return classes.get(name);
     }
 
-    public void addClass(String name, LoxClass cl) {
+    public void addClass(String name, ScriptedClass cl) {
         if (!classes.containsKey(name))
             classes.put(name, ClassReference.of(cl));
         else

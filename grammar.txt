@@ -15,7 +15,11 @@ varDecl     -> "final"? VAR_TYPE IDENTIFIER ( "=" expression )? ";"
 
 statement   -> exprStmt | forStmt | ifStmt | tryStmt | thrStmt | returnStmt | whileStmt | block
 exprStmt    -> switch | call | assignment ";"
-forStmt     -> "for" "(" ( varDecl | exprStmt)? ";" expression? ";" expression? ")" statement
+forStmt     -> forIStmt | forEachStmt
+
+forEachStmt -> "for" "(" VAR_TYPE IDENTIFIER ":" expression ")" statement
+forIStmt    -> "for" "(" ( varDecl | exprStmt)? ";" expression? ";" expression? ")" statement
+
 ifStmt      -> "if" "(" expression ")" statement ( "elif" "(" expression ")" statement )* ( "else" statement )?
 tryStmt     -> "try" "{" statement* "}" ( ( "catch" "(" VAR_TYPE ( "|" VAR_TYPE )* IDENTIFIER ")" "{" statement* "}" ) | ("finally" "{" statement* "}"
 thrStmt     -> "throw" expression ";"
