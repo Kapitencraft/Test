@@ -2,8 +2,10 @@ package net.kapitencraft.lang.compiler.parser;
 
 import com.google.common.collect.ImmutableList;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.VarTypeParser;
@@ -16,6 +18,7 @@ import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 
 import java.util.*;
+import java.util.prefs.PreferenceChangeEvent;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
@@ -170,66 +173,57 @@ public class AbstractParser {
         throw error(peek(), message);
     }
 
-    protected Optional<ClassReference> tryConsumeVarType() {
-        if (VarTypeManager.hasPackage(peek().lexeme())) {
-            if (!varAnalyser.has(peek().lexeme())) {
-                return Optional.of(consumeVarType());
-            }
+    protected Optional<SourceClassReference> tryConsumeVarType() {
+        if (VarTypeManager.hasPackage(peek().lexeme()) && !varAnalyser.has(peek().lexeme())) {
+            return Optional.of(consumeVarType());
         }
-        ClassReference loxClass = parser.getClass(advance().lexeme());
-        if (loxClass != null && !check(DOT)) {
-            return Optional.of(loxClass);
+        Token t = advance();
+        ClassReference reference = parser.getClass(t.lexeme());
+        if ( reference != null && !check(DOT)) {
+            return Optional.of(SourceClassReference.from(t,  reference));
         } else
             current--;
         return Optional.empty();
     }
 
-    protected ClassReference consumeVarType() {
+    protected SourceClassReference consumeVarType() {
         StringBuilder typeName = new StringBuilder();
         Token token = consumeIdentifier();
         typeName.append(token.lexeme());
-        ClassReference loxClass = parser.getClass(token.lexeme());
-        if (loxClass == null) {
+        ClassReference reference = parser.getClass(token.lexeme());
+        if (reference == null) {
             Package p = VarTypeManager.getPackage(token.lexeme());
             while (match(DOT)) {
                 String id = consumeIdentifier().lexeme();
                 typeName.append(".").append(id);
                 if (p.hasClass(id)) {
-                    loxClass = p.getClass(id);
+                    reference = p.getClass(id);
                     break;
                 }
                 p = p.getPackage(id);
             }
         }
 
-        while (match(DOT) && loxClass != null) {
+        Token last = previous();
+        while (match(DOT) && reference != null) {
             String enclosingName = consumeIdentifier().lexeme();
             typeName.append(".").append(enclosingName);
-            if (!loxClass.get().hasEnclosing(enclosingName)) {
-                return loxClass;
+            if (!reference.get().hasEnclosing(enclosingName)) {
+                return SourceClassReference.from(last, reference);
             }
-            loxClass = loxClass.get().getEnclosing(enclosingName);
+            last = previous();
+            reference = reference.get().getEnclosing(enclosingName);
         }
-        if (loxClass == null) error(token, "unknown class '" + typeName + "'");
+        if (reference == null) {
+            error(token, "unknown class '" + typeName + "'");
+            return null; //skip rest
+        }
         else while (match(S_BRACKET_O)) {
             consume(S_BRACKET_C, "']' expected");
-            loxClass = loxClass.array();
+            reference = reference.array();
+            last = previous();
         }
-        return loxClass;
-    }
-
-    protected AbstractAnnotationClass parseAnnotationClass() {
-        ClassReference type = consumeVarType();
-        AbstractAnnotationClass target = null;
-        if (type.get() instanceof AbstractAnnotationClass annotationClass) {
-            target = annotationClass;
-        } else if (type instanceof AbstractAnnotationClass annotationClass) {
-            target = annotationClass;
-        }
-        if (target == null) {
-            error(previous(), "expected annotation class");
-        }
-        return target;
+        return SourceClassReference.from(last, reference);
     }
 
     protected Token consumeIdentifier() {

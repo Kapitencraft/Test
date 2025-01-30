@@ -199,7 +199,7 @@ public final class GeneratedAnnotation implements CacheableClass, AbstractAnnota
     }
 
     @Override
-    public String packageRepresentation() {
+    public String pck() {
         return packageRepresentation;
     }
 

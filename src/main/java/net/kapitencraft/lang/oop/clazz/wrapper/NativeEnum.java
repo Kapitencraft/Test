@@ -75,7 +75,7 @@ public class NativeEnum implements EnumClass {
     }
 
     @Override
-    public String packageRepresentation() {
+    public String pck() {
         return pck;
     }
 

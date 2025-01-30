@@ -9,4 +9,9 @@ public interface AbstractAnnotationClass extends ScriptedClass {
     default String findAbstractProperty() {
         return getAbstracts().isEmpty() ? null : getAbstracts().get(0);
     }
+
+    @Override
+    default ClassType getClassType() {
+        return ClassType.ANNOTATION;
+    }
 }

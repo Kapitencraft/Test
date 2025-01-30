@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
@@ -110,7 +111,7 @@ public class SkeletonInterface implements ScriptedClass {
     }
 
     @Override
-    public String packageRepresentation() {
+    public String pck() {
         return pck;
     }
 
@@ -182,5 +183,15 @@ public class SkeletonInterface implements ScriptedClass {
     @Override
     public GeneratedMethodMap getMethods() {
         return methods;
+    }
+
+    @Override
+    public ClassReference[] interfaces() {
+        return interfaces;
+    }
+
+    @Override
+    public ClassType getClassType() {
+        return ClassType.INTERFACE;
     }
 }

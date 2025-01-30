@@ -118,10 +118,10 @@ public interface ScriptedClass {
 
     String name();
 
-    String packageRepresentation(); //stupid keyword :agony:
+    String pck(); //stupid keyword :agony:
 
     default String absoluteName() {
-        return packageRepresentation() + name();
+        return pck() + name();
     }
 
     @Nullable ClassReference superclass();
@@ -219,4 +219,6 @@ public interface ScriptedClass {
     ClassReference getEnclosing(String name);
 
     AbstractMethodMap getMethods();
+
+    ClassType getClassType();
 }

@@ -62,4 +62,8 @@ public class Package {
     public Collection<Package> allPackages() {
         return packages.values();
     }
+
+    public String getName() {
+        return name;
+    }
 }

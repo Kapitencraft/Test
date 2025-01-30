@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
@@ -151,7 +152,7 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public String packageRepresentation() {
+    public String pck() {
         return pck + "." + name;
     }
 
@@ -243,5 +244,10 @@ public class SkeletonClass implements ScriptedClass {
     @Override
     public GeneratedMethodMap getMethods() {
         return methods;
+    }
+
+    @Override
+    public ClassType getClassType() {
+        return ClassType.CLASS;
     }
 }

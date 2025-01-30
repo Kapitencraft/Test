@@ -196,7 +196,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public String packageRepresentation() {
+    public String pck() {
         return packageRepresentation;
     }
 

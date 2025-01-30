@@ -8,6 +8,7 @@ import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
+import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -271,7 +272,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public String packageRepresentation() {
+    public String pck() {
         return packageRepresentation;
     }
 
@@ -297,5 +298,10 @@ public final class GeneratedClass implements CacheableClass {
     @Override
     public ClassReference[] interfaces() {
         return implemented;
+    }
+
+    @Override
+    public ClassType getClassType() {
+        return ClassType.CLASS;
     }
 }

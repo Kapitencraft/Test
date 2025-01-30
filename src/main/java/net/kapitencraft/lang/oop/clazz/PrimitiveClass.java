@@ -63,7 +63,7 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public String packageRepresentation() {
+    public String pck() {
         return "scripted.lang.";
     }
 
@@ -179,5 +179,10 @@ public abstract class PrimitiveClass implements ScriptedClass {
     @Override
     public ClassReference[] interfaces() {
         return new ClassReference[0];
+    }
+
+    @Override
+    public ClassType getClassType() {
+        return ClassType.CLASS;
     }
 }

@@ -57,4 +57,9 @@ public interface EnumClass extends ScriptedClass {
         if ("values".equals(name) && args.isEmpty()) return 0;
         return -1;
     }
+
+    @Override
+    default ClassType getClassType() {
+        return ClassType.ENUM;
+    }
 }

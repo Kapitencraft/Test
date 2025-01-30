@@ -23,7 +23,7 @@ import java.util.List;
 
 public class VMHolder extends ClassHolder {
     private final JsonObject data;
-    private final String type;
+    private final ClassType type;
 
     public VMHolder(File file, ClassHolder[] children) {
         super(file, children);
@@ -32,12 +32,12 @@ public class VMHolder extends ClassHolder {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-        this.type = GsonHelper.getAsString(data, "TYPE");
+        this.type = ClassType.valueOf(GsonHelper.getAsString(data, "TYPE"));
     }
 
     @Override
-    protected boolean isInterface() {
-        return "interface".equals(type);
+    protected ClassType getType() {
+        return type;
     }
 
     @Override
@@ -47,29 +47,26 @@ public class VMHolder extends ClassHolder {
             return classHolder.reference;
         }).toList();
         ClassReference[] enclosedClasses = enclosed.toArray(new ClassReference[0]);
-        if (isInterface())
-            return SkeletonInterface.fromCache(data, pck(), enclosedClasses);
-        else if ("enum".equals(type))
-            return SkeletonEnum.fromCache(data, pck(), enclosedClasses);
-        else if ("annotation".equals(type))
-            return SkeletonAnnotation.fromCache(data, pck(), enclosedClasses);
-        else
-            return SkeletonClass.fromCache(data, pck(), enclosedClasses);
+        return switch (type) {
+            case ENUM -> SkeletonEnum.fromCache(data, pck(), enclosedClasses);
+            case CLASS -> SkeletonClass.fromCache(data, pck(), enclosedClasses);
+            case INTERFACE -> SkeletonInterface.fromCache(data, pck(), enclosedClasses);
+            case ANNOTATION -> SkeletonAnnotation.fromCache(data, pck(), enclosedClasses);
+            case UNKNOWN -> throw new IllegalStateException("can not create class from unknown class type");
+        };
     }
 
     @Override
     public ScriptedClass loadClass()  {
         List<ClassReference> enclosed = Arrays.stream(children).map(ClassHolder::loadClass).map(ClassReference::of).toList();
         ScriptedClass target;
-        if (isInterface())
-            target = GeneratedInterface.load(data, enclosed, pck());
-        else if ("enum".equals(type))
-            target = GeneratedEnum.load(data, enclosed, pck());
-        else if ("annotation".equals(type))
-            target = GeneratedAnnotation.load(data, enclosed, pck());
-        else
-            target = GeneratedClass.load(data, enclosed, pck());
-
+        target = switch (type) {
+            case ANNOTATION -> GeneratedAnnotation.load(data, enclosed, pck());
+            case INTERFACE -> GeneratedInterface.load(data, enclosed, pck());
+            case CLASS -> GeneratedClass.load(data, enclosed, pck());
+            case ENUM -> GeneratedEnum.load(data, enclosed, pck());
+            case UNKNOWN -> throw new IllegalStateException("can not create class from unknown class type");
+        };
         this.reference.setTarget(target);
         return target;
     }

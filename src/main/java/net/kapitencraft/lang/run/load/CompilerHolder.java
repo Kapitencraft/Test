@@ -8,6 +8,7 @@ import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
+import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 import java.io.File;
@@ -34,6 +35,11 @@ public class CompilerHolder extends ClassHolder {
                 content.split("\n", Integer.MAX_VALUE), //second param required to not skip empty lines
                 file.getAbsolutePath().replace(".\\", "") //remove '\.\'
         );
+    }
+
+    @Override
+    protected ClassType getType() {
+        return null;
     }
 
     public void applyConstructor() {
@@ -72,7 +78,7 @@ public class CompilerHolder extends ClassHolder {
             Compiler.cache(
                     ClassLoader.cacheLoc,
                     builder,
-                    target.packageRepresentation().replace(".", "/"),
+                    target.pck().replace(".", "/"),
                     target,
                     target.name()
             );
@@ -80,11 +86,6 @@ public class CompilerHolder extends ClassHolder {
             System.err.println("Fehler beim Laden: " + e.getMessage());
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    protected boolean isInterface() {
-        return false;
     }
 
     protected boolean checkConstructorCreated() {

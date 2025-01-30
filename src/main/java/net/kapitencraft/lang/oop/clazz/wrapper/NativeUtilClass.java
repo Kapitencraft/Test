@@ -2,6 +2,7 @@ package net.kapitencraft.lang.oop.clazz.wrapper;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.NativeField;
@@ -55,13 +56,13 @@ public class NativeUtilClass implements ScriptedClass {
     }
 
     @Override
-    public String packageRepresentation() {
+    public String pck() {
         return pck;
     }
 
     @Override
     public String absoluteName() {
-        return packageRepresentation() + "." + name();
+        return pck() + "." + name();
     }
 
     @Override
@@ -132,5 +133,10 @@ public class NativeUtilClass implements ScriptedClass {
     @Override
     public GeneratedMethodMap getMethods() {
         return null;
+    }
+
+    @Override
+    public ClassType getClassType() {
+        return ClassType.CLASS;
     }
 }

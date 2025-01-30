@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
@@ -43,10 +44,10 @@ public class ExprParser extends AbstractParser {
 
     public Expr literalOrReference() {
         if (match(AT)) {
-            AbstractAnnotationClass target = parseAnnotationClass();
+            SourceClassReference reference = consumeVarType();
             Token errorPoint = previous();
             if (match(BRACKET_O)) {
-                parseAnnotationProperties(target, errorPoint);
+                parseAnnotationProperties(reference, errorPoint);
             }
         }
         if (match(PRIMITIVE)) {
@@ -63,7 +64,13 @@ public class ExprParser extends AbstractParser {
         return parseAnnotationProperties(obj.type(), obj.errorPoint());
     }
 
-    public AnnotationClassInstance parseAnnotationProperties(AbstractAnnotationClass type, Token errorPoint) {
+    public AnnotationClassInstance parseAnnotationProperties(SourceClassReference typeRef, Token errorPoint) {
+        AbstractAnnotationClass type = typeRef.get() instanceof AbstractAnnotationClass AAC ? AAC : null;
+
+        if (type == null) {
+            error(typeRef.getToken(), "annotation type expected");
+        }
+
         List<String> abstracts = type.getAbstracts();
         if (isAtEnd()) {
             if (!abstracts.isEmpty()) {

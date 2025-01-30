@@ -95,7 +95,7 @@ public class GeneratedInterface implements ScriptedInterface, CacheableClass {
     }
 
     @Override
-    public String packageRepresentation() {
+    public String pck() {
         return packageRepresentation;
     }
 

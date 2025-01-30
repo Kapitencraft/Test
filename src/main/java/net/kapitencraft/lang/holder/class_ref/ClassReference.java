@@ -1,26 +1,39 @@
 package net.kapitencraft.lang.holder.class_ref;
 
+import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 import java.util.Objects;
 import java.util.function.Supplier;
 
 public class ClassReference implements Supplier<ScriptedClass> {
-    private ScriptedClass target;
+    protected ScriptedClass target;
     private final String name;
+    private final String pck;
+    protected final ClassType type;
 
-    public ClassReference(String name) {
+    public ClassReference(String name, String pck, ClassType type) {
         this.name = name;
+        this.pck = pck;
+        this.type = type;
     }
 
     public String absoluteName() {
-        return get().absoluteName();
+        return pck + "." + name;
     }
 
-    public static ClassReference of(ScriptedClass setTarget) {
-        ClassReference reference = new ClassReference(setTarget.name());
-        reference.setTarget(setTarget);
+    public String pck() {
+        return pck;
+    }
+
+    public static ClassReference of(ScriptedClass target) {
+        ClassReference reference = new ClassReference(target.name(), target.pck(), target.getClassType());
+        reference.setTarget(target);
         return reference;
+    }
+
+    public ClassType getType() {
+        return type;
     }
 
     public String name() {
@@ -44,7 +57,7 @@ public class ClassReference implements Supplier<ScriptedClass> {
     }
 
     public ClassReference array() {
-        return new ClassWrapper(this.name + "[]", () -> target.array());
+        return new ClassWrapper(this.name + "[]", this.pck, () -> target.array());
     }
 
     @Override

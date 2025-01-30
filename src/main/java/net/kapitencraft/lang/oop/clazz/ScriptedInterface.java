@@ -49,4 +49,9 @@ public interface ScriptedInterface extends ScriptedClass {
     default @Nullable ClassReference superclass() {
         return ClassReference.of(VarTypeManager.VOID);
     }
+
+    @Override
+    default ClassType getClassType() {
+        return ClassType.INTERFACE;
+    }
 }

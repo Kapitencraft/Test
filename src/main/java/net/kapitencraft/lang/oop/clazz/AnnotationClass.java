@@ -51,7 +51,7 @@ public class AnnotationClass implements AbstractAnnotationClass {
     }
 
     @Override
-    public String packageRepresentation() {
+    public String pck() {
         return pck;
     }
 

@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -101,7 +102,7 @@ public class StmtParser extends ExprParser {
             if (match(WHILE)) return whileStatement();
             if (match(C_BRACKET_O)) return new Stmt.Block(block("block"));
             if (check(IDENTIFIER)) {
-                Optional<ClassReference> type = tryConsumeVarType();
+                Optional<SourceClassReference> type = tryConsumeVarType();
                 if (type.isPresent()) {
                     return varDeclaration(false, type.get());
                 }
@@ -191,7 +192,7 @@ public class StmtParser extends ExprParser {
         pushScope();
         loopIndex++;
 
-        Optional<ClassReference> type = tryConsumeVarType();
+        Optional<SourceClassReference> type = tryConsumeVarType();
 
         Stmt initializer;
         if (type.isPresent()) {

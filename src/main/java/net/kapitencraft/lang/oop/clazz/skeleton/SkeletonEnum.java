@@ -162,7 +162,7 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public String packageRepresentation() {
+    public String pck() {
         return pck + "." + name;
     }
 

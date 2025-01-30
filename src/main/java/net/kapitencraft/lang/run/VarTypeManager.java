@@ -7,6 +7,7 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.natives.scripted.lang.IndexOutOfBoundsException;
 import net.kapitencraft.lang.natives.scripted.lang.SystemClass;
 import net.kapitencraft.lang.natives.scripted.lang.annotation.OverrideAnnotation;
+import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.primitive.*;
@@ -28,23 +29,23 @@ public class VarTypeManager {
     public static final ScriptedClass CHAR = new CharacterClass();
     public static final ScriptedClass VOID = new VoidClass();
 
-    public static final ClassReference OBJECT = registerMain(ObjectClass::new, "Object");
+    public static final ClassReference OBJECT = registerMain(ClassType.CLASS, ObjectClass::new, "Object");
 
-    public static final ClassReference ENUM = registerMain(EnumClass::new, "Enum");
+    public static final ClassReference ENUM = registerMain(ClassType.CLASS, EnumClass::new, "Enum");
 
-    public static final ClassReference STRING = registerMain(StringClass::new, "String", String.class);
+    public static final ClassReference STRING = registerMain(StringClass::new, "String", ClassType.CLASS, String.class);
 
-    public static final ClassReference THROWABLE = registerMain(() -> new ThrowableClass("Throwable", "scripted.lang"), "Throwable");
-    public static final ClassReference STACK_OVERFLOW_EXCEPTION = registerMain(StackOverflowExceptionClass::new, "StackOverflowException");
-    public static final ClassReference MISSING_VAR_EXCEPTION = registerMain(MissingVarExceptionClass::new, "MissingVarException");
-    public static final ClassReference ARITHMETIC_EXCEPTION = registerMain(ArithmeticExceptionClass::new, "ArithmeticException");
-    public static final ClassReference FUNCTION_CALL_ERROR = registerMain(FunctionCallErrorClass::new, "FunctionCallError");
-    public static final ClassReference INDEX_OUT_OF_BOUNDS_EXCEPTION = registerMain(IndexOutOfBoundsException::new, "IndexOutOfBoundsException");
+    public static final ClassReference THROWABLE = registerMain(ClassType.CLASS, () -> new ThrowableClass("Throwable", "scripted.lang"), "Throwable");
+    public static final ClassReference STACK_OVERFLOW_EXCEPTION = registerMain(ClassType.CLASS, StackOverflowExceptionClass::new, "StackOverflowException");
+    public static final ClassReference MISSING_VAR_EXCEPTION = registerMain(ClassType.CLASS, MissingVarExceptionClass::new, "MissingVarException");
+    public static final ClassReference ARITHMETIC_EXCEPTION = registerMain(ClassType.CLASS, ArithmeticExceptionClass::new, "ArithmeticException");
+    public static final ClassReference FUNCTION_CALL_ERROR = registerMain(ClassType.CLASS, FunctionCallErrorClass::new, "FunctionCallError");
+    public static final ClassReference INDEX_OUT_OF_BOUNDS_EXCEPTION = registerMain(ClassType.CLASS, IndexOutOfBoundsException::new, "IndexOutOfBoundsException");
 
-    public static final ClassReference SYSTEM = registerMain(SystemClass::new, "System");
-    public static final ClassReference MATH = registerMain(MathClass::new, "Math");
+    public static final ClassReference SYSTEM = registerMain(ClassType.CLASS, SystemClass::new, "System");
+    public static final ClassReference MATH = registerMain(ClassType.CLASS, MathClass::new, "Math");
 
-    public static final ClassReference OVERRIDE = registerMain(OverrideAnnotation::new, "Override");
+    public static final ClassReference OVERRIDE = registerMain(ClassType.ANNOTATION, OverrideAnnotation::new, "Override");
 
     static {
         loadClasses();
@@ -54,23 +55,23 @@ public class VarTypeManager {
         data.forEach(RegistryClassReference::create);
     }
 
-    public static ClassReference register(Package pck, String name, Supplier<ScriptedClass> sup, Class<?> target) {
-        RegistryClassReference classReference = new RegistryClassReference(name, sup);
+    public static ClassReference register(Package pck, String name, ClassType type, Supplier<ScriptedClass> sup, Class<?> target) {
+        RegistryClassReference classReference = new RegistryClassReference(name, pck.getName(), type, sup);
         data.add(classReference);
         pck.addClass(name, classReference);
         return classReference;
     }
 
-    public static ClassReference register(Package pck, String name, Supplier<ScriptedClass> sup) {
-        return register(pck, name, sup, null);
+    public static ClassReference register(Package pck, String name, ClassType type, Supplier<ScriptedClass> sup) {
+        return register(pck, name, type, sup, null);
     }
 
-    private static ClassReference registerMain(Supplier<ScriptedClass> sup, String name) {
-        return register(langRoot, name, sup);
+    private static ClassReference registerMain(ClassType type, Supplier<ScriptedClass> sup, String name) {
+        return register(langRoot, name, type, sup);
     }
 
-    private static ClassReference registerMain(Supplier<ScriptedClass> sup, String name, Class<?> target) {
-        return register(langRoot, name, sup, target);
+    private static ClassReference registerMain(Supplier<ScriptedClass> sup, String name, ClassType type, Class<?> target) {
+        return register(langRoot, name, type, sup, target);
     }
 
     public static ClassReference getClassForName(String type) {

@@ -30,7 +30,9 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     }
 
     public JsonObject cacheClass(CacheableClass loxClass) {
-        return loxClass.save(this);
+        JsonObject object = loxClass.save(this);
+        object.addProperty("TYPE", loxClass.getClassType().name());
+        return object;
     }
 
     @Override

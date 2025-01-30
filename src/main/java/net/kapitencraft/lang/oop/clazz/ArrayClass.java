@@ -28,4 +28,9 @@ public class ArrayClass extends PrimitiveClass {
     public String absoluteName() {
         return super.absoluteName();
     }
+
+    @Override
+    public ClassType getClassType() {
+        return ClassType.CLASS;
+    }
 }

@@ -1,8 +1,10 @@
 package net.kapitencraft.lang.compiler.parser;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.decl.*;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
+import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.token.Token;
@@ -48,7 +50,7 @@ public class SkeletonParser extends AbstractParser {
 
         checkFileName(name, fileId);
 
-        if (target == null) target = new ClassReference(name.lexeme());
+        if (target == null) target = new ClassReference(name.lexeme(), pckID, ClassType.CLASS);
 
         parser.addClass(target, null);
         ClassReference superClass = VarTypeManager.OBJECT;
@@ -70,9 +72,9 @@ public class SkeletonParser extends AbstractParser {
         List<ClassConstructor<?>> enclosed = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
-            AnnotationObj[] annotations = parseAnnotations();
             ModifiersParser modifiers = MODIFIERS;
             modifiers.parse();
+            AnnotationObj[] annotations = modifiers.getAnnotations();
             String enclosedId = pckID + name.lexeme() + "$";
             if (readClass(enclosed::add, enclosedId, modifiers, annotations)) {
                 if (Objects.equals(peek().lexeme(), name.lexeme())) {
@@ -117,7 +119,7 @@ public class SkeletonParser extends AbstractParser {
 
         checkFileName(name, fileId);
 
-        if (target == null) target = new ClassReference(name.lexeme());
+        if (target == null) target = new ClassReference(name.lexeme(), pckID, ClassType.INTERFACE);
 
         parser.addClass(target, null);
 
@@ -137,8 +139,8 @@ public class SkeletonParser extends AbstractParser {
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             ModifiersParser modifiers = MODIFIERS;
-            AnnotationObj[] annotations = parseAnnotations();
             modifiers.parse();
+            AnnotationObj[] annotations = modifiers.getAnnotations();
             if (readClass(enclosed::add, pckID, modifiers, annotations)) {
                 ClassReference type = consumeVarType();
                 Token elementName = consumeIdentifier();
@@ -167,7 +169,7 @@ public class SkeletonParser extends AbstractParser {
 
         checkFileName(name, fileId);
 
-        if (target == null) target = new ClassReference(name.lexeme());
+        if (target == null) target = new ClassReference(name.lexeme(), pckID, ClassType.ENUM);
 
         parser.addClass(target, null);
 
@@ -205,8 +207,8 @@ public class SkeletonParser extends AbstractParser {
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             ModifiersParser modifiers = MODIFIERS;
-            AnnotationObj[] annotations = parseAnnotations();
             modifiers.parse();
+            AnnotationObj[] annotations = modifiers.getAnnotations();
             String enclosedId = pckID + name.lexeme() + "$";
             if (readClass(enclosed::add, enclosedId, modifiers, annotations)) {
                 if (Objects.equals(peek().lexeme(), name.lexeme())) {
@@ -252,7 +254,7 @@ public class SkeletonParser extends AbstractParser {
 
         checkFileName(name, fileId);
 
-        if (target == null) target = new ClassReference(name.lexeme());
+        if (target == null) target = new ClassReference(name.lexeme(), pckId, ClassType.ANNOTATION);
 
         parser.addClass(target, null);
 
@@ -263,8 +265,8 @@ public class SkeletonParser extends AbstractParser {
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             ModifiersParser modifiers = MODIFIERS;
-            AnnotationObj[] annotations = parseAnnotations();
             modifiers.parse();
+            AnnotationObj[] annotations = modifiers.getAnnotations();
             String enclosedId = pckId + name.lexeme() + "$";
             if (readClass(enclosed::add, enclosedId, modifiers, annotations)) {
                 ModifierScope.ANNOTATION.check(this, modifiers);
@@ -315,11 +317,9 @@ public class SkeletonParser extends AbstractParser {
         parseImports();
         ModifiersParser modifiersParser = MODIFIERS;
         modifiersParser.parse();
-
         String pckId = pck.stream().map(Token::lexeme).collect(Collectors.joining(".", "", "."));
-        AnnotationObj[] annotations = parseAnnotations();
         try {
-            return readClass(pckId, fileName, modifiersParser, target, annotations);
+            return readClass(pckId, fileName, modifiersParser, target, modifiersParser.getAnnotations());
         } catch (ParseError error) {
             synchronize();
             return null;
@@ -437,10 +437,13 @@ public class SkeletonParser extends AbstractParser {
     }
 
     private AnnotationObj parseAnnotationObject() {
-        AbstractAnnotationClass cInst = parseAnnotationClass();
+        SourceClassReference cInst = consumeVarType();
         Token errorPoint = previous();
         Token[] properties = new Token[0];
-        if (match(BRACKET_O)) properties = getBracketEnclosedCode();
+        if (match(BRACKET_O)) {
+            properties = getBracketEnclosedCode();
+            consumeBracketClose("annotation object");
+        }
         return new AnnotationObj(cInst, errorPoint, properties);
     }
 
@@ -516,6 +519,7 @@ public class SkeletonParser extends AbstractParser {
     public class ModifiersParser {
         private final Map<TokenType, Token> encountered = new HashMap<>();
         private final List<TokenType> acceptable = new ArrayList<>();
+        private AnnotationObj[] annotations;
         private final Map<TokenType, List<TokenType>> illegalCombinations = new HashMap<>();
         private final TokenType[] interrupt = {IDENTIFIER, CLASS, INTERFACE, ANNOTATION, ENUM, EOF};
 
@@ -525,6 +529,7 @@ public class SkeletonParser extends AbstractParser {
         }
 
         public void parse() {
+            annotations = parseAnnotations();
             this.clear();
             a: while (!check(interrupt) && !isAtEnd()) {
                 boolean handled = false;
@@ -573,6 +578,10 @@ public class SkeletonParser extends AbstractParser {
 
         public Token get(TokenType type) {
             return encountered.get(type);
+        }
+
+        public AnnotationObj[] getAnnotations() {
+            return annotations;
         }
     }
 
@@ -632,6 +641,6 @@ public class SkeletonParser extends AbstractParser {
         }
     }
 
-    public record AnnotationObj(AbstractAnnotationClass type, Token errorPoint, Token[] params) {
+    public record AnnotationObj(SourceClassReference type, Token errorPoint, Token[] params) {
     }
 }
