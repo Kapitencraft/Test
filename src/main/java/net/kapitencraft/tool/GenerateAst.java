@@ -131,7 +131,7 @@ public class GenerateAst {
         writer.print(fields[fields.length - 1]);
         writer.println(") {");
 
-        // Store parameters in fields.
+        // Store params in fields.
         for (String field : fields) {
             String name = field.split(" ")[1];
             writer.println("            this." + name + " = " + name + ";");

@@ -1,13 +1,13 @@
 {
-  "TYPE": "class",
+  "TYPE": "CLASS",
   "name": "IntersectionTest",
-  "superclass": "scripted.lang.Object",
+  "superclass": ".scripted.lang.Object",
   "interfaces": [],
   "methods": {},
   "staticMethods": {
     "main": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [
           {
             "type": "scripted.lang.String[]",
@@ -24,10 +24,10 @@
               "line": 8,
               "lineStartIndex": 12
             },
-            "targetType": "test.MultipleMethodsTest",
+            "targetType": ".test.MultipleMethodsTest",
             "initializer": {
               "TYPE": "constructors",
-              "target": "test.MultipleMethodsTest",
+              "target": ".test.MultipleMethodsTest",
               "args": [
                 {
                   "type": "String",
@@ -114,12 +114,13 @@
             }
           }
         ],
-        "flags": []
+        "modifiers": 2,
+        "annotations": []
       }
     ]
   },
   "constructors": [],
   "fields": {},
   "staticFields": {},
-  "flags": []
+  "annotations": []
 }

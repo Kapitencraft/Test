@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 public class AnnotationClassInstance implements AbstractClassInstance {
-    private final Map<String, Expr> properties = new HashMap<>();
+    public final Map<String, Expr> properties = new HashMap<>();
     private final AbstractAnnotationClass type;
 
     public AnnotationClassInstance(AbstractAnnotationClass type, Map<String, Expr> appliedProperties) {

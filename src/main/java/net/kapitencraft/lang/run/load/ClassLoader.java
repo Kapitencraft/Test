@@ -1,9 +1,7 @@
 package net.kapitencraft.lang.run.load;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.*;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -22,8 +20,8 @@ public class ClassLoader {
     public static final File cacheLoc = new File("./run/cache");
 
     public static void main(String[] args) throws IOException {
-        PackageHolder pckSkeleton = load(cacheLoc, ".scrc", VMHolder::new);
-        applyPreviews(pckSkeleton);
+        PackageHolder<VMLoaderHolder> pckSkeleton = load(cacheLoc, ".scrc", VMLoaderHolder::new);
+        useClasses(pckSkeleton, (classes, pck) -> classes.forEach((name, vmLoaderHolder) -> pck.addClass(name, vmLoaderHolder.reference)));
         generateSkeletons(pckSkeleton);
         generateClasses(pckSkeleton);
         System.out.println("Loading complete.");
@@ -48,14 +46,14 @@ public class ClassLoader {
         }
     }
 
-    public static <T extends ClassHolder> PackageHolder load(File fileLoc, String end, BiFunction<File, ClassHolder[], T> constructor) {
-        PackageHolder root = new PackageHolder();
-        List<Pair<File, PackageHolder>> pckLoader = new ArrayList<>();
+    public static <T extends ClassLoaderHolder> PackageHolder<T> load(File fileLoc, String end, BiFunction<File, ClassLoaderHolder[], T> constructor) {
+        PackageHolder<T> root = new PackageHolder<>();
+        List<Pair<File, PackageHolder<T>>> pckLoader = new ArrayList<>();
         pckLoader.add(Pair.of(fileLoc, root));
         while (!pckLoader.isEmpty()) {
-            Pair<File, PackageHolder> pck = pckLoader.get(0);
+            Pair<File, PackageHolder<T>> pck = pckLoader.get(0);
             File file = pck.left();
-            PackageHolder holder = pck.right();
+            PackageHolder<T> holder = pck.right();
             File[] files = file.listFiles();
             if (files == null) {
                 pckLoader.remove(0);
@@ -64,7 +62,7 @@ public class ClassLoader {
             Map<String, EnclosedClassLoader> enclosedLoaderMap = new HashMap<>();
             for (File file1 : files) {
                 if (file1.isDirectory()) {
-                    PackageHolder child = new PackageHolder();
+                    PackageHolder<T> child = new PackageHolder<>();
                     holder.packages.put(file1.getName(), child);
                     pckLoader.add(Pair.of(file1, child));
                 } else {
@@ -93,27 +91,22 @@ public class ClassLoader {
         return root;
     }
 
-
-    public static void applyPreviews(PackageHolder root) {
-        useClasses(root, (classes, pck) -> classes.forEach((name, classHolder) -> pck.addClass(name, classHolder.reference)));
+    public static void generateSkeletons(PackageHolder<?> root) {
+        useClasses(root, (classes, pck) -> classes.forEach((s, classLoaderHolder) -> classLoaderHolder.applySkeleton()));
     }
 
-    public static void generateSkeletons(PackageHolder root) {
-        useClasses(root, (classes, pck) -> classes.forEach((s, classHolder) -> pck.addClass(s, classHolder.createSkeleton())));
-    }
-
-    public static void generateClasses(PackageHolder root) {
+    public static void generateClasses(PackageHolder<?> root) {
         useClasses(root, (classes, pck) -> classes.forEach((name, holder1) -> pck.addClass(name, holder1.loadClass())));
     }
 
 
     //how should I name this...
-    public static void useClasses(PackageHolder root, BiConsumer<Map<String, ClassHolder>, Package> consumer) {
-        List<Pair<PackageHolder, Package>> packageData = new ArrayList<>();
+    public static <T extends ClassLoaderHolder> void useClasses(PackageHolder<T> root, BiConsumer<Map<String, T>, Package> consumer) {
+        List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         while (!packageData.isEmpty()) {
-            Pair<PackageHolder, Package> data = packageData.get(0);
-            PackageHolder holder = data.left();
+            Pair<PackageHolder<T>, Package> data = packageData.get(0);
+            PackageHolder<T> holder = data.left();
             Package pck = data.right();
             consumer.accept(holder.classes, pck);
             holder.packages.forEach((name, holder1) ->
@@ -123,12 +116,12 @@ public class ClassLoader {
         }
     }
 
-    public static void useHolders(PackageHolder root, BiConsumer<String, ClassHolder> consumer) {
-        List<Pair<PackageHolder, Package>> packageData = new ArrayList<>();
+    public static <T extends ClassLoaderHolder> void useHolders(PackageHolder<T> root, BiConsumer<String, T> consumer) {
+        List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         while (!packageData.isEmpty()) {
-            Pair<PackageHolder, Package> data = packageData.get(0);
-            PackageHolder holder = data.left();
+            Pair<PackageHolder<T>, Package> data = packageData.get(0);
+            PackageHolder<T> holder = data.left();
             Package pck = data.right();
             holder.classes.forEach(consumer);
             holder.packages.forEach((name, holder1) ->
@@ -142,13 +135,9 @@ public class ClassLoader {
         return VarTypeManager.getClassForName(GsonHelper.getAsString(object, elementName));
     }
 
-    public static List<String> readFlags(JsonObject data) {
-        return GsonHelper.getAsJsonArray(data, "flags").asList().stream().map(JsonElement::getAsString).toList();
-    }
-
-    public static class PackageHolder {
-        private final Map<String, PackageHolder> packages = new HashMap<>();
-        private final Map<String, ClassHolder> classes = new HashMap<>();
+    public static class PackageHolder<T extends ClassLoaderHolder> {
+        private final Map<String, PackageHolder<T>> packages = new HashMap<>();
+        private final Map<String, T> classes = new HashMap<>();
 
     }
 
@@ -179,11 +168,11 @@ public class ClassLoader {
             return addEnclosed(s);
         }
 
-        public <T extends ClassHolder> T toHolder(BiFunction<File, ClassHolder[], T> constructor) {
+        public <T extends ClassLoaderHolder> T toHolder(BiFunction<File, ClassLoaderHolder[], T> constructor) {
             return constructor.apply(file, enclosed.values()
                     .stream()
                     .map(enclosedClassLoader -> enclosedClassLoader.toHolder(constructor))
-                    .toArray(ClassHolder[]::new)
+                    .toArray(ClassLoaderHolder[]::new)
             );
         }
     }

@@ -9,7 +9,7 @@ public class ClassWrapper extends ClassReference {
     private final Supplier<ScriptedClass> target;
 
     public ClassWrapper(String name, String pck, Supplier<ScriptedClass> target) {
-        super(name, pck, ClassType.CLASS);
+        super(name, pck);
         this.target = target;
     }
 

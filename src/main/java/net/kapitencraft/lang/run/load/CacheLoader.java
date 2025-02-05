@@ -9,6 +9,8 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.tool.GsonHelper;
@@ -16,7 +18,9 @@ import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CacheLoader {
 
@@ -353,5 +357,18 @@ public class CacheLoader {
 
     private static Stmt readLoopInterrupt(JsonObject object) {
         return new Stmt.LoopInterruption(Token.readFromSubObject(object, "keyword"));
+    }
+
+    public static AnnotationClassInstance[] readAnnotations(JsonObject data) {
+        List<AnnotationClassInstance> list = new ArrayList<>();
+        JsonArray annotationData = GsonHelper.getAsJsonArray(data, "annotations");
+        for (JsonElement e : annotationData) {
+            JsonObject d = (JsonObject) e;
+            AbstractAnnotationClass clazz = (AbstractAnnotationClass) ClassLoader.loadClassReference(d, "type");
+            Map<String, Expr> properties = new HashMap<>();
+            GsonHelper.getAsJsonObject(d, "properties").asMap().forEach((string, jsonElement) -> properties.put(string, readExpr((JsonObject) jsonElement)));
+            list.add(new AnnotationClassInstance(clazz, properties));
+        }
+        return list.toArray(new AnnotationClassInstance[0]);
     }
 }

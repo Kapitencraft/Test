@@ -1,20 +1,20 @@
 {
-  "TYPE": "class",
+  "TYPE": "CLASS",
   "name": "OverflowTest",
-  "superclass": "scripted.lang.Object",
+  "superclass": ".scripted.lang.Object",
   "interfaces": [],
   "methods": {},
   "staticMethods": {
     "test": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [],
         "body": [
           {
             "TYPE": "expression",
             "expr": {
               "TYPE": "staticCall",
-              "target": "test.OverflowTest",
+              "target": ".test.OverflowTest",
               "name": {
                 "type": "IDENTIFIER",
                 "lexeme": "test1",
@@ -27,12 +27,13 @@
             }
           }
         ],
-        "flags": []
+        "modifiers": 2,
+        "annotations": []
       }
     ],
     "main": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [
           {
             "type": "scripted.lang.String[]",
@@ -44,7 +45,7 @@
             "TYPE": "expression",
             "expr": {
               "TYPE": "staticCall",
-              "target": "test.OverflowTest",
+              "target": ".test.OverflowTest",
               "name": {
                 "type": "IDENTIFIER",
                 "lexeme": "test",
@@ -57,19 +58,20 @@
             }
           }
         ],
-        "flags": []
+        "modifiers": 2,
+        "annotations": []
       }
     ],
     "test1": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [],
         "body": [
           {
             "TYPE": "expression",
             "expr": {
               "TYPE": "staticCall",
-              "target": "test.OverflowTest",
+              "target": ".test.OverflowTest",
               "name": {
                 "type": "IDENTIFIER",
                 "lexeme": "test",
@@ -82,12 +84,13 @@
             }
           }
         ],
-        "flags": []
+        "modifiers": 2,
+        "annotations": []
       }
     ]
   },
   "constructors": [],
   "fields": {},
   "staticFields": {},
-  "flags": []
+  "annotations": []
 }

@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.compiler.parser;
 
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
@@ -59,9 +60,9 @@ public class ExprParser extends AbstractParser {
         return new Expr.StaticGet(target, name);
     }
 
-    public AnnotationClassInstance parseAnnotation(SkeletonParser.AnnotationObj obj, VarTypeParser varTypeParser) {
-        this.apply(obj.params(), varTypeParser);
-        return parseAnnotationProperties(obj.type(), obj.errorPoint());
+    public AnnotationClassInstance parseAnnotation(Holder.AnnotationObj obj, VarTypeParser varTypeParser) {
+        this.apply(obj.properties(), varTypeParser);
+        return parseAnnotationProperties(obj.type(), obj.type().getToken());
     }
 
     public AnnotationClassInstance parseAnnotationProperties(SourceClassReference typeRef, Token errorPoint) {
@@ -69,6 +70,7 @@ public class ExprParser extends AbstractParser {
 
         if (type == null) {
             error(typeRef.getToken(), "annotation type expected");
+            return null;
         }
 
         List<String> abstracts = type.getAbstracts();
@@ -83,13 +85,13 @@ public class ExprParser extends AbstractParser {
             singleProperty = literalOrReference();
         } else {
             advance();
-            if (check(EQUAL)) {
+            if (check(ASSIGN)) {
                 current--;
                 Map<String, Expr> properties = new HashMap<>();
                 do {
                     Token propertyName = consumeIdentifier();
                     if (properties.containsKey(propertyName.lexeme())) errorLogger.errorF(propertyName, "duplicate annotation property with name %s", propertyName.lexeme());
-                    consume(EQUAL, "'=' expected");
+                    consume(ASSIGN, "'=' expected");
                     Expr property = literalOrReference();
                     properties.put(propertyName.lexeme(), property);
                 } while (match(COMMA));

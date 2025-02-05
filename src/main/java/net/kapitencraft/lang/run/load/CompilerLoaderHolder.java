@@ -3,7 +3,7 @@ package net.kapitencraft.lang.run.load;
 import net.kapitencraft.lang.compiler.*;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.parser.ExprParser;
-import net.kapitencraft.lang.compiler.parser.SkeletonParser;
+import net.kapitencraft.lang.compiler.parser.HolderParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.token.Token;
@@ -17,14 +17,15 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Objects;
 
-public class CompilerHolder extends ClassHolder {
+public class CompilerLoaderHolder extends ClassLoaderHolder {
     private final String content;
     private final Compiler.ErrorLogger logger;
-    private SkeletonParser.ClassConstructor<?> constructor;
+    private Holder.Class holder;
     private Compiler.ClassBuilder builder;
     private CacheableClass target;
+    private final VarTypeParser varTypeParser = new VarTypeParser();
 
-    public CompilerHolder(File file, ClassHolder[] children) {
+    public CompilerLoaderHolder(File file, ClassLoaderHolder[] children) {
         super(file, children);
         try {
             content = new String(Files.readAllBytes(file.toPath()));
@@ -43,34 +44,34 @@ public class CompilerHolder extends ClassHolder {
     }
 
     public void applyConstructor() {
-        VarTypeParser varTypeParser = new VarTypeParser();
         Lexer lexer = new Lexer(content, logger);
         List<Token> tokens = lexer.scanTokens();
         String fileName = file.getName().replace(".scr", "");
-        SkeletonParser parser = new SkeletonParser(logger, fileName);
+        HolderParser parser = new HolderParser(logger);
         parser.apply(tokens.toArray(new Token[0]), varTypeParser);
 
-        SkeletonParser.ClassConstructor<?> decl = parser.parse(this.reference);
+        Holder.Class decl = parser.parseFile(fileName);
 
         if (decl == null) return;
 
         String path = file.getParentFile().getPath().substring(10).replace(".scr", "");
         String pck = path.replace('\\', '.');
-        String declPck = decl.pck().substring(0, decl.pck().length()-1);
+        String declPck = decl.pck();
         if (!Objects.equals(declPck, pck)) {
             logger.errorF(
                     tokens.get(0),
                     "package path '%s' does not match file path '%s'", declPck, pck);
         }
 
-        constructor = decl;
+        holder = decl;
     }
 
     public void construct() {
         if (!checkConstructorCreated()) return;
         ExprParser exprParser = new ExprParser(this.logger);
         StmtParser stmtParser = new StmtParser(this.logger);
-        builder = constructor.construct(stmtParser, exprParser);
+
+        builder = holder.construct(stmtParser, exprParser, this.varTypeParser, this.logger);
     }
 
     public void cache(CacheBuilder builder) {
@@ -83,19 +84,17 @@ public class CompilerHolder extends ClassHolder {
                     target.name()
             );
         } catch (IOException e) {
-            System.err.println("Fehler beim Laden: " + e.getMessage());
-            throw new RuntimeException(e);
+            System.err.println("Error saving class '" + target.absoluteName() + "': " + e.getMessage());
         }
     }
 
     protected boolean checkConstructorCreated() {
-        return constructor != null;
+        return holder != null;
     }
 
     @Override
-    public ScriptedClass createSkeleton() {
-        if (!checkConstructorCreated()) return null;
-        return constructor.applySkeleton();
+    public void applySkeleton() {
+        if (checkConstructorCreated()) this.holder.applySkeleton(logger);
     }
 
     @Override

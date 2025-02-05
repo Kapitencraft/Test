@@ -1,7 +1,7 @@
 {
-  "TYPE": "class",
+  "TYPE": "CLASS",
   "name": "FinalTest",
-  "superclass": "scripted.lang.Object",
+  "superclass": ".scripted.lang.Object",
   "interfaces": [],
   "methods": {
     "test": [
@@ -32,9 +32,8 @@
             }
           }
         ],
-        "flags": [
-          "isFinal"
-        ]
+        "modifiers": 1,
+        "annotations": []
       }
     ]
   },
@@ -42,5 +41,5 @@
   "constructors": [],
   "fields": {},
   "staticFields": {},
-  "flags": []
+  "annotations": []
 }

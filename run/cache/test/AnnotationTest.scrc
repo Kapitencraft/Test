@@ -1,5 +1,5 @@
 {
-  "TYPE": "annotation",
+  "TYPE": "ANNOTATION",
   "name": "AnnotationTest",
   "methods": {
     "name": {
@@ -11,15 +11,15 @@
       "type": "scripted.lang.String"
     },
     "max": {
-      "type": "scripted.lang.int"
+      "type": "scripted.lang..int"
     },
     "min": {
-      "type": "scripted.lang.int"
+      "type": "scripted.lang..int"
     },
     "test": {
       "value": {
         "TYPE": "staticGet",
-        "target": "test.EnumTest",
+        "target": ".test.EnumTest",
         "name": {
           "type": "IDENTIFIER",
           "lexeme": "A",
@@ -28,7 +28,8 @@
           "lineStartIndex": 25
         }
       },
-      "type": "test.EnumTest"
+      "type": ".test.EnumTest"
     }
-  }
+  },
+  "annotations": []
 }

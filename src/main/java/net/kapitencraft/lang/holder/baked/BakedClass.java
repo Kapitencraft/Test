@@ -6,6 +6,7 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.generated.GeneratedClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
@@ -20,12 +21,13 @@ public record BakedClass(
         Pair<Token, GeneratedCallable>[] methods,
         Pair<Token, GeneratedCallable>[] staticMethods,
         Pair<Token, GeneratedCallable>[] constructors,
-        Stmt.VarDecl[] fields,
-        Stmt.VarDecl[] staticFields,
+        Map<String, GeneratedField> fields,
+        Map<String, GeneratedField> staticFields,
         ClassReference superclass, Token name, String pck,
         ClassReference[] interfaces,
         Compiler.ClassBuilder[] enclosed,
-        boolean isAbstract, boolean isFinal
+        short modifiers,
+        AnnotationClassInstance[] annotations
 ) implements Compiler.ClassBuilder {
 
     @Override
@@ -50,8 +52,6 @@ public record BakedClass(
             builder.addMethod(logger, method.right(), method.left());
         }
 
-        Map<String, GeneratedField> fields = Compiler.ClassBuilder.generateFields(this.fields());
-
         List<String> finalFields = new ArrayList<>();
         fields.forEach((name, field) -> {
             if (field.isFinal() && !field.hasInit()) {
@@ -68,15 +68,15 @@ public record BakedClass(
         GeneratedClass loxClass = new GeneratedClass(
                 DataMethodContainer.bakeBuilders(methods), DataMethodContainer.bakeBuilders(staticMethods),
                 container,
-                fields,
-                Compiler.ClassBuilder.generateFields(this.staticFields()),
+                fields(),
+                staticFields(),
                 enclosed.build(),
                 this.superclass(),
                 this.interfaces(),
                 this.name().lexeme(),
                 this.pck(),
-                this.isAbstract(),
-                this.isFinal()
+                this.modifiers(),
+                this.annotations()
         );
         this.target().setTarget(loxClass);
         return loxClass;

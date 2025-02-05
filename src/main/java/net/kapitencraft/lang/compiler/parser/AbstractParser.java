@@ -150,7 +150,7 @@ public class AbstractParser {
     }
 
     protected boolean isAtEnd() {
-        return current == tokens.length - 1;
+        return current >= tokens.length - 1;
     }
 
     protected Token advance() {

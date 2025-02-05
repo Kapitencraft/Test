@@ -1,15 +1,15 @@
 {
-  "TYPE": "class",
+  "TYPE": "CLASS",
   "name": "B",
-  "superclass": "main.A",
+  "superclass": ".main.A",
   "interfaces": [],
   "methods": {
     "test": [
       {
-        "retType": "scripted.lang.int",
+        "retType": "scripted.lang..int",
         "params": [
           {
-            "type": "scripted.lang.int",
+            "type": "scripted.lang..int",
             "name": "in"
           }
         ],
@@ -42,7 +42,7 @@
                 "line": 8,
                 "lineStartIndex": 22
               },
-              "executor": "scripted.lang.int",
+              "executor": "scripted.lang..int",
               "operand": "LEFT",
               "right": {
                 "type": "int",
@@ -52,7 +52,7 @@
             }
           }
         ],
-        "flags": []
+        "annotations": []
       }
     ]
   },
@@ -60,5 +60,5 @@
   "constructors": [],
   "fields": {},
   "staticFields": {},
-  "flags": []
+  "annotations": []
 }

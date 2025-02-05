@@ -7,6 +7,7 @@ import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.*;
 import net.kapitencraft.lang.oop.clazz.generated.GeneratedEnum;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
@@ -28,8 +29,9 @@ public record BakedEnum(
         Pair<Token, GeneratedCallable>[] staticMethods,
         ClassReference[] interfaces,
         Map<String, GeneratedEnumConstant> constants,
-        Stmt.VarDecl[] fields, Stmt.VarDecl[] staticFields,
-        Token name, String pck, Compiler.ClassBuilder[] enclosed
+        Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
+        Token name, String pck, Compiler.ClassBuilder[] enclosed,
+        AnnotationClassInstance[] annotations
         ) implements Compiler.ClassBuilder {
 
     @Override
@@ -54,8 +56,6 @@ public record BakedEnum(
             builder.addMethod(logger, method.right(), method.left());
         }
 
-        Map<String, GeneratedField> fields = Compiler.ClassBuilder.generateFields(this.fields());
-
         List<String> finalFields = new ArrayList<>();
         fields.forEach((name, field) -> {
             if (field.isFinal() && !field.hasInit()) {
@@ -68,17 +68,18 @@ public record BakedEnum(
             container.addMethod(logger, method.right(), method.left());
         }
 
+
         return new GeneratedEnum(
                 DataMethodContainer.bakeBuilders(methods),
                 DataMethodContainer.bakeBuilders(staticMethods),
                 container,
-                fields,
+                fields(),
                 constants(),
-                Compiler.ClassBuilder.generateFields(this.staticFields()),
+                this.staticFields(),
                 enclosed.build(),
                 interfaces(),
                 name().lexeme(),
-                pck());
+                pck(), annotations());
     }
 
     @Override

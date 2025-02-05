@@ -4,10 +4,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.Interpreter;
@@ -21,14 +23,15 @@ public class GeneratedCallable implements ScriptedCallable {
     private final ClassReference retType;
     private final List<Pair<ClassReference, String>> params;
     private final List<Stmt> body;
-    private final boolean isFinal, isAbstract;
+    private final short modifiers;
+    private final AnnotationClassInstance[] annotations;
 
-    public GeneratedCallable(ClassReference retType, List<Pair<ClassReference, String>> params, List<Stmt> body, boolean isFinal, boolean isAbstract) {
+    public GeneratedCallable(ClassReference retType, List<Pair<ClassReference, String>> params, List<Stmt> body, short modifiers, AnnotationClassInstance[] annotations) {
         this.retType = retType;
         this.params = params;
         this.body = body;
-        this.isFinal = isFinal;
-        this.isAbstract = isAbstract;
+        this.modifiers = modifiers;
+        this.annotations = annotations;
     }
 
     public JsonObject save(CacheBuilder builder) {
@@ -44,24 +47,20 @@ public class GeneratedCallable implements ScriptedCallable {
             });
             object.add("params", array);
         }
-        if (!isAbstract) {
+        if (!Modifiers.isAbstract(modifiers)) {
             JsonArray array = new JsonArray();
             body.stream().map(builder::cache).forEach(array::add);
             object.add("body", array);
         }
-        {
-            JsonArray array = new JsonArray();
-            if (isFinal) array.add("isFinal");
-            if (isAbstract) array.add("isAbstract");
-            object.add("flags", array);
-        }
+        if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);
 
+        object.add("annotations", builder.cacheAnnotations(this.annotations));
         return object;
     }
 
-    public static GeneratedCallable load(JsonObject object) {
-        ClassReference retType = ClassLoader.loadClassReference(object, "retType");
-        JsonArray paramData = GsonHelper.getAsJsonArray(object, "params");
+    public static GeneratedCallable load(JsonObject data) {
+        ClassReference retType = ClassLoader.loadClassReference(data, "retType");
+        JsonArray paramData = GsonHelper.getAsJsonArray(data, "params");
 
         List<Pair<ClassReference, String>> params = paramData.asList().stream().map(JsonElement::getAsJsonObject).map(object1 -> {
             ClassReference type = ClassLoader.loadClassReference(object1, "type");
@@ -69,13 +68,15 @@ public class GeneratedCallable implements ScriptedCallable {
             return Pair.of(type, argName);
         }).toList();
 
-        List<String> flags = ClassLoader.readFlags(object);
+        short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
 
         List<Stmt> body;
-        if (flags.contains("isAbstract")) body = null;
-        else body = CacheLoader.readStmtList(object, "body");
+        if (Modifiers.isAbstract(modifiers)) body = null;
+        else body = CacheLoader.readStmtList(data, "body");
 
-        return new GeneratedCallable(retType, params, body, flags.contains("isFinal"), flags.contains("isAbstract"));
+        AnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
+
+        return new GeneratedCallable(retType, params, body, modifiers, annotations);
     }
 
     @Override
@@ -103,7 +104,7 @@ public class GeneratedCallable implements ScriptedCallable {
 
     @Override
     public boolean isFinal() {
-        return isFinal;
+        return Modifiers.isFinal(modifiers);
     }
 
     @Override

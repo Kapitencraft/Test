@@ -9,6 +9,7 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
 
@@ -33,6 +34,19 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
         JsonObject object = loxClass.save(this);
         object.addProperty("TYPE", loxClass.getClassType().name());
         return object;
+    }
+
+    public JsonArray cacheAnnotations(AnnotationClassInstance[] annotations) {
+        JsonArray array = new JsonArray();
+        for (AnnotationClassInstance instance : annotations) {
+            JsonObject data = new JsonObject();
+            data.addProperty("type", instance.getType().absoluteName());
+            JsonObject properties = new JsonObject();
+            instance.properties.forEach((string, expr) -> properties.add(string, cache(expr)));
+            data.add("properties", properties);
+            array.add(data);
+        }
+        return array;
     }
 
     @Override

@@ -3,13 +3,14 @@ package net.kapitencraft.lang.oop.clazz.generated;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.decl.AnnotationDecl;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.AnnotationMethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
@@ -27,15 +28,17 @@ public final class GeneratedAnnotation implements CacheableClass, AbstractAnnota
 
     private final Map<String, ClassReference> enclosing;
 
-    private final Map<String, AnnotationDecl.MethodWrapper> methods;
+    private final Map<String, Holder.Class.MethodWrapper> methods;
     private final List<String> abstracts;
 
     private final String name;
     private final String packageRepresentation;
+    private final AnnotationClassInstance[] annotations;
 
-    public GeneratedAnnotation(Map<String, ClassReference> enclosing, Map<String, AnnotationDecl.MethodWrapper> methods,
-                               String name, String packageRepresentation) {
+    public GeneratedAnnotation(Map<String, ClassReference> enclosing, Map<String, Holder.Class.MethodWrapper> methods,
+                               String name, String packageRepresentation, AnnotationClassInstance[] annotations) {
         this.methods = methods;
+        this.annotations = annotations;
         List<String> abstracts = new ArrayList<>();
         methods.forEach((string, methodWrapper) -> {
             if (methodWrapper.isAbstract()) abstracts.add(string);
@@ -51,17 +54,20 @@ public final class GeneratedAnnotation implements CacheableClass, AbstractAnnota
 
         Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));
 
+        AnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
+
         return new GeneratedAnnotation(
                 enclosedClasses, readMethods(data), name,
-                pck);
+                pck, annotations);
     }
 
-    private static Map<String, AnnotationDecl.MethodWrapper> readMethods(JsonObject object) {
+    private static Map<String, Holder.Class.MethodWrapper> readMethods(JsonObject object) {
         JsonObject sub = GsonHelper.getAsJsonObject(object, "methods");
-        ImmutableMap.Builder<String, AnnotationDecl.MethodWrapper> builder = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, Holder.Class.MethodWrapper> builder = new ImmutableMap.Builder<>();
         sub.asMap().forEach((string, jsonElement) -> {
             JsonObject e = (JsonObject) jsonElement;
-            builder.put(string, new AnnotationDecl.MethodWrapper(e.has("value") ? CacheLoader.readExpr(GsonHelper.getAsJsonObject(e, "value")) : null, ClassLoader.loadClassReference(e, "type")));
+            AnnotationClassInstance[] annotations = CacheLoader.readAnnotations(e);
+            builder.put(string, new Holder.Class.MethodWrapper(e.has("value") ? CacheLoader.readExpr(GsonHelper.getAsJsonObject(e, "value")) : null, ClassLoader.loadClassReference(e, "type"), annotations));
         });
         return builder.build();
     }
@@ -82,6 +88,7 @@ public final class GeneratedAnnotation implements CacheableClass, AbstractAnnota
         object.addProperty("TYPE", "annotation");
         object.addProperty("name", name);
         object.add("methods", this.addMethodData(cacheBuilder));
+        object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
 
         return object;
     }

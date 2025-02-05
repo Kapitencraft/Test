@@ -1,28 +1,27 @@
 {
-  "TYPE": "class",
+  "TYPE": "CLASS",
   "name": "A",
-  "superclass": "scripted.lang.Object",
+  "superclass": ".scripted.lang.Object",
   "interfaces": [],
   "methods": {
     "test": [
       {
-        "retType": "scripted.lang.int",
+        "retType": "scripted.lang..int",
         "params": [
           {
-            "type": "scripted.lang.int",
+            "type": "scripted.lang..int",
             "name": "in"
           }
         ],
-        "flags": [
-          "isAbstract"
-        ]
+        "modifiers": 4,
+        "annotations": []
       }
     ]
   },
   "staticMethods": {
     "main": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [
           {
             "type": "scripted.lang.String",
@@ -39,10 +38,10 @@
               "line": 19,
               "lineStartIndex": 10
             },
-            "targetType": "main.A",
+            "targetType": ".main.A",
             "initializer": {
               "TYPE": "constructors",
-              "target": "main.A$B",
+              "target": "main.B",
               "args": [],
               "keyword": {
                 "type": "IDENTIFIER",
@@ -113,7 +112,7 @@
               },
               "value": {
                 "TYPE": "constructors",
-                "target": "main.A$C",
+                "target": "main.C",
                 "args": [],
                 "keyword": {
                   "type": "IDENTIFIER",
@@ -181,14 +180,14 @@
             }
           }
         ],
-        "flags": []
+        "modifiers": 2,
+        "annotations": []
       }
     ]
   },
   "constructors": [],
   "fields": {},
   "staticFields": {},
-  "flags": [
-    "isAbstract"
-  ]
+  "annotations": [],
+  "modifiers": 4
 }

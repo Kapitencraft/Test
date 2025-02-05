@@ -1,13 +1,13 @@
 {
-  "TYPE": "class",
+  "TYPE": "CLASS",
   "name": "TimeTest",
-  "superclass": "scripted.lang.Object",
+  "superclass": ".scripted.lang.Object",
   "interfaces": [],
   "methods": {},
   "staticMethods": {
     "main": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [
           {
             "type": "scripted.lang.String[]",
@@ -26,7 +26,7 @@
                 "line": 5,
                 "lineStartIndex": 17
               },
-              "targetType": "scripted.lang.int",
+              "targetType": "scripted.lang..int",
               "initializer": {
                 "type": "int",
                 "value": 0,
@@ -53,7 +53,7 @@
                 "line": 5,
                 "lineStartIndex": 26
               },
-              "executor": "scripted.lang.int",
+              "executor": "scripted.lang..int",
               "operand": "LEFT",
               "right": {
                 "type": "int",
@@ -183,12 +183,13 @@
             }
           }
         ],
-        "flags": []
+        "modifiers": 2,
+        "annotations": []
       }
     ]
   },
   "constructors": [],
   "fields": {},
   "staticFields": {},
-  "flags": []
+  "annotations": []
 }

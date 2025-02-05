@@ -3,7 +3,8 @@ package net.kapitencraft.lang.oop.method;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.parser.SkeletonParser;
+import net.kapitencraft.lang.compiler.Holder;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -18,17 +19,24 @@ import java.util.List;
 public class SkeletonMethod implements ScriptedCallable {
     private final List<ClassReference> args;
     private final ClassReference retType;
-    private final boolean isAbstract, isFinal;
+    private final short modifiers;
 
-    public SkeletonMethod(List<ClassReference> args, ClassReference retType, boolean isAbstract, boolean isFinal) {
+    public SkeletonMethod(List<ClassReference> args, ClassReference retType, short modifiers) {
         this.args = args;
         this.retType = retType;
-        this.isAbstract = isAbstract;
-        this.isFinal = isFinal;
+        this.modifiers = modifiers;
     }
 
-    public static SkeletonMethod create(SkeletonParser.MethodDecl decl) {
-        return new SkeletonMethod(decl.params().stream().map(Pair::left).toList(), decl.type(), decl.isAbstract(), decl.isFinal());
+    public static SkeletonMethod create(Holder.Method decl) {
+        return create(decl.params(), decl.type(), decl.modifiers());
+    }
+
+    private static SkeletonMethod create(List<Pair<ClassReference, String>> params, ClassReference type, short modifiers) {
+        return new SkeletonMethod(params.stream().map(Pair::left).toList(), type, modifiers);
+    }
+
+    public static SkeletonMethod create(Holder.Constructor decl, ClassReference type) {
+        return create(decl.params(), type, (short) 0);
     }
 
     public static SkeletonMethod fromJson(JsonObject object) {
@@ -37,8 +45,9 @@ public class SkeletonMethod implements ScriptedCallable {
                 .map(JsonElement::getAsJsonObject)
                 .map(object1 -> ClassLoader.loadClassReference(object1, "type"))
                 .toList();
-        List<String> flags = ClassLoader.readFlags(object);
-        return new SkeletonMethod(args, retType, flags.contains("isAbstract"), flags.contains("isFinal"));
+
+        short modifiers = object.has("modifiers") ? GsonHelper.getAsShort(object, "modifiers") : 0;
+        return new SkeletonMethod(args, retType, modifiers);
     }
 
     public static ImmutableMap<String, DataMethodContainer> readFromCache(JsonObject data, String subElementName) {
@@ -70,11 +79,11 @@ public class SkeletonMethod implements ScriptedCallable {
 
     @Override
     public boolean isAbstract() {
-        return isAbstract;
+        return Modifiers.isAbstract(modifiers);
     }
 
     @Override
     public boolean isFinal() {
-        return isFinal;
+        return Modifiers.isFinal(modifiers);
     }
 }

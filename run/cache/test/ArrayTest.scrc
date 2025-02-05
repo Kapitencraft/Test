@@ -1,13 +1,13 @@
 {
-  "TYPE": "class",
+  "TYPE": "CLASS",
   "name": "ArrayTest",
-  "superclass": "scripted.lang.Object",
+  "superclass": ".scripted.lang.Object",
   "interfaces": [],
   "methods": {},
   "staticMethods": {
     "main": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [
           {
             "type": "scripted.lang.String[]",
@@ -69,12 +69,13 @@
             }
           }
         ],
-        "flags": []
+        "modifiers": 2,
+        "annotations": []
       }
     ]
   },
   "constructors": [],
   "fields": {},
   "staticFields": {},
-  "flags": []
+  "annotations": []
 }

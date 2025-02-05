@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.clazz.skeleton;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
@@ -36,13 +37,13 @@ public class SkeletonClass implements ScriptedClass {
     private final Map<String, DataMethodContainer> staticMethods;
     private final ConstructorContainer constructor;
 
-    private final boolean isAbstract, isFinal;
+    private final short modifiers;
 
     public SkeletonClass(String name, String pck, ClassReference superclass,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, ClassReference> enclosed,
                          Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor,
-                         boolean isAbstract, boolean isFinal) {
+                         short modifiers) {
         this.name = name;
         this.pck = pck;
         this.superclass = superclass;
@@ -52,15 +53,14 @@ public class SkeletonClass implements ScriptedClass {
         this.methods = new GeneratedMethodMap(methods);
         this.staticMethods = staticMethods;
         this.constructor = constructor.build(this);
-        this.isAbstract = isAbstract;
-        this.isFinal = isFinal;
+        this.modifiers = modifiers;
     }
 
     public SkeletonClass(String name, String pck, ClassReference superclass,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, ClassReference> enclosed,
                          Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer constructor,
-                         boolean isAbstract, boolean isFinal) {
+                         short modifiers) {
         this.name = name;
         this.pck = pck;
         this.superclass = superclass;
@@ -70,8 +70,7 @@ public class SkeletonClass implements ScriptedClass {
         this.methods = new GeneratedMethodMap(methods);
         this.staticMethods = staticMethods;
         this.constructor = constructor;
-        this.isAbstract = isAbstract;
-        this.isFinal = isFinal;
+        this.modifiers = modifiers;
     }
 
     public static SkeletonClass fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
@@ -105,14 +104,14 @@ public class SkeletonClass implements ScriptedClass {
             });
         }
 
-        List<String> flags = ClassLoader.readFlags(data);
+        short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
 
         return new SkeletonClass(name, pck, superclass,
                 staticFields.build(), fields.build(),
                 Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
                 methods, staticMethods,
                 constructorContainer,
-                flags.contains("isAbstract"), flags.contains("isFinal")
+                modifiers
         );
     }
 
@@ -203,12 +202,12 @@ public class SkeletonClass implements ScriptedClass {
 
     @Override
     public boolean isAbstract() {
-        return isAbstract;
+        return Modifiers.isAbstract(modifiers);
     }
 
     @Override
     public boolean isFinal() {
-        return isFinal;
+        return Modifiers.isFinal(modifiers);
     }
 
     @Override

@@ -8,6 +8,7 @@ import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.Interpreter;
@@ -17,11 +18,13 @@ public class GeneratedField extends ScriptedField {
     private final ClassReference type;
     private final Expr init;
     private final boolean isFinal;
+    private final AnnotationClassInstance[] annotations;
 
-    public GeneratedField(ClassReference type, Expr init, boolean isFinal) {
+    public GeneratedField(ClassReference type, Expr init, boolean isFinal, AnnotationClassInstance[] annotations) {
         this.type = type;
         this.init = init;
         this.isFinal = isFinal;
+        this.annotations = annotations;
     }
 
     @Override
@@ -49,6 +52,7 @@ public class GeneratedField extends ScriptedField {
         object.addProperty("type", type.absoluteName());
         if (hasInit()) object.add("init", cacheBuilder.cache(init));
         if (isFinal) object.addProperty("isFinal", true);
+        object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
         return object;
     }
 
@@ -56,7 +60,8 @@ public class GeneratedField extends ScriptedField {
         ClassReference type = ClassLoader.loadClassReference(object, "type");
         Expr init = object.has("init") ? CacheLoader.readSubExpr(object, "init") : null;
         boolean isFinal = object.has("isFinal") && GsonHelper.getAsBoolean(object, "isFinal");
-        return new GeneratedField(type, init, isFinal);
+        AnnotationClassInstance[] annotations = CacheLoader.readAnnotations(object);
+        return new GeneratedField(type, init, isFinal, annotations);
     }
 
     public static ImmutableMap<String, GeneratedField> loadFieldMap(JsonObject data, String member) {

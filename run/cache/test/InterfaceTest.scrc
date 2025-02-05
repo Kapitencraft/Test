@@ -1,5 +1,5 @@
 {
-  "TYPE": "interface",
+  "TYPE": "INTERFACE",
   "name": "InterfaceTest",
   "methods": {
     "a": [
@@ -23,29 +23,28 @@
             }
           }
         ],
-        "flags": []
+        "annotations": []
       }
     ],
     "test": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [],
-        "flags": [
-          "isAbstract"
-        ]
+        "modifiers": 4,
+        "annotations": []
       }
     ],
     "e": [
       {
         "retType": "scripted.lang.String",
         "params": [],
-        "flags": [
-          "isAbstract"
-        ]
+        "modifiers": 4,
+        "annotations": []
       }
     ]
   },
   "staticMethods": {},
   "interfaces": [],
-  "staticFields": {}
+  "staticFields": {},
+  "annotations": []
 }

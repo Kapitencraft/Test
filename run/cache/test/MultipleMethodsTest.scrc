@@ -1,12 +1,12 @@
 {
-  "TYPE": "class",
+  "TYPE": "CLASS",
   "name": "MultipleMethodsTest",
-  "superclass": "scripted.lang.Object",
+  "superclass": ".scripted.lang.Object",
   "interfaces": [],
   "methods": {
     "test": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [
           {
             "type": "scripted.lang.String",
@@ -42,13 +42,13 @@
             }
           }
         ],
-        "flags": []
+        "annotations": []
       },
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [
           {
-            "type": "scripted.lang.int",
+            "type": "scripted.lang..int",
             "name": "i"
           }
         ],
@@ -86,7 +86,7 @@
                     "line": 13,
                     "lineStartIndex": 22
                   },
-                  "executor": "scripted.lang.int",
+                  "executor": "scripted.lang..int",
                   "operand": "LEFT",
                   "right": {
                     "type": "int",
@@ -98,14 +98,14 @@
             }
           }
         ],
-        "flags": []
+        "annotations": []
       }
     ]
   },
   "staticMethods": {
     "main": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [
           {
             "type": "scripted.lang.String[]",
@@ -122,10 +122,10 @@
               "line": 17,
               "lineStartIndex": 28
             },
-            "targetType": "test.MultipleMethodsTest",
+            "targetType": ".test.MultipleMethodsTest",
             "initializer": {
               "TYPE": "constructors",
-              "target": "test.MultipleMethodsTest",
+              "target": ".test.MultipleMethodsTest",
               "args": [
                 {
                   "type": "String",
@@ -212,13 +212,14 @@
             }
           }
         ],
-        "flags": []
+        "modifiers": 2,
+        "annotations": []
       }
     ]
   },
   "constructors": [
     {
-      "retType": "scripted.lang.void",
+      "retType": ".test.MultipleMethodsTest",
       "params": [
         {
           "type": "scripted.lang.String",
@@ -280,10 +281,10 @@
           }
         }
       ],
-      "flags": []
+      "annotations": []
     }
   ],
   "fields": {},
   "staticFields": {},
-  "flags": []
+  "annotations": []
 }

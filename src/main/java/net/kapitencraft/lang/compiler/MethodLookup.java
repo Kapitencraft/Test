@@ -101,7 +101,7 @@ public class MethodLookup {
     }
 
     private static List<ScriptedClass> createParentMap(ScriptedClass scriptedClass) {
-        Objects.requireNonNull(scriptedClass, "Can not create parent map for null class!");
+        Objects.requireNonNull(scriptedClass, "Can not create target map for null class!");
         List<ScriptedClass> parents = new ArrayList<>();
         if (scriptedClass.superclass() != null) {
             do {

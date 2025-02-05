@@ -1,0 +1,579 @@
+package net.kapitencraft.lang.compiler;
+
+import com.google.common.collect.ImmutableMap;
+import net.kapitencraft.lang.compiler.parser.ExprParser;
+import net.kapitencraft.lang.compiler.parser.StmtParser;
+import net.kapitencraft.lang.env.core.Environment;
+import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.ast.Expr;
+import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.holder.baked.BakedAnnotation;
+import net.kapitencraft.lang.holder.baked.BakedClass;
+import net.kapitencraft.lang.holder.baked.BakedEnum;
+import net.kapitencraft.lang.holder.baked.BakedInterface;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.oop.clazz.ClassType;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonAnnotation;
+import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
+import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonEnum;
+import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonInterface;
+import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
+import net.kapitencraft.lang.oop.field.GeneratedField;
+import net.kapitencraft.lang.oop.field.SkeletonField;
+import net.kapitencraft.lang.oop.method.GeneratedCallable;
+import net.kapitencraft.lang.oop.method.SkeletonMethod;
+import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
+import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
+import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
+import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.run.Interpreter;
+import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.tool.Pair;
+import org.jetbrains.annotations.Nullable;
+
+import java.lang.invoke.MethodHandle;
+import java.util.*;
+
+public class Holder {
+
+    public record AnnotationObj(SourceClassReference type, Token[] properties) {}
+
+    public record Class(ClassType type, ClassReference target, short modifiers,
+                        AnnotationObj[] annotations, String pck, Token name, ClassReference parent,
+                        SourceClassReference[] interfaces,
+                        Constructor[] constructors,
+                        Method[] methods,
+                        Field[] fields,
+                        EnumConstant[] enumConstants,
+                        Class[] enclosed
+    ) {
+        public Compiler.ClassBuilder construct(StmtParser stmtParser, ExprParser exprParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+            return switch (this.type) {
+                case ENUM -> constructEnum(stmtParser, exprParser, parser, logger);
+                case INTERFACE -> constructInterface(stmtParser, exprParser, parser, logger);
+                case CLASS -> constructClass(stmtParser, exprParser, parser, logger);
+                case ANNOTATION -> constructAnnotation(stmtParser, exprParser, parser, logger);
+            };
+        }
+
+        public BakedEnum constructEnum(StmtParser stmtParser, ExprParser exprParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+            Map<String, GeneratedField> fields = new HashMap<>();
+            Map<String, GeneratedField> staticFields = new HashMap<>();
+
+            for (Field field : fields()) {
+                Expr initializer = null;
+                if (field.body() != null) {
+                    exprParser.apply(field.body(), parser);
+                    initializer = exprParser.expression();
+                }
+                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                for (AnnotationObj obj : field.annotations()) {
+                    annotations.add(exprParser.parseAnnotation(obj, parser));
+                }
+
+                GeneratedField fieldDecl = new GeneratedField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new AnnotationClassInstance[0]));
+                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
+                    else fields.put(field.name.lexeme(), fieldDecl);
+            }
+
+            List<Pair<Token, GeneratedCallable>> methods = new ArrayList<>();
+            List<Pair<Token, GeneratedCallable>> staticMethods = new ArrayList<>();
+            for (Method method : this.methods()) {
+                List<Stmt> body = null;
+                if (!Modifiers.isAbstract(method.modifiers)) {
+                    stmtParser.apply(method.body(), parser);
+                    stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, method.type());
+                    body = stmtParser.parse();
+                    stmtParser.popMethod();
+                }
+
+                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                for (AnnotationObj obj : method.annotations()) {
+                    annotations.add(exprParser.parseAnnotation(obj, parser));
+                }
+
+                GeneratedCallable methodDecl = new GeneratedCallable(method.type(), method.params(), body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
+                if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
+                else methods.add(Pair.of(method.name(), methodDecl));
+            }
+
+            List<Pair<Token, GeneratedCallable>> constructors = new ArrayList<>();
+            for (Constructor method : this.constructors()) {
+                stmtParser.apply(method.body(), parser);
+                stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, ClassReference.of(VarTypeManager.VOID));
+                List<Stmt> body = stmtParser.parse();
+                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                for (AnnotationObj obj : method.annotations()) {
+                    annotations.add(exprParser.parseAnnotation(obj, parser));
+                }
+
+
+                GeneratedCallable constDecl = new GeneratedCallable(target, method.params(), body, (short) 0, annotations.toArray(new AnnotationClassInstance[0]));
+                stmtParser.popMethod();
+                constructors.add(Pair.of(method.name(), constDecl));
+            }
+
+
+            ImmutableMap.Builder<String, GeneratedEnumConstant> enumConstants = new ImmutableMap.Builder<>();
+            for (EnumConstant decl : enumConstants()) {
+                List<Expr> args;
+                if (decl.arguments.length == 0) {
+                    args = new ArrayList<>();
+                    exprParser.apply(new Token[0], parser);
+                } else {
+                    exprParser.apply(decl.arguments, parser);
+                    args = exprParser.args();
+                }
+
+                int ordinal = target.get().getConstructor().getMethodOrdinal(exprParser.argTypes(args));
+                ScriptedCallable callable = target.get().getConstructor().getMethodByOrdinal(ordinal);
+
+                exprParser.checkArguments(args, callable, decl.name());
+
+                enumConstants.put(decl.name().lexeme(), new GeneratedEnumConstant(target.get(), decl.ordinal(), decl.name().lexeme(), ordinal, args));
+            }
+
+            List<AnnotationClassInstance> annotations = new ArrayList<>();
+            for (AnnotationObj obj : this.annotations()) {
+                annotations.add(exprParser.parseAnnotation(obj, parser));
+            }
+
+
+            return new BakedEnum(
+                    logger,
+                    target(),
+                    constructors.toArray(Pair[]::new),
+                    methods.toArray(Pair[]::new),
+                    staticMethods.toArray(Pair[]::new),
+                    interfaces(),
+                    enumConstants.build(),
+                    fields,
+                    staticFields,
+                    name(),
+                    pck(),
+                    Arrays.stream(enclosed)
+                            .map(classConstructor -> classConstructor.construct(stmtParser, exprParser, parser, logger))
+                            .toArray(Compiler.ClassBuilder[]::new),
+                    annotations.toArray(new AnnotationClassInstance[0])
+            );
+
+        }
+
+        public BakedInterface constructInterface(StmtParser stmtParser, ExprParser exprParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+            Map<String, GeneratedField> staticFields = new HashMap<>();
+            for (Field field : fields()) {
+                Expr initializer = null;
+                if (field.body() != null) {
+                    exprParser.apply(field.body(), parser);
+                    initializer = exprParser.expression();
+                }
+                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                for (AnnotationObj obj : field.annotations()) {
+                    annotations.add(exprParser.parseAnnotation(obj, parser));
+                }
+
+                GeneratedField fieldDecl = new GeneratedField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new AnnotationClassInstance[0]));
+                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
+                else logger.error(field.name, "fields on interfaces must be static");
+            }
+
+            List<Pair<Token, GeneratedCallable>> methods = new ArrayList<>();
+            List<Pair<Token, GeneratedCallable>> staticMethods = new ArrayList<>();
+            for (Method method : this.methods()) {
+                List<Stmt> body = null;
+                if (!Modifiers.isAbstract(method.modifiers)) {
+                    stmtParser.apply(method.body(), parser);
+                    stmtParser.applyMethod(method.params, target(), null, method.type());
+                    body = stmtParser.parse();
+                    stmtParser.popMethod();
+                }
+                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                for (AnnotationObj obj : method.annotations()) {
+                    annotations.add(exprParser.parseAnnotation(obj, parser));
+                }
+
+
+                GeneratedCallable methodDecl = new GeneratedCallable(method.type(), method.params, body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
+                if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
+                else methods.add(Pair.of(method.name(), methodDecl));
+            }
+
+            List<AnnotationClassInstance> annotations = new ArrayList<>();
+            for (AnnotationObj obj : this.annotations()) {
+                annotations.add(exprParser.parseAnnotation(obj, parser));
+            }
+
+
+            return new BakedInterface(
+                    logger, target,
+                    methods.toArray(new Pair[0]),
+                    staticMethods.toArray(new Pair[0]),
+                    staticFields,
+                    interfaces,
+                    name,
+                    pck,
+                    Arrays.stream(enclosed)
+                            .map(classConstructor -> classConstructor.construct(stmtParser, exprParser, parser, logger))
+                            .toArray(Compiler.ClassBuilder[]::new),
+                    annotations.toArray(new AnnotationClassInstance[0])
+            );
+
+        }
+
+        public BakedClass constructClass(StmtParser stmtParser, ExprParser exprParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+            Map<String, GeneratedField> fields = new HashMap<>();
+            Map<String, GeneratedField> staticFields = new HashMap<>();
+            for (Field field : fields()) {
+                Expr initializer = null;
+                if (field.body() != null) {
+                    exprParser.apply(field.body(), parser);
+                    initializer = exprParser.expression();
+                }
+                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                for (AnnotationObj obj : field.annotations()) {
+                    annotations.add(exprParser.parseAnnotation(obj, parser));
+                }
+
+                GeneratedField fieldDecl = new GeneratedField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new AnnotationClassInstance[0]));
+                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
+                else fields.put(field.name.lexeme(), fieldDecl);
+            }
+
+            List<Pair<Token, GeneratedCallable>> methods = new ArrayList<>();
+            List<Pair<Token, GeneratedCallable>> staticMethods = new ArrayList<>();
+            for (Method method : this.methods()) {
+                List<Stmt> body = null;
+                if (!Modifiers.isAbstract(method.modifiers)) {
+                    stmtParser.apply(method.body(), parser);
+                    if (Modifiers.isStatic(method.modifiers))
+                        stmtParser.applyStaticMethod(method.params(), method.type());
+                    else
+                        stmtParser.applyMethod(method.params(), target(), parent, method.type());
+                    body = stmtParser.parse();
+                    stmtParser.popMethod();
+                }
+                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                for (AnnotationObj obj : method.annotations()) {
+                    annotations.add(exprParser.parseAnnotation(obj, parser));
+                }
+
+                GeneratedCallable methodDecl = new GeneratedCallable(method.type(), method.params(), body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
+                if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
+                else methods.add(Pair.of(method.name(), methodDecl));
+            }
+
+            List<Pair<Token, GeneratedCallable>> constructors = new ArrayList<>();
+            for (Constructor constructor : this.constructors()) {
+                stmtParser.apply(constructor.body(), parser);
+                stmtParser.applyMethod(constructor.params(), target(), parent, ClassReference.of(VarTypeManager.VOID));
+                List<Stmt> body = stmtParser.parse();
+
+                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                for (AnnotationObj obj : constructor.annotations()) {
+                    annotations.add(exprParser.parseAnnotation(obj, parser));
+                }
+
+                GeneratedCallable constDecl = new GeneratedCallable(target, constructor.params(), body, (short) 0, annotations.toArray(new AnnotationClassInstance[0]));
+                stmtParser.popMethod();
+                constructors.add(Pair.of(constructor.name(), constDecl));
+            }
+
+            List<AnnotationClassInstance> annotations = new ArrayList<>();
+            for (AnnotationObj obj : this.annotations()) {
+                annotations.add(exprParser.parseAnnotation(obj, parser));
+            }
+
+            return new BakedClass(
+                    logger,
+                    this.target(),
+                    methods.toArray(new Pair[0]),
+                    staticMethods.toArray(new Pair[0]),
+                    constructors.toArray(new Pair[0]),
+                    fields,
+                    staticFields,
+                    this.parent,
+                    this.name(),
+                    this.pck(),
+                    this.interfaces,
+                    Arrays.stream(enclosed)
+                            .map(classConstructor -> classConstructor.construct(stmtParser, exprParser, parser, logger))
+                            .toArray(Compiler.ClassBuilder[]::new),
+                    this.modifiers,
+                    annotations.toArray(new AnnotationClassInstance[0])
+            );
+        }
+
+        public BakedAnnotation constructAnnotation(StmtParser stmtParser, ExprParser exprParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+            ImmutableMap.Builder<String, MethodWrapper> methods = new ImmutableMap.Builder<>();
+            for (Method method : methods()) {
+                Expr val = null;
+                if (!Modifiers.isAbstract(method.modifiers)) {
+                    exprParser.apply(method.body(), parser);
+                    val = exprParser.literalOrReference();
+                }
+                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                for (AnnotationObj obj : method.annotations()) {
+                    annotations.add(exprParser.parseAnnotation(obj, parser));
+                }
+
+                methods.put(method.name().lexeme(), new MethodWrapper(val, method.type, annotations.toArray(new AnnotationClassInstance[0])));
+            }
+
+            List<AnnotationClassInstance> annotations = new ArrayList<>();
+            for (AnnotationObj obj : this.annotations()) {
+                annotations.add(exprParser.parseAnnotation(obj, parser));
+            }
+
+
+            return new BakedAnnotation(
+                    this.target(),
+                    this.name(),
+                    this.pck(),
+                    methods.build(),
+                    Arrays.stream(enclosed)
+                            .map(classConstructor -> classConstructor.construct(stmtParser, exprParser, parser, logger))
+                            .toArray(Compiler.ClassBuilder[]::new),
+                    annotations.toArray(new AnnotationClassInstance[0])
+            );
+
+        }
+
+        public void applySkeleton(Compiler.ErrorLogger logger) {
+            ScriptedClass skeleton = createSkeleton(logger);
+            this.target.setTarget(skeleton);
+        }
+
+        public ScriptedClass createSkeleton(Compiler.ErrorLogger logger) {
+            return switch (this.type) {
+                case ENUM -> createEnumSkeleton(logger);
+                case INTERFACE -> createInterfaceSkeleton(logger);
+                case CLASS -> createClassSkeleton(logger);
+                case ANNOTATION -> createAnnotationSkeleton(logger);
+            };
+        }
+
+        public ScriptedClass createEnumSkeleton(Compiler.ErrorLogger logger) {
+            ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
+            ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
+            List<String> finalFields = new ArrayList<>();
+            for (Field field : this.fields()) {
+                SkeletonField skeletonField = new SkeletonField(field.type(), Modifiers.isFinal(field.modifiers));
+                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name().lexeme(), skeletonField);
+                else {
+                    fields.put(field.name().lexeme(), skeletonField);
+                    if (skeletonField.isFinal() && field.body() == null) //add non-defaulted final fields to extra list to check constructors init
+                        finalFields.add(field.name().lexeme());
+                }
+            }
+
+            //enclosed classes
+            ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
+            for (Class enclosedDecl : this.enclosed()) {
+                ScriptedClass generated = enclosedDecl.createSkeleton(logger);
+                enclosedDecl.target().setTarget(generated);
+                enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
+            }
+
+            //methods
+            Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
+            Map<String, DataMethodContainer.Builder> staticMethods = new HashMap<>();
+            for (Method method : this.methods()) {
+                if (Modifiers.isStatic(method.modifiers)) {
+                    staticMethods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
+                    DataMethodContainer.Builder builder = staticMethods.get(method.name().lexeme());
+                    builder.addMethod(logger, SkeletonMethod.create(method), method.name());
+                } else {
+                    methods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
+                    DataMethodContainer.Builder builder = methods.get(method.name().lexeme());
+                    builder.addMethod(logger, SkeletonMethod.create(method), method.name());
+                }
+            }
+
+            //constructors
+            ConstructorContainer.Builder constructorBuilder = new ConstructorContainer.Builder(finalFields, this.name());
+            for (Constructor constructor : this.constructors()) {
+                constructorBuilder.addMethod(
+                        logger,
+                        SkeletonMethod.create(constructor, this.target),
+                        constructor.name()
+                );
+            }
+
+
+            return new SkeletonEnum(
+                    name().lexeme(), pck(),
+                    staticFields.build(), fields.build(),
+                    enclosed.build(),
+                    DataMethodContainer.bakeBuilders(methods),
+                    DataMethodContainer.bakeBuilders(staticMethods),
+                    constructorBuilder
+            );
+        }
+
+        public ScriptedClass createInterfaceSkeleton(Compiler.ErrorLogger logger) {
+
+            //fields
+            ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
+            for (Field field : this.fields()) {
+                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name().lexeme(), new SkeletonField(field.type(), Modifiers.isFinal(field.modifiers)));
+                else {
+                    logger.error(field.name(), "fields inside Interfaces must always be static");
+                }
+            }
+
+            //enclosed classes
+            ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
+            for (Class enclosedDecl : this.enclosed()) {
+                ScriptedClass generated = enclosedDecl.createSkeleton(logger);
+                enclosedDecl.target().setTarget(generated);
+                enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
+            }
+
+            //methods
+            Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
+            Map<String, DataMethodContainer.Builder> staticMethods = new HashMap<>();
+            for (Method method : this.methods()) {
+                if (Modifiers.isStatic(method.modifiers)) {
+                    staticMethods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
+                    DataMethodContainer.Builder builder = staticMethods.get(method.name().lexeme());
+                    builder.addMethod(logger, SkeletonMethod.create(method), method.name());
+                } else {
+                    methods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
+                    DataMethodContainer.Builder builder = methods.get(method.name().lexeme());
+                    builder.addMethod(logger, SkeletonMethod.create(method), method.name());
+                }
+            }
+
+            return new SkeletonInterface(
+                    this.name().lexeme(),
+                    this.pck(),
+                    this.interfaces,
+                    staticFields.build(),
+                    enclosed.build(),
+                    DataMethodContainer.bakeBuilders(methods),
+                    DataMethodContainer.bakeBuilders(staticMethods)
+            );
+
+        }
+
+        public ScriptedClass createClassSkeleton(Compiler.ErrorLogger logger) {
+
+            //fields
+            ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
+            ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
+            List<String> finalFields = new ArrayList<>();
+            for (Field field : this.fields()) {
+                SkeletonField skeletonField = new SkeletonField(field.type(), Modifiers.isFinal(field.modifiers));
+                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name().lexeme(), skeletonField);
+                else {
+                    fields.put(field.name().lexeme(), skeletonField);
+                    if (skeletonField.isFinal() && field.body() == null) //add non-defaulted final fields to extra list to check constructors init
+                        finalFields.add(field.name().lexeme());
+                }
+            }
+
+            //enclosed classes
+            ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
+            for (Class enclosedDecl : this.enclosed()) {
+                ScriptedClass generated = enclosedDecl.createSkeleton(logger);
+                enclosedDecl.target().setTarget(generated);
+                enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
+            }
+
+            //methods
+            Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
+            Map<String, DataMethodContainer.Builder> staticMethods = new HashMap<>();
+            for (Method method : this.methods()) {
+                if (Modifiers.isStatic(method.modifiers)) {
+                    staticMethods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
+                    DataMethodContainer.Builder builder = staticMethods.get(method.name().lexeme());
+                    builder.addMethod(logger, SkeletonMethod.create(method), method.name());
+                } else {
+                    methods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
+                    DataMethodContainer.Builder builder = methods.get(method.name().lexeme());
+                    builder.addMethod(logger, SkeletonMethod.create(method), method.name());
+                }
+            }
+
+            //constructors
+            ConstructorContainer.Builder constructorBuilder = new ConstructorContainer.Builder(finalFields, this.name());
+            for (Constructor constructor : this.constructors()) {
+                constructorBuilder.addMethod(
+                        logger,
+                        SkeletonMethod.create(constructor, this.target),
+                        constructor.name()
+                );
+            }
+
+            return new SkeletonClass(
+                    this.name().lexeme(),
+                    this.pck(), this.parent,
+                    staticFields.build(),
+                    fields.build(),
+                    enclosed.build(),
+                    DataMethodContainer.bakeBuilders(methods),
+                    DataMethodContainer.bakeBuilders(staticMethods),
+                    constructorBuilder,
+                    this.modifiers
+            );
+
+        }
+
+        public record MethodWrapper(@Nullable Expr val, ClassReference type, AnnotationClassInstance[] annotations) implements ScriptedCallable {
+
+            @Override
+            public List<ClassReference> argTypes() {
+                return List.of();
+            }
+
+            @Override
+            public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+                return val == null ? null : interpreter.evaluate(val);
+            }
+
+            @Override
+            public boolean isAbstract() {
+                return val == null;
+            }
+
+            @Override
+            public boolean isFinal() {
+                return false;
+            }
+        }
+
+        public ScriptedClass createAnnotationSkeleton(Compiler.ErrorLogger logger) {
+            //enclosed classes
+            ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
+            for (Class enclosedDecl : this.enclosed()) {
+                ScriptedClass generated = enclosedDecl.createSkeleton(logger);
+                enclosedDecl.target().setTarget(generated);
+                enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
+            }
+
+            ImmutableMap.Builder<String, AnnotationCallable> methods = new ImmutableMap.Builder<>();
+            for (Method method : methods()) {
+                methods.put(method.name().lexeme(), new SkeletonAnnotationMethod(method.type, method.body().length > 0));
+            }
+
+            return new SkeletonAnnotation(
+                    this.name().lexeme(),
+                    this.pck(),
+                    enclosed.build(),
+                    methods.build()
+            );
+        }
+    }
+
+    public record Constructor(AnnotationObj[] annotations, Token name, List<Pair<ClassReference, String>> params, Token[] body) {}
+
+    public record EnumConstant(Token name, int ordinal, Token[] arguments) {}
+
+    public record Field(short modifiers, AnnotationObj[] annotations, SourceClassReference type, Token name, Token[] body) {}
+
+    public record Method(short modifiers, AnnotationObj[] annotations, SourceClassReference type, Token name, List<Pair<ClassReference, String>> params, Token[] body) {}
+}

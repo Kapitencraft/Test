@@ -1,7 +1,10 @@
 package net.kapitencraft.lang.oop;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -65,5 +68,16 @@ public class Package {
 
     public String getName() {
         return name;
+    }
+
+    /**
+     * may only be called from compilation
+     */
+    @ApiStatus.Internal
+    public ClassReference getOrCreateClass(String name) {
+        if (classes.containsKey(name)) return classes.get(name);
+        ClassReference reference = new ClassReference(name, this.name);
+        classes.put(name, reference);
+        return reference;
     }
 }

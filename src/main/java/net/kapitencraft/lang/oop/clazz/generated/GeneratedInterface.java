@@ -5,20 +5,24 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedInterface;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.tool.GsonHelper;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +43,9 @@ public class GeneratedInterface implements ScriptedInterface, CacheableClass {
     private final String name;
     private final String packageRepresentation;
 
-    public GeneratedInterface(Map<String, DataMethodContainer> allMethods, Map<String, DataMethodContainer> allStaticMethods, Map<String, GeneratedField> allStaticFields, ClassReference[] parentInterfaces, Map<String, ClassReference> enclosing, String name, String packageRepresentation) {
+    private final AnnotationClassInstance[] annotations;
+
+    public GeneratedInterface(Map<String, DataMethodContainer> allMethods, Map<String, DataMethodContainer> allStaticMethods, Map<String, GeneratedField> allStaticFields, ClassReference[] parentInterfaces, Map<String, ClassReference> enclosing, String name, String packageRepresentation, AnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(allMethods);
         this.allMethods = allMethods;
         this.staticMethods = new GeneratedMethodMap(allStaticMethods);
@@ -48,6 +54,7 @@ public class GeneratedInterface implements ScriptedInterface, CacheableClass {
         this.enclosing = enclosing;
         this.name = name;
         this.packageRepresentation = packageRepresentation;
+        this.annotations = annotations;
         this.lookup = MethodLookup.createFromClass(this);
     }
 
@@ -59,6 +66,9 @@ public class GeneratedInterface implements ScriptedInterface, CacheableClass {
         ImmutableMap<String, GeneratedField> staticFields = GeneratedField.loadFieldMap(data, "staticFields");
 
         ClassReference[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(ClassReference[]::new);
+
+        AnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
+
         return new GeneratedInterface(
                 methods,
                 staticMethods,
@@ -66,11 +76,10 @@ public class GeneratedInterface implements ScriptedInterface, CacheableClass {
                 implemented,
                 enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity())),
                 name,
-                pck
+                pck,
+                annotations
         );
     }
-
-    //TODO complete ClassReference Transfer
 
     boolean init = false;
 
@@ -175,6 +184,8 @@ public class GeneratedInterface implements ScriptedInterface, CacheableClass {
             allStaticFields.forEach((name, field) -> staticFields.add(name, field.cache(cacheBuilder)));
             object.add("staticFields", staticFields);
         }
+        object.add("annotations", cacheBuilder.cacheAnnotations(annotations));
+
         return object;
     }
 

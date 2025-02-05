@@ -29,23 +29,23 @@ public class VarTypeManager {
     public static final ScriptedClass CHAR = new CharacterClass();
     public static final ScriptedClass VOID = new VoidClass();
 
-    public static final ClassReference OBJECT = registerMain(ClassType.CLASS, ObjectClass::new, "Object");
+    public static final ClassReference OBJECT = registerMain(ObjectClass::new, "Object");
 
-    public static final ClassReference ENUM = registerMain(ClassType.CLASS, EnumClass::new, "Enum");
+    public static final ClassReference ENUM = registerMain(EnumClass::new, "Enum");
 
-    public static final ClassReference STRING = registerMain(StringClass::new, "String", ClassType.CLASS, String.class);
+    public static final ClassReference STRING = registerMain(StringClass::new, "String", String.class);
 
-    public static final ClassReference THROWABLE = registerMain(ClassType.CLASS, () -> new ThrowableClass("Throwable", "scripted.lang"), "Throwable");
-    public static final ClassReference STACK_OVERFLOW_EXCEPTION = registerMain(ClassType.CLASS, StackOverflowExceptionClass::new, "StackOverflowException");
-    public static final ClassReference MISSING_VAR_EXCEPTION = registerMain(ClassType.CLASS, MissingVarExceptionClass::new, "MissingVarException");
-    public static final ClassReference ARITHMETIC_EXCEPTION = registerMain(ClassType.CLASS, ArithmeticExceptionClass::new, "ArithmeticException");
-    public static final ClassReference FUNCTION_CALL_ERROR = registerMain(ClassType.CLASS, FunctionCallErrorClass::new, "FunctionCallError");
-    public static final ClassReference INDEX_OUT_OF_BOUNDS_EXCEPTION = registerMain(ClassType.CLASS, IndexOutOfBoundsException::new, "IndexOutOfBoundsException");
+    public static final ClassReference THROWABLE = registerMain(() -> new ThrowableClass("Throwable", "scripted.lang"), "Throwable");
+    public static final ClassReference STACK_OVERFLOW_EXCEPTION = registerMain(StackOverflowExceptionClass::new, "StackOverflowException");
+    public static final ClassReference MISSING_VAR_EXCEPTION = registerMain(MissingVarExceptionClass::new, "MissingVarException");
+    public static final ClassReference ARITHMETIC_EXCEPTION = registerMain(ArithmeticExceptionClass::new, "ArithmeticException");
+    public static final ClassReference FUNCTION_CALL_ERROR = registerMain(FunctionCallErrorClass::new, "FunctionCallError");
+    public static final ClassReference INDEX_OUT_OF_BOUNDS_EXCEPTION = registerMain(IndexOutOfBoundsException::new, "IndexOutOfBoundsException");
 
-    public static final ClassReference SYSTEM = registerMain(ClassType.CLASS, SystemClass::new, "System");
-    public static final ClassReference MATH = registerMain(ClassType.CLASS, MathClass::new, "Math");
+    public static final ClassReference SYSTEM = registerMain(SystemClass::new, "System");
+    public static final ClassReference MATH = registerMain(MathClass::new, "Math");
 
-    public static final ClassReference OVERRIDE = registerMain(ClassType.ANNOTATION, OverrideAnnotation::new, "Override");
+    public static final ClassReference OVERRIDE = registerMain(OverrideAnnotation::new, "Override");
 
     static {
         loadClasses();
@@ -55,23 +55,23 @@ public class VarTypeManager {
         data.forEach(RegistryClassReference::create);
     }
 
-    public static ClassReference register(Package pck, String name, ClassType type, Supplier<ScriptedClass> sup, Class<?> target) {
-        RegistryClassReference classReference = new RegistryClassReference(name, pck.getName(), type, sup);
+    public static ClassReference register(Package pck, String name, Supplier<ScriptedClass> sup, Class<?> target) {
+        RegistryClassReference classReference = new RegistryClassReference(name, pck.getName(), sup);
         data.add(classReference);
         pck.addClass(name, classReference);
         return classReference;
     }
 
-    public static ClassReference register(Package pck, String name, ClassType type, Supplier<ScriptedClass> sup) {
-        return register(pck, name, type, sup, null);
+    public static ClassReference register(Package pck, String name, Supplier<ScriptedClass> sup) {
+        return register(pck, name, sup, null);
     }
 
-    private static ClassReference registerMain(ClassType type, Supplier<ScriptedClass> sup, String name) {
-        return register(langRoot, name, type, sup);
+    private static ClassReference registerMain(Supplier<ScriptedClass> sup, String name) {
+        return register(langRoot, name, sup);
     }
 
-    private static ClassReference registerMain(Supplier<ScriptedClass> sup, String name, ClassType type, Class<?> target) {
-        return register(langRoot, name, type, sup, target);
+    private static ClassReference registerMain(Supplier<ScriptedClass> sup, String name, Class<?> target) {
+        return register(langRoot, name, sup, target);
     }
 
     public static ClassReference getClassForName(String type) {
@@ -84,16 +84,16 @@ public class VarTypeManager {
             String name = packages[i];
             if (i == packages.length - 1) {
                 String[] subClasses = name.split("\\$");
-                ClassReference loxClass = pg.getClass(subClasses[0].replace("[]", ""));
-                if (loxClass == null) return null; //TODO fix enclosed classes not working exposed
+                ClassReference reference = pg.getClass(subClasses[0].replace("[]", ""));
+                if (reference == null) return null; //TODO fix enclosed classes not working exposed
                 for (int j = 1; j < subClasses.length; j++) {
-                    if (!loxClass.get().hasEnclosing(subClasses[j])) return null;
-                    loxClass = loxClass.get().getEnclosing(subClasses[j]);
+                    if (!reference.hasEnclosing(subClasses[j])) return null;
+                    reference = reference.getEnclosedUnsave(subClasses[j]);
                 }
                 for (; arrayCount > 0; arrayCount--) {
-                    loxClass = loxClass.array();
+                    reference = reference.array();
                 }
-                return loxClass;
+                return reference;
             } else {
                 if (!pg.hasPackage(name)) return null;
                 pg = pg.getPackage(name);
@@ -134,25 +134,41 @@ public class VarTypeManager {
         return p;
     }
 
-    public static ClassReference getClass(List<Token> s, BiConsumer<Token, String> error) {
+    public static ClassReference getClassOrError(List<Token> s, BiConsumer<Token, String> error) {
         Package pg = rootPackage();
-        for (int i = 0; i < s.size(); i++) {
+        for (int i = 0; i < s.size() - 1; i++) {
             Token token = s.get(i);
             String lexeme = token.lexeme();
-            if (i == s.size() - 1) {
-                if (!pg.hasClass(lexeme)) {
-                    error.accept(token, "unknown class '" + lexeme + "'");
-                    return null;
-                }
-                return pg.getClass(lexeme);
-            } else {
-                if (!pg.hasPackage(lexeme)) {
-                    error.accept(token, "unknown package '" + lexeme + "'");
-                    return null;
-                }
-                pg = pg.getPackage(lexeme);
+            if (!pg.hasPackage(lexeme)) {
+                error.accept(token, "unknown package '" + lexeme + "'");
+                return null;
             }
+            pg = pg.getPackage(lexeme);
         }
-        return null;
+        Token token = s.get(s.size()-1);
+        String lexeme = token.lexeme();
+        if (!pg.hasClass(lexeme)) {
+            error.accept(token, "unknown class '" + lexeme + "'");
+            return null;
+        }
+        return pg.getClass(lexeme);
+    }
+
+    public static ClassReference getOrCreateClass(List<Token> path) {
+        Package pg = rootPackage();
+        for (int i = 0; i < path.size() - 1; i++) {
+            String pckName = path.get(i).lexeme();
+            pg = pg.getOrCreatePackage(pckName);
+        }
+        return pg.getOrCreateClass(path.get(path.size()-1).lexeme());
+    }
+
+    public static ClassReference getOrCreateClass(String name, String pck) {
+        String[] packages = pck.split("\\.");
+        Package pg = rootPackage();
+        for (String aPackage : packages) {
+            pg = pg.getOrCreatePackage(aPackage);
+        }
+        return pg.getOrCreateClass(name);
     }
 }

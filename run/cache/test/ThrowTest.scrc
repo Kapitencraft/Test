@@ -1,16 +1,16 @@
 {
-  "TYPE": "class",
+  "TYPE": "CLASS",
   "name": "ThrowTest",
-  "superclass": "scripted.lang.Object",
+  "superclass": ".scripted.lang.Object",
   "interfaces": [],
   "methods": {},
   "staticMethods": {
     "test": [
       {
-        "retType": "scripted.lang.int",
+        "retType": "scripted.lang..int",
         "params": [
           {
-            "type": "scripted.lang.int",
+            "type": "scripted.lang..int",
             "name": "i"
           }
         ],
@@ -36,7 +36,7 @@
                 "line": 5,
                 "lineStartIndex": 14
               },
-              "executor": "scripted.lang.int",
+              "executor": "scripted.lang..int",
               "operand": "LEFT",
               "right": {
                 "type": "int",
@@ -93,7 +93,7 @@
             },
             "value": {
               "TYPE": "staticCall",
-              "target": "test.ThrowTest",
+              "target": ".test.ThrowTest",
               "name": {
                 "type": "IDENTIFIER",
                 "lexeme": "test",
@@ -122,7 +122,7 @@
                     "line": 6,
                     "lineStartIndex": 31
                   },
-                  "executor": "scripted.lang.int",
+                  "executor": "scripted.lang..int",
                   "operand": "LEFT",
                   "right": {
                     "type": "int",
@@ -134,12 +134,13 @@
             }
           }
         ],
-        "flags": []
+        "modifiers": 2,
+        "annotations": []
       }
     ],
     "main": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [
           {
             "type": "scripted.lang.String[]",
@@ -156,7 +157,7 @@
                   "TYPE": "expression",
                   "expr": {
                     "TYPE": "staticCall",
-                    "target": "test.ThrowTest",
+                    "target": ".test.ThrowTest",
                     "name": {
                       "type": "IDENTIFIER",
                       "lexeme": "test",
@@ -253,12 +254,13 @@
             ]
           }
         ],
-        "flags": []
+        "modifiers": 2,
+        "annotations": []
       }
     ]
   },
   "constructors": [],
   "fields": {},
   "staticFields": {},
-  "flags": []
+  "annotations": []
 }

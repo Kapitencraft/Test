@@ -1,12 +1,12 @@
 {
-  "TYPE": "class",
+  "TYPE": "CLASS",
   "name": "A",
-  "superclass": "main.Main",
+  "superclass": ".main.Main",
   "interfaces": [],
   "methods": {
     "test2": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [],
         "body": [
           {
@@ -42,12 +42,12 @@
                 "line": 17,
                 "lineStartIndex": 19
               },
-              "executor": "scripted.lang.void",
+              "executor": "scripted.lang..void",
               "operand": "LEFT"
             }
           }
         ],
-        "flags": []
+        "annotations": []
       }
     ]
   },
@@ -55,5 +55,5 @@
   "constructors": [],
   "fields": {},
   "staticFields": {},
-  "flags": []
+  "annotations": []
 }

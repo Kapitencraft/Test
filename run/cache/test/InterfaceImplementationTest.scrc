@@ -1,9 +1,9 @@
 {
-  "TYPE": "class",
+  "TYPE": "CLASS",
   "name": "InterfaceImplementationTest",
-  "superclass": "test.FinalTest",
+  "superclass": ".test.FinalTest",
   "interfaces": [
-    "test.InterfaceTest"
+    ".test.InterfaceTest"
   ],
   "methods": {
     "e": [
@@ -27,7 +27,12 @@
             }
           }
         ],
-        "flags": []
+        "annotations": [
+          {
+            "type": "scripted.langOverride",
+            "properties": {}
+          }
+        ]
       }
     ]
   },
@@ -35,5 +40,5 @@
   "constructors": [],
   "fields": {},
   "staticFields": {},
-  "flags": []
+  "annotations": []
 }

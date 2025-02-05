@@ -4,9 +4,7 @@ public enum ClassType {
     ENUM,
     INTERFACE,
     CLASS,
-    ANNOTATION,
-    //only used in compilation process!
-    UNKNOWN;
+    ANNOTATION;
 
     ClassType() {
     }

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
@@ -22,7 +23,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class SkeletonAnnotation implements ScriptedClass {
+public class SkeletonAnnotation implements AbstractAnnotationClass {
     private final String name;
     private final String pck;
 
@@ -181,6 +182,11 @@ public class SkeletonAnnotation implements ScriptedClass {
     @Override
     public GeneratedMethodMap getMethods() {
         return null;
+    }
+
+    @Override
+    public List<String> getAbstracts() {
+        return methods.getAbstracts();
     }
 
     @Override

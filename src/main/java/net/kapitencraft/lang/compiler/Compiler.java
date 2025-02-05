@@ -10,7 +10,7 @@ import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.run.load.ClassLoader;
-import net.kapitencraft.lang.run.load.CompilerHolder;
+import net.kapitencraft.lang.run.load.CompilerLoaderHolder;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
@@ -77,14 +77,13 @@ public class Compiler {
 
         System.out.println("Compiling...");
 
-        ClassLoader.PackageHolder holder = ClassLoader.load(root, ".scr", CompilerHolder::new);
-        ClassLoader.applyPreviews(holder);
+        ClassLoader.PackageHolder<CompilerLoaderHolder> holder = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
 
-        ClassLoader.useHolders(holder, (s, classHolder) -> ((CompilerHolder) classHolder).applyConstructor());
+        ClassLoader.useHolders(holder, (s, classHolder) -> classHolder.applyConstructor());
 
         ClassLoader.generateSkeletons(holder);
 
-        ClassLoader.useHolders(holder, (s, classHolder) -> ((CompilerHolder) classHolder).construct());
+        ClassLoader.useHolders(holder, (s, classHolder) -> classHolder.construct());
 
         ClassLoader.generateClasses(holder);
 
@@ -94,7 +93,7 @@ public class Compiler {
 
         CacheBuilder builder = new CacheBuilder();
         ClassLoader.useClasses(holder, (stringClassHolderMap, aPackage) ->
-                stringClassHolderMap.values().forEach(classHolder -> ((CompilerHolder) classHolder).cache(builder))
+                stringClassHolderMap.values().forEach(classHolder -> classHolder.cache(builder))
         );
 
         if (hadError) System.exit(65);
@@ -150,13 +149,8 @@ public class Compiler {
     }
 
     public interface ClassBuilder {
-        ErrorLogger logger();
 
         CacheableClass build();
-
-        static Map<String, GeneratedField> generateFields(Stmt.VarDecl[] declarations) {
-            return Arrays.stream(declarations).collect(Collectors.toMap(dec -> dec.name.lexeme(), decl -> new GeneratedField(decl.type, decl.initializer, decl.isFinal)));
-        }
 
         ClassReference superclass();
 

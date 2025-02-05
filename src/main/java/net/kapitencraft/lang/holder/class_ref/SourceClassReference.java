@@ -1,21 +1,30 @@
 package net.kapitencraft.lang.holder.class_ref;
 
-import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.ClassType;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 public class SourceClassReference extends ClassReference {
     private final Token nameToken;
+    private final ClassReference reference;
 
-    public SourceClassReference(String name, String pck, ClassType type, Token nameToken) {
-        super(name, pck, type);
+    private SourceClassReference(String name, String pck, Token nameToken, ClassReference reference) {
+        super(name, pck);
         this.nameToken = nameToken;
+        this.reference = reference;
+    }
+
+    @Override
+    public ScriptedClass get() {
+        return reference.get();
+    }
+
+    @Override
+    public void setTarget(ScriptedClass target) {
+        reference.setTarget(target);
     }
 
     public static SourceClassReference from(Token name, ClassReference other) {
-        SourceClassReference r = new SourceClassReference(other.name(), other.pck(), other.getType(), name);
-        r.target = other.target;
-        return r;
+        return new SourceClassReference(other.name(), other.pck(), name, other);
     }
 
     public Token getToken() {

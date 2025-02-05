@@ -6,10 +6,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.MethodLookup;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
@@ -19,9 +21,11 @@ import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Util;
+import org.checkerframework.checker.signature.qual.CanonicalNameOrEmpty;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -47,12 +51,14 @@ public final class GeneratedClass implements CacheableClass {
     private final String name;
     private final String packageRepresentation;
 
-    private final boolean isAbstract, isFinal;
+    private final short modifiers;
+
+    private final AnnotationClassInstance[] annotations;
 
     public GeneratedClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor,
                           Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
                           Map<String, ClassReference> enclosing,
-                          ClassReference superclass, ClassReference[] implemented, String name, String packageRepresentation, boolean isAbstract, boolean isFinal) {
+                          ClassReference superclass, ClassReference[] implemented, String name, String packageRepresentation, short modifiers, AnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
         this.staticMethods = new GeneratedMethodMap(staticMethods);
@@ -64,8 +70,8 @@ public final class GeneratedClass implements CacheableClass {
         this.name = name;
         this.enclosing = enclosing;
         this.packageRepresentation = packageRepresentation;
-        this.isAbstract = isAbstract;
-        this.isFinal = isFinal;
+        this.modifiers = modifiers;
+        this.annotations = annotations;
         this.lookup = MethodLookup.createFromClass(this);
     }
 
@@ -73,7 +79,7 @@ public final class GeneratedClass implements CacheableClass {
                           Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
                           ClassReference superclass, String name, String packageRepresentation,
                           Map<String, ClassReference> enclosing, ClassReference[] implemented,
-                          boolean isAbstract, boolean isFinal) {
+                          short modifiers, AnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
         this.staticMethods = new GeneratedMethodMap(staticMethods);
@@ -85,8 +91,8 @@ public final class GeneratedClass implements CacheableClass {
         this.enclosing = enclosing;
         this.packageRepresentation = packageRepresentation;
         this.implemented = implemented;
-        this.isAbstract = isAbstract;
-        this.isFinal = isFinal;
+        this.modifiers = modifiers;
+        this.annotations = annotations;
         this.lookup = MethodLookup.createFromClass(this);
     }
 
@@ -95,7 +101,7 @@ public final class GeneratedClass implements CacheableClass {
         ClassReference superclass = ClassLoader.loadClassReference(data, "superclass");
         ClassReference[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(ClassReference[]::new);
 
-        if (superclass == null) throw new IllegalArgumentException(String.format("could not find parent class for class '%s': '%s'", name, GsonHelper.getAsString(data, "superclass")));
+        if (superclass == null) throw new IllegalArgumentException(String.format("could not find target class for class '%s': '%s'", name, GsonHelper.getAsString(data, "superclass")));
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
         ImmutableMap<String, DataMethodContainer> staticMethods = DataMethodContainer.load(data, name, "staticMethods");
 
@@ -105,7 +111,9 @@ public final class GeneratedClass implements CacheableClass {
         ImmutableMap<String, GeneratedField> fields = GeneratedField.loadFieldMap(data, "fields");
         ImmutableMap<String, GeneratedField> staticFields = GeneratedField.loadFieldMap(data, "staticFields");
 
-        List<String> flags = GsonHelper.getAsJsonArray(data, "flags").asList().stream().map(JsonElement::getAsString).toList();
+        short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
+
+        AnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
 
         Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));
 
@@ -116,7 +124,8 @@ public final class GeneratedClass implements CacheableClass {
                 name, pck,
                 enclosedClasses,
                 implemented,
-                flags.contains("isAbstract"), flags.contains("isFinal")
+                modifiers,
+                annotations
         );
     }
 
@@ -144,13 +153,9 @@ public final class GeneratedClass implements CacheableClass {
             object.add("staticFields", staticFields);
         }
 
+        object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
 
-        {
-            JsonArray flags = new JsonArray();
-            if (isAbstract) flags.add("isAbstract");
-            if (isFinal) flags.add("isFinal");
-            object.add("flags", flags);
-        }
+        if (this.modifiers != 0) object.addProperty("modifiers", modifiers);
 
         return object;
     }
@@ -206,12 +211,12 @@ public final class GeneratedClass implements CacheableClass {
     }
     @Override
     public boolean isAbstract() {
-        return isAbstract;
+        return Modifiers.isAbstract(modifiers);
     }
 
     @Override
     public boolean isFinal() {
-        return isFinal;
+        return Modifiers.isFinal(modifiers);
     }
 
     @Override

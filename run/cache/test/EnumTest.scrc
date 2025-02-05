@@ -1,12 +1,12 @@
 {
-  "TYPE": "enum",
+  "TYPE": "ENUM",
   "name": "EnumTest",
   "interfaces": [],
   "methods": {},
   "staticMethods": {
     "main": [
       {
-        "retType": "scripted.lang.void",
+        "retType": "scripted.lang..void",
         "params": [
           {
             "type": "scripted.lang.String[]",
@@ -16,7 +16,7 @@
         "body": [
           {
             "TYPE": "forEach",
-            "type": "test.EnumTest",
+            "type": ".test.EnumTest",
             "name": {
               "type": "IDENTIFIER",
               "lexeme": "test",
@@ -26,7 +26,7 @@
             },
             "init": {
               "TYPE": "staticCall",
-              "target": "test.EnumTest",
+              "target": ".test.EnumTest",
               "name": {
                 "type": "IDENTIFIER",
                 "lexeme": "values",
@@ -81,20 +81,21 @@
             }
           }
         ],
-        "flags": []
+        "modifiers": 2,
+        "annotations": []
       }
     ]
   },
   "constructors": [
     {
-      "retType": "scripted.lang.void",
+      "retType": ".test.EnumTest",
       "params": [
         {
           "type": "scripted.lang.String",
           "name": "id"
         },
         {
-          "type": "scripted.lang.int",
+          "type": "scripted.lang..int",
           "name": "count"
         }
       ],
@@ -137,7 +138,7 @@
               "line": 12,
               "lineStartIndex": 16
             },
-            "executor": "scripted.lang.void",
+            "executor": "scripted.lang..void",
             "operand": "LEFT"
           }
         },
@@ -179,12 +180,12 @@
               "line": 13,
               "lineStartIndex": 19
             },
-            "executor": "scripted.lang.void",
+            "executor": "scripted.lang..void",
             "operand": "LEFT"
           }
         }
       ],
-      "flags": []
+      "annotations": []
     }
   ],
   "enumConstants": {
@@ -242,13 +243,16 @@
   },
   "fields": {
     "count": {
-      "type": "scripted.lang.int",
-      "isFinal": true
+      "type": "scripted.lang..int",
+      "isFinal": true,
+      "annotations": []
     },
     "id": {
       "type": "scripted.lang.String",
-      "isFinal": true
+      "isFinal": true,
+      "annotations": []
     }
   },
-  "staticFields": {}
+  "staticFields": {},
+  "annotations": []
 }
