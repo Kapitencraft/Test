@@ -63,9 +63,9 @@ public class ConstructorContainer extends DataMethodContainer {
         }
 
         public void addMethod(Compiler.ErrorLogger errorLogger, ScriptedCallable callable, Token constructorLocation) {
-            List<? extends List<ClassReference>> appliedTypes = methods.stream().map(ScriptedCallable::argTypes).toList();
-            List<ClassReference> argTypes = callable.argTypes();
-            for (List<ClassReference> appliedType : appliedTypes) {
+            List<? extends List<? extends ClassReference>> appliedTypes = methods.stream().map(ScriptedCallable::argTypes).toList();
+            List<? extends ClassReference> argTypes = callable.argTypes();
+            for (List<? extends ClassReference> appliedType : appliedTypes) {
                 if (Util.matchArgs(argTypes, appliedType)) {
                     errorLogger.errorF(constructorLocation, "duplicate constructors with args %s in class %s", Util.getDescriptor(argTypes), className.lexeme());
                     return;

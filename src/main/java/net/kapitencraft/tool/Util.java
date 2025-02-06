@@ -34,7 +34,7 @@ public class Util {
         return main != null ? main : other;
     }
 
-    public static boolean matchArgs(List<ClassReference> got, List<ClassReference> expected) {
+    public static boolean matchArgs(List<? extends ClassReference> got, List<? extends ClassReference> expected) {
         if (got.size() != expected.size()) {
             return false;
         }
@@ -45,7 +45,7 @@ public class Util {
         return true;
     }
 
-    public static String getDescriptor(List<ClassReference> args) {
+    public static String getDescriptor(List<? extends ClassReference> args) {
         return args.stream().map(ClassReference::name).collect(Collectors.joining(","));
     }
 

@@ -41,7 +41,7 @@ public class HolderParser extends AbstractParser {
         String nameOverride = null;
         if (match(AS)) nameOverride = consumeIdentifier().lexeme();
         consumeEndOfArg();
-        ClassReference target = VarTypeManager.getOrCreateClass(packages);
+        SourceClassReference target = VarTypeManager.getOrCreateClass(packages);
         if (target != null) {
             if (parser.hasClass(target, nameOverride)) {
                 error(packages.get(packages.size()-1), "unknown class '" + packages.stream().map(Token::lexeme).collect(Collectors.joining(".")) + "'");
@@ -242,7 +242,7 @@ public class HolderParser extends AbstractParser {
     }
 
     private Holder.Constructor constDecl(Holder.AnnotationObj[] annotation, Token origin) {
-        List<Pair<ClassReference, String>> parameters = new ArrayList<>();
+        List<Pair<SourceClassReference, String>> parameters = new ArrayList<>();
         if (!check(BRACKET_C)) {
             do {
                 if (parameters.size() >= 255) {
@@ -267,7 +267,7 @@ public class HolderParser extends AbstractParser {
 
     private Holder.Method funcDecl(SourceClassReference type, Holder.AnnotationObj[] annotations, Token name, short modifiers) {
 
-        List<Pair<ClassReference, String>> parameters = new ArrayList<>();
+        List<Pair<SourceClassReference, String>> parameters = new ArrayList<>();
         if (!check(BRACKET_C)) {
             do {
                 if (parameters.size() >= 255) {
@@ -334,8 +334,8 @@ public class HolderParser extends AbstractParser {
 
         ClassReference target = getOrCreate(name.lexeme(), pckID, fileId != null);
 
-        parser.addClass(target, null);
-        ClassReference superClass = VarTypeManager.OBJECT;
+        parser.addClass(SourceClassReference.from(name, target), null);
+        SourceClassReference superClass = SourceClassReference.from(null, VarTypeManager.OBJECT);
         if (match(EXTENDS)) superClass = consumeVarType();
 
         List<SourceClassReference> implemented = new ArrayList<>();
@@ -356,8 +356,7 @@ public class HolderParser extends AbstractParser {
         parseClassProperties(Modifiers.isAbstract(mods) ? ModifierScope.Group.ABSTRACT_CLASS : ModifierScope.Group.CLASS, methods, constructors, fields, target, enclosed, pckID, name);
 
         consumeCurlyClose("class");
-        return new Holder.Class(
-                ClassType.CLASS,
+        return new Holder.Class(ClassType.CLASS,
                 target,
                 mods,
                 classAnnotations,
@@ -380,7 +379,7 @@ public class HolderParser extends AbstractParser {
 
         ClassReference target = getOrCreate(name.lexeme(), pckID, fileId != null);
 
-        parser.addClass(target, null);
+        parser.addClass(SourceClassReference.from(name, target), null);
 
         List<SourceClassReference> interfaces = new ArrayList<>();
 
@@ -438,7 +437,7 @@ public class HolderParser extends AbstractParser {
 
         ClassReference target = getOrCreate(name.lexeme(), pckId, fileId != null);
 
-        parser.addClass(target, null);
+        parser.addClass(SourceClassReference.from(name, target), null);
 
         consumeCurlyOpen("annotation");
 
@@ -492,7 +491,7 @@ public class HolderParser extends AbstractParser {
 
         ClassReference target = getOrCreate(name.lexeme(), pckID, fileId != null);
 
-        parser.addClass(target, null);
+        parser.addClass(SourceClassReference.from(name, target), null);
 
         List<SourceClassReference> parentInterfaces = new ArrayList<>();
 

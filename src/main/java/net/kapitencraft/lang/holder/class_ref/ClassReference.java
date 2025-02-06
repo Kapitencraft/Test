@@ -79,11 +79,15 @@ public class ClassReference implements Supplier<ScriptedClass> {
     }
 
     public ClassReference array() {
-        return new ClassWrapper(this.name + "[]", this.pck, () -> get().array());
+        return new ClassWrapper(this.name + "[]", this.pck, ScriptedClass::array, this);
     }
 
     @Override
     public String toString() {
-        return "ClassReference@" + this.name + (target != null ? ", applied: " + target : "");
+        return "ClassReference@" + this.name + (exists() ? ", applied: " + target : "");
+    }
+
+    protected boolean exists() {
+        return target != null;
     }
 }

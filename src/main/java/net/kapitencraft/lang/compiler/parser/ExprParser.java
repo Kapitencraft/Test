@@ -469,7 +469,7 @@ public class ExprParser extends AbstractParser {
     }
 
     public void checkArguments(List<Expr> args, ScriptedCallable target, Token loc) {
-        List<ClassReference> expectedTypes = target.argTypes();
+        List<? extends ClassReference> expectedTypes = target.argTypes();
         List<ClassReference> givenTypes = argTypes(args);
         if (expectedTypes.size() != givenTypes.size()) {
             errorLogger.errorF(loc, "constructor for %s cannot be applied to given types;", loc.lexeme());

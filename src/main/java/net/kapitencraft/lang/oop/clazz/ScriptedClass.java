@@ -121,7 +121,7 @@ public interface ScriptedClass {
     String pck(); //stupid keyword :agony:
 
     default String absoluteName() {
-        return pck() + name();
+        return pck() + "." + name();
     }
 
     @Nullable ClassReference superclass();

@@ -1,0 +1,10 @@
+package test;
+
+import main.Hello;
+
+class MissingClassTest {
+
+    static void main(String[] args) {
+        Hello.run();
+    }
+}

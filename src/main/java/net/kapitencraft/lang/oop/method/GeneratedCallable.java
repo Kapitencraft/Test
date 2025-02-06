@@ -21,12 +21,12 @@ import java.util.List;
 
 public class GeneratedCallable implements ScriptedCallable {
     private final ClassReference retType;
-    private final List<Pair<ClassReference, String>> params;
+    private final List<? extends Pair<? extends ClassReference, String>> params;
     private final List<Stmt> body;
     private final short modifiers;
     private final AnnotationClassInstance[] annotations;
 
-    public GeneratedCallable(ClassReference retType, List<Pair<ClassReference, String>> params, List<Stmt> body, short modifiers, AnnotationClassInstance[] annotations) {
+    public GeneratedCallable(ClassReference retType, List<? extends Pair<? extends ClassReference, String>> params, List<Stmt> body, short modifiers, AnnotationClassInstance[] annotations) {
         this.retType = retType;
         this.params = params;
         this.body = body;
@@ -113,7 +113,7 @@ public class GeneratedCallable implements ScriptedCallable {
     }
 
     @Override
-    public List<ClassReference> argTypes() {
+    public List<? extends ClassReference> argTypes() {
         return params.stream().map(Pair::left).toList();
     }
 }

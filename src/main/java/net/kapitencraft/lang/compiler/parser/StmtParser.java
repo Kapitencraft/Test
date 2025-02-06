@@ -305,12 +305,12 @@ public class StmtParser extends ExprParser {
         return stmts;
     }
 
-    public void applyMethod(List<Pair<ClassReference, String>> params, ClassReference targetClass, ClassReference superclass, ClassReference funcRetType) {
+    public void applyMethod(List<? extends Pair<? extends ClassReference, String>> params, ClassReference targetClass, ClassReference superclass, ClassReference funcRetType) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (targetClass != null) this.varAnalyser.add("this", targetClass, true, true);
         if (superclass != null) this.varAnalyser.add("super", superclass, true, true);
-        for (Pair<ClassReference, String> param : params) {
+        for (Pair<? extends ClassReference, String> param : params) {
             varAnalyser.add(param.right(), param.left(), true, false);
         }
     }
@@ -320,10 +320,10 @@ public class StmtParser extends ExprParser {
         funcRetType = VarTypeManager.VOID.reference();
     }
 
-    public void applyStaticMethod(List<Pair<ClassReference, String>> params, ClassReference funcRetType) {
+    public void applyStaticMethod(List<? extends Pair<? extends ClassReference, String>> params, ClassReference funcRetType) {
         this.pushScope();
         this.funcRetType = funcRetType;
-        for (Pair<ClassReference, String> param : params) {
+        for (Pair<? extends ClassReference, String> param : params) {
             varAnalyser.add(param.right(), param.left(), true, false);
         }
     }

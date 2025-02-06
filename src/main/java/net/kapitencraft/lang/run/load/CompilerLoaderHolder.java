@@ -67,7 +67,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder {
     }
 
     public void construct() {
-        if (!checkConstructorCreated()) return;
+        if (!checkHolderCreated()) return;
         ExprParser exprParser = new ExprParser(this.logger);
         StmtParser stmtParser = new StmtParser(this.logger);
 
@@ -88,18 +88,18 @@ public class CompilerLoaderHolder extends ClassLoaderHolder {
         }
     }
 
-    protected boolean checkConstructorCreated() {
+    protected boolean checkHolderCreated() {
         return holder != null;
     }
 
     @Override
     public void applySkeleton() {
-        if (checkConstructorCreated()) this.holder.applySkeleton(logger);
+        if (checkHolderCreated()) this.holder.applySkeleton(logger);
     }
 
     @Override
     public ScriptedClass loadClass() {
-        if (!checkConstructorCreated()) return null;
+        if (!checkHolderCreated()) return null;
 
         if (builder.superclass() != null) {
             MethodLookup lookup = MethodLookup.createFromClass(builder.superclass().get(), builder.interfaces());
@@ -109,5 +109,11 @@ public class CompilerLoaderHolder extends ClassLoaderHolder {
             }
         }
         return target = builder.build();
+    }
+
+    public void validate() {
+        if (!checkHolderCreated()) return;
+        this.varTypeParser.validate(this.logger);
+        this.holder.validate(this.logger);
     }
 }

@@ -35,22 +35,42 @@ import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.invoke.MethodHandle;
 import java.util.*;
 
 public class Holder {
+    private static <T extends Validateable> void validateNullable(T[] annotations, Compiler.ErrorLogger logger) {
+        if (annotations != null) for (T obj : annotations) obj.validate(logger);
+    }
 
-    public record AnnotationObj(SourceClassReference type, Token[] properties) {}
+    public interface Validateable {
+        void validate(Compiler.ErrorLogger logger);
+    }
+
+    public record AnnotationObj(SourceClassReference type, Token[] properties) implements Validateable {
+        public void validate(Compiler.ErrorLogger logger) {
+            this.type.validate(logger);
+        }
+    }
 
     public record Class(ClassType type, ClassReference target, short modifiers,
-                        AnnotationObj[] annotations, String pck, Token name, ClassReference parent,
+                        AnnotationObj[] annotations, String pck, Token name, SourceClassReference parent,
                         SourceClassReference[] interfaces,
                         Constructor[] constructors,
                         Method[] methods,
                         Field[] fields,
                         EnumConstant[] enumConstants,
                         Class[] enclosed
-    ) {
+    ) implements Validateable {
+        public void validate(Compiler.ErrorLogger logger) {
+            validateNullable(annotations, logger);
+            if (parent != null) parent.validate(logger);
+            validateNullable(interfaces, logger);
+            validateNullable(constructors, logger);
+            for (Method method : methods) method.validate(logger);
+            validateNullable(fields, logger);
+            validateNullable(enclosed, logger);
+        }
+
         public Compiler.ClassBuilder construct(StmtParser stmtParser, ExprParser exprParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
             return switch (this.type) {
                 case ENUM -> constructEnum(stmtParser, exprParser, parser, logger);
@@ -569,11 +589,29 @@ public class Holder {
         }
     }
 
-    public record Constructor(AnnotationObj[] annotations, Token name, List<Pair<ClassReference, String>> params, Token[] body) {}
+    public record Constructor(AnnotationObj[] annotations, Token name, List<Pair<SourceClassReference, String>> params, Token[] body) implements Validateable {
+        public void validate(Compiler.ErrorLogger logger) {
+            if (annotations != null) for (AnnotationObj obj : annotations) obj.validate(logger);
+            params.forEach(p -> p.left().validate(logger));
+        }
+    }
 
-    public record EnumConstant(Token name, int ordinal, Token[] arguments) {}
+    public record EnumConstant(Token name, int ordinal, Token[] arguments) {
+    }
 
-    public record Field(short modifiers, AnnotationObj[] annotations, SourceClassReference type, Token name, Token[] body) {}
+    public record Field(short modifiers, AnnotationObj[] annotations, SourceClassReference type, Token name, Token[] body) implements Validateable {
+        @Override
+        public void validate(Compiler.ErrorLogger logger) {
+            validateNullable(annotations, logger);
+            type.validate(logger);
+        }
+    }
 
-    public record Method(short modifiers, AnnotationObj[] annotations, SourceClassReference type, Token name, List<Pair<ClassReference, String>> params, Token[] body) {}
+    public record Method(short modifiers, AnnotationObj[] annotations, SourceClassReference type, Token name, List<? extends Pair<SourceClassReference, String>> params, Token[] body) {
+        public void validate(Compiler.ErrorLogger logger) {
+            validateNullable(annotations, logger);
+            type.validate(logger);
+            params.forEach(p -> p.left().validate(logger));
+        }
+    }
 }

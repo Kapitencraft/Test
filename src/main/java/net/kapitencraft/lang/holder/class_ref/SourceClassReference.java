@@ -1,9 +1,11 @@
 package net.kapitencraft.lang.holder.class_ref;
 
+import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
-public class SourceClassReference extends ClassReference {
+public class SourceClassReference extends ClassReference implements Holder.Validateable {
     private final Token nameToken;
     private final ClassReference reference;
 
@@ -29,5 +31,9 @@ public class SourceClassReference extends ClassReference {
 
     public Token getToken() {
         return nameToken;
+    }
+
+    public void validate(Compiler.ErrorLogger logger) {
+        if (!reference.exists()) logger.errorF(nameToken, "unknown class '%s'", reference.absoluteName());
     }
 }

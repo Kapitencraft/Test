@@ -64,7 +64,7 @@ public abstract class PrimitiveClass implements ScriptedClass {
 
     @Override
     public String pck() {
-        return "scripted.lang.";
+        return "scripted.lang";
     }
 
     @Override

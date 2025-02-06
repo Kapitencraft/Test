@@ -2,6 +2,7 @@ package net.kapitencraft.lang.run;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.RegistryClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.natives.scripted.lang.*;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.natives.scripted.lang.IndexOutOfBoundsException;
@@ -154,13 +155,14 @@ public class VarTypeManager {
         return pg.getClass(lexeme);
     }
 
-    public static ClassReference getOrCreateClass(List<Token> path) {
+    public static SourceClassReference getOrCreateClass(List<Token> path) {
         Package pg = rootPackage();
         for (int i = 0; i < path.size() - 1; i++) {
             String pckName = path.get(i).lexeme();
             pg = pg.getOrCreatePackage(pckName);
         }
-        return pg.getOrCreateClass(path.get(path.size()-1).lexeme());
+        Token last = path.get(path.size() - 1);
+        return SourceClassReference.from(last, pg.getOrCreateClass(last.lexeme()));
     }
 
     public static ClassReference getOrCreateClass(String name, String pck) {

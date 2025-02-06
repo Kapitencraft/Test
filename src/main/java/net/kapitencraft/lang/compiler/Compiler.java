@@ -83,6 +83,8 @@ public class Compiler {
 
         ClassLoader.generateSkeletons(holder);
 
+        ClassLoader.useHolders(holder, (s, compilerLoaderHolder) -> compilerLoaderHolder.validate());
+
         ClassLoader.useHolders(holder, (s, classHolder) -> classHolder.construct());
 
         ClassLoader.generateClasses(holder);
@@ -90,6 +92,8 @@ public class Compiler {
         if (hadError) System.exit(65);
 
         if (cache.exists()) Util.delete(cache);
+
+        System.out.println("Caching...");
 
         CacheBuilder builder = new CacheBuilder();
         ClassLoader.useClasses(holder, (stringClassHolderMap, aPackage) ->

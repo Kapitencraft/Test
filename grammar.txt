@@ -3,13 +3,13 @@ program     -> pck import* classDecl
 pck         -> "package" VAR_TYPE ";"
 import      -> "import" VAR_TYPE ("as" IDENTIFIER)? ";"
 
-interfaceDecl -> "interface" IDENTIFIER ( "extends" IDENTIFIER ( "," IDENTIFIER )* )?
-classDecl   -> "class" IDENTIFIER ( "extends" IDENTIFIER )? "{" (funcDecl | varDecl)* "}"
-enumDecl -> "enum" ( "implements" IDENTIFIER ( "," IDENTIFIER )*
+interfaceDecl -> "interface" IDENTIFIER ( "extends" VAR_TYPE ( "," VAR_TYPE )* )?
+classDecl   -> "class" IDENTIFIER ( "extends" VAR_TYPE )? ( "implements" VAR_TYPE ( "," VAR_TYPE)* )? "{" (funcDecl | varDecl)* "}"
+enumDecl -> "enum" IDENTIFIER ( "implements" VAR_TYPE ( "," VAR_TYPE )* )
 
 declaration -> varDecl | statement
 
-funcDecl    -> VAR_TYPE IDENTIFIER "(" parameters? ")" block
+funcDecl    -> "static"? "default"? "final"? VAR_TYPE IDENTIFIER "(" parameters? ")" block
 fieldDecl   -> "static"? varDecl;
 varDecl     -> "final"? VAR_TYPE IDENTIFIER ( "=" expression )? ";"
 
@@ -35,7 +35,7 @@ when        -> cast_check ( "?" expression ":" expression)?
 
 cast_check  -> assignment ( "instanceof" VAR_TYPE IDENTIFIER? )?
 
-assignment  -> ( call "." )? IDENTIFIER "=" assignment | logic_or
+assignment  -> ( ( call "." )? IDENTIFIER "=" assignment ) | logic_or
 
 logic_or    -> logic_and ( ("or" | "||") logic_and )*
 logic_and   -> equality ( ("and" | "&&") equality )*
@@ -52,9 +52,9 @@ constructor -> "new" VAR_TYPE "(" arguments? ")"
 primary     -> "true" | "false" | "null" | "this" | NUMBER | STRING | IDENTIFIER | "(" expression ")" | "super" "." IDENTIFIER
 
 //util
-parameters  -> VAR_TYPE IDENTIFIER ( "," IDENTIFIER )*
+parameters  -> VAR_TYPE IDENTIFIER ( "," VAR_TYPE IDENTIFIER )*
 arguments   -> expression ( "," expression )*
-genericType -> IDENTIFIER (("extends" IDENTIFIER) | ("super" IDENTIFIER))?
+genericType -> IDENTIFIER (("extends" VAR_TYPE) | ("super" VAR_TYPE))?
 generics    -> "<" genericType ("," genericType)* ">"
 genericDecl -> "<" IDENTIFIER ("," IDENTIFIER)* ">"
 
