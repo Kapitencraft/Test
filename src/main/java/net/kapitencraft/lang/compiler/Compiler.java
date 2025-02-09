@@ -23,6 +23,7 @@ public class Compiler {
     static boolean hadError = false;
 
     public static class ErrorLogger {
+        private boolean hadError = false;
         private final String[] lines;
         private final String fileLoc;
         private final LocationFinder finder;
@@ -34,26 +35,32 @@ public class Compiler {
         }
 
         public void error(Token loc, String msg) {
+            hadError = true;
             Compiler.error(loc, msg, fileLoc, lines[loc.line() - 1]);
         }
 
         public void errorF(Token loc, String format, Object... args) {
+            hadError = true;
             error(loc, String.format(format, args));
         }
 
         public void error(int lineIndex, int lineStartIndex, String msg) {
+            hadError = true;
             Compiler.error(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
         }
 
         public void error(Stmt loc, String msg) {
+            hadError = true;
             error(finder.find(loc), msg);
         }
 
         public void error(Expr loc, String msg) {
+            hadError = true;
             error(finder.find(loc), msg);
         }
 
         public void logError(String s) {
+            hadError = true;
             System.err.println(s);
         }
 
@@ -67,7 +74,11 @@ public class Compiler {
 
         @Override
         public String toString() {
-            return "ErrorLogger for '" + fileLoc + "'";
+            return "ErrorLogger for '" + fileLoc + "' (hadError: " + hadError + ")";
+        }
+
+        public boolean hadError() {
+            return hadError;
         }
     }
 

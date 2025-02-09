@@ -23,6 +23,7 @@ import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.CacheLoader;
+import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Util;
 import org.checkerframework.checker.signature.qual.CanonicalNameOrEmpty;
@@ -92,7 +93,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
 
     public static GeneratedEnum load(JsonObject data, List<ClassReference> enclosed, String pck) {
         String name = GsonHelper.getAsString(data, "name");
-        ClassReference[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(ClassReference[]::new);
+        ClassReference[] implemented = ClassLoader.loadInterfaces(data);
 
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
         ImmutableMap<String, DataMethodContainer> staticMethods = DataMethodContainer.load(data, name, "staticMethods");

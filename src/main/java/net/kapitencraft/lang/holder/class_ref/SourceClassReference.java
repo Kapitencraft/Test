@@ -29,11 +29,22 @@ public class SourceClassReference extends ClassReference implements Holder.Valid
         return new SourceClassReference(other.name(), other.pck(), name, other);
     }
 
+    @Override
+    public String toString() {
+        return "SourceClassReference@" + this.name() + (exists() ? ", applied:" + this.reference.get() : "");
+    }
+
     public Token getToken() {
         return nameToken;
     }
 
     public void validate(Compiler.ErrorLogger logger) {
-        if (!reference.exists()) logger.errorF(nameToken, "unknown class '%s'", reference.absoluteName());
+        if (!reference.exists())
+            logger.errorF(nameToken, "unknown class '%s'", reference.absoluteName());
+    }
+
+    @Override
+    protected boolean exists() {
+        return reference.exists();
     }
 }

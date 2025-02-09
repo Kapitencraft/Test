@@ -29,6 +29,10 @@ public class ClassReference implements Supplier<ScriptedClass> {
         } else enclosed.put(name.lexeme(), reference);
     }
 
+    public void registerEnclosed(String name, ClassReference reference) {
+        enclosed.put(name, reference);
+    }
+
     public boolean hasEnclosing(String name) {
         return enclosed.containsKey(name);
     }

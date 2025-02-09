@@ -25,7 +25,6 @@ import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Util;
-import org.checkerframework.checker.signature.qual.CanonicalNameOrEmpty;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -99,7 +98,7 @@ public final class GeneratedClass implements CacheableClass {
     public static ScriptedClass load(JsonObject data, List<ClassReference> enclosed, String pck) {
         String name = GsonHelper.getAsString(data, "name");
         ClassReference superclass = ClassLoader.loadClassReference(data, "superclass");
-        ClassReference[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(ClassReference[]::new);
+        ClassReference[] implemented = ClassLoader.loadInterfaces(data);
 
         if (superclass == null) throw new IllegalArgumentException(String.format("could not find target class for class '%s': '%s'", name, GsonHelper.getAsString(data, "superclass")));
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");

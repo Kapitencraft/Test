@@ -23,7 +23,7 @@ public class GeneratedMethodMap implements AbstractMethodMap {
     }
 
     public int getMethodOrdinal(String name, List<ClassReference> args) {
-        return methods.get(name).getMethodOrdinal(args);
+        return methods.containsKey(name) ? methods.get(name).getMethodOrdinal(args) : -1;
     }
 
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {

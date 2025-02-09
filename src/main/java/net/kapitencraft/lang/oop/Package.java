@@ -5,6 +5,7 @@ import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -42,6 +43,11 @@ public class Package {
             classes.get(name).setTarget(cl);
     }
 
+    public void addNullableClass(String name, @Nullable ScriptedClass cl) {
+        if (cl == null) return;
+        addClass(name, cl);
+    }
+
     public void addClass(String name, ClassReference reference) {
         this.classes.put(name, reference);
     }
@@ -53,7 +59,7 @@ public class Package {
 
     public Package getOrCreatePackage(String name) {
         if (!hasPackage(name)) {
-            addPackage(name, new Package(this.name + "." + name));
+            addPackage(name, new Package(this.name.isEmpty() ? name : this.name + "." + name));
         }
         return getPackage(name);
     }

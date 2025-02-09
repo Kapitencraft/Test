@@ -91,7 +91,7 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
 
     @Override
     public String pck() {
-        return pck + "." + name;
+        return pck;
     }
 
     @Override
@@ -187,10 +187,5 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     @Override
     public List<String> getAbstracts() {
         return methods.getAbstracts();
-    }
-
-    @Override
-    public ClassType getClassType() {
-        return ClassType.ANNOTATION;
     }
 }

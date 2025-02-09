@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.run.load;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.Package;
@@ -7,6 +8,7 @@ import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
+import org.checkerframework.checker.units.qual.C;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,7 +23,9 @@ public class ClassLoader {
 
     public static void main(String[] args) throws IOException {
         PackageHolder<VMLoaderHolder> pckSkeleton = load(cacheLoc, ".scrc", VMLoaderHolder::new);
-        useClasses(pckSkeleton, (classes, pck) -> classes.forEach((name, vmLoaderHolder) -> pck.addClass(name, vmLoaderHolder.reference)));
+        useClasses(pckSkeleton, (classes, pck) -> classes.forEach((name, vmLoaderHolder) -> {
+            loadHolderReference(pck, vmLoaderHolder);
+        }));
         generateSkeletons(pckSkeleton);
         generateClasses(pckSkeleton);
         System.out.println("Loading complete.");
@@ -46,7 +50,17 @@ public class ClassLoader {
         }
     }
 
-    public static <T extends ClassLoaderHolder> PackageHolder<T> load(File fileLoc, String end, BiFunction<File, ClassLoaderHolder[], T> constructor) {
+    private static void loadHolderReference(Package pck, VMLoaderHolder holder) {
+        pck.addClass(holder.name, holder.reference);
+        if (holder.children.length > 0) {
+            Package internal = pck.getOrCreatePackage(holder.name);
+            for (VMLoaderHolder child : ((VMLoaderHolder[]) holder.children)) {
+                loadHolderReference(internal, child);
+            }
+        }
+    }
+
+    public static <T extends ClassLoaderHolder> PackageHolder<T> load(File fileLoc, String end, BiFunction<File, List<T>, T> constructor) {
         PackageHolder<T> root = new PackageHolder<>();
         List<Pair<File, PackageHolder<T>>> pckLoader = new ArrayList<>();
         pckLoader.add(Pair.of(fileLoc, root));
@@ -59,7 +73,7 @@ public class ClassLoader {
                 pckLoader.remove(0);
                 continue;
             }
-            Map<String, EnclosedClassLoader> enclosedLoaderMap = new HashMap<>();
+            Map<String, EnclosedClassLoader<T>> enclosedLoaderMap = new HashMap<>();
             for (File file1 : files) {
                 if (file1.isDirectory()) {
                     PackageHolder<T> child = new PackageHolder<>();
@@ -70,15 +84,15 @@ public class ClassLoader {
                     String[] enclosedSplit = name.split("\\$");
                     if (enclosedSplit.length > 1) {
                         if (!enclosedLoaderMap.containsKey(enclosedSplit[0])) {
-                            enclosedLoaderMap.put(enclosedSplit[0], new EnclosedClassLoader());
+                            enclosedLoaderMap.put(enclosedSplit[0], new EnclosedClassLoader<>());
                         }
-                        EnclosedClassLoader loader = enclosedLoaderMap.get(enclosedSplit[0]);
+                        EnclosedClassLoader<T> loader = enclosedLoaderMap.get(enclosedSplit[0]);
                         for (int i = 1; i < enclosedSplit.length; i++) {
                             loader = loader.addOrGetEnclosed(enclosedSplit[i]);
                         }
                         loader.applyFile(file1);
                     } else {
-                        if (!enclosedLoaderMap.containsKey(name)) enclosedLoaderMap.put(name, new EnclosedClassLoader());
+                        if (!enclosedLoaderMap.containsKey(name)) enclosedLoaderMap.put(name, new EnclosedClassLoader<>());
                         enclosedLoaderMap.get(name).applyFile(file1);
                     }
                 }
@@ -96,7 +110,7 @@ public class ClassLoader {
     }
 
     public static void generateClasses(PackageHolder<?> root) {
-        useClasses(root, (classes, pck) -> classes.forEach((name, holder1) -> pck.addClass(name, holder1.loadClass())));
+        useClasses(root, (classes, pck) -> classes.forEach((name, holder1) -> pck.addNullableClass(name, holder1.loadClass())));
     }
 
 
@@ -132,7 +146,11 @@ public class ClassLoader {
     }
 
     public static ClassReference loadClassReference(JsonObject object, String elementName) {
-        return VarTypeManager.getClassForName(GsonHelper.getAsString(object, elementName));
+        return VarTypeManager.getClassOrError(GsonHelper.getAsString(object, elementName));
+    }
+
+    public static ClassReference[] loadInterfaces(JsonObject data) {
+        return GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassOrError).toArray(ClassReference[]::new);
     }
 
     public static class PackageHolder<T extends ClassLoaderHolder> {
@@ -149,30 +167,30 @@ public class ClassLoader {
     }
 
 
-    private static class EnclosedClassLoader {
+    private static class EnclosedClassLoader<T extends ClassLoaderHolder> {
         private File file;
-        private final Map<String, EnclosedClassLoader> enclosed = new HashMap<>();
+        private final Map<String, EnclosedClassLoader<T>> enclosed = new HashMap<>();
 
         public void applyFile(File file) {
             this.file = file;
         }
 
-        public EnclosedClassLoader addEnclosed(String name) {
-            EnclosedClassLoader loader = new EnclosedClassLoader();
+        public EnclosedClassLoader<T> addEnclosed(String name) {
+            EnclosedClassLoader<T> loader = new EnclosedClassLoader<>();
             enclosed.put(name, loader);
             return loader;
         }
 
-        public EnclosedClassLoader addOrGetEnclosed(String s) {
+        public EnclosedClassLoader<T> addOrGetEnclosed(String s) {
             if (enclosed.containsKey(s)) return enclosed.get(s);
             return addEnclosed(s);
         }
 
-        public <T extends ClassLoaderHolder> T toHolder(BiFunction<File, ClassLoaderHolder[], T> constructor) {
-            return constructor.apply(file, enclosed.values()
-                    .stream()
+        public T toHolder(BiFunction<File, List<T>, T> constructor) {
+            return constructor.apply(file,
+                    enclosed.values().stream()
                     .map(enclosedClassLoader -> enclosedClassLoader.toHolder(constructor))
-                    .toArray(ClassLoaderHolder[]::new)
+                    .toList()
             );
         }
     }

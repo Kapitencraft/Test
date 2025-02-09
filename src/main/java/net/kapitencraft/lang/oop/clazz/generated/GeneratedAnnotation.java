@@ -78,6 +78,7 @@ public final class GeneratedAnnotation implements CacheableClass, AbstractAnnota
             JsonObject method = new JsonObject();
             if (methodWrapper.val() != null) method.add("value", builder.cache(methodWrapper.val()));
             method.addProperty("type", methodWrapper.type().absoluteName());
+            method.add("annotations", builder.cacheAnnotations(methodWrapper.annotations()));
             methods.add(string, method);
         });
         return methods;

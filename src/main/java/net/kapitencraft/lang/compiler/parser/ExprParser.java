@@ -18,6 +18,7 @@ import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -365,15 +366,15 @@ public class ExprParser extends AbstractParser {
         List<Expr> arguments = args();
 
         List<ClassReference> givenTypes = arguments.stream().map(this.finder::findRetType).toList();
-        ClassReference targetClass = this.finder.findRetType(get.object);
+        ScriptedClass targetClass = this.finder.findRetType(get.object).get();
 
-        int ordinal = targetClass.get().getMethodOrdinal(get.name.lexeme(), givenTypes);
+        int ordinal = targetClass.getMethodOrdinal(get.name.lexeme(), givenTypes);
         if (ordinal == -1) {
             error(get.name, "unknown symbol");
             consumeBracketClose("arguments");
             return new Expr.InstCall(get.object, get.name, ordinal, arguments);
         }
-        ScriptedCallable callable = targetClass.get().getMethodByOrdinal(get.name.lexeme(), ordinal);
+        ScriptedCallable callable = targetClass.getMethodByOrdinal(get.name.lexeme(), ordinal);
 
         checkArguments(arguments, callable, get.name);
 
@@ -395,16 +396,21 @@ public class ExprParser extends AbstractParser {
         consumeBracketOpen("static call");
         List<Expr> args = args();
 
+        int ordinal = -1;
 
-        int ordinal = target.get().getStaticMethodOrdinal(name.lexeme(), argTypes(args));
-        if (ordinal == -1) {
-            error(name, "unknown symbol");
-            consumeBracketClose("static call");
-            return new Expr.StaticCall(target, name, ordinal, args);
+        if (target != null) {
+
+            ordinal = target.get().getStaticMethodOrdinal(name.lexeme(), argTypes(args));
+            if (ordinal == -1) {
+                error(name, "unknown symbol");
+                consumeBracketClose("static call");
+                return new Expr.StaticCall(target, name, ordinal, args);
+            }
+
+            ScriptedCallable callable = target.get().getStaticMethodByOrdinal(name.lexeme(), ordinal);
+            checkArguments(args, callable, name);
+
         }
-
-        ScriptedCallable callable = target.get().getStaticMethodByOrdinal(name.lexeme(), ordinal);
-        checkArguments(args, callable, name);
 
         consumeBracketClose("static call");
 
@@ -457,8 +463,7 @@ public class ExprParser extends AbstractParser {
                 ScriptedClass targetType = finder.findRetType(expr).get();
                 if (!check(BRACKET_O)) { //ensure not to check for field if it's a method
                     if (!targetType.hasField(name.lexeme())) error(name, "unknown symbol");
-                } else
-                    if (!targetType.hasMethod(name.lexeme())) error(name, "unknown symbol");
+                }
                 expr = new Expr.Get(expr, name);
             } else {
                 break;
@@ -527,7 +532,7 @@ public class ExprParser extends AbstractParser {
             return new Expr.VarRef(previous);
         }
 
-        if (match(THIS)) return new Expr.VarRef(previous());
+        if (match(THIS) || match(SUPER)) return new Expr.VarRef(previous());
 
         if (match(BRACKET_O)) {
             Expr expr = expression();

@@ -19,6 +19,7 @@ import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.CacheLoader;
+import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,7 +66,7 @@ public class GeneratedInterface implements ScriptedInterface, CacheableClass {
 
         ImmutableMap<String, GeneratedField> staticFields = GeneratedField.loadFieldMap(data, "staticFields");
 
-        ClassReference[] implemented = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(ClassReference[]::new);
+        ClassReference[] implemented = ClassLoader.loadInterfaces(data);
 
         AnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
 

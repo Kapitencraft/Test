@@ -75,7 +75,7 @@ public class SkeletonClass implements ScriptedClass {
 
     public static SkeletonClass fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
         String name = GsonHelper.getAsString(data, "name");
-        ClassReference superclass = VarTypeManager.getClassForName(GsonHelper.getAsString(data, "superclass"));
+        ClassReference superclass = ClassLoader.loadClassReference(data, "superclass");
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
         ImmutableMap<String, DataMethodContainer> staticMethods = SkeletonMethod.readFromCache(data, "staticMethods");

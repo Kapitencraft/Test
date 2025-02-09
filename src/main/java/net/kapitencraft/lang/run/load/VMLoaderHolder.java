@@ -3,6 +3,7 @@ package net.kapitencraft.lang.run.load;
 import com.google.gson.JsonObject;
 import com.google.gson.internal.Streams;
 import com.google.gson.stream.JsonReader;
+import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.*;
 import net.kapitencraft.lang.oop.clazz.generated.GeneratedAnnotation;
@@ -14,26 +15,40 @@ import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonEnum;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonInterface;
 import net.kapitencraft.tool.GsonHelper;
+import org.checkerframework.checker.units.qual.C;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class VMLoaderHolder extends ClassLoaderHolder {
     private final JsonObject data;
     private final ClassType type;
+    public final String name;
     final ClassReference reference;
 
-    public VMLoaderHolder(File file, ClassLoaderHolder[] children) {
-        super(file, children);
+    public VMLoaderHolder(File file, List<VMLoaderHolder> children) {
+        super(file, children.toArray(VMLoaderHolder[]::new));
         try {
             this.data = Streams.parse(new JsonReader(new FileReader(file))).getAsJsonObject();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-        this.reference = new ClassReference(file.getName(), file.getPath().substring(10).replace("/", "."));
+        String fileId = file.getPath().substring(10);
+        String[] packages = fileId.substring(0, fileId.length() - 5).split("[\\\\$]");
+        StringBuilder pck = new StringBuilder(packages[0]);
+        for (int i = 1; i < packages.length - 2; i++) {
+            pck.append(".");
+            pck.append(packages[i]);
+        }
+        this.name = packages[packages.length-1];
+        this.reference = new ClassReference(name, pck.toString());
+        for (VMLoaderHolder holder : children) {
+            this.reference.registerEnclosed(holder.name, holder.reference);
+        }
         this.type = ClassType.valueOf(GsonHelper.getAsString(data, "TYPE"));
     }
 
@@ -63,13 +78,18 @@ public class VMLoaderHolder extends ClassLoaderHolder {
     public ScriptedClass loadClass()  {
         List<ClassReference> enclosed = Arrays.stream(children).map(ClassLoaderHolder::loadClass).map(ClassReference::of).toList();
         ScriptedClass target;
-        target = switch (type) {
-            case ANNOTATION -> GeneratedAnnotation.load(data, enclosed, pck());
-            case INTERFACE -> GeneratedInterface.load(data, enclosed, pck());
-            case CLASS -> GeneratedClass.load(data, enclosed, pck());
-            case ENUM -> GeneratedEnum.load(data, enclosed, pck());
-        };
-        this.reference.setTarget(target);
-        return target;
+        try {
+            target = switch (type) {
+                case ANNOTATION -> GeneratedAnnotation.load(data, enclosed, pck());
+                case INTERFACE -> GeneratedInterface.load(data, enclosed, pck());
+                case CLASS -> GeneratedClass.load(data, enclosed, pck());
+                case ENUM -> GeneratedEnum.load(data, enclosed, pck());
+            };
+            this.reference.setTarget(target);
+            return target;
+        } catch (Exception e) {
+            System.err.println("Error Loading Class '" + reference.absoluteName() + "': " + e.getMessage());
+        }
+        return null;
     }
 }

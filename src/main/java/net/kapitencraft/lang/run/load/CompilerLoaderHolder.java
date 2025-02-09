@@ -25,8 +25,8 @@ public class CompilerLoaderHolder extends ClassLoaderHolder {
     private CacheableClass target;
     private final VarTypeParser varTypeParser = new VarTypeParser();
 
-    public CompilerLoaderHolder(File file, ClassLoaderHolder[] children) {
-        super(file, children);
+    public CompilerLoaderHolder(File file, List<CompilerLoaderHolder> children) {
+        super(file, children.toArray(CompilerLoaderHolder[]::new));
         try {
             content = new String(Files.readAllBytes(file.toPath()));
         } catch (IOException e) {
@@ -88,8 +88,8 @@ public class CompilerLoaderHolder extends ClassLoaderHolder {
         }
     }
 
-    protected boolean checkHolderCreated() {
-        return holder != null;
+    public boolean checkHolderCreated() {
+        return holder != null && !logger.hadError();
     }
 
     @Override

@@ -42,12 +42,10 @@ public class HolderParser extends AbstractParser {
         if (match(AS)) nameOverride = consumeIdentifier().lexeme();
         consumeEndOfArg();
         SourceClassReference target = VarTypeManager.getOrCreateClass(packages);
-        if (target != null) {
-            if (parser.hasClass(target, nameOverride)) {
-                error(packages.get(packages.size()-1), "unknown class '" + packages.stream().map(Token::lexeme).collect(Collectors.joining(".")) + "'");
-            }
-            parser.addClass(target, nameOverride);
+        if (parser.hasClass(target, nameOverride)) {
+            error(packages.get(packages.size() - 1), "unknown class '" + packages.stream().map(Token::lexeme).collect(Collectors.joining(".")) + "'");
         }
+        parser.addClass(target, nameOverride);
     }
 
     private List<Token> readPackage() {
@@ -193,8 +191,8 @@ public class HolderParser extends AbstractParser {
         }
     }
 
-    private static ClassReference getOrCreate(String name, String pck, boolean singleton) {
-        return singleton ? VarTypeManager.getOrCreateClass(name, pck) : new ClassReference(name, pck);
+    private static ClassReference getOrCreate(String name, String pck) {
+        return VarTypeManager.getOrCreateClass(name, pck);
     }
 
     private final ModifiersParser MODIFIERS = from(FINAL, ABSTRACT, STATIC, DEFAULT);
@@ -332,7 +330,7 @@ public class HolderParser extends AbstractParser {
 
         checkFileName(name, fileId);
 
-        ClassReference target = getOrCreate(name.lexeme(), pckID, fileId != null);
+        ClassReference target = getOrCreate(name.lexeme(), pckID);
 
         parser.addClass(SourceClassReference.from(name, target), null);
         SourceClassReference superClass = SourceClassReference.from(null, VarTypeManager.OBJECT);
@@ -353,7 +351,7 @@ public class HolderParser extends AbstractParser {
         List<Holder.Field> fields = new ArrayList<>();
         List<Holder.Class> enclosed = new ArrayList<>();
 
-        parseClassProperties(Modifiers.isAbstract(mods) ? ModifierScope.Group.ABSTRACT_CLASS : ModifierScope.Group.CLASS, methods, constructors, fields, target, enclosed, pckID, name);
+        parseClassProperties(Modifiers.isAbstract(mods) ? ModifierScope.Group.ABSTRACT_CLASS : ModifierScope.Group.CLASS, methods, constructors, fields, target, enclosed, pckID + (fileId == null ? "$" : ".") + name.lexeme(), name);
 
         consumeCurlyClose("class");
         return new Holder.Class(ClassType.CLASS,
@@ -377,7 +375,7 @@ public class HolderParser extends AbstractParser {
 
         checkFileName(name, fileId);
 
-        ClassReference target = getOrCreate(name.lexeme(), pckID, fileId != null);
+        ClassReference target = getOrCreate(name.lexeme(), pckID);
 
         parser.addClass(SourceClassReference.from(name, target), null);
 
@@ -435,7 +433,7 @@ public class HolderParser extends AbstractParser {
 
         checkFileName(name, fileId);
 
-        ClassReference target = getOrCreate(name.lexeme(), pckId, fileId != null);
+        ClassReference target = getOrCreate(name.lexeme(), pckId);
 
         parser.addClass(SourceClassReference.from(name, target), null);
 
@@ -448,7 +446,7 @@ public class HolderParser extends AbstractParser {
             ModifiersParser modifiers = MODIFIERS;
             modifiers.parse();
             Holder.AnnotationObj[] annotations = modifiers.getAnnotations();
-            String enclosedId = pckId + name.lexeme() + "$";
+            String enclosedId = pckId + (fileId == null ? "$" : ".") + name.lexeme();
             if (readClass(enclosed::add, enclosedId, modifiers)) {
                 ModifierScope.ANNOTATION.check(this, modifiers);
                 SourceClassReference type = consumeVarType();
@@ -489,7 +487,7 @@ public class HolderParser extends AbstractParser {
 
         checkFileName(name, fileId);
 
-        ClassReference target = getOrCreate(name.lexeme(), pckID, fileId != null);
+        ClassReference target = getOrCreate(name.lexeme(), pckID);
 
         parser.addClass(SourceClassReference.from(name, target), null);
 

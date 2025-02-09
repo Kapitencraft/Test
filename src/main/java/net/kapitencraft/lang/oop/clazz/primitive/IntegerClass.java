@@ -79,7 +79,15 @@ public class IntegerClass extends PrimitiveClass {
             }
         }
         if (type == OperationType.POTENCY) {
-            return Math.pow(val, ((Number) other).doubleValue());
+            if (other instanceof Float f) {
+                return (float) Math.pow(val, f);
+            }
+            if (other instanceof Double d) {
+                return Math.pow(val, d);
+            }
+            if (other instanceof Integer i) {
+                return (int) Math.pow(val, i);
+            }
         }
         if (type == OperationType.LEQUAL) {
             if (other instanceof Float f) {

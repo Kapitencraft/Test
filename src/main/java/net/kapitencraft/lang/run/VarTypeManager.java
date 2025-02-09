@@ -103,6 +103,10 @@ public class VarTypeManager {
         return null;
     }
 
+    public static ClassReference getClassOrError(String type) {
+        return Objects.requireNonNull(getClassForName(type), "unknown class: " + type);
+    }
+
     public static Package rootPackage() {
         return root;
     }
