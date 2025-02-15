@@ -169,6 +169,11 @@ public class GeneratedInterface implements ScriptedInterface, CacheableClass {
     }
 
     @Override
+    public AnnotationClassInstance[] annotations() {
+        return annotations;
+    }
+
+    @Override
     public JsonObject save(CacheBuilder cacheBuilder) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "interface");

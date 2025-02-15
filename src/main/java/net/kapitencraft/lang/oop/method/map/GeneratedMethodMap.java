@@ -16,6 +16,10 @@ public class GeneratedMethodMap implements AbstractMethodMap {
         this.methods = methods;
     }
 
+    public static GeneratedMethodMap empty() {
+        return new GeneratedMethodMap(Map.of());
+    }
+
     public JsonObject save(CacheBuilder builder) {
         JsonObject methods = new JsonObject();
         this.methods.forEach((name, container) -> methods.add(name, container.cache(builder)));

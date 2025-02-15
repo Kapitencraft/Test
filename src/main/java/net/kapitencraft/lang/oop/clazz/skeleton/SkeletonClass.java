@@ -7,6 +7,7 @@ import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -248,5 +249,10 @@ public class SkeletonClass implements ScriptedClass {
     @Override
     public ClassType getClassType() {
         return ClassType.CLASS;
+    }
+
+    @Override
+    public AnnotationClassInstance[] annotations() {
+        return new AnnotationClassInstance[0];
     }
 }

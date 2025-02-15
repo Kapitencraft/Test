@@ -1,0 +1,30 @@
+package test;
+
+class LoopTest {
+
+    static void testIteration(String[] args) {
+        for (String s : args) {
+            System.print(s);
+        }
+    }
+
+    static void testI() {
+        for (int i = 0; i < 100; i++) {
+            System.print(i);
+        }
+    }
+
+    static void testWhile() {
+        int i = 0;
+        while (i < 100) {
+            System.print(i);
+            i++;
+        }
+    }
+
+    static void main(String[] args) {
+        LoopTest.testIteration(args);
+        LoopTest.testI();
+        LoopTest.testWhile();
+    }
+}

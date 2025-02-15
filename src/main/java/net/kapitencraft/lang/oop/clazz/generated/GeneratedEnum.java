@@ -285,4 +285,9 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     public GeneratedMethodMap getMethods() {
         return methods;
     }
+
+    @Override
+    public AnnotationClassInstance[] annotations() {
+        return annotations;
+    }
 }

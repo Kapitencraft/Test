@@ -2,15 +2,18 @@ package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.VarTypeManager;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
 
+@ApiStatus.Internal
 public abstract class PrimitiveClass implements ScriptedClass {
     private final String name;
     private final ScriptedClass superclass;
@@ -184,5 +187,10 @@ public abstract class PrimitiveClass implements ScriptedClass {
     @Override
     public ClassType getClassType() {
         return ClassType.CLASS;
+    }
+
+    @Override
+    public AnnotationClassInstance[] annotations() {
+        return new AnnotationClassInstance[0];
     }
 }

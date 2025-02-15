@@ -308,4 +308,9 @@ public final class GeneratedClass implements CacheableClass {
     public ClassType getClassType() {
         return ClassType.CLASS;
     }
+
+    @Override
+    public AnnotationClassInstance[] annotations() {
+        return annotations;
+    }
 }

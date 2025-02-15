@@ -341,7 +341,7 @@ public class CacheLoader {
 
     private static Stmt readWhile(JsonObject object) {
         Expr condition = readSubExpr(object, "condition");
-        Stmt body = readStmt(GsonHelper.getAsJsonObject(object, "stmt"));
+        Stmt body = readStmt(GsonHelper.getAsJsonObject(object, "body"));
         Token keyword = Token.readFromSubObject(object, "keyword");
         return new Stmt.While(condition, body, keyword);
     }

@@ -2,6 +2,7 @@ package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -142,7 +143,6 @@ public interface ScriptedClass {
         return superclass() != null && superclass().get().hasField(name);
     }
 
-    //TODO extract to custom class?
     default ScriptedCallable getStaticMethod(String name, List<ClassReference> args) {
         return getStaticMethodByOrdinal(name, getStaticMethodOrdinal(name, args));
     }
@@ -221,4 +221,6 @@ public interface ScriptedClass {
     AbstractMethodMap getMethods();
 
     ClassType getClassType();
+
+    AnnotationClassInstance[] annotations();
 }

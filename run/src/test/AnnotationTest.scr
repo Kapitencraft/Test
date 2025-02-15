@@ -1,7 +1,10 @@
 package test;
 
 import test.EnumTest as ET;
+import scripted.lang.annotations.Retention;
+import scripted.lang.annotations.RetentionPolicy;
 
+@Retention(RetentionPolicy.SOURCE)
 annotation AnnotationTest {
     String name() default "";
 

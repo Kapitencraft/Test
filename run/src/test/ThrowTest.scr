@@ -7,10 +7,6 @@ class ThrowTest {
     }
 
     static void main(String[] args) {
-        try {
-            ThrowTest.test(10);
-        } catch (ArithmeticException e) {
-            System.print("Error: " + e.message);
-        }
+        ThrowTest.test(10);
     }
 }

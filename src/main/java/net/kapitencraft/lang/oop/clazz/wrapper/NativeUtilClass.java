@@ -4,6 +4,7 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -18,12 +19,14 @@ import java.util.Map;
 public class NativeUtilClass implements ScriptedClass {
     private final GeneratedMethodMap staticMethods;
     private final Map<String, NativeField> staticFields;
+    private final AnnotationClassInstance[] annotations;
     private final String name;
     private final String pck;
 
-    public NativeUtilClass(Map<String, DataMethodContainer> staticMethods, Map<String, NativeField> staticFields, String name, String pck) {
+    public NativeUtilClass(Map<String, DataMethodContainer> staticMethods, Map<String, NativeField> staticFields, String name, String pck, AnnotationClassInstance... annotations) {
         this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.staticFields = staticFields;
+        this.annotations = annotations;
         this.name = name;
         this.pck = pck;
     }
@@ -138,5 +141,10 @@ public class NativeUtilClass implements ScriptedClass {
     @Override
     public ClassType getClassType() {
         return ClassType.CLASS;
+    }
+
+    @Override
+    public AnnotationClassInstance[] annotations() {
+        return annotations;
     }
 }

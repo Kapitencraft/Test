@@ -8,9 +8,10 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.natives.scripted.lang.IndexOutOfBoundsException;
 import net.kapitencraft.lang.natives.scripted.lang.SystemClass;
 import net.kapitencraft.lang.natives.scripted.lang.annotation.OverrideAnnotation;
-import net.kapitencraft.lang.oop.clazz.ClassType;
+import net.kapitencraft.lang.natives.scripted.lang.annotation.RetentionAnnotation;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.Package;
+import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.clazz.primitive.*;
 
 import java.util.*;
@@ -20,7 +21,8 @@ import java.util.function.Supplier;
 public class VarTypeManager {
     private static final List<RegistryClassReference> data = new ArrayList<>();
     private static final Package root = new Package("");
-    private static final Package langRoot = getOrCreatePackage("scripted.lang");
+    private static final Package LANG_ROOT = getOrCreatePackage("scripted.lang");
+    private static final Package ANNOTATION_PCK = LANG_ROOT.getOrCreatePackage("annotations");
 
     public static final ScriptedClass NUMBER = new NumberClass();
     public static final ScriptedClass INTEGER = new IntegerClass();
@@ -47,6 +49,8 @@ public class VarTypeManager {
     public static final ClassReference MATH = registerMain(MathClass::new, "Math");
 
     public static final ClassReference OVERRIDE = registerMain(OverrideAnnotation::new, "Override");
+    public static final ClassReference RETENTION_POLICY = register(ANNOTATION_PCK, "RetentionPolicy", RetentionPolicyEnum::new);
+    public static final ClassReference RETENTION = register(ANNOTATION_PCK, "Retention", RetentionAnnotation::new);
 
     static {
         loadClasses();
@@ -68,11 +72,11 @@ public class VarTypeManager {
     }
 
     private static ClassReference registerMain(Supplier<ScriptedClass> sup, String name) {
-        return register(langRoot, name, sup);
+        return register(LANG_ROOT, name, sup);
     }
 
     private static ClassReference registerMain(Supplier<ScriptedClass> sup, String name, Class<?> target) {
-        return register(langRoot, name, sup, target);
+        return register(LANG_ROOT, name, sup, target);
     }
 
     public static ClassReference getClassForName(String type) {
@@ -86,7 +90,7 @@ public class VarTypeManager {
             if (i == packages.length - 1) {
                 String[] subClasses = name.split("\\$");
                 ClassReference reference = pg.getClass(subClasses[0].replace("[]", ""));
-                if (reference == null) return null; //TODO fix enclosed classes not working exposed
+                if (reference == null) return null;
                 for (int j = 1; j < subClasses.length; j++) {
                     if (!reference.hasEnclosing(subClasses[j])) return null;
                     reference = reference.getEnclosedUnsave(subClasses[j]);
@@ -176,5 +180,21 @@ public class VarTypeManager {
             pg = pg.getOrCreatePackage(aPackage);
         }
         return pg.getOrCreateClass(name);
+    }
+
+    public static ClassReference getClassFromObject(Object o) {
+        if (o instanceof Integer) return INTEGER.reference();
+        if (o instanceof Float) return FLOAT.reference();
+        if (o instanceof Double) return DOUBLE.reference();
+        if (o instanceof Boolean) return BOOLEAN.reference();
+        if (o instanceof Character) return CHAR.reference();
+        if (o instanceof ClassInstance cI) {
+            return cI.getType().reference();
+        }
+        throw new IllegalArgumentException("could not parse object to class: " + o);
+    }
+
+    public static List<ClassReference> getArgsFromObjects(List<Object> objects) {
+        return objects.stream().map(VarTypeManager::getClassFromObject).toList();
     }
 }

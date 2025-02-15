@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.EnumClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
@@ -249,6 +250,11 @@ public class SkeletonEnum implements EnumClass {
     @Override
     public GeneratedMethodMap getMethods() {
         return methods;
+    }
+
+    @Override
+    public AnnotationClassInstance[] annotations() {
+        return new AnnotationClassInstance[0];
     }
 
 }

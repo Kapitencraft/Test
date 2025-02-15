@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.oop.method.builder;
 
+import com.google.common.collect.Lists;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -50,6 +51,50 @@ public class ConstructorContainer extends DataMethodContainer {
             });
         }
         return new ConstructorContainer(methods.toArray(new ScriptedCallable[0]));
+    }
+
+    public static NativeBuilder builder(ScriptedCallable... methods) {
+        return new NativeBuilder(Lists.newArrayList(methods));
+    }
+
+    public static class NativeBuilder {
+        private final List<ScriptedCallable> methods;
+
+        public NativeBuilder(List<ScriptedCallable> methods) {
+            this.methods = methods;
+        }
+
+        public ConstructorContainer build(ScriptedClass target) {
+            if (methods.isEmpty()) {
+                methods.add(new ScriptedCallable() {
+                    @Override
+                    public ClassReference type() {
+                            return ClassReference.of(target);
+                        }
+
+                    @Override
+                    public List<ClassReference> argTypes() {
+                            return List.of();
+                        }
+
+                    @Override
+                    public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+                        return new ClassInstance(target, interpreter);
+                    }
+
+                    @Override
+                    public boolean isAbstract() {
+                            return false;
+                        }
+
+                    @Override
+                    public boolean isFinal() {
+                            return false;
+                        }
+                });
+            }
+            return new ConstructorContainer(methods.toArray(new ScriptedCallable[0]));
+        }
     }
 
     public static class Builder {

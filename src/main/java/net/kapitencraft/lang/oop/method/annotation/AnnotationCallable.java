@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.method.annotation;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.Nullable;
@@ -63,7 +64,11 @@ public class AnnotationCallable implements ScriptedCallable {
         return new AnnotationCallable(ClassReference.of(VarTypeManager.STRING.get()), value);
     }
 
-    public static AnnotationCallable enumType(ClassReference type) { //TODO fix
+    public static AnnotationCallable enumType(ClassReference type, ClassInstance value) { //TODO fix
+        return new AnnotationCallable(type, value);
+    }
+
+    public static AnnotationCallable enumType(ClassReference type) {
         return new AnnotationCallable(type, null);
     }
 }

@@ -1,5 +1,7 @@
 package net.kapitencraft.lang.oop.clazz;
 
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+
 public class ArrayClass extends PrimitiveClass {
     private final ScriptedClass component;
 
@@ -32,5 +34,10 @@ public class ArrayClass extends PrimitiveClass {
     @Override
     public ClassType getClassType() {
         return ClassType.CLASS;
+    }
+
+    @Override
+    public AnnotationClassInstance[] annotations() {
+        return new AnnotationClassInstance[0];
     }
 }

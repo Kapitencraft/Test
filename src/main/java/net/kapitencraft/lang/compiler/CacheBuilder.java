@@ -39,6 +39,7 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     public JsonArray cacheAnnotations(AnnotationClassInstance[] annotations) {
         JsonArray array = new JsonArray();
         for (AnnotationClassInstance instance : annotations) {
+            //if (instance.getType()) TODO create annotation processor and implement retention
             JsonObject data = new JsonObject();
             data.addProperty("type", instance.getType().absoluteName());
             JsonObject properties = new JsonObject();

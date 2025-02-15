@@ -28,7 +28,7 @@ public class ClassInstance implements AbstractClassInstance {
         environment.defineVar("this", this);
         ClassReference superClass = this.type.superclass();
         if (superClass != null)
-            environment.defineVar("super", new SuperWrapper(superClass.get())); //TODO add scoped method map
+            environment.defineVar("super", new SuperWrapper(superClass.get()));
         this.executeConstructor(interpreter);
     }
 

@@ -179,6 +179,11 @@ public final class GeneratedAnnotation implements CacheableClass, AbstractAnnota
         return null;
     }
 
+    @Override
+    public AnnotationClassInstance[] annotations() {
+        return annotations;
+    }
+
     boolean init = false;
 
     @Override

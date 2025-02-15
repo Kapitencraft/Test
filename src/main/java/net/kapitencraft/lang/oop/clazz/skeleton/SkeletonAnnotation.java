@@ -7,6 +7,7 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
@@ -182,6 +183,11 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     @Override
     public GeneratedMethodMap getMethods() {
         return null;
+    }
+
+    @Override
+    public AnnotationClassInstance[] annotations() {
+        return new AnnotationClassInstance[0];
     }
 
     @Override

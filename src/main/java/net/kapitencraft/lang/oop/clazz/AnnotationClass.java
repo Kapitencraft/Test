@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 
-public class AnnotationClass implements AbstractAnnotationClass {
+public abstract class AnnotationClass implements AbstractAnnotationClass {
     private final String name, pck;
 
     protected final AnnotationMethodMap methods;
