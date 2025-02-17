@@ -2,11 +2,13 @@ package test;
 
 class ThrowTest {
     static int test(int i) {
-        System.print(100.0 / i);
+        ThrowTest.sink(100 / i);
         return ThrowTest.test(i-1);
     }
 
     static void main(String[] args) {
         ThrowTest.test(10);
     }
+
+    static void sink(int in) {}
 }
