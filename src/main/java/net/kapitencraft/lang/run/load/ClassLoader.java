@@ -30,23 +30,47 @@ public class ClassLoader {
         generateClasses(pckSkeleton);
         System.out.println("Loading complete.");
         Interpreter interpreter = Interpreter.INSTANCE;
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        Scanner scanner = new Scanner(System.in);
+        executeTest(interpreter);
         String line = "";
         while (!"!exit".equals(line)) {
-            if (line != null && line.startsWith("!run ")) {
-                String data = line.substring(5);
-                String classRef;
-                if (data.contains(" ")) classRef = data.substring(0, data.indexOf(' '));
-                else classRef = data;
-                ClassReference target = VarTypeManager.getClassForName(classRef);
-                if (target == null) System.err.println("unable to find class for id '" + classRef + "'");
-                else {
-                    if (data.contains(" ")) data = data.substring(data.indexOf(' ') + 1);
-                    else data = "";
-                    interpreter.runMainMethod(target.get(), data);
-                }
+            if (line != null) {
+                if (line.startsWith("!run ")) {
+                    String data = line.substring(5);
+                    String classRef;
+                    if (data.contains(" ")) classRef = data.substring(0, data.indexOf(' '));
+                    else classRef = data;
+                    ClassReference target = VarTypeManager.getClassForName(classRef);
+                    if (target == null) System.err.println("unable to find class for id '" + classRef + "'");
+                    else {
+                        if (data.contains(" ")) data = data.substring(data.indexOf(' ') + 1);
+                        else data = "";
+                        interpreter.runMainMethod(target.get(), data);
+                    }
+                } else if ("!test".equals(line)) executeTest(interpreter);
             }
-            line = reader.readLine();
+            line = scanner.nextLine();
+        }
+    }
+
+    private static void executeTest(Interpreter interpreter) {
+        testClass(interpreter, "test.ArrayTest", "a b c d e f g h");
+        testClass(interpreter, "test.EnumTest", "");
+        testClass(interpreter, "test.InheritanceTest", "");
+        testClass(interpreter, "test.IntersectionTest", "");
+        testClass(interpreter, "test.LoopTest", "a b c d e f g h");
+        testClass(interpreter, "test.MultipleMethodsTest", "");
+        testClass(interpreter, "test.TimeTest", "");
+        //testClass(interpreter, "test.OverflowTest", "");
+        //testClass(interpreter, "test.ThrowTest", "");
+    }
+
+    private static void testClass(Interpreter interpreter, String className, String data) {
+        try {
+            System.out.println("testing '" + className + "':");
+            interpreter.runMainMethod(VarTypeManager.getClassForName(className).get(), data);
+        } catch (NullPointerException e) {
+            System.out.println("could not find class: '" + className + "'");
         }
     }
 

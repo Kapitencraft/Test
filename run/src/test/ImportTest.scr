@@ -2,7 +2,7 @@ package test;
 
 import test.MultipleMethodsTest as MMT;
 
-class IntersectionTest {
+class ImportTest {
 
     static void main(String[] args) {
         MMT mmt = new MMT("e", "a");

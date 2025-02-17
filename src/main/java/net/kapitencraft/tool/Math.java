@@ -13,4 +13,11 @@ public class Math {
             return (double)in + (type.type() == TokenType.GROW ? 1 : -1);
         }
     }
+
+    public static void main(String[] args) {
+        long millis = System.nanoTime();
+        for (int i = 0; i < 1000; i++) {
+        }
+        System.out.println(System.nanoTime() - millis + "ns");
+    }
 }

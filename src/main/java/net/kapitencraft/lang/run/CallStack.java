@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 
 public class CallStack {
-    public static final int MAX_STACK_SIZE = 500;
+    public static final int MAX_STACK_SIZE = 200;
 
     Deque<Pair<String, String>> stack = new ArrayDeque<>();
     Deque<Integer> lineIndexes = new ArrayDeque<>();

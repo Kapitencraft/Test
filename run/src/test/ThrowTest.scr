@@ -2,7 +2,7 @@ package test;
 
 class ThrowTest {
     static int test(int i) {
-        if (i <= 0) throw new ArithmeticException("EEE");
+        System.print(100.0 / i);
         return ThrowTest.test(i-1);
     }
 
