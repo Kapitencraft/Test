@@ -21,8 +21,8 @@ import static net.kapitencraft.lang.holder.token.TokenType.C_BRACKET_C;
 @SuppressWarnings("ThrowableNotThrown")
 public class StmtParser extends ExprParser {
 
-    public StmtParser(Compiler.ErrorLogger errorLogger) {
-        super(errorLogger);
+    public StmtParser(Compiler.ErrorLogger errorLogger, ClassReference fallback) {
+        super(errorLogger, fallback);
     }
 
     private ClassReference funcRetType = ClassReference.of(VarTypeManager.VOID);

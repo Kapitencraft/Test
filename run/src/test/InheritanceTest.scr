@@ -1,5 +1,6 @@
 package test;
 
+//this is not a political statement
 class InheritanceTest {
     int e(int a) {
         return a == 0 ? 1 : this.e(a-1)*2;

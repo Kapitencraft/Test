@@ -44,7 +44,7 @@ public class SourceClassReference extends ClassReference implements Holder.Valid
     }
 
     @Override
-    protected boolean exists() {
+    public boolean exists() {
         return reference.exists();
     }
 }

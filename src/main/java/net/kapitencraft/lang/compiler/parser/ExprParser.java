@@ -31,9 +31,11 @@ import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
 
 @SuppressWarnings("ThrowableNotThrown")
 public class ExprParser extends AbstractParser {
+    private final ClassReference fallback;
 
-    public ExprParser(Compiler.ErrorLogger errorLogger) {
+    public ExprParser(Compiler.ErrorLogger errorLogger, ClassReference fallback) {
         super(errorLogger);
+        this.fallback = fallback;
     }
 
     public Expr expression() {
@@ -525,6 +527,19 @@ public class ExprParser extends AbstractParser {
         if (match(IDENTIFIER)) {
             Token previous = previous();
             if (!varAnalyser.has(previous.lexeme())) {
+                if (fallback != null && fallback.exists()) {
+                    ScriptedClass fallback = this.fallback.get();
+                    if (check(BRACKET_O)) {
+                        if (fallback.hasMethod(previous.lexeme())) {
+                            return finishInstCall(new Expr.Get(new Expr.VarRef(Token.createNative("this")), previous));
+                        }
+                        if (fallback.hasStaticMethod(previous.lexeme())) {
+                            return staticCall(this.fallback, previous);
+                        }
+                    } else {
+                        
+                    }
+                }
                 current--;
                 return statics();
             }

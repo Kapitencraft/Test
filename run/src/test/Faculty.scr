@@ -1,0 +1,12 @@
+package test;
+
+class Faculty {
+
+    static int faculty(int val) {
+        return val <= 1 ? 1 : val * faculty(val - 1);
+    }
+
+    static void main(String[] args) {
+        System.print(faculty(10));
+    }
+}

@@ -91,7 +91,7 @@ public class ClassReference implements Supplier<ScriptedClass> {
         return "ClassReference@" + this.name + (exists() ? ", applied: " + target : "");
     }
 
-    protected boolean exists() {
+    public boolean exists() {
         return target != null;
     }
 }

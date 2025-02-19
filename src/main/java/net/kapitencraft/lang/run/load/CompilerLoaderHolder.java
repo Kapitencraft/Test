@@ -68,8 +68,8 @@ public class CompilerLoaderHolder extends ClassLoaderHolder {
 
     public void construct() {
         if (!checkHolderCreated()) return;
-        ExprParser exprParser = new ExprParser(this.logger);
-        StmtParser stmtParser = new StmtParser(this.logger);
+        ExprParser exprParser = new ExprParser(this.logger, this.holder.target());
+        StmtParser stmtParser = new StmtParser(this.logger, this.holder.target());
 
         builder = holder.construct(stmtParser, exprParser, this.varTypeParser, this.logger);
     }

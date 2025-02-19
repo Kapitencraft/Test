@@ -17,7 +17,7 @@ public class ClassWrapper extends ClassReference {
     }
 
     @Override
-    protected boolean exists() {
+    public boolean exists() {
         return origin.exists();
     }
 
