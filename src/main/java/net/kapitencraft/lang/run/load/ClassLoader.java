@@ -31,7 +31,7 @@ public class ClassLoader {
         System.out.println("Loading complete.");
         Interpreter interpreter = Interpreter.INSTANCE;
         Scanner scanner = new Scanner(System.in);
-        testClass(interpreter, "test.ThrowTest", "");
+        testClass(interpreter, "test.LoopTest", "a b c d e f");
         //executeTest(interpreter);
         String line = "";
         while (!"!exit".equals(line)) {

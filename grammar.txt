@@ -1,15 +1,18 @@
-program     -> pck import* classDecl
+program     -> pck import* clDecl
 
 pck         -> "package" VAR_TYPE ";"
 import      -> "import" VAR_TYPE ("as" IDENTIFIER)? ";"
 
+clDec       -> interfaceDecl | classDecl | enumDecl | annotationDecl
 interfaceDecl -> "interface" IDENTIFIER ( "extends" VAR_TYPE ( "," VAR_TYPE )* )?
 classDecl   -> "class" IDENTIFIER ( "extends" VAR_TYPE )? ( "implements" VAR_TYPE ( "," VAR_TYPE)* )? "{" (funcDecl | varDecl)* "}"
-enumDecl -> "enum" IDENTIFIER ( "implements" VAR_TYPE ( "," VAR_TYPE )* )
+enumDecl    -> "enum" IDENTIFIER ( "implements" VAR_TYPE ( "," VAR_TYPE )* )
+annotationDecl -> "annotation" IDENTIFIER "{" annotationFuncDecl* "}"
 
 declaration -> varDecl | statement
 
 funcDecl    -> "static"? "default"? "final"? VAR_TYPE IDENTIFIER "(" parameters? ")" block
+annotationFuncDecl -> VAR_TYPE IDENTIFIER "(" ")" ("default" literal)?
 fieldDecl   -> "static"? varDecl;
 varDecl     -> "final"? VAR_TYPE IDENTIFIER ( "=" expression )? ";"
 
@@ -44,12 +47,13 @@ comparison  -> term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term        -> factor ( ( "-" | "+" ) factor )*
 factor      -> unary ( ( "/" | "*" ) unary )*
 
-unary       -> ( "!" | "-" ) unary | call | switch | constructor
+unary       -> (( "!" | "-" ) unary) | call | switch | constructor
 
 call        -> primary ( "(" arguments? ")" | "." IDENTIFIER )*
 constructor -> "new" VAR_TYPE "(" arguments? ")"
 
-primary     -> "true" | "false" | "null" | "this" | NUMBER | STRING | IDENTIFIER | "(" expression ")" | "super" "." IDENTIFIER
+primary     -> literal | "(" expression ")" | "super" "." IDENTIFIER
+literal     -> "true" | "false" | "null" | "this" | NUMBER | STRING | IDENTIFIER
 
 //util
 parameters  -> VAR_TYPE IDENTIFIER ( "," VAR_TYPE IDENTIFIER )*
