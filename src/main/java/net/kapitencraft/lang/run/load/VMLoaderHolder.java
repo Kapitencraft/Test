@@ -53,11 +53,6 @@ public class VMLoaderHolder extends ClassLoaderHolder {
     }
 
     @Override
-    protected ClassType getType() {
-        return type;
-    }
-
-    @Override
     public void applySkeleton()  {
         List<ClassReference> enclosed = Arrays.stream(children).map(classLoaderHolder -> {
             classLoaderHolder.applySkeleton();

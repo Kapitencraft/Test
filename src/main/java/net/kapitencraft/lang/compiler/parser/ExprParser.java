@@ -32,10 +32,15 @@ import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
 @SuppressWarnings("ThrowableNotThrown")
 public class ExprParser extends AbstractParser {
     private final ClassReference fallback;
+    protected Holder.Generics generics = null;
 
     public ExprParser(Compiler.ErrorLogger errorLogger, ClassReference fallback) {
         super(errorLogger);
         this.fallback = fallback;
+    }
+
+    public void applyGenerics(Holder.Generics generics) {
+        this.generics = generics;
     }
 
     public Expr expression() {
@@ -48,7 +53,7 @@ public class ExprParser extends AbstractParser {
 
     public Expr literalOrReference() {
         if (match(AT)) {
-            SourceClassReference reference = consumeVarType();
+            SourceClassReference reference = consumeVarType(generics);
             Token errorPoint = previous();
             if (match(BRACKET_O)) {
                 parseAnnotationProperties(reference, errorPoint);
@@ -57,7 +62,7 @@ public class ExprParser extends AbstractParser {
         if (match(PRIMITIVE)) {
             return new Expr.Literal(previous().literal());
         }
-        ClassReference target = consumeVarType();
+        ClassReference target = consumeVarType(generics);
         Token name = previous();
 
         return new Expr.StaticGet(target, name);
@@ -140,7 +145,7 @@ public class ExprParser extends AbstractParser {
     private Expr castCheck() {
         Expr expr = assignment();
         if (match(INSTANCEOF)) {
-            ClassReference loxClass = consumeVarType();
+            ClassReference loxClass = consumeVarType(generics);
             Token patternVar = null;
             if (match(IDENTIFIER)) {
                 patternVar = previous();
@@ -386,7 +391,7 @@ public class ExprParser extends AbstractParser {
     }
 
     private Expr statics() {
-        ClassReference target = consumeVarType();
+        ClassReference target = consumeVarType(generics);
         Token name = previous();
         if (check(BRACKET_O)) return staticCall(target, name);
         if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
@@ -506,7 +511,7 @@ public class ExprParser extends AbstractParser {
 
     private Expr primary() {
         if (match(NEW)) {
-            ClassReference loxClass = consumeVarType();
+            ClassReference loxClass = consumeVarType(generics);
             Token loc = previous();
             consumeBracketOpen("constructors");
             List<Expr> args = args();

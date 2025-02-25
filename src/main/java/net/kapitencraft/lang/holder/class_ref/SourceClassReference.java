@@ -9,7 +9,7 @@ public class SourceClassReference extends ClassReference implements Holder.Valid
     private final Token nameToken;
     private final ClassReference reference;
 
-    private SourceClassReference(String name, String pck, Token nameToken, ClassReference reference) {
+    protected SourceClassReference(String name, String pck, Token nameToken, ClassReference reference) {
         super(name, pck);
         this.nameToken = nameToken;
         this.reference = reference;

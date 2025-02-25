@@ -12,6 +12,7 @@ import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.baked.BakedEnum;
 import net.kapitencraft.lang.holder.baked.BakedInterface;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ClassType;
@@ -38,8 +39,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public class Holder {
-    private static <T extends Validateable> void validateNullable(T[] annotations, Compiler.ErrorLogger logger) {
-        if (annotations != null) for (T obj : annotations) obj.validate(logger);
+    private static <T extends Validateable> void validateNullable(T[] validateable, Compiler.ErrorLogger logger) {
+        if (validateable != null) for (T obj : validateable) obj.validate(logger);
     }
 
     public interface Validateable {
@@ -53,7 +54,7 @@ public class Holder {
     }
 
     public record Class(ClassType type, ClassReference target, short modifiers,
-                        AnnotationObj[] annotations, String pck, Token name, SourceClassReference parent,
+                        AnnotationObj[] annotations, Generics generics, String pck, Token name, SourceClassReference parent,
                         SourceClassReference[] interfaces,
                         Constructor[] constructors,
                         Method[] methods,
@@ -107,6 +108,7 @@ public class Holder {
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, method.type());
+                    stmtParser.applyGenerics(method.generics());
                     body = stmtParser.parse();
                     stmtParser.popMethod();
                 }
@@ -125,6 +127,7 @@ public class Holder {
             for (Constructor method : this.constructors()) {
                 stmtParser.apply(method.body(), parser);
                 stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, ClassReference.of(VarTypeManager.VOID));
+                stmtParser.applyGenerics(method.generics());
                 List<Stmt> body = stmtParser.parse();
                 List<AnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
@@ -208,6 +211,7 @@ public class Holder {
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     stmtParser.applyMethod(method.params, target(), null, method.type());
+                    stmtParser.applyGenerics(method.generics());
                     body = stmtParser.parse();
                     stmtParser.popMethod();
                 }
@@ -215,7 +219,6 @@ public class Holder {
                 for (AnnotationObj obj : method.annotations()) {
                     annotations.add(exprParser.parseAnnotation(obj, parser));
                 }
-
 
                 GeneratedCallable methodDecl = new GeneratedCallable(method.type(), method.params, body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
                 if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
@@ -273,6 +276,7 @@ public class Holder {
                         stmtParser.applyStaticMethod(method.params(), method.type());
                     else
                         stmtParser.applyMethod(method.params(), target(), parent, method.type());
+                    stmtParser.applyGenerics(method.generics());
                     body = stmtParser.parse();
                     stmtParser.popMethod();
                 }
@@ -290,6 +294,7 @@ public class Holder {
             for (Constructor constructor : this.constructors()) {
                 stmtParser.apply(constructor.body(), parser);
                 stmtParser.applyMethod(constructor.params(), target(), parent, ClassReference.of(VarTypeManager.VOID));
+                stmtParser.applyGenerics(constructor.generics());
                 List<Stmt> body = stmtParser.parse();
 
                 List<AnnotationClassInstance> annotations = new ArrayList<>();
@@ -589,8 +594,9 @@ public class Holder {
         }
     }
 
-    public record Constructor(AnnotationObj[] annotations, Token name, List<Pair<SourceClassReference, String>> params, Token[] body) implements Validateable {
+    public record Constructor(AnnotationObj[] annotations, Generics generics, Token name, List<Pair<SourceClassReference, String>> params, Token[] body) implements Validateable {
         public void validate(Compiler.ErrorLogger logger) {
+            validateNullable(annotations, logger);
             if (annotations != null) for (AnnotationObj obj : annotations) obj.validate(logger);
             params.forEach(p -> p.left().validate(logger));
         }
@@ -607,11 +613,43 @@ public class Holder {
         }
     }
 
-    public record Method(short modifiers, AnnotationObj[] annotations, SourceClassReference type, Token name, List<? extends Pair<SourceClassReference, String>> params, Token[] body) {
+    public record Method(short modifiers, AnnotationObj[] annotations, Generics generics, SourceClassReference type, Token name, List<? extends Pair<SourceClassReference, String>> params, Token[] body) {
         public void validate(Compiler.ErrorLogger logger) {
             validateNullable(annotations, logger);
             type.validate(logger);
             params.forEach(p -> p.left().validate(logger));
+        }
+    }
+
+    public record Generics(Generic[] variables) implements Validateable {
+        @Override
+        public void validate(Compiler.ErrorLogger logger) {
+            for (Generic generic : variables) generic.validate(logger);
+        }
+
+        public boolean hasGeneric(String name) {
+            for (Generic generic : variables) {
+                if (name.equals(generic.name.lexeme())) return true;
+            }
+            return false;
+        }
+
+        public ClassReference getReference(String name) {
+            for (Generic generic : variables) if (name.equals(generic.name.lexeme())) return generic.reference;
+            return null;
+        }
+    }
+
+    public record Generic(Token name, SourceClassReference[] lowerBound, SourceClassReference[] upperBound, GenericClassReference reference) implements Validateable {
+
+        public Generic(Token name, SourceClassReference[] lowerBound, SourceClassReference[] upperBound) {
+            this(name, lowerBound, upperBound, new GenericClassReference(name.lexeme(), lowerBound, upperBound));
+        }
+
+        @Override
+        public void validate(Compiler.ErrorLogger logger) {
+            for (SourceClassReference reference : lowerBound) reference.validate(logger);
+            for (SourceClassReference reference : upperBound) reference.validate(logger);
         }
     }
 }

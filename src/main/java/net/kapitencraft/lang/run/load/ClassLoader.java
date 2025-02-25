@@ -22,18 +22,14 @@ public class ClassLoader {
     public static final File cacheLoc = new File("./run/cache");
 
     public static void main(String[] args) throws IOException {
-        PackageHolder<VMLoaderHolder> pckSkeleton = load(cacheLoc, ".scrc", VMLoaderHolder::new);
-        useClasses(pckSkeleton, (classes, pck) -> classes.forEach((name, vmLoaderHolder) -> {
-            loadHolderReference(pck, vmLoaderHolder);
-        }));
-        generateSkeletons(pckSkeleton);
-        generateClasses(pckSkeleton);
+        loadClasses();
         System.out.println("Loading complete.");
         Interpreter interpreter = Interpreter.INSTANCE;
         Scanner scanner = new Scanner(System.in);
         //testClass(interpreter, "test.LoopTest", "a b c d e f");
         //executeTest(interpreter);
         String line = "";
+        boolean profiling = false;
         while (!"!exit".equals(line)) {
             if (line != null) {
                 if (line.startsWith("!run ")) {
@@ -46,12 +42,38 @@ public class ClassLoader {
                     else {
                         if (data.contains(" ")) data = data.substring(data.indexOf(' ') + 1);
                         else data = "";
-                        interpreter.runMainMethod(target.get(), data);
+                        interpreter.runMainMethod(target.get(), data, profiling, true);
                     }
                 } else if ("!test".equals(line)) executeTest(interpreter);
+                else if (line.startsWith("!profiler ")) {
+                    switch (line.substring(10)) {
+                        case "start" -> {
+                            profiling = true;
+                            System.out.println("started profiler");
+                        }
+                        case "end" -> {
+                            profiling = false;
+                            System.out.println("stopped profiler");
+                        }
+                        case "toggle" -> {
+                            profiling = !profiling;
+                            System.out.println("toggled profiler. now: " + profiling);
+                        }
+                        default -> System.err.println("unknown profiler operation : \"" + line.substring(10) + "\"");
+                    }
+                } else if (!line.isEmpty()) System.err.println("unknown command: \"" + line + "\"");
             }
             line = scanner.nextLine();
         }
+    }
+
+    public static void loadClasses() {
+        PackageHolder<VMLoaderHolder> pckSkeleton = load(cacheLoc, ".scrc", VMLoaderHolder::new);
+        useClasses(pckSkeleton, (classes, pck) -> classes.forEach((name, vmLoaderHolder) -> {
+            loadHolderReference(pck, vmLoaderHolder);
+        }));
+        generateSkeletons(pckSkeleton);
+        generateClasses(pckSkeleton);
     }
 
     private static void executeTest(Interpreter interpreter) {
@@ -69,7 +91,7 @@ public class ClassLoader {
     private static void testClass(Interpreter interpreter, String className, String data) {
         try {
             System.out.println("testing '" + className + "':");
-            interpreter.runMainMethod(VarTypeManager.getClassForName(className).get(), data);
+            interpreter.runMainMethod(VarTypeManager.getClassForName(className).get(), data, false, true);
         } catch (NullPointerException e) {
             System.out.println("could not find class: '" + className + "'");
         }

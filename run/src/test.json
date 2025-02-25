@@ -1,0 +1,35 @@
+[
+  {
+    "target": "test.ArrayTest",
+    "arguments": "a b c d e f g h i j k",
+    "output": [
+      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"
+    ]
+  },
+  {
+    "target": "test.EnumTest",
+    "output": ["a", "b", "c"]
+  },
+  {
+    "target": "test.Faculty",
+    "output": ["3628800"]
+  },
+  {
+    "target": "test.ImportTest",
+    "output": [
+      "ea", "25", "Hello!"
+    ]
+  },
+  {
+    "target": "test.InheritanceTest",
+    "output": [
+      "10", "5", "YAY"
+    ]
+  },
+  {
+    "target": "test.MultipleMethodsTest",
+    "output": [
+      "el", "25", "Hello!"
+    ]
+  }
+]

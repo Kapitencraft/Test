@@ -1,11 +1,11 @@
 package net.kapitencraft.lang.compiler.parser;
 
 import com.google.common.collect.ImmutableList;
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.GenericSourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.oop.Package;
-import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
-import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.VarTypeParser;
@@ -18,7 +18,6 @@ import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 
 import java.util.*;
-import java.util.prefs.PreferenceChangeEvent;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
@@ -173,9 +172,9 @@ public class AbstractParser {
         throw error(peek(), message);
     }
 
-    protected Optional<SourceClassReference> tryConsumeVarType() {
+    protected Optional<SourceClassReference> tryConsumeVarType(Holder.Generics generics) {
         if (VarTypeManager.hasPackage(peek().lexeme()) && !varAnalyser.has(peek().lexeme())) {
-            return Optional.of(consumeVarType());
+            return Optional.of(consumeVarType(generics));
         }
         Token t = advance();
         ClassReference reference = parser.getClass(t.lexeme());
@@ -186,11 +185,16 @@ public class AbstractParser {
         return Optional.empty();
     }
 
-    protected SourceClassReference consumeVarType() {
+    protected SourceClassReference consumeVarType(Holder.Generics generics) {
         StringBuilder typeName = new StringBuilder();
         Token token = consumeIdentifier();
         typeName.append(token.lexeme());
         ClassReference reference = parser.getClass(token.lexeme());
+        if (reference == null) {
+            if (generics.hasGeneric(token.lexeme())) {
+                return new GenericSourceClassReference(token, generics.getReference(token.lexeme()));
+            }
+        }
         if (reference == null) {
             Package p = VarTypeManager.getPackage(token.lexeme());
             while (match(DOT)) {

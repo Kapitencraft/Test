@@ -15,8 +15,6 @@ public abstract class ClassLoaderHolder {
         this.children = children;
     }
 
-    protected abstract ClassType getType();
-
     protected String pck() {
         return ClassLoader.pck(file);
     }

@@ -17,7 +17,7 @@ public class SystemClass extends NativeUtilClass {
                     new NativeMethodImpl(List.of(VarTypeManager.OBJECT), VarTypeManager.VOID.reference(), true, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                            System.out.println(Interpreter.stringify(arguments.get(0)));
+                            interpreter.output.accept(Interpreter.stringify(arguments.get(0)));
                             return null;
                         }
                     }
@@ -27,7 +27,7 @@ public class SystemClass extends NativeUtilClass {
                     new NativeMethodImpl(List.of(), VarTypeManager.INTEGER.reference(), true, false) {
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                            return (int) (System.currentTimeMillis() - Interpreter.millisAtStart);
+                            return (int) interpreter.elapsedMillis();
                         }
                     }),
             "input", DataMethodContainer.of(

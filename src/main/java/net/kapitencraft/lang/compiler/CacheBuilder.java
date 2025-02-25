@@ -10,6 +10,7 @@ import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
 
@@ -39,7 +40,11 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     public JsonArray cacheAnnotations(AnnotationClassInstance[] annotations) {
         JsonArray array = new JsonArray();
         for (AnnotationClassInstance instance : annotations) {
-            //if (instance.getType()) TODO create annotation processor and implement retention
+            //AnnotationClassInstance retention;
+            //if (retention = instance.getType().getAnnotation(VarTypeManager.RETENTION) != null) {
+            //    if (retention.getProperty("value"))
+            //    //TODO create annotation processor and implement retention
+            //}
             JsonObject data = new JsonObject();
             data.addProperty("type", instance.getType().absoluteName());
             JsonObject properties = new JsonObject();

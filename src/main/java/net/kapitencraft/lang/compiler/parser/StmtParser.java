@@ -54,7 +54,7 @@ public class StmtParser extends ExprParser {
             error(peek(), "unreachable statement");
         }
         try {
-            if (match(FINAL)) return varDeclaration(true, consumeVarType());
+            if (match(FINAL)) return varDeclaration(true, consumeVarType(generics));
             if (match(IDENTIFIER)) {
                 Token id = previous();
                 ClassReference loxClass = parser.getClass(id.lexeme());
@@ -102,7 +102,7 @@ public class StmtParser extends ExprParser {
             if (match(WHILE)) return whileStatement();
             if (match(C_BRACKET_O)) return new Stmt.Block(block("block"));
             if (check(IDENTIFIER)) {
-                Optional<SourceClassReference> type = tryConsumeVarType();
+                Optional<SourceClassReference> type = tryConsumeVarType(generics);
                 if (type.isPresent()) {
                     return varDeclaration(false, type.get());
                 }
@@ -125,7 +125,7 @@ public class StmtParser extends ExprParser {
             List<ClassReference> targets = new ArrayList<>();
             consumeBracketOpen("catch");
             do {
-                targets.add(consumeVarType());
+                targets.add(consumeVarType(generics));
             } while (match(SINGLE_OR));
             pushScope();
             Token name = consumeIdentifier();
@@ -192,7 +192,7 @@ public class StmtParser extends ExprParser {
         pushScope();
         loopIndex++;
 
-        Optional<SourceClassReference> type = tryConsumeVarType();
+        Optional<SourceClassReference> type = tryConsumeVarType(generics);
 
         Stmt initializer;
         if (type.isPresent()) {

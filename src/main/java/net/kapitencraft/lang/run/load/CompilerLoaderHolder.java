@@ -38,11 +38,6 @@ public class CompilerLoaderHolder extends ClassLoaderHolder {
         );
     }
 
-    @Override
-    protected ClassType getType() {
-        return null;
-    }
-
     public void applyConstructor() {
         Lexer lexer = new Lexer(content, logger);
         List<Token> tokens = lexer.scanTokens();

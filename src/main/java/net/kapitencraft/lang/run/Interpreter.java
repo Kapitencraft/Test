@@ -17,12 +17,15 @@ import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.Pair;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public static final Interpreter INSTANCE = new Interpreter();
 
     private Environment environment = new Environment();
     private final CallStack callStack = new CallStack();
+
+    public Consumer<String> output = System.out::println;
 
     public static final Scanner in = new Scanner(System.in);
 
@@ -47,7 +50,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return object.toString();
     }
 
-    public void runMainMethod(ScriptedClass target, String data) {
+    public void runMainMethod(ScriptedClass target, String data, boolean profiling, boolean output) {
         if (!target.hasStaticMethod("main")) return;
         suppressClassLoad = true;
         Optional.ofNullable(target.getStaticMethod("main", List.of(VarTypeManager.STRING.array())))
@@ -60,7 +63,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                         ArrayList<Object> obj = new ArrayList<>(); //can't use List.of() because it would add each of the split strings as a single element to the list
                         obj.add(data.split(" "));
                         method.call(new Environment(), this, obj);
-                        System.out.println("\u001B[32mExecution finished\u001B[0m");
+                        if (output) {
+                            if (profiling)
+                                System.out.println("\u001B[32mExecution took " + elapsedMillis() + "ms\u001B[0m");
+                            else System.out.println("\u001B[32mExecution finished\u001B[0m");
+                        }
                     } catch (AbstractScriptedException e) {
                         System.err.println("Caused by: " + e.exceptionType.getType().absoluteName() + ": " + e.exceptionType.getField("message"));
                         this.callStack.printStackTrace(System.err::println);
@@ -479,5 +486,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (object == null) return false;
         if (object instanceof Boolean) return (boolean)object;
         return true;
+    }
+
+    public long elapsedMillis() {
+        return System.currentTimeMillis() - millisAtStart;
     }
 }
