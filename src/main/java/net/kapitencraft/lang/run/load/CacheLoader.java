@@ -197,7 +197,7 @@ public class CacheLoader {
     }
 
     private static Expr readLiteral(JsonObject object) {
-        return new Expr.Literal(LiteralHolder.fromJson(object));
+        return new Expr.Literal(Token.fromJson(object));
     }
 
     private static Expr readLogical(JsonObject object) {

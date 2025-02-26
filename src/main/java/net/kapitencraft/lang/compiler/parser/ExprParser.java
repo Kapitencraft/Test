@@ -60,7 +60,7 @@ public class ExprParser extends AbstractParser {
             }
         }
         if (match(PRIMITIVE)) {
-            return new Expr.Literal(previous().literal());
+            return new Expr.Literal(previous());
         }
         ClassReference target = consumeVarType(generics);
         Token name = previous();
@@ -375,12 +375,13 @@ public class ExprParser extends AbstractParser {
         List<ClassReference> givenTypes = arguments.stream().map(this.finder::findRetType).toList();
         ScriptedClass targetClass = this.finder.findRetType(get.object).get();
 
-        int ordinal = targetClass.getMethodOrdinal(get.name.lexeme(), givenTypes);
-        if (ordinal == -1) {
+        if (!targetClass.hasMethod(get.name.lexeme())) {
             error(get.name, "unknown symbol");
             consumeBracketClose("arguments");
-            return new Expr.InstCall(get.object, get.name, ordinal, arguments);
+            return new Expr.InstCall(get.object, get.name, -1, arguments);
         }
+        int ordinal = targetClass.getMethodOrdinal(get.name.lexeme(), givenTypes);
+        if (ordinal == -1) ordinal = 0;
         ScriptedCallable callable = targetClass.getMethodByOrdinal(get.name.lexeme(), ordinal);
 
         checkArguments(arguments, callable, get.name);
@@ -403,17 +404,18 @@ public class ExprParser extends AbstractParser {
         consumeBracketOpen("static call");
         List<Expr> args = args();
 
-        int ordinal = -1;
+        int ordinal = 0;
 
         if (target != null) {
 
-            ordinal = target.get().getStaticMethodOrdinal(name.lexeme(), argTypes(args));
-            if (ordinal == -1) {
+            if (!target.get().hasStaticMethod(name.lexeme())) {
                 error(name, "unknown symbol");
                 consumeBracketClose("static call");
                 return new Expr.StaticCall(target, name, ordinal, args);
             }
 
+            ordinal = target.get().getStaticMethodOrdinal(name.lexeme(), argTypes(args));
+            if (ordinal == -1) ordinal = 0;
             ScriptedCallable callable = target.get().getStaticMethodByOrdinal(name.lexeme(), ordinal);
             checkArguments(args, callable, name);
 
@@ -466,6 +468,7 @@ public class ExprParser extends AbstractParser {
                 if (expr instanceof Expr.Get get) expr = finishInstCall(get);
                 else error(locFinder.find(expr), "obj expected");
             } else if (match(DOT)) {
+                if (expr instanceof Expr.Literal && !check(IDENTIFIER)) continue;
                 Token name = consume(IDENTIFIER, "Expect property name after '.'");
                 ScriptedClass targetType = finder.findRetType(expr).get();
                 if (!check(BRACKET_O)) { //ensure not to check for field if it's a method
@@ -484,7 +487,7 @@ public class ExprParser extends AbstractParser {
         List<? extends ClassReference> expectedTypes = target.argTypes();
         List<ClassReference> givenTypes = argTypes(args);
         if (expectedTypes.size() != givenTypes.size()) {
-            errorLogger.errorF(loc, "constructor for %s cannot be applied to given types;", loc.lexeme());
+            errorLogger.errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
 
             errorLogger.logError("required: " + Util.getDescriptor(expectedTypes));
             errorLogger.logError("found:    " + Util.getDescriptor(givenTypes));
@@ -526,7 +529,7 @@ public class ExprParser extends AbstractParser {
         }
 
         if (match(PRIMITIVE)) {
-            return new Expr.Literal(previous().literal());
+            return new Expr.Literal(previous());
         }
 
         if (match(IDENTIFIER)) {

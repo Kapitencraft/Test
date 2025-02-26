@@ -640,16 +640,16 @@ public class Holder {
         }
     }
 
-    public record Generic(Token name, SourceClassReference[] lowerBound, SourceClassReference[] upperBound, GenericClassReference reference) implements Validateable {
+    public record Generic(Token name, SourceClassReference lowerBound, SourceClassReference upperBound, GenericClassReference reference) implements Validateable {
 
-        public Generic(Token name, SourceClassReference[] lowerBound, SourceClassReference[] upperBound) {
+        public Generic(Token name, SourceClassReference lowerBound, SourceClassReference upperBound) {
             this(name, lowerBound, upperBound, new GenericClassReference(name.lexeme(), lowerBound, upperBound));
         }
 
         @Override
         public void validate(Compiler.ErrorLogger logger) {
-            for (SourceClassReference reference : lowerBound) reference.validate(logger);
-            for (SourceClassReference reference : upperBound) reference.validate(logger);
+            if (lowerBound != null) lowerBound.validate(logger);
+            if (upperBound != null) upperBound.validate(logger);
         }
     }
 }

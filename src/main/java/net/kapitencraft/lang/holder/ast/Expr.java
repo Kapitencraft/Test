@@ -362,10 +362,10 @@ public abstract class Expr {
     }
 
     public static class Literal extends Expr {
-        public final LiteralHolder holder;
+        public final Token token;
 
-        public Literal(LiteralHolder holder) {
-            this.holder = holder;
+        public Literal(Token token) {
+            this.token = token;
         }
 
         @Override

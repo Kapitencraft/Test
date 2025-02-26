@@ -213,9 +213,7 @@ public class Lexer {
         String literal = source.substring(start, current);
         if (match('f') || match('F')) { //float :hypers:
             addToken(NUM, Float.parseFloat(literal), VarTypeManager.FLOAT);
-        }
-
-        if (seenDecimal) addToken(NUM, Double.parseDouble(literal), VarTypeManager.DOUBLE);
+        } else if (seenDecimal) addToken(NUM, Double.parseDouble(literal), VarTypeManager.DOUBLE);
         else addToken(NUM, Integer.parseInt(literal), VarTypeManager.INTEGER);
     }
 

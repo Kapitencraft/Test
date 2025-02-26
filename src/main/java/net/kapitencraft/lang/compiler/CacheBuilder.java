@@ -251,7 +251,7 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
 
     @Override
     public JsonElement visitLiteralExpr(Expr.Literal expr) {
-        JsonObject object = expr.holder.toJson();
+        JsonObject object = expr.token.toJson();
         object.addProperty("TYPE", "literal");
         return object;
     }

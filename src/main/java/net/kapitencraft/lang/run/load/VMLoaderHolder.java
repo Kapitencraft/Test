@@ -46,9 +46,6 @@ public class VMLoaderHolder extends ClassLoaderHolder {
         }
         this.name = packages[packages.length-1];
         this.reference = new ClassReference(name, pck.toString());
-        for (VMLoaderHolder holder : children) {
-            this.reference.registerEnclosed(holder.name, holder.reference);
-        }
         this.type = ClassType.valueOf(GsonHelper.getAsString(data, "TYPE"));
     }
 

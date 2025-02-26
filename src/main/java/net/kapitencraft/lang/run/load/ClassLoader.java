@@ -26,8 +26,6 @@ public class ClassLoader {
         System.out.println("Loading complete.");
         Interpreter interpreter = Interpreter.INSTANCE;
         Scanner scanner = new Scanner(System.in);
-        //testClass(interpreter, "test.LoopTest", "a b c d e f");
-        //executeTest(interpreter);
         String line = "";
         boolean profiling = false;
         while (!"!exit".equals(line)) {
@@ -44,8 +42,7 @@ public class ClassLoader {
                         else data = "";
                         interpreter.runMainMethod(target.get(), data, profiling, true);
                     }
-                } else if ("!test".equals(line)) executeTest(interpreter);
-                else if (line.startsWith("!profiler ")) {
+                } else if (line.startsWith("!profiler ")) {
                     switch (line.substring(10)) {
                         case "start" -> {
                             profiling = true;
@@ -74,27 +71,6 @@ public class ClassLoader {
         }));
         generateSkeletons(pckSkeleton);
         generateClasses(pckSkeleton);
-    }
-
-    private static void executeTest(Interpreter interpreter) {
-        testClass(interpreter, "test.ArrayTest", "a b c d e f g h");
-        testClass(interpreter, "test.EnumTest", "");
-        testClass(interpreter, "test.InheritanceTest", "");
-        testClass(interpreter, "test.IntersectionTest", "");
-        testClass(interpreter, "test.LoopTest", "a b c d e f g h");
-        testClass(interpreter, "test.MultipleMethodsTest", "");
-        testClass(interpreter, "test.TimeTest", "");
-        //testClass(interpreter, "test.OverflowTest", "");
-        //testClass(interpreter, "test.ThrowTest", "");
-    }
-
-    private static void testClass(Interpreter interpreter, String className, String data) {
-        try {
-            System.out.println("testing '" + className + "':");
-            interpreter.runMainMethod(VarTypeManager.getClassForName(className).get(), data, false, true);
-        } catch (NullPointerException e) {
-            System.out.println("could not find class: '" + className + "'");
-        }
     }
 
     private static void loadHolderReference(Package pck, VMLoaderHolder holder) {

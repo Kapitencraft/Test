@@ -1,0 +1,18 @@
+package test;
+
+class GenericTest {
+    static void main(String[] args) {
+        System.print(create("Hello!"));
+        System.print(test(5));
+        System.print(test(19f));
+        System.print(test(14.));
+    }
+
+    static <T> T create(T in) {
+        return in;
+    }
+
+    static <T extends num> T test(T in) {
+        return in;
+    }
+}

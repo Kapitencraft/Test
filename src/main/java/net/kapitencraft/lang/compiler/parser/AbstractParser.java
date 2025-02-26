@@ -174,11 +174,13 @@ public class AbstractParser {
 
     protected Optional<SourceClassReference> tryConsumeVarType(Holder.Generics generics) {
         if (VarTypeManager.hasPackage(peek().lexeme()) && !varAnalyser.has(peek().lexeme())) {
-            return Optional.of(consumeVarType(generics));
+            advance();
+            if (check(DOT)) return Optional.ofNullable(consumeVarType(generics));
+            current--;
         }
         Token t = advance();
         ClassReference reference = parser.getClass(t.lexeme());
-        if ( reference != null && !check(DOT)) {
+        if (reference != null && !check(DOT)) {
             return Optional.of(SourceClassReference.from(t,  reference));
         } else
             current--;

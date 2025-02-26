@@ -30,6 +30,11 @@ public class SourceClassReference extends ClassReference implements Holder.Valid
     }
 
     @Override
+    public String absoluteName() {
+        return reference.absoluteName();
+    }
+
+    @Override
     public String toString() {
         return "SourceClassReference@" + this.name() + (exists() ? ", applied:" + this.reference.get() : "");
     }

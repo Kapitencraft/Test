@@ -39,7 +39,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public static String stringify(Object object) {
         if (object == null) return "null";
 
-        if (object instanceof Double) {
+        if (object instanceof Double || object instanceof Float) {
             String text = object.toString();
             if (text.endsWith(".0")) {
                 text = text.substring(0, text.length() - 2);
@@ -241,7 +241,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitLiteralExpr(Expr.Literal expr) {
-        return expr.holder.value();
+        return expr.token.literal().value();
     }
 
     @Override

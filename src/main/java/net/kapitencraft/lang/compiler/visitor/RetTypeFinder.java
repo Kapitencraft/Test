@@ -113,7 +113,7 @@ public class RetTypeFinder implements Expr.Visitor<ClassReference> {
 
     @Override
     public ClassReference visitLiteralExpr(Expr.Literal expr) {
-        return expr.holder.type().reference();
+        return expr.token.literal().type().reference();
     }
 
     @Override

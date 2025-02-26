@@ -15,7 +15,7 @@ import java.util.List;
 
 public class TestLoader {
     private static final Gson GSON = new GsonBuilder().create();
-    private static final File TEST_CONFIG = new File("./run/src/test.json");
+    private static final File TEST_CONFIG = new File("./run/test.json");
 
     private record TestInstance(String target, String args, String[] output) {
         public void run(Interpreter interpreter) {
@@ -68,7 +68,7 @@ public class TestLoader {
             if (error) {
                 System.out.println("\u001B[31mError running class '" + instance.target + "'\u001B[0m");
             } else {
-                System.out.println("\u001B[32mSuccessfully ran class '" + instance.target + "'. took " + interpreter.elapsedMillis() + "ms\u001B[0m");
+                System.out.println("\u001B[32mSuccessfully tested class '" + instance.target + "'. took " + interpreter.elapsedMillis() + "ms\u001B[0m");
             }
         }
 
@@ -77,7 +77,11 @@ public class TestLoader {
         }
 
         private void checkOutput(String output) {
-            if (!output.equals(running.output[outputIndex])) {
+            if (outputIndex == running.output.length) {
+                System.err.println("Test for '" + running.target + "' failed. more outputs got than expected");
+                error = true;
+                return;
+            } else if (!output.equals(running.output[outputIndex])) {
                 System.err.println("Test for '" + running.target + "' failed at index " + outputIndex + ". Expected \"" + running.output[outputIndex] + "\", but got: \"" + output + "\"");
                 error = true;
             }

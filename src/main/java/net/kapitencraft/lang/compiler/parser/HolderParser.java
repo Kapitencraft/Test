@@ -22,6 +22,8 @@ import static net.kapitencraft.lang.holder.token.TokenType.DOT;
 
 @SuppressWarnings("ThrowableNotThrown")
 public class HolderParser extends AbstractParser {
+    private Holder.Generics activeGenerics = null;
+
     public HolderParser(Compiler.ErrorLogger errorLogger) {
         super(errorLogger);
     }
@@ -88,10 +90,14 @@ public class HolderParser extends AbstractParser {
         return tokens.toArray(Token[]::new);
     }
 
+    //TODO acknowledge generics
     protected SourceClassReference consumeVarType() {
         StringBuilder typeName = new StringBuilder();
         Token token = consumeIdentifier();
         typeName.append(token.lexeme());
+        if (activeGenerics != null) {
+            if (activeGenerics.hasGeneric(token.lexeme())) return SourceClassReference.from(token, activeGenerics.getReference(token.lexeme()));
+        }
         ClassReference reference = parser.getClass(token.lexeme());
         if (reference == null) {
             Package p = VarTypeManager.getPackage(token.lexeme());
@@ -111,7 +117,7 @@ public class HolderParser extends AbstractParser {
             consume(S_BRACKET_C, "']' expected");
             if (reference != null) reference = reference.array();
         }
-        return SourceClassReference.from(last, reference);
+        return reference != null ? SourceClassReference.from(last, reference) : null;
     }
 
 
@@ -198,6 +204,7 @@ public class HolderParser extends AbstractParser {
             modifiers.parse();
             Holder.AnnotationObj[] annotations = modifiers.getAnnotations();
             if (readClass(enclosed::add, pckId, modifiers)) {
+                activeGenerics = modifiers.generics;
                 if (constructors != null && Objects.equals(peek().lexeme(), name.lexeme())) {
                     Token constName = consume(IDENTIFIER, "that shouldn't have happened... (expected class name to be identifier)");
                     consumeBracketOpen("constructors");
@@ -219,7 +226,6 @@ public class HolderParser extends AbstractParser {
                 }
             }
         }
-        enclosed.forEach(classHolder -> target.registerEnclosed(classHolder.name(), classHolder.target(), errorLogger));
     }
 
     public List<Pair<SourceClassReference, String>> parseParams() {
@@ -249,11 +255,11 @@ public class HolderParser extends AbstractParser {
 
         consumeCurlyClose("method body");
 
+        activeGenerics = null;
         return new Holder.Constructor(annotation, generics, origin, parameters, code);
     }
 
     private Holder.Method funcDecl(SourceClassReference type, ModifiersParser modifiers, Token name) {
-
         List<Pair<SourceClassReference, String>> parameters = parseParams();
         consumeBracketClose("params");
 
@@ -266,6 +272,7 @@ public class HolderParser extends AbstractParser {
 
             consumeCurlyClose("method body");
         } else consumeEndOfArg();
+        activeGenerics = null;
         return new Holder.Method(modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), type, name, parameters, code);
     }
 
@@ -432,7 +439,6 @@ public class HolderParser extends AbstractParser {
                 } else error(peek(), "'(' expected");
             }
         }
-        enclosed.forEach(classHolder -> target.registerEnclosed(classHolder.name(), classHolder.target(), errorLogger));
 
         consumeCurlyClose("annotation");
         return new Holder.Class(ClassType.ANNOTATION,
@@ -547,18 +553,14 @@ public class HolderParser extends AbstractParser {
 
         private Holder.Generic generic() {
             Token name = consumeIdentifier();
-            List<SourceClassReference> lowerBound = new ArrayList<>(), upperBound = new ArrayList<>();
+            SourceClassReference lowerBound = null, upperBound = null;
             if (match(EXTENDS)) {
-                do {
-                    lowerBound.add(consumeVarType());
-                } while (match(COMMA));
+                lowerBound = consumeVarType();
             } else if (match(SUPER)) {
-                do {
-                    upperBound.add(consumeVarType());
-                } while (match(COMMA));
+                upperBound = consumeVarType();
             }
 
-            return new Holder.Generic(name, lowerBound.toArray(new SourceClassReference[0]), upperBound.toArray(new SourceClassReference[0]));
+            return new Holder.Generic(name, lowerBound, upperBound);
         }
 
         private void clear() {

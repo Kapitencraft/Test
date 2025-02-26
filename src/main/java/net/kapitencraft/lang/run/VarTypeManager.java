@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.run;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.RegistryClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.natives.scripted.lang.*;
@@ -17,6 +18,8 @@ import net.kapitencraft.lang.oop.clazz.primitive.*;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class VarTypeManager {
     private static final List<RegistryClassReference> data = new ArrayList<>();
@@ -88,13 +91,8 @@ public class VarTypeManager {
         for (int i = 0; i < packages.length; i++) {
             String name = packages[i];
             if (i == packages.length - 1) {
-                String[] subClasses = name.split("\\$");
-                ClassReference reference = pg.getClass(subClasses[0].replace("[]", ""));
+                ClassReference reference = pg.getClass(name.replace("[]", ""));
                 if (reference == null) return null;
-                for (int j = 1; j < subClasses.length; j++) {
-                    if (!reference.hasEnclosing(subClasses[j])) return null;
-                    reference = reference.getEnclosedUnsave(subClasses[j]);
-                }
                 for (; arrayCount > 0; arrayCount--) {
                     reference = reference.array();
                 }
@@ -108,6 +106,17 @@ public class VarTypeManager {
     }
 
     public static ClassReference getClassOrError(String type) {
+        if (type.startsWith("?")) {
+            ClassReference lowerBound = null, upperBound = null;
+            if (type.length() > 1) {
+                if (type.substring(2).startsWith("extends")) {
+                    lowerBound = getClassOrError(type.substring(10));
+                } else if (type.substring(2).startsWith("super")) {
+                    upperBound = getClassOrError(type.substring(8));
+                }
+            }
+            return new GenericClassReference("?", lowerBound, upperBound);
+        }
         return Objects.requireNonNull(getClassForName(type), "unknown class: " + type);
     }
 

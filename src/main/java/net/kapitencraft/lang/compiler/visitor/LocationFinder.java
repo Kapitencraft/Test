@@ -106,7 +106,7 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
 
     @Override
     public Token visitLiteralExpr(Expr.Literal expr) {
-        return Token.createNative("wat?");
+        return expr.token;
     }
 
     @Override

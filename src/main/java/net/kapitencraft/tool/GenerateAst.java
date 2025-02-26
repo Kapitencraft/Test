@@ -30,7 +30,7 @@ public class GenerateAst {
                 "CastCheck     : Expr object; ClassReference targetType; Token patternVarName",
                 "Grouping      : Expr expression",
                 //"Lambda   : List<Token> params, Stmt body",
-                "Literal       : LiteralHolder holder",
+                "Literal       : Token token",
                 "Logical       : Expr left; Token operator; Expr right",
                 "Unary         : Token operator; Expr right",
                 "VarRef        : Token name",

@@ -16,37 +16,12 @@ public class ClassReference implements Supplier<ScriptedClass> {
     protected ScriptedClass target;
     private final String name;
     private final String pck;
-    private final Map<String, ClassReference> enclosed = new HashMap<>();
 
     public ClassReference(String name, String pck) {
         this.name = name;
         this.pck = pck;
     }
 
-    public void registerEnclosed(Token name, ClassReference reference, Compiler.ErrorLogger logger) {
-        if (enclosed.containsKey(name.lexeme())) {
-            logger.errorF(name, "duplicate inner class with name %s", name.lexeme());
-        } else enclosed.put(name.lexeme(), reference);
-    }
-
-    public void registerEnclosed(String name, ClassReference reference) {
-        enclosed.put(name, reference);
-    }
-
-    public boolean hasEnclosing(String name) {
-        return enclosed.containsKey(name);
-    }
-
-    public ClassReference getEnclosedUnsave(String name) {
-        return enclosed.get(name);
-    }
-
-    public ClassReference getEnclosedOrError(Token name, Compiler.ErrorLogger logger) {
-        if (!enclosed.containsKey(name.lexeme())) {
-            logger.errorF(name, "no inner class '%s' in %s", name.lexeme(), this.absoluteName());
-        }
-        return enclosed.get(name.lexeme());
-    }
 
     public ScriptedClass get() {
         return Objects.requireNonNull(target, "ScriptedClass not present: " + this.name);

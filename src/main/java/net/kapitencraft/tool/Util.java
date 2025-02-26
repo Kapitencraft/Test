@@ -35,9 +35,7 @@ public class Util {
     }
 
     public static boolean matchArgs(List<? extends ClassReference> got, List<? extends ClassReference> expected) {
-        if (got.size() != expected.size()) {
-            return false;
-        }
+        if (got.size() != expected.size()) return false;
         if (got.isEmpty()) return true;
         for (int i = 0; i < got.size(); i++) {
             if (!got.get(i).get().isChildOf(expected.get(i).get())) return false;
