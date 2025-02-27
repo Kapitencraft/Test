@@ -38,7 +38,10 @@ public class Util {
         if (got.size() != expected.size()) return false;
         if (got.isEmpty()) return true;
         for (int i = 0; i < got.size(); i++) {
-            if (!got.get(i).get().isChildOf(expected.get(i).get())) return false;
+            ClassReference gotType = got.get(i);
+            ClassReference expectedType = expected.get(i);
+            if (gotType == null || expectedType == null) return false;
+            if (!gotType.get().isChildOf(expectedType.get())) return false;
         }
         return true;
     }

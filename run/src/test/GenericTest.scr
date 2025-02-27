@@ -15,4 +15,9 @@ class GenericTest {
     static <T extends num> T test(T in) {
         return in;
     }
+
+    static <T> T build(T in) {
+        T test = in;
+        return test;
+    }
 }

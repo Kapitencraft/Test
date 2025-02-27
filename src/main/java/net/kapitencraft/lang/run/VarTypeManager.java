@@ -117,7 +117,7 @@ public class VarTypeManager {
             }
             return new GenericClassReference("?", lowerBound, upperBound);
         }
-        return Objects.requireNonNull(getClassForName(type), "unknown class: " + type);
+        return Objects.requireNonNull(getClassForName(type), "unknown symbol: " + type);
     }
 
     public static Package rootPackage() {

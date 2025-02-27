@@ -58,7 +58,7 @@ public class RetTypeFinder implements Expr.Visitor<ClassReference> {
 
     @Override
     public ClassReference visitStaticGetExpr(Expr.StaticGet expr) {
-        return expr.target.get().getStaticFieldType(expr.name.lexeme());
+        return expr.target == null ? VarTypeManager.VOID.reference() : expr.target.get().getStaticFieldType(expr.name.lexeme());
     }
 
     @Override

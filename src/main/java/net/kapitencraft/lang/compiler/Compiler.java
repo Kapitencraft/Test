@@ -64,6 +64,10 @@ public class Compiler {
             System.err.println(s);
         }
 
+        public void warn(int lineIndex, int lineStartIndex, String msg) {
+            Compiler.warn(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
+        }
+
         public void warn(Token loc, String msg) {
             Compiler.warn(loc, msg, fileLoc, lines[loc.line()]);
         }

@@ -25,7 +25,7 @@ public class StmtParser extends ExprParser {
         super(errorLogger, fallback);
     }
 
-    private ClassReference funcRetType = ClassReference.of(VarTypeManager.VOID);
+    private ClassReference funcRetType = VarTypeManager.VOID.reference();
     private final Stack<Boolean> seenReturn = new Stack<>();
     private int loopIndex = 0;
 
@@ -55,14 +55,9 @@ public class StmtParser extends ExprParser {
         }
         try {
             if (match(FINAL)) return varDeclaration(true, consumeVarType(generics));
-            if (match(IDENTIFIER)) {
-                Token id = previous();
-                ClassReference loxClass = parser.getClass(id.lexeme());
-                if (loxClass != null && !check(DOT)) return varDeclaration(false, loxClass);
-                current--; //jump back if it isn't a var decl
-            }
 
-            return statement();
+            Optional<SourceClassReference> type = tryConsumeVarType(generics);
+            return type.map(sourceClassReference -> varDeclaration(false, sourceClassReference)).orElseGet(this::statement);
         } catch (ParseError error) {
             synchronize();
             return null;
@@ -101,12 +96,6 @@ public class StmtParser extends ExprParser {
             if (match(IF)) return ifStatement();
             if (match(WHILE)) return whileStatement();
             if (match(C_BRACKET_O)) return new Stmt.Block(block("block"));
-            if (check(IDENTIFIER)) {
-                Optional<SourceClassReference> type = tryConsumeVarType(generics);
-                if (type.isPresent()) {
-                    return varDeclaration(false, type.get());
-                }
-            }
 
             return expressionStatement();
         } catch (ParseError error) {
@@ -301,7 +290,7 @@ public class StmtParser extends ExprParser {
     public List<Stmt> parse() {
         if (tokens.length == 0) return List.of();
         List<Stmt> stmts = new ArrayList<>();
-        while (!isAtEnd()) stmts.add(statement());
+        while (!isAtEnd()) stmts.add(declaration());
         return stmts;
     }
 

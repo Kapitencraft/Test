@@ -6,6 +6,8 @@ import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Function;
@@ -15,6 +17,7 @@ import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 public class Lexer {
     private static final Map<String, TokenType> keywords;
+    private static final Logger log = LoggerFactory.getLogger(Lexer.class);
 
     static {
         keywords = Arrays.stream(values()).filter(tokenType -> tokenType.isCategory(TokenTypeCategory.KEY_WORD)).collect(Collectors.toMap(tokenType -> tokenType.name().toLowerCase(Locale.ROOT), Function.identity()));
@@ -213,6 +216,9 @@ public class Lexer {
         String literal = source.substring(start, current);
         if (match('f') || match('F')) { //float :hypers:
             addToken(NUM, Float.parseFloat(literal), VarTypeManager.FLOAT);
+        } else if (match('d') || match('D')) {
+            if (seenDecimal) warn("unnecessary double indicator");
+            addToken(NUM, Double.parseDouble(literal), VarTypeManager.DOUBLE);
         } else if (seenDecimal) addToken(NUM, Double.parseDouble(literal), VarTypeManager.DOUBLE);
         else addToken(NUM, Integer.parseInt(literal), VarTypeManager.INTEGER);
     }
@@ -225,12 +231,11 @@ public class Lexer {
     }
 
     private void string() {
-        while (peek() != '"' && !isAtEnd()) {
-            if (peek() == '\n') nextLine();
+        while (peek() != '"' && !isAtEnd() && peek() != '\n') {
             advance();
         }
 
-        if (isAtEnd()) {
+        if (isAtEnd() || peek() == '\n') {
             error("Unterminated string.");
             return;
         }
@@ -244,6 +249,10 @@ public class Lexer {
     }
 
     private void error(String msg) {
-        logger.error(line, indexAtLineStart, msg);
+        logger.error(line-1, indexAtLineStart, msg);
+    }
+
+    private void warn(String msg) {
+        logger.warn(line-1, indexAtLineStart, msg);
     }
 }

@@ -96,8 +96,9 @@ public class AbstractParser {
     }
 
     protected ClassReference expectType(Token errorLoc, ClassReference gotten, ClassReference expected) {
+        if (gotten == null) return VarTypeManager.VOID.reference();
         if (expected == VarTypeManager.OBJECT) return gotten;
-        if (!expected.get().isParentOf(gotten.get())) errorLogger.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
+        if ( !expected.get().isParentOf(gotten.get())) errorLogger.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
         return gotten;
     }
 
@@ -173,6 +174,10 @@ public class AbstractParser {
     }
 
     protected Optional<SourceClassReference> tryConsumeVarType(Holder.Generics generics) {
+        if (generics.hasGeneric(peek().lexeme())) {
+            Token source = advance();
+            return Optional.of(SourceClassReference.from(source, generics.getReference(source.lexeme())));
+        }
         if (VarTypeManager.hasPackage(peek().lexeme()) && !varAnalyser.has(peek().lexeme())) {
             advance();
             if (check(DOT)) return Optional.ofNullable(consumeVarType(generics));

@@ -37,17 +37,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     public static String stringify(Object object) {
-        if (object == null) return "null";
-
-        if (object instanceof Double || object instanceof Float) {
-            String text = object.toString();
-            if (text.endsWith(".0")) {
-                text = text.substring(0, text.length() - 2);
-            }
-            return text;
-        }
-
-        return object.toString();
+        return object == null ? "null" : object.toString();
     }
 
     public void runMainMethod(ScriptedClass target, String data, boolean profiling, boolean output) {

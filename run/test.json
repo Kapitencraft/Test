@@ -35,7 +35,7 @@
   {
     "target": "test.GenericTest",
     "output": [
-      "Hello!", "5",  "19.0", "14"
+      "Hello!", "5",  "19.0", "14.0"
     ]
   }
 ]
