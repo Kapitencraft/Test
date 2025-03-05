@@ -42,6 +42,7 @@ public class RetTypeFinder implements Expr.Visitor<ClassReference> {
 
     @Override
     public ClassReference visitInstCallExpr(Expr.InstCall expr) {
+
         return findRetType(expr.callee).get().getMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).type();
     }
 

@@ -18,7 +18,6 @@ import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;

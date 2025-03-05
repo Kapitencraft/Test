@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.holder.class_ref;
 
+import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
@@ -22,7 +23,7 @@ public class ClassWrapper extends ClassReference {
     }
 
     @Override
-    public ScriptedClass get() {
-        return target.apply(origin.get());
+    public ScriptedClass get(GenericStack generics) {
+        return target.apply(origin.get(generics));
     }
 }

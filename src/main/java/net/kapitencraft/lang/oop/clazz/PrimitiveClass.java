@@ -2,6 +2,7 @@ package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.PrimitiveClassReference;
 import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
@@ -18,12 +19,14 @@ public abstract class PrimitiveClass implements ScriptedClass {
     private final String name;
     private final ScriptedClass superclass;
     private final Object defaultValue;
+    private final PrimitiveClassReference reference;
 
     public PrimitiveClass(ScriptedClass superclass, String name, Object defaultValue) {
         this.name = name;
         this.superclass = superclass;
         this.defaultValue = defaultValue;
         VarTypeManager.getOrCreatePackage("scripted.lang").addClass(name, this);
+        this.reference = new PrimitiveClassReference(this.name, this);
     }
 
     public PrimitiveClass(String name, Object defaultValue) {
@@ -47,7 +50,6 @@ public abstract class PrimitiveClass implements ScriptedClass {
 
     @Override
     public void setInit() {
-
     }
 
     @Override
@@ -192,5 +194,10 @@ public abstract class PrimitiveClass implements ScriptedClass {
     @Override
     public AnnotationClassInstance[] annotations() {
         return new AnnotationClassInstance[0];
+    }
+
+    @Override
+    public ClassReference reference() {
+        return reference;
     }
 }

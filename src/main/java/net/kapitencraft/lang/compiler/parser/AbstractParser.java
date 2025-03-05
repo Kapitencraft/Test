@@ -3,7 +3,7 @@ package net.kapitencraft.lang.compiler.parser;
 import com.google.common.collect.ImmutableList;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.GenericSourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.generic.GenericSourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.run.VarTypeManager;

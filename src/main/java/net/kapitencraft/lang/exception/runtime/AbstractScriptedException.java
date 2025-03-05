@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.exception.runtime;
 
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.inst.AbstractClassInstance;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.Interpreter;

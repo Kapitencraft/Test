@@ -6,6 +6,8 @@ class GenericTest {
         System.print(test(5));
         System.print(test(19f));
         System.print(test(14.));
+        Supplier<String> test = new TestA("ABC");
+        System.print(test.get());
     }
 
     static <T> T create(T in) {
@@ -19,5 +21,17 @@ class GenericTest {
     static <T> T build(T in) {
         T test = in;
         return test;
+    }
+
+    static class TestA<T> implements Supplier<T> {
+        final T value;
+
+        T get() {
+            return value;
+        }
+    }
+
+    interface Supplier<T> {
+        T get();
     }
 }

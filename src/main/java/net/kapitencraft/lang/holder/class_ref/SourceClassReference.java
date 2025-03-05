@@ -2,6 +2,7 @@ package net.kapitencraft.lang.holder.class_ref;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
+import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
@@ -16,8 +17,8 @@ public class SourceClassReference extends ClassReference implements Holder.Valid
     }
 
     @Override
-    public ScriptedClass get() {
-        return reference.get();
+    public ScriptedClass get(GenericStack generics) {
+        return reference.get(generics);
     }
 
     @Override
@@ -36,7 +37,7 @@ public class SourceClassReference extends ClassReference implements Holder.Valid
 
     @Override
     public String toString() {
-        return "SourceClassReference@" + this.name() + (exists() ? ", applied:" + this.reference.get() : "");
+        return "SourceClassReference@" + this.name() + (exists() ? ", applied:" + this.reference.get(null) : "");
     }
 
     public Token getToken() {

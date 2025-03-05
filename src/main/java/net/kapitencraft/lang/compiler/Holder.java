@@ -12,8 +12,9 @@ import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.baked.BakedEnum;
 import net.kapitencraft.lang.holder.baked.BakedInterface;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.GenericClassReference;
+import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
@@ -622,6 +623,12 @@ public class Holder {
     }
 
     public record Generics(Generic[] variables) implements Validateable {
+        public void pushToStack(GenericStack stack) {
+            Map<String, ClassReference> map = new HashMap<>();
+            for (Generic generic : variables) map.put(generic.name.lexeme(), generic.reference);
+            stack.push(map);
+        }
+
         @Override
         public void validate(Compiler.ErrorLogger logger) {
             for (Generic generic : variables) generic.validate(logger);

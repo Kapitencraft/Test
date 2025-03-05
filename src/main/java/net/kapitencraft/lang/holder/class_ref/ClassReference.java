@@ -1,15 +1,18 @@
 package net.kapitencraft.lang.holder.class_ref;
 
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class ClassReference implements Supplier<ScriptedClass> {
@@ -22,9 +25,12 @@ public class ClassReference implements Supplier<ScriptedClass> {
         this.pck = pck;
     }
 
+    public ScriptedClass get(@Nullable GenericStack generics) {
+        return Objects.requireNonNull(target, "ScriptedClass not present: " + this.name);
+    }
 
     public ScriptedClass get() {
-        return Objects.requireNonNull(target, "ScriptedClass not present: " + this.name);
+        return get(null);
     }
 
     public String absoluteName() {
@@ -47,10 +53,6 @@ public class ClassReference implements Supplier<ScriptedClass> {
 
     public void setTarget(ScriptedClass target) {
         this.target = target;
-    }
-
-    public boolean is(ClassReference other) {
-        return this.get().is(other.get());
     }
 
     public boolean is(ScriptedClass scriptedClass) {

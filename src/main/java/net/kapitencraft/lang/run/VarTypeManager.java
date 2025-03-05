@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.run;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.GenericClassReference;
+import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.RegistryClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.natives.scripted.lang.*;
@@ -18,8 +18,6 @@ import net.kapitencraft.lang.oop.clazz.primitive.*;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class VarTypeManager {
     private static final List<RegistryClassReference> data = new ArrayList<>();
@@ -117,7 +115,7 @@ public class VarTypeManager {
             }
             return new GenericClassReference("?", lowerBound, upperBound);
         }
-        return Objects.requireNonNull(getClassForName(type), "unknown symbol: " + type);
+        return Objects.requireNonNull(getClassForName(type), "unknown class: " + type);
     }
 
     public static Package rootPackage() {
