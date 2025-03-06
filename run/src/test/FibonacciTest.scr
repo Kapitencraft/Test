@@ -1,0 +1,12 @@
+package test;
+
+class FibonacciTest {
+    static int fib(int i) {
+        if (i <= 2) return 1;
+        return fib(i - 2) + fib(i - 1);
+    }
+
+    static void main(String[] args) {
+        System.print(fib(32));
+    }
+}
