@@ -64,6 +64,7 @@ public class TestLoader {
         public void runTest(TestInstance instance) {
             this.running = instance;
             this.outputIndex = 0;
+            this.error = false;
             instance.run(interpreter);
             if (error) {
                 System.out.println("\u001B[31mError running class '" + instance.target + "'\u001B[0m");
@@ -77,10 +78,9 @@ public class TestLoader {
         }
 
         private void checkOutput(String output) {
-            if (outputIndex == running.output.length) {
+            if (outputIndex >= running.output.length) {
                 System.err.println("Test for '" + running.target + "' failed. more outputs got than expected");
                 error = true;
-                return;
             } else if (!output.equals(running.output[outputIndex])) {
                 System.err.println("Test for '" + running.target + "' failed at index " + outputIndex + ". Expected \"" + running.output[outputIndex] + "\", but got: \"" + output + "\"");
                 error = true;

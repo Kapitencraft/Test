@@ -138,7 +138,7 @@ public class MethodLookup {
         return new GeneratedMethodMap(ImmutableMap.copyOf(map));
     }
 
-    public int getMethodOrdinal(String name, List<ClassReference> args) {
+    public int getMethodOrdinal(String name, ClassReference[] args) {
         return exposed.getMethodOrdinal(name, args);
     }
 

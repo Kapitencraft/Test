@@ -7,11 +7,11 @@ import java.util.List;
 
 public interface MethodContainer {
 
-    ScriptedCallable getMethod(List<ClassReference> expectedArgs);
+    ScriptedCallable getMethod(ClassReference[] expectedArgs);
 
     ScriptedCallable getMethodByOrdinal(int ordinal);
 
-    int getMethodOrdinal(List<ClassReference> types);
+    int getMethodOrdinal(ClassReference[] types);
 
     ScriptedCallable[] getMethods();
 }

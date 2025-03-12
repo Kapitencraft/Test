@@ -4,6 +4,7 @@ import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
@@ -18,11 +19,9 @@ import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.Util;
+import org.checkerframework.checker.units.qual.C;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
@@ -30,16 +29,30 @@ import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
 
 @SuppressWarnings("ThrowableNotThrown")
 public class ExprParser extends AbstractParser {
-    private final ClassReference fallback;
-    protected Holder.Generics generics = null;
+    private final List<ClassReference> fallback;
+    protected GenericStack generics = new GenericStack();
 
-    public ExprParser(Compiler.ErrorLogger errorLogger, ClassReference fallback) {
+    public ExprParser(Compiler.ErrorLogger errorLogger) {
         super(errorLogger);
-        this.fallback = fallback;
+        this.fallback = new ArrayList<>();
     }
 
-    public void applyGenerics(Holder.Generics generics) {
-        this.generics = generics;
+    protected ClassReference currentFallback() {
+        if (fallback.isEmpty()) throw new IllegalArgumentException("no fallback applied");
+        return fallback.get(fallback.size() - 1);
+    }
+
+    public void pushGenerics(Holder.Generics generics) {
+        generics.pushToStack(this.generics);
+    }
+
+    public void pushFallback(ClassReference fallback) {
+        this.fallback.add(fallback);
+    }
+
+    public void popFallback() {
+        if (this.fallback.isEmpty()) throw new IllegalStateException("fallback stack underflow");
+        this.fallback.remove(this.fallback.size() - 1);
     }
 
     public Expr expression() {
@@ -73,14 +86,24 @@ public class ExprParser extends AbstractParser {
     }
 
     public AnnotationClassInstance parseAnnotationProperties(SourceClassReference typeRef, Token errorPoint) {
-        AbstractAnnotationClass type = typeRef.get() instanceof AbstractAnnotationClass AAC ? AAC : null;
+        //TODO transfer to modifiers
+        ScriptedClass type = typeRef.get();
 
-        if (type == null) {
+        if (!type.isAnnotation()) {
             error(typeRef.getToken(), "annotation type expected");
             return null;
         }
+        Map<String, ScriptedCallable> annotationMethods = new HashMap<>();
 
-        List<String> abstracts = type.getAbstracts();
+        type.getMethods().asMap().forEach((s, dataMethodContainer) ->
+                annotationMethods.put(s, dataMethodContainer.getMethods()[0])
+        );
+
+        List<String> abstracts = new ArrayList<>();
+        annotationMethods.forEach((s, scriptedCallable) -> {
+            if (scriptedCallable.isAbstract()) abstracts.add(s);
+        });
+
         if (isAtEnd()) {
             if (!abstracts.isEmpty()) {
                 errorMissingProperties(errorPoint, abstracts);
@@ -371,11 +394,11 @@ public class ExprParser extends AbstractParser {
     private Expr finishInstCall(Expr.Get get) {
         List<Expr> arguments = args();
 
-        List<ClassReference> givenTypes = arguments.stream().map(this.finder::findRetType).toList();
+        ClassReference[] givenTypes = argTypes(arguments);
         ScriptedClass targetClass = this.finder.findRetType(get.object).get();
 
         if (!targetClass.hasMethod(get.name.lexeme())) {
-            error(get.name, "unknown symbol");
+            error(get.name, "unknown method '" + get.name.lexeme() + "'");
             consumeBracketClose("arguments");
             return new Expr.InstCall(get.object, get.name, -1, arguments);
         }
@@ -448,8 +471,8 @@ public class ExprParser extends AbstractParser {
         return arguments;
     }
 
-    public List<ClassReference> argTypes(List<Expr> args) {
-        return args.stream().map(this.finder::findRetType).toList();
+    public ClassReference[] argTypes(List<Expr> args) {
+        return args.stream().map(this.finder::findRetType).toArray(ClassReference[]::new);
     }
 
 
@@ -483,17 +506,17 @@ public class ExprParser extends AbstractParser {
     }
 
     public void checkArguments(List<Expr> args, ScriptedCallable target, Token loc) {
-        List<? extends ClassReference> expectedTypes = target.argTypes();
-        List<ClassReference> givenTypes = argTypes(args);
-        if (expectedTypes.size() != givenTypes.size()) {
+        ClassReference[] expectedTypes = target.argTypes();
+        ClassReference[] givenTypes = argTypes(args);
+        if (expectedTypes.length != givenTypes.length) {
             errorLogger.errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
 
             errorLogger.logError("required: " + Util.getDescriptor(expectedTypes));
             errorLogger.logError("found:    " + Util.getDescriptor(givenTypes));
             errorLogger.logError("reason: actual and formal argument lists differ in length");
         } else {
-            for (int i = 0; i < givenTypes.size(); i++) {
-                expectType(locFinder.find(args.get(i)), givenTypes.get(i), expectedTypes.get(i));
+            for (int i = 0; i < givenTypes.length; i++) {
+                expectType(locFinder.find(args.get(i)), givenTypes[i], expectedTypes[i]);
             }
         }
 
@@ -534,17 +557,23 @@ public class ExprParser extends AbstractParser {
         if (match(IDENTIFIER)) {
             Token previous = previous();
             if (!varAnalyser.has(previous.lexeme())) {
-                if (fallback != null && fallback.exists()) {
-                    ScriptedClass fallback = this.fallback.get();
+                if (currentFallback().exists()) {
+                    ScriptedClass fallback = currentFallback().get();
+                    String name = previous.lexeme();
                     if (check(BRACKET_O)) {
-                        if (fallback.hasMethod(previous.lexeme())) {
+                        if (fallback.hasMethod(name)) {
                             return finishInstCall(new Expr.Get(new Expr.VarRef(Token.createNative("this")), previous));
                         }
-                        if (fallback.hasStaticMethod(previous.lexeme())) {
-                            return staticCall(this.fallback, previous);
+                        if (fallback.hasStaticMethod(name)) {
+                            return staticCall(currentFallback(), previous);
                         }
                     } else {
-                        
+                        if (fallback.hasField(name)) {
+                            return new Expr.Get(new Expr.VarRef(Token.createNative("this")), previous);
+                        }
+                        if (fallback.hasStaticField(name)) {
+                            return new Expr.StaticGet(currentFallback(), previous);
+                        }
                     }
                 }
                 current--;

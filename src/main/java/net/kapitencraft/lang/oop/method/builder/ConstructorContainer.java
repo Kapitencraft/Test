@@ -30,8 +30,8 @@ public class ConstructorContainer extends DataMethodContainer {
                 }
 
                 @Override
-                public List<ClassReference> argTypes() {
-                    return List.of();
+                public ClassReference[] argTypes() {
+                    return new ClassReference[0];
                 }
 
                 @Override
@@ -73,8 +73,8 @@ public class ConstructorContainer extends DataMethodContainer {
                         }
 
                     @Override
-                    public List<ClassReference> argTypes() {
-                            return List.of();
+                    public ClassReference[] argTypes() {
+                            return new ClassReference[0];
                         }
 
                     @Override
@@ -98,19 +98,21 @@ public class ConstructorContainer extends DataMethodContainer {
     }
 
     public static class Builder {
-        private final List<String> finalVars;
+        private final List<Token> finalVars;
         private final List<ScriptedCallable> methods = new ArrayList<>();
         private final Token className;
+        private final Compiler.ErrorLogger logger;
 
-        public Builder(List<String> finalVars, Token className) {
+        public Builder(List<Token> finalVars, Token className, Compiler.ErrorLogger logger) {
             this.finalVars = finalVars;
             this.className = className;
+            this.logger = logger;
         }
 
         public void addMethod(Compiler.ErrorLogger errorLogger, ScriptedCallable callable, Token constructorLocation) {
-            List<? extends List<? extends ClassReference>> appliedTypes = methods.stream().map(ScriptedCallable::argTypes).toList();
-            List<? extends ClassReference> argTypes = callable.argTypes();
-            for (List<? extends ClassReference> appliedType : appliedTypes) {
+            List<? extends ClassReference[]> appliedTypes = methods.stream().map(ScriptedCallable::argTypes).toList();
+            ClassReference[] argTypes = callable.argTypes();
+            for (ClassReference[] appliedType : appliedTypes) {
                 if (Util.matchArgs(argTypes, appliedType)) {
                     errorLogger.errorF(constructorLocation, "duplicate constructors with args %s in class %s", Util.getDescriptor(argTypes), className.lexeme());
                     return;
@@ -129,8 +131,8 @@ public class ConstructorContainer extends DataMethodContainer {
                         }
 
                         @Override
-                        public List<ClassReference> argTypes() {
-                            return List.of();
+                        public ClassReference[] argTypes() {
+                            return new ClassReference[0];
                         }
 
                         @Override
@@ -150,7 +152,7 @@ public class ConstructorContainer extends DataMethodContainer {
                     });
                 }
                 else {
-
+                    finalVars.forEach(token -> logger.error(token, "field '" + token.lexeme() + "' not initialized"));
                 }
             }
             return new ConstructorContainer(methods.toArray(new ScriptedCallable[0]));

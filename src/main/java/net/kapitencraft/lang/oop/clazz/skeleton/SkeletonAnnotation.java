@@ -2,6 +2,7 @@ package net.kapitencraft.lang.oop.clazz.skeleton;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
@@ -11,6 +12,7 @@ import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
+import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.AnnotationMethodMap;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
@@ -116,7 +118,7 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public ScriptedCallable getStaticMethod(String name, List<ClassReference> args) {
+    public ScriptedCallable getStaticMethod(String name, ClassReference[] args) {
         return null;
     }
 
@@ -126,7 +128,7 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
+    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
         return -1;
     }
 
@@ -141,18 +143,8 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public boolean isAbstract() {
-        return false;
-    }
-
-    @Override
-    public boolean isFinal() {
-        return true;
-    }
-
-    @Override
-    public boolean isInterface() {
-        return true;
+    public short getModifiers() {
+        return Modifiers.ANNOTATION;
     }
 
     @Override
@@ -161,7 +153,7 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<ClassReference> types) {
+    public int getMethodOrdinal(String name, ClassReference[] types) {
         return -1;
     }
 
@@ -181,8 +173,8 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public GeneratedMethodMap getMethods() {
-        return null;
+    public AbstractMethodMap getMethods() {
+        return methods;
     }
 
     @Override

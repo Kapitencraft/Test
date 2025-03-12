@@ -1,16 +1,10 @@
 package net.kapitencraft.lang.run.algebra;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public enum OperationType {
     ADDITION(TokenType.ADD, TokenType.ADD_ASSIGN),

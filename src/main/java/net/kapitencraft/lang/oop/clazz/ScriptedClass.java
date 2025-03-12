@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.oop.clazz;
 
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
@@ -15,11 +16,11 @@ import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
+import org.checkerframework.dataflow.qual.Pure;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public interface ScriptedClass {
     Map<String, Object> staticFieldData = new HashMap<>();
@@ -53,11 +54,18 @@ public interface ScriptedClass {
      * <br><br>API note: it's recommended to call {@code super.checkOperation(...)} due to the given equality check
      */
     default ScriptedClass checkOperation(OperationType type, Operand operand, ClassReference other) {
-        return type.is(TokenTypeCategory.EQUALITY) && other.is(this) ? VarTypeManager.BOOLEAN : VarTypeManager.VOID;
+        return type == OperationType.ADDITION && "scripted.lang.String".equals(this.absoluteName()) ?
+                VarTypeManager.STRING.get() :
+                type.is(TokenTypeCategory.EQUALITY) && other.is(this) ?
+                        VarTypeManager.BOOLEAN :
+                        VarTypeManager.VOID;
     }
 
     default Object doOperation(OperationType type, Operand operand, Object self, Object other) {
-        return null;
+        String selfS = Interpreter.stringify(self);
+        String otherS = Interpreter.stringify(other);
+        return type == OperationType.ADDITION && "scripted.lang.String".equals(this.absoluteName()) ?
+                operand == Operand.LEFT ? selfS + otherS  : otherS + selfS : null;
     }
 
     default void checkInit() {
@@ -117,14 +125,17 @@ public interface ScriptedClass {
         return this.assignStaticField(name, newVal);
     }
 
+    @Contract(pure = true)
     String name();
 
+    @Contract(pure = true)
     String pck(); //stupid keyword :agony:
 
     default String absoluteName() {
         return pck() + "." + name();
     }
 
+    @Contract(pure = true)
     @Nullable ClassReference superclass();
 
     default ClassReference[] interfaces() {
@@ -135,27 +146,31 @@ public interface ScriptedClass {
         return superclass() != null ? superclass().get().getFieldType(name) : null;
     }
 
-    default ClassReference getStaticFieldType(String name) {
-        return staticFields().get(name).getType();
-    }
-
     default boolean hasField(String name) {
         return superclass() != null && superclass().get().hasField(name);
     }
 
-    default ScriptedCallable getStaticMethod(String name, List<ClassReference> args) {
+    default ClassReference getStaticFieldType(String name) {
+        return staticFields().get(name).getType();
+    }
+
+    default boolean hasStaticField(String name) {
+        return superclass() != null && superclass().get().hasStaticField(name);
+    }
+
+    default ScriptedCallable getStaticMethod(String name, ClassReference[] args) {
         return getStaticMethodByOrdinal(name, getStaticMethodOrdinal(name, args));
     }
 
     ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal);
 
-    int getStaticMethodOrdinal(String name, List<ClassReference> args);
-
-    default ScriptedCallable getMethod(String name, List<ClassReference> args) {
-        return getMethodByOrdinal(name, getMethodOrdinal(name, args));
-    }
+    int getStaticMethodOrdinal(String name, ClassReference[] args);
 
     boolean hasStaticMethod(String name);
+
+    default ScriptedCallable getMethod(String name, ClassReference[] args) {
+        return getMethodByOrdinal(name, getMethodOrdinal(name, args));
+    }
 
     default boolean hasMethod(String name) {
         return superclass() != null && superclass().get().hasMethod(name);
@@ -171,17 +186,11 @@ public interface ScriptedClass {
         return instance;
     }
 
-    default Map<String, ScriptedField> getFields() {
+    default Map<String, ? extends ScriptedField> getFields() {
         return superclass() != null ? superclass().get().getFields() : Map.of();
     }
 
     MethodContainer getConstructor();
-
-    boolean isAbstract();
-
-    boolean isFinal();
-
-    boolean isInterface();
 
     default boolean is(ScriptedClass other) {
         return other == this;
@@ -189,14 +198,16 @@ public interface ScriptedClass {
 
     default boolean isParentOf(ScriptedClass suspectedChild) {
         if (suspectedChild.is(this) || (!suspectedChild.isInterface() && VarTypeManager.OBJECT.get().is(this))) return true;
-        while (suspectedChild != null && suspectedChild.superclass() != null && suspectedChild != VarTypeManager.OBJECT.get()  && !suspectedChild.is(this)) {
+        while (suspectedChild != null && suspectedChild.superclass() != null && suspectedChild != VarTypeManager.OBJECT.get() && !suspectedChild.is(this)) {
             suspectedChild = suspectedChild.superclass().get();
         }
         return suspectedChild != null && suspectedChild.is(this);
     }
 
     default boolean isChildOf(ScriptedClass suspectedParent) {
-        return suspectedParent.isParentOf(this);
+        return suspectedParent.isInterface() ?
+                Arrays.stream(this.interfaces()).map(ClassReference::get).anyMatch(scriptedClass -> scriptedClass.isParentOf(suspectedParent)) :
+                suspectedParent.isParentOf(this);
     }
 
 
@@ -212,7 +223,7 @@ public interface ScriptedClass {
      * @param types argument types
      * @return the ID of the given method name and argument types; -1 if none could be found
      */
-    int getMethodOrdinal(String name, List<ClassReference> types);
+    int getMethodOrdinal(String name, ClassReference[] types);
 
     boolean hasEnclosing(String name);
 
@@ -223,4 +234,27 @@ public interface ScriptedClass {
     ClassType getClassType();
 
     AnnotationClassInstance[] annotations();
+
+    // ----- MODIFIERS START -----
+
+    @Contract(pure = true)
+    short getModifiers();
+
+    default boolean isInterface() {
+        return (getModifiers() & Modifiers.INTERFACE) != 0;
+    }
+
+    default boolean isAbstract() {
+        return Modifiers.isAbstract(getModifiers());
+    }
+
+    default boolean isFinal() {
+        return Modifiers.isFinal(getModifiers());
+    }
+
+    default boolean isAnnotation() {
+        return (getModifiers() & Modifiers.ANNOTATION) != 0;
+    }
+
+    // ----- MODIFIERS END -----
 }

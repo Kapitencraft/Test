@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.clazz.skeleton;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ClassType;
@@ -132,7 +133,7 @@ public class SkeletonInterface implements ScriptedClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
+    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
         return staticMethods.getMethodOrdinal(name, args);
     }
 
@@ -147,18 +148,8 @@ public class SkeletonInterface implements ScriptedClass {
     }
 
     @Override
-    public boolean isAbstract() {
-        return true;
-    }
-
-    @Override
-    public boolean isFinal() {
-        return false;
-    }
-
-    @Override
-    public boolean isInterface() {
-        return true;
+    public short getModifiers() {
+        return Modifiers.INTERFACE;
     }
 
     @Override
@@ -167,7 +158,7 @@ public class SkeletonInterface implements ScriptedClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<ClassReference> types) {
+    public int getMethodOrdinal(String name, ClassReference[] types) {
         return methods.getMethodOrdinal(name, types);
     }
 
@@ -199,5 +190,10 @@ public class SkeletonInterface implements ScriptedClass {
     @Override
     public AnnotationClassInstance[] annotations() {
         return new AnnotationClassInstance[0];
+    }
+
+    @Override
+    public boolean hasMethod(String name) {
+        return methods.has(name);
     }
 }

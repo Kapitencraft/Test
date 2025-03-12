@@ -113,7 +113,7 @@ public class GeneratedCallable implements ScriptedCallable {
     }
 
     @Override
-    public List<? extends ClassReference> argTypes() {
-        return params.stream().map(Pair::left).toList();
+    public ClassReference[] argTypes() {
+        return params.stream().map(Pair::left).toArray(ClassReference[]::new);
     }
 }

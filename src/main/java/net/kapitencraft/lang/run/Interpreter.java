@@ -43,7 +43,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public void runMainMethod(ScriptedClass target, String data, boolean profiling, boolean output) {
         if (!target.hasStaticMethod("main")) return;
         suppressClassLoad = true;
-        Optional.ofNullable(target.getStaticMethod("main", List.of(VarTypeManager.STRING.array())))
+        Optional.ofNullable(target.getStaticMethod("main", new ClassReference[] {VarTypeManager.STRING.array()}))
                 .ifPresentOrElse(method -> {
                     suppressClassLoad = false;
                     this.pushCall(target.absoluteName(), "main", target.name());

@@ -5,6 +5,7 @@ import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericSourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
@@ -16,6 +17,7 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -98,7 +100,7 @@ public class AbstractParser {
     protected ClassReference expectType(Token errorLoc, ClassReference gotten, ClassReference expected) {
         if (gotten == null) return VarTypeManager.VOID.reference();
         if (expected == VarTypeManager.OBJECT) return gotten;
-        if ( !expected.get().isParentOf(gotten.get())) errorLogger.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
+        if (!gotten.get().isChildOf(expected.get())) errorLogger.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
         return gotten;
     }
 
@@ -119,6 +121,30 @@ public class AbstractParser {
         this.parser = targetAnalyser;
         this.varAnalyser = new VarAnalyser();
         this.finder = new RetTypeFinder(varAnalyser);
+    }
+
+    protected @Nullable Holder.Generics generics(GenericStack genericStack) {
+        if (match(LESSER)) {
+            List<Holder.Generic> generics = new ArrayList<>();
+            do {
+                generics.add(generic(genericStack));
+            } while (match(COMMA));
+            consume(GREATER, "unclosed generic declaration");
+            return new Holder.Generics(generics.toArray(new Holder.Generic[0]));
+        }
+        return null;
+    }
+
+    private Holder.Generic generic(GenericStack genericStack) {
+        Token name = consumeIdentifier();
+        SourceClassReference lowerBound = null, upperBound = null;
+        if (match(EXTENDS)) {
+            lowerBound = consumeVarType(genericStack);
+        } else if (match(SUPER)) {
+            upperBound = consumeVarType(genericStack);
+        }
+
+        return new Holder.Generic(name, lowerBound, upperBound);
     }
 
     protected boolean check(TokenType type) {
@@ -173,34 +199,34 @@ public class AbstractParser {
         throw error(peek(), message);
     }
 
-    protected Optional<SourceClassReference> tryConsumeVarType(Holder.Generics generics) {
-        if (generics.hasGeneric(peek().lexeme())) {
-            Token source = advance();
-            return Optional.of(SourceClassReference.from(source, generics.getReference(source.lexeme())));
-        }
+    protected Optional<SourceClassReference> tryConsumeVarType(GenericStack generics) {
+        Optional<ClassReference> optional = generics.getValue(peek().lexeme());
+        if (optional.isPresent()) return Optional.of(SourceClassReference.from(advance(), optional.get()));
         if (VarTypeManager.hasPackage(peek().lexeme()) && !varAnalyser.has(peek().lexeme())) {
             advance();
-            if (check(DOT)) return Optional.ofNullable(consumeVarType(generics));
-            current--;
+            if (check(DOT)) {
+                current--;
+                return Optional.ofNullable(consumeVarType(generics));
+            }
         }
         Token t = advance();
         ClassReference reference = parser.getClass(t.lexeme());
         if (reference != null && !check(DOT)) {
+            Holder.Generics declared = generics(generics);
             return Optional.of(SourceClassReference.from(t,  reference));
         } else
             current--;
         return Optional.empty();
     }
 
-    protected SourceClassReference consumeVarType(Holder.Generics generics) {
+    protected SourceClassReference consumeVarType(GenericStack generics) {
         StringBuilder typeName = new StringBuilder();
         Token token = consumeIdentifier();
         typeName.append(token.lexeme());
         ClassReference reference = parser.getClass(token.lexeme());
         if (reference == null) {
-            if (generics.hasGeneric(token.lexeme())) {
-                return new GenericSourceClassReference(token, generics.getReference(token.lexeme()));
-            }
+            Optional<ClassReference> optional = generics.getValue(token.lexeme());
+            if (optional.isPresent()) return SourceClassReference.from(token, optional.get());
         }
         if (reference == null) {
             Package p = VarTypeManager.getPackage(token.lexeme());
@@ -226,10 +252,11 @@ public class AbstractParser {
             reference = reference.get().getEnclosing(enclosingName);
         }
         if (reference == null) {
-            error(token, "unknown class '" + typeName + "'");
+            error(token, "unknown symbol");
             return null; //skip rest
         }
-        else while (match(S_BRACKET_O)) {
+        Holder.Generics declared = generics(generics);
+        while (match(S_BRACKET_O)) {
             consume(S_BRACKET_C, "']' expected");
             reference = reference.array();
             last = previous();

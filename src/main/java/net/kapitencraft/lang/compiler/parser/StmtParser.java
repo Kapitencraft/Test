@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.compiler.parser;
 
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
@@ -9,11 +10,9 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Stack;
+import java.util.*;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 import static net.kapitencraft.lang.holder.token.TokenType.C_BRACKET_C;
@@ -21,8 +20,8 @@ import static net.kapitencraft.lang.holder.token.TokenType.C_BRACKET_C;
 @SuppressWarnings("ThrowableNotThrown")
 public class StmtParser extends ExprParser {
 
-    public StmtParser(Compiler.ErrorLogger errorLogger, ClassReference fallback) {
-        super(errorLogger, fallback);
+    public StmtParser(Compiler.ErrorLogger errorLogger) {
+        super(errorLogger);
     }
 
     private ClassReference funcRetType = VarTypeManager.VOID.reference();
@@ -88,6 +87,7 @@ public class StmtParser extends ExprParser {
 
     private Stmt statement() {
         try {
+            if (match(C_BRACKET_O)) return new Stmt.Block(block("block"));
             if (match(RETURN)) return returnStatement();
             if (match(TRY)) return tryStatement();
             if (match(THROW)) return thrStatement();
@@ -95,9 +95,32 @@ public class StmtParser extends ExprParser {
             if (match(FOR)) return forStatement();
             if (match(IF)) return ifStatement();
             if (match(WHILE)) return whileStatement();
-            if (match(C_BRACKET_O)) return new Stmt.Block(block("block"));
 
             return expressionStatement();
+        } catch (ParseError error) {
+            synchronize();
+            return null;
+        }
+    }
+
+    private Stmt statementWithScope() {
+        try {
+            if (match(C_BRACKET_O)) return new Stmt.Block(block("block"));
+            try {
+                this.pushScope();
+
+                if (match(RETURN)) return returnStatement();
+                if (match(TRY)) return tryStatement();
+                if (match(THROW)) return thrStatement();
+                if (match(CONTINUE, BREAK)) return loopInterruptionStatement();
+                if (match(FOR)) return forStatement();
+                if (match(IF)) return ifStatement();
+                if (match(WHILE)) return whileStatement();
+
+                return expressionStatement();
+            } finally {
+                this.popScope();
+            }
         } catch (ParseError error) {
             synchronize();
             return null;
@@ -157,9 +180,9 @@ public class StmtParser extends ExprParser {
             value = expression();
         }
 
-        if (funcRetType == VarTypeManager.VOID && value != null) error(keyword, "incompatible types: unexpected return value.");
+        if (funcRetType == VarTypeManager.VOID.reference() && value != null) error(keyword, "incompatible types: unexpected return value.");
         else if (value != null) expectType(value, funcRetType);
-        else if (funcRetType != VarTypeManager.VOID) error(keyword, "incompatible types: missing return value.");
+        else if (funcRetType != VarTypeManager.VOID.reference()) error(keyword, "incompatible types: missing return value.");
 
         consumeEndOfArg();
         seenReturn();
@@ -236,7 +259,7 @@ public class StmtParser extends ExprParser {
         this.expectCondition(condition);
         consumeBracketClose("if condition");
 
-        Stmt thenBranch = statement();
+        Stmt thenBranch = statementWithScope();
         Stmt elseBranch = null;
         List<Pair<Expr, Stmt>> elifs = new ArrayList<>();
         while (match(ELIF)) {
@@ -244,12 +267,12 @@ public class StmtParser extends ExprParser {
             Expr elifCondition = expression();
             this.expectCondition(elifCondition);
             consumeBracketClose("elif condition");
-            Stmt elifStmt = statement();
+            Stmt elifStmt = statementWithScope();
             elifs.add(Pair.of(elifCondition, elifStmt));
         }
 
         if (match(ELSE)) {
-            elseBranch = statement();
+            elseBranch = statementWithScope();
         }
 
         return new Stmt.If(condition, thenBranch, elseBranch, elifs, statement);
@@ -294,9 +317,11 @@ public class StmtParser extends ExprParser {
         return stmts;
     }
 
-    public void applyMethod(List<? extends Pair<? extends ClassReference, String>> params, ClassReference targetClass, ClassReference superclass, ClassReference funcRetType) {
+    public void applyMethod(List<? extends Pair<? extends ClassReference, String>> params, ClassReference targetClass, ClassReference superclass, ClassReference funcRetType, @Nullable Holder.Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
+        if (generics != null) generics.pushToStack(this.generics);
+        else this.generics.push(Map.of());
         if (targetClass != null) this.varAnalyser.add("this", targetClass, true, true);
         if (superclass != null) this.varAnalyser.add("super", superclass, true, true);
         for (Pair<? extends ClassReference, String> param : params) {
@@ -306,6 +331,7 @@ public class StmtParser extends ExprParser {
 
     public void popMethod() {
         this.popScope();
+        this.generics.pop();
         funcRetType = VarTypeManager.VOID.reference();
     }
 

@@ -21,7 +21,7 @@ public record BakedClass(
         Pair<Token, GeneratedCallable>[] methods,
         Pair<Token, GeneratedCallable>[] staticMethods,
         Pair<Token, GeneratedCallable>[] constructors,
-        Map<String, GeneratedField> fields,
+        Map<Token, GeneratedField> fields,
         Map<String, GeneratedField> staticFields,
         ClassReference superclass, Token name, String pck,
         ClassReference[] interfaces,
@@ -52,14 +52,14 @@ public record BakedClass(
             builder.addMethod(logger, method.right(), method.left());
         }
 
-        List<String> finalFields = new ArrayList<>();
+        List<Token> finalFields = new ArrayList<>();
         fields.forEach((name, field) -> {
             if (field.isFinal() && !field.hasInit()) {
                 finalFields.add(name);
             }
         });
 
-        ConstructorContainer.Builder container = new ConstructorContainer.Builder(finalFields, this.name());
+        ConstructorContainer.Builder container = new ConstructorContainer.Builder(finalFields, this.name(), logger);
         for (Pair<Token, GeneratedCallable> method : this.constructors()) {
             container.addMethod(logger, method.right(), method.left());
         }
@@ -68,7 +68,7 @@ public record BakedClass(
         GeneratedClass loxClass = new GeneratedClass(
                 DataMethodContainer.bakeBuilders(methods), DataMethodContainer.bakeBuilders(staticMethods),
                 container,
-                fields(),
+                create(fields()),
                 staticFields(),
                 enclosed.build(),
                 this.superclass(),
@@ -80,5 +80,11 @@ public record BakedClass(
         );
         this.target().setTarget(loxClass);
         return loxClass;
+    }
+
+    public static Map<String, GeneratedField> create(Map<Token, GeneratedField> fields) {
+        ImmutableMap.Builder<String, GeneratedField> builder = new ImmutableMap.Builder<>();
+        fields.forEach((token, generatedField) -> builder.put(token.lexeme(), generatedField));
+        return builder.build();
     }
 }

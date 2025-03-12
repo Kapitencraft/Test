@@ -20,7 +20,6 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
-import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
@@ -175,7 +174,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
+    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
         return staticMethods.getMethodOrdinal(name, args);
     }
 
@@ -185,7 +184,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public ScriptedCallable getMethod(String name, List<ClassReference> args) {
+    public ScriptedCallable getMethod(String name, ClassReference[] args) {
         return Optional.ofNullable(allMethods.get(name)).map(container -> container.getMethod(args)).orElse(CacheableClass.super.getMethod(name, args));
     }
 
@@ -200,7 +199,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public Map<String, ScriptedField> getFields() {
+    public Map<String, ? extends ScriptedField> getFields() {
         return Util.mergeMaps(CacheableClass.super.getFields(), allFields);
     }
 
@@ -229,7 +228,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<ClassReference> types) {
+    public int getMethodOrdinal(String name, ClassReference[] types) {
         return lookup.getMethodOrdinal(name, types);
     }
 
@@ -312,5 +311,10 @@ public final class GeneratedClass implements CacheableClass {
     @Override
     public AnnotationClassInstance[] annotations() {
         return annotations;
+    }
+
+    @Override
+    public short getModifiers() {
+        return modifiers;
     }
 }

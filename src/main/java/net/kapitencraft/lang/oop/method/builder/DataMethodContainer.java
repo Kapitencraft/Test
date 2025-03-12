@@ -26,7 +26,7 @@ public class DataMethodContainer implements MethodContainer {
         return new DataMethodContainer(methods);
     }
 
-    public ScriptedCallable getMethod(List<ClassReference> expectedArgs) {
+    public ScriptedCallable getMethod(ClassReference[] expectedArgs) {
         for (ScriptedCallable method : methods) {
             if (Util.matchArgs(method.argTypes(), expectedArgs)) return method;
         }
@@ -72,7 +72,7 @@ public class DataMethodContainer implements MethodContainer {
         return methods[ordinal];
     }
 
-    public int getMethodOrdinal(List<ClassReference> types) {
+    public int getMethodOrdinal(ClassReference[] types) {
         for (int i = 0; i < methods.length; i++) {
             if (Util.matchArgs(types, methods[i].argTypes())) return i;
         }
@@ -88,9 +88,9 @@ public class DataMethodContainer implements MethodContainer {
         }
 
         public void addMethod(Compiler.ErrorLogger errorLogger, ScriptedCallable callable, Token methodName) {
-            List<? extends List<? extends ClassReference>> appliedTypes = methods.stream().map(ScriptedCallable::argTypes).toList();
-            List<? extends ClassReference> argTypes = callable.argTypes();
-            for (List<? extends ClassReference> appliedType : appliedTypes) {
+            List<? extends ClassReference[]> appliedTypes = methods.stream().map(ScriptedCallable::argTypes).toList();
+            ClassReference[] argTypes = callable.argTypes();
+            for (ClassReference[] appliedType : appliedTypes) {
                 if (Util.matchArgs(argTypes, appliedType)) {
                     errorLogger.errorF(methodName, "method %s(%s) is already defined in class %s", methodName.lexeme(), Util.getDescriptor(argTypes), className.lexeme());
                     return;

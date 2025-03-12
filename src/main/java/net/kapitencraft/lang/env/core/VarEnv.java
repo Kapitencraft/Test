@@ -23,7 +23,7 @@ public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
             return getValue(name.lexeme()).val;
         } catch (NullPointerException e) {
             Interpreter.INSTANCE.pushCallIndex(name.line());
-            throw AbstractScriptedException.createException(VarTypeManager.MISSING_VAR_EXCEPTION, "Variable '" + name.lexeme() + "' not found in current scope");
+            throw AbstractScriptedException.createException(VarTypeManager.MISSING_VAR_ERROR, "Variable '" + name.lexeme() + "' not found in current scope");
         }
     }
 
@@ -32,7 +32,7 @@ public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
             getValue(name.lexeme()).val = value;
         } catch (NullPointerException e) {
             Interpreter.INSTANCE.pushCallIndex(name.line());
-            throw AbstractScriptedException.createException(VarTypeManager.MISSING_VAR_EXCEPTION, "Variable '" + name + "' not found in current scope");
+            throw AbstractScriptedException.createException(VarTypeManager.MISSING_VAR_ERROR, "Variable '" + name + "' not found in current scope");
         }
     }
 

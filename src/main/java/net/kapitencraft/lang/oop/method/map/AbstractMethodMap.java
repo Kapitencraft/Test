@@ -9,7 +9,7 @@ import java.util.Map;
 
 public interface AbstractMethodMap {
 
-    int getMethodOrdinal(String name, List<ClassReference> args);
+    int getMethodOrdinal(String name, ClassReference[] args);
 
     ScriptedCallable getMethodByOrdinal(String name, int ordinal);
 

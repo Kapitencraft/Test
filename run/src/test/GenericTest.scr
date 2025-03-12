@@ -26,6 +26,10 @@ class GenericTest {
     static class TestA<T> implements Supplier<T> {
         final T value;
 
+        TestA(T value) {
+            this.value = value;
+        }
+
         T get() {
             return value;
         }

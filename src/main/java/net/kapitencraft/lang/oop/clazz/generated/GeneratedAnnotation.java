@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.MethodLookup;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
@@ -25,6 +26,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class GeneratedAnnotation implements CacheableClass, AbstractAnnotationClass {
+    //TODO extract generated to single class
 
     private final Map<String, ClassReference> enclosing;
 
@@ -110,7 +112,7 @@ public final class GeneratedAnnotation implements CacheableClass, AbstractAnnota
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
+    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
         return -1;
     }
 
@@ -130,7 +132,7 @@ public final class GeneratedAnnotation implements CacheableClass, AbstractAnnota
     }
 
     @Override
-    public Map<String, ScriptedField> getFields() {
+    public Map<String, ? extends ScriptedField> getFields() {
         return Map.of();
     }
 
@@ -160,8 +162,8 @@ public final class GeneratedAnnotation implements CacheableClass, AbstractAnnota
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<ClassReference> types) {
-        return types.isEmpty() && hasMethod(name) ? 0 : -1;
+    public int getMethodOrdinal(String name, ClassReference[] types) {
+        return types.length == 0 && hasMethod(name) ? 0 : -1;
     }
 
     @Override
@@ -182,6 +184,11 @@ public final class GeneratedAnnotation implements CacheableClass, AbstractAnnota
     @Override
     public AnnotationClassInstance[] annotations() {
         return annotations;
+    }
+
+    @Override
+    public short getModifiers() {
+        return Modifiers.ANNOTATION;
     }
 
     boolean init = false;
@@ -234,10 +241,5 @@ public final class GeneratedAnnotation implements CacheableClass, AbstractAnnota
     @Override
     public String toString() {
         return "GeneratedAnnotation{" + name + "}";
-    }
-
-    @Override
-    public List<String> getAbstracts() {
-        return abstracts;
     }
 }

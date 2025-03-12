@@ -18,12 +18,12 @@ import java.util.Map;
 
 public class NativeUtilClass implements ScriptedClass {
     private final GeneratedMethodMap staticMethods;
-    private final Map<String, NativeField> staticFields;
+    private final Map<String, ? extends ScriptedField> staticFields;
     private final AnnotationClassInstance[] annotations;
     private final String name;
     private final String pck;
 
-    public NativeUtilClass(Map<String, DataMethodContainer> staticMethods, Map<String, NativeField> staticFields, String name, String pck, AnnotationClassInstance... annotations) {
+    public NativeUtilClass(Map<String, DataMethodContainer> staticMethods, Map<String, ? extends ScriptedField> staticFields, String name, String pck, AnnotationClassInstance... annotations) {
         this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.staticFields = staticFields;
         this.annotations = annotations;
@@ -84,7 +84,7 @@ public class NativeUtilClass implements ScriptedClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
+    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
         return staticMethods.getMethodOrdinal(name, args);
     }
 
@@ -99,18 +99,8 @@ public class NativeUtilClass implements ScriptedClass {
     }
 
     @Override
-    public boolean isAbstract() {
-        return false;
-    }
-
-    @Override
-    public boolean isFinal() {
-        return true;
-    }
-
-    @Override
-    public boolean isInterface() {
-        return false;
+    public short getModifiers() {
+        return 0;
     }
 
     @Override
@@ -119,7 +109,7 @@ public class NativeUtilClass implements ScriptedClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<ClassReference> types) {
+    public int getMethodOrdinal(String name, ClassReference[] types) {
         return 0;
     }
 

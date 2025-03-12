@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.oop.clazz;
 
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
@@ -16,7 +17,7 @@ public interface ScriptedInterface extends ScriptedClass {
     }
 
     @Override
-    default Map<String, ScriptedField> getFields() {
+    default Map<String, ? extends ScriptedField> getFields() {
         return Map.of();
     }
 
@@ -31,18 +32,8 @@ public interface ScriptedInterface extends ScriptedClass {
     }
 
     @Override
-    default boolean isAbstract() {
-        return true;
-    }
-
-    @Override
-    default boolean isFinal() {
-        return false;
-    }
-
-    @Override
-    default boolean isInterface() {
-        return true;
+    default short getModifiers() {
+        return Modifiers.INTERFACE;
     }
 
     @Override

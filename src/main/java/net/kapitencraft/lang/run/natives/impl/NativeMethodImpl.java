@@ -5,12 +5,13 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 
 import java.util.List;
 
+@Deprecated
 public abstract class NativeMethodImpl implements ScriptedCallable {
-    private final List<ClassReference> arguments;
+    private final ClassReference[] arguments;
     private final ClassReference retType;
     private final boolean isFinal, isAbstract;
 
-    public NativeMethodImpl(List<ClassReference> arguments, ClassReference retType, boolean isFinal, boolean isAbstract) {
+    public NativeMethodImpl(ClassReference[] arguments, ClassReference retType, boolean isFinal, boolean isAbstract) {
         this.arguments = arguments;
         this.retType = retType;
         this.isFinal = isFinal;
@@ -23,7 +24,7 @@ public abstract class NativeMethodImpl implements ScriptedCallable {
     }
 
     @Override
-    public List<ClassReference> argTypes() {
+    public ClassReference[] argTypes() {
         return arguments;
     }
 

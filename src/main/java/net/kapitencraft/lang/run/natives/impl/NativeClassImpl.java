@@ -1,35 +1,38 @@
-package net.kapitencraft.lang.oop.clazz.wrapper;
+package net.kapitencraft.lang.run.natives.impl;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.natives.scripted.lang.ObjectClass;
-import net.kapitencraft.lang.oop.field.NativeField;
+import net.kapitencraft.lang.oop.clazz.wrapper.NativeUtilClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
-import net.kapitencraft.lang.run.VarTypeManager;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Map;
 
-public class NativeClass extends NativeUtilClass {
+@ApiStatus.Internal
+public class NativeClassImpl extends NativeUtilClass {
     private final GeneratedMethodMap methods;
-    private final Map<String, ScriptedField> fields;
+    private final Map<String, ? extends ScriptedField> fields;
     private final DataMethodContainer constructor;
     private final ClassReference superclass;
-    private final boolean isAbstract, isFinal, isInterface;
+    private final ClassReference[] interfaces;
+    private final short modifiers;
 
-    public NativeClass(String name, String pck, Map<String, DataMethodContainer> staticMethods, Map<String, NativeField> staticFields, Map<String, DataMethodContainer> methods, Map<String, ScriptedField> fields, DataMethodContainer constructor, ClassReference superclass, boolean isAbstract, boolean isFinal, boolean isInterface) {
+    @ApiStatus.Internal
+    public NativeClassImpl(String name, String pck,
+                           Map<String, DataMethodContainer> staticMethods, Map<String, ? extends ScriptedField> staticFields,
+                           Map<String, DataMethodContainer> methods, Map<String, ? extends ScriptedField> fields,
+                           DataMethodContainer constructor, ClassReference superclass, ClassReference[] interfaces, short modifiers) {
         super(staticMethods, staticFields, name, pck);
         this.methods = new GeneratedMethodMap(methods);
         this.fields = fields;
         this.constructor = constructor;
-        this.superclass = superclass == null && this.getClass() != ObjectClass.class ? VarTypeManager.OBJECT : superclass;
-        this.isAbstract = isAbstract;
-        this.isFinal = isFinal;
-        this.isInterface = isInterface;
+        this.superclass = superclass;
+        this.interfaces = interfaces;
+        this.modifiers = modifiers;
     }
 
     @Override
@@ -53,18 +56,8 @@ public class NativeClass extends NativeUtilClass {
     }
 
     @Override
-    public boolean isAbstract() {
-        return isAbstract;
-    }
-
-    @Override
-    public boolean isFinal() {
-        return isFinal;
-    }
-
-    @Override
-    public boolean isInterface() {
-        return isInterface;
+    public short getModifiers() {
+        return modifiers;
     }
 
     @Override
@@ -73,7 +66,7 @@ public class NativeClass extends NativeUtilClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<ClassReference> types) {
+    public int getMethodOrdinal(String name, ClassReference[] types) {
         return methods.getMethodOrdinal(name, types);
     }
 
@@ -83,22 +76,17 @@ public class NativeClass extends NativeUtilClass {
     }
 
     @Override
-    public boolean hasEnclosing(String name) {
-        return false;
-    }
-
-    @Override
-    public ClassReference getEnclosing(String name) {
-        return null;
-    }
-
-    @Override
-    public Map<String, ScriptedField> getFields() {
+    public Map<String, ? extends ScriptedField> getFields() {
         return fields;
     }
 
     @Override
     public GeneratedMethodMap getMethods() {
         return methods;
+    }
+
+    @Override
+    public ClassReference[] interfaces() {
+        return interfaces;
     }
 }

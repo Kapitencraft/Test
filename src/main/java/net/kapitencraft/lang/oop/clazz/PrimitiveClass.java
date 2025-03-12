@@ -93,7 +93,7 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public ScriptedCallable getStaticMethod(String name, List<ClassReference> args) {
+    public ScriptedCallable getStaticMethod(String name, ClassReference[] args) {
         return null;
     }
 
@@ -103,12 +103,12 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
+    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
         return 0;
     }
 
     @Override
-    public ScriptedCallable getMethod(String name, List<ClassReference> args) {
+    public ScriptedCallable getMethod(String name, ClassReference[] args) {
         return null;
     }
 
@@ -123,7 +123,7 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public Map<String, ScriptedField> getFields() {
+    public Map<String, ? extends ScriptedField> getFields() {
         return Map.of();
     }
 
@@ -133,18 +133,8 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public boolean isAbstract() {
-        return false;
-    }
-
-    @Override
-    public boolean isFinal() {
-        return true;
-    }
-
-    @Override
-    public boolean isInterface() {
-        return false;
+    public short getModifiers() {
+        return 0;
     }
 
     @Override
@@ -153,7 +143,7 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<ClassReference> types) {
+    public int getMethodOrdinal(String name, ClassReference[] types) {
         return -1;
     }
 

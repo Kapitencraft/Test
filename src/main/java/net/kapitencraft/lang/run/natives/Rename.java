@@ -5,7 +5,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.FIELD)
+/**
+ * changes the name of the given native field / method
+ */
+@Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface NativeField {
+public @interface Rename {
+
+    /**
+     * @return the new name
+     */
+    String value();
 }

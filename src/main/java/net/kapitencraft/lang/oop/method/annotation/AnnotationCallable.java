@@ -29,8 +29,8 @@ public class AnnotationCallable implements ScriptedCallable {
     }
 
     @Override
-    public List<ClassReference> argTypes() {
-        return List.of();
+    public ClassReference[] argTypes() {
+        return new ClassReference[0];
     }
 
     @Override

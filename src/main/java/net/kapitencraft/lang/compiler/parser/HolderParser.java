@@ -326,7 +326,8 @@ public class HolderParser extends AbstractParser {
             if (mods.isStatic()) {
                 stack = activeGenerics;
                 activeGenerics = new GenericStack();
-            } else classGenerics.pushToStack(activeGenerics);
+            }
+            classGenerics.pushToStack(activeGenerics);
         }
 
         if (match(EXTENDS)) superClass = consumeVarType();
@@ -353,7 +354,6 @@ public class HolderParser extends AbstractParser {
         consumeCurlyClose("class");
 
         if (stack != null) activeGenerics = stack;
-        else if (classGenerics != null) activeGenerics.pop();
         activePackages.pop();
         return new Holder.Class(ClassType.CLASS,
                 target,
@@ -371,7 +371,7 @@ public class HolderParser extends AbstractParser {
         );
     }
 
-    private @Nullable Holder.Generics generics() {
+    protected @Nullable Holder.Generics generics() {
         if (match(LESSER)) {
             List<Holder.Generic> generics = new ArrayList<>();
             do {

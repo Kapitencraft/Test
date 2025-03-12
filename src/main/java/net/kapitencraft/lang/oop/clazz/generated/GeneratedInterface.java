@@ -126,7 +126,7 @@ public class GeneratedInterface implements ScriptedInterface, CacheableClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
+    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
         checkInit();
         return staticMethods.getMethodOrdinal(name, args);
     }
@@ -143,7 +143,7 @@ public class GeneratedInterface implements ScriptedInterface, CacheableClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<ClassReference> types) {
+    public int getMethodOrdinal(String name, ClassReference[] types) {
         checkInit();
         return lookup.getMethodOrdinal(name, types);
     }

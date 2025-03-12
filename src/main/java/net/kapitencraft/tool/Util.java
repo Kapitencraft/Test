@@ -34,20 +34,21 @@ public class Util {
         return main != null ? main : other;
     }
 
-    public static boolean matchArgs(List<? extends ClassReference> got, List<? extends ClassReference> expected) {
-        if (got.size() != expected.size()) return false;
-        if (got.isEmpty()) return true;
-        for (int i = 0; i < got.size(); i++) {
-            ClassReference gotType = got.get(i);
-            ClassReference expectedType = expected.get(i);
+    //TODO make args arrays?
+    public static boolean matchArgs(ClassReference[] got, ClassReference[] expected) {
+        if (got.length != expected.length) return false;
+        if (got.length == 0) return true;
+        for (int i = 0; i < got.length; i++) {
+            ClassReference gotType = got[i];
+            ClassReference expectedType = expected[i];
             if (gotType == null || expectedType == null) return false;
             if (!gotType.get().isChildOf(expectedType.get())) return false;
         }
         return true;
     }
 
-    public static String getDescriptor(List<? extends ClassReference> args) {
-        return args.stream().map(ClassReference::name).collect(Collectors.joining(","));
+    public static String getDescriptor(ClassReference[] args) {
+        return Arrays.stream(args).map(ClassReference::name).collect(Collectors.joining(","));
     }
 
     /**
@@ -122,5 +123,10 @@ public class Util {
                     return pairs;
                 }
         );
+    }
+
+    public static <T> boolean arrayContains(T[] array, T val) {
+        for (T t : array) if (t.equals(val)) return true;
+        return false;
     }
 }

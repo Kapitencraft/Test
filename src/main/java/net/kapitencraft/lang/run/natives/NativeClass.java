@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface NativeClass {
 
-    String name();
+    String name() default "";
 
     String pck();
 }

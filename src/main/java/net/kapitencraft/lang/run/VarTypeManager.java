@@ -4,20 +4,15 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.RegistryClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
-import net.kapitencraft.lang.natives.scripted.lang.*;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.natives.scripted.lang.IndexOutOfBoundsException;
-import net.kapitencraft.lang.natives.scripted.lang.SystemClass;
-import net.kapitencraft.lang.natives.scripted.lang.annotation.OverrideAnnotation;
-import net.kapitencraft.lang.natives.scripted.lang.annotation.RetentionAnnotation;
-import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.clazz.primitive.*;
+import net.kapitencraft.lang.run.natives.NativeClassLoader;
 
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
 public class VarTypeManager {
     private static final List<RegistryClassReference> data = new ArrayList<>();
@@ -25,59 +20,40 @@ public class VarTypeManager {
     private static final Package LANG_ROOT = getOrCreatePackage("scripted.lang");
     private static final Package ANNOTATION_PCK = LANG_ROOT.getOrCreatePackage("annotations");
 
-    public static final ScriptedClass NUMBER = new NumberClass();
-    public static final ScriptedClass INTEGER = new IntegerClass();
-    public static final ScriptedClass FLOAT = new FloatClass();
-    public static final ScriptedClass DOUBLE = new DoubleClass();
-    public static final ScriptedClass BOOLEAN = new BooleanClass();
-    public static final ScriptedClass CHAR = new CharacterClass();
-    public static final ScriptedClass VOID = new VoidClass();
-
-    public static final ClassReference OBJECT = registerMain(ObjectClass::new, "Object");
-
-    public static final ClassReference ENUM = registerMain(EnumClass::new, "Enum");
-
-    public static final ClassReference STRING = registerMain(StringClass::new, "String", String.class);
-
-    public static final ClassReference THROWABLE = registerMain(() -> new ThrowableClass("Throwable", "scripted.lang"), "Throwable");
-    public static final ClassReference STACK_OVERFLOW_EXCEPTION = registerMain(StackOverflowExceptionClass::new, "StackOverflowException");
-    public static final ClassReference MISSING_VAR_EXCEPTION = registerMain(MissingVarExceptionClass::new, "MissingVarException");
-    public static final ClassReference ARITHMETIC_EXCEPTION = registerMain(ArithmeticExceptionClass::new, "ArithmeticException");
-    public static final ClassReference FUNCTION_CALL_ERROR = registerMain(FunctionCallErrorClass::new, "FunctionCallError");
-    public static final ClassReference INDEX_OUT_OF_BOUNDS_EXCEPTION = registerMain(IndexOutOfBoundsException::new, "IndexOutOfBoundsException");
-
-    public static final ClassReference SYSTEM = registerMain(SystemClass::new, "System");
-    public static final ClassReference MATH = registerMain(MathClass::new, "Math");
-
-    public static final ClassReference OVERRIDE = registerMain(OverrideAnnotation::new, "Override");
-    public static final ClassReference RETENTION_POLICY = register(ANNOTATION_PCK, "RetentionPolicy", RetentionPolicyEnum::new);
-    public static final ClassReference RETENTION = register(ANNOTATION_PCK, "Retention", RetentionAnnotation::new);
+    public static final PrimitiveClass NUMBER = new NumberClass();
+    public static final PrimitiveClass INTEGER = new IntegerClass();
+    public static final PrimitiveClass FLOAT = new FloatClass();
+    public static final PrimitiveClass DOUBLE = new DoubleClass();
+    public static final PrimitiveClass BOOLEAN = new BooleanClass();
+    public static final PrimitiveClass CHAR = new CharacterClass();
+    public static final PrimitiveClass VOID = new VoidClass();
 
     static {
+        NativeClassLoader.load();
         loadClasses();
     }
 
+    public static final ClassReference OBJECT = getMainClass("Object");
+
+    public static final ClassReference ENUM = getMainClass("Enum");
+
+    public static final ClassReference STRING = getMainClass("String");
+
+    public static final ClassReference THROWABLE = getMainClass("Throwable");
+    public static final ClassReference STACK_OVERFLOW_ERROR = getMainClass("StackOverflowError");
+    public static final ClassReference UNKNOWN_ERROR = getMainClass("UnknownError");
+    public static final ClassReference MISSING_VAR_ERROR = getMainClass("MissingVarError");
+    public static final ClassReference ARITHMETIC_EXCEPTION = getMainClass("ArithmeticException");
+    public static final ClassReference FUNCTION_CALL_ERROR = getMainClass("FunctionCallError");
+    public static final ClassReference INDEX_OUT_OF_BOUNDS_EXCEPTION = getMainClass("IndexOutOfBoundsException");
+
+    public static final ClassReference OVERRIDE = getMainClass("Override");
+    public static final ClassReference RETENTION_POLICY = getAnnotationClass("RetentionPolicy");
+    public static final ClassReference RETENTION = getAnnotationClass("Retention");
+
+
     private static void loadClasses() {
         data.forEach(RegistryClassReference::create);
-    }
-
-    public static ClassReference register(Package pck, String name, Supplier<ScriptedClass> sup, Class<?> target) {
-        RegistryClassReference classReference = new RegistryClassReference(name, pck.getName(), sup);
-        data.add(classReference);
-        pck.addClass(name, classReference);
-        return classReference;
-    }
-
-    public static ClassReference register(Package pck, String name, Supplier<ScriptedClass> sup) {
-        return register(pck, name, sup, null);
-    }
-
-    private static ClassReference registerMain(Supplier<ScriptedClass> sup, String name) {
-        return register(LANG_ROOT, name, sup);
-    }
-
-    private static ClassReference registerMain(Supplier<ScriptedClass> sup, String name, Class<?> target) {
-        return register(LANG_ROOT, name, sup, target);
     }
 
     public static ClassReference getClassForName(String type) {
@@ -178,6 +154,14 @@ public class VarTypeManager {
         }
         Token last = path.get(path.size() - 1);
         return SourceClassReference.from(last, pg.getOrCreateClass(last.lexeme()));
+    }
+
+    private static ClassReference getMainClass(String name) {
+        return LANG_ROOT.getClass(name);
+    }
+
+    private static ClassReference getAnnotationClass(String name) {
+        return ANNOTATION_PCK.getClass(name);
     }
 
     public static ClassReference getOrCreateClass(String name, String pck) {

@@ -22,7 +22,7 @@ public class CallStack {
     }
 
     public void push(String methodRef, String callClass) {
-        if (stack.size() > MAX_STACK_SIZE) throw AbstractScriptedException.createException(VarTypeManager.STACK_OVERFLOW_EXCEPTION, "");
+        if (stack.size() > MAX_STACK_SIZE) throw AbstractScriptedException.createException(VarTypeManager.STACK_OVERFLOW_ERROR, "");
         stack.push(Pair.of(methodRef, callClass));
     }
 

@@ -17,11 +17,11 @@ import net.kapitencraft.tool.Pair;
 import java.util.List;
 
 public class SkeletonMethod implements ScriptedCallable {
-    private final List<? extends ClassReference> args;
+    private final ClassReference[] args;
     private final ClassReference retType;
     private final short modifiers;
 
-    public SkeletonMethod(List<? extends ClassReference> args, ClassReference retType, short modifiers) {
+    public SkeletonMethod(ClassReference[] args, ClassReference retType, short modifiers) {
         this.args = args;
         this.retType = retType;
         this.modifiers = modifiers;
@@ -32,7 +32,7 @@ public class SkeletonMethod implements ScriptedCallable {
     }
 
     private static SkeletonMethod create(List<? extends Pair<? extends ClassReference, String>> params, ClassReference type, short modifiers) {
-        return new SkeletonMethod(params.stream().map(Pair::left).toList(), type, modifiers);
+        return new SkeletonMethod(params.stream().map(Pair::left).toArray(ClassReference[]::new), type, modifiers);
     }
 
     public static SkeletonMethod create(Holder.Constructor decl, ClassReference type) {
@@ -41,10 +41,10 @@ public class SkeletonMethod implements ScriptedCallable {
 
     public static SkeletonMethod fromJson(JsonObject object) {
         ClassReference retType = ClassLoader.loadClassReference(object, "retType");
-        List<ClassReference> args = GsonHelper.getAsJsonArray(object, "params").asList().stream()
+        ClassReference[] args = GsonHelper.getAsJsonArray(object, "params").asList().stream()
                 .map(JsonElement::getAsJsonObject)
                 .map(object1 -> ClassLoader.loadClassReference(object1, "type"))
-                .toList();
+                .toArray(ClassReference[]::new);
 
         short modifiers = object.has("modifiers") ? GsonHelper.getAsShort(object, "modifiers") : 0;
         return new SkeletonMethod(args, retType, modifiers);
@@ -68,7 +68,7 @@ public class SkeletonMethod implements ScriptedCallable {
     }
 
     @Override
-    public List<? extends ClassReference> argTypes() {
+    public ClassReference[] argTypes() {
         return args;
     }
 

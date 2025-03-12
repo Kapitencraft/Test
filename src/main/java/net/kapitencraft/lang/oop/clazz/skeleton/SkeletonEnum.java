@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.clazz.skeleton;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.EnumClass;
@@ -188,7 +189,7 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public ScriptedCallable getStaticMethod(String name, List<ClassReference> args) {
+    public ScriptedCallable getStaticMethod(String name, ClassReference[] args) {
         return staticMethods.get(name).getMethod(args);
     }
 
@@ -198,7 +199,7 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
+    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
         return Optional.ofNullable(staticMethods.get(name)).map(c -> c.getMethodOrdinal(args)).orElseGet(() -> EnumClass.super.getStaticMethodOrdinal(name, args));
     }
 
@@ -213,18 +214,8 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public boolean isAbstract() {
-        return false;
-    }
-
-    @Override
-    public boolean isFinal() {
-        return true;
-    }
-
-    @Override
-    public boolean isInterface() {
-        return false;
+    public short getModifiers() {
+        return Modifiers.ENUM;
     }
 
     @Override
@@ -233,7 +224,7 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<ClassReference> types) {
+    public int getMethodOrdinal(String name, ClassReference[] types) {
         return methods.getMethodOrdinal(name, types);
     }
 

@@ -29,8 +29,8 @@ public class AnnotationMethodMap implements AbstractMethodMap {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<ClassReference> args) {
-        return args.isEmpty() && methods.containsKey(name) ? 0 : -1;
+    public int getMethodOrdinal(String name, ClassReference[] args) {
+        return args.length == 0 && methods.containsKey(name) ? 0 : -1;
     }
 
     @Override

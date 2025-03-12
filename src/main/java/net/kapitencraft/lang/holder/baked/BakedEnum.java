@@ -29,7 +29,7 @@ public record BakedEnum(
         Pair<Token, GeneratedCallable>[] staticMethods,
         ClassReference[] interfaces,
         Map<String, GeneratedEnumConstant> constants,
-        Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
+        Map<Token, GeneratedField> fields, Map<String, GeneratedField> staticFields,
         Token name, String pck, Compiler.ClassBuilder[] enclosed,
         AnnotationClassInstance[] annotations
         ) implements Compiler.ClassBuilder {
@@ -56,14 +56,14 @@ public record BakedEnum(
             builder.addMethod(logger, method.right(), method.left());
         }
 
-        List<String> finalFields = new ArrayList<>();
+        List<Token> finalFields = new ArrayList<>();
         fields.forEach((name, field) -> {
             if (field.isFinal() && !field.hasInit()) {
                 finalFields.add(name);
             }
         });
 
-        ConstructorContainer.Builder container = new ConstructorContainer.Builder(finalFields, this.name());
+        ConstructorContainer.Builder container = new ConstructorContainer.Builder(finalFields, this.name(), logger);
         for (Pair<Token, GeneratedCallable> method : this.constructors()) {
             container.addMethod(logger, method.right(), method.left());
         }
@@ -73,7 +73,7 @@ public record BakedEnum(
                 DataMethodContainer.bakeBuilders(methods),
                 DataMethodContainer.bakeBuilders(staticMethods),
                 container,
-                fields(),
+                BakedClass.create(fields),
                 constants(),
                 this.staticFields(),
                 enclosed.build(),

@@ -11,7 +11,6 @@ import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
-import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -39,12 +38,13 @@ public class SkeletonClass implements ScriptedClass {
     private final ConstructorContainer constructor;
 
     private final short modifiers;
+    private final ClassReference[] interfaces;
 
     public SkeletonClass(String name, String pck, ClassReference superclass,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, ClassReference> enclosed,
                          Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor,
-                         short modifiers) {
+                         short modifiers, ClassReference[] interfaces) {
         this.name = name;
         this.pck = pck;
         this.superclass = superclass;
@@ -55,13 +55,14 @@ public class SkeletonClass implements ScriptedClass {
         this.staticMethods = staticMethods;
         this.constructor = constructor.build(this);
         this.modifiers = modifiers;
+        this.interfaces = interfaces;
     }
 
     public SkeletonClass(String name, String pck, ClassReference superclass,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, ClassReference> enclosed,
                          Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer constructor,
-                         short modifiers) {
+                         short modifiers, ClassReference[] interfaces) {
         this.name = name;
         this.pck = pck;
         this.superclass = superclass;
@@ -72,11 +73,14 @@ public class SkeletonClass implements ScriptedClass {
         this.staticMethods = staticMethods;
         this.constructor = constructor;
         this.modifiers = modifiers;
+        this.interfaces = interfaces;
     }
 
     public static SkeletonClass fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
         String name = GsonHelper.getAsString(data, "name");
         ClassReference superclass = ClassLoader.loadClassReference(data, "superclass");
+
+        ClassReference[] interfaces = ClassLoader.loadInterfaces(data);
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
         ImmutableMap<String, DataMethodContainer> staticMethods = SkeletonMethod.readFromCache(data, "staticMethods");
@@ -112,8 +116,8 @@ public class SkeletonClass implements ScriptedClass {
                 Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
                 methods, staticMethods,
                 constructorContainer,
-                modifiers
-        );
+                modifiers,
+                interfaces);
     }
 
     @Override
@@ -177,7 +181,7 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public ScriptedCallable getStaticMethod(String name, List<ClassReference> args) {
+    public ScriptedCallable getStaticMethod(String name, ClassReference[] args) {
         return staticMethods.get(name).getMethod(args);
     }
 
@@ -187,7 +191,7 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
+    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
         return staticMethods.get(name).getMethodOrdinal(args);
     }
 
@@ -202,18 +206,8 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public boolean isAbstract() {
-        return Modifiers.isAbstract(modifiers);
-    }
-
-    @Override
-    public boolean isFinal() {
-        return Modifiers.isFinal(modifiers);
-    }
-
-    @Override
-    public boolean isInterface() {
-        return false;
+    public short getModifiers() {
+        return modifiers;
     }
 
     @Override
@@ -222,7 +216,7 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<ClassReference> types) {
+    public int getMethodOrdinal(String name, ClassReference[] types) {
         return methods.getMethodOrdinal(name, types);
     }
 
@@ -254,5 +248,10 @@ public class SkeletonClass implements ScriptedClass {
     @Override
     public AnnotationClassInstance[] annotations() {
         return new AnnotationClassInstance[0];
+    }
+
+    @Override
+    public ClassReference[] interfaces() {
+        return interfaces;
     }
 }

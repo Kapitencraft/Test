@@ -26,7 +26,7 @@ public class GeneratedMethodMap implements AbstractMethodMap {
         return methods;
     }
 
-    public int getMethodOrdinal(String name, List<ClassReference> args) {
+    public int getMethodOrdinal(String name, ClassReference[] args) {
         return methods.containsKey(name) ? methods.get(name).getMethodOrdinal(args) : -1;
     }
 

@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.MethodLookup;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
@@ -229,7 +230,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, List<ClassReference> args) {
+    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
         checkInit();
         return staticMethods.has(name) ? staticMethods.getMethodOrdinal(name, args) : EnumClass.super.getStaticMethodOrdinal(name, args);
     }
@@ -245,28 +246,13 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public boolean isAbstract() {
-        return false;
-    }
-
-    @Override
-    public boolean isFinal() {
-        return true;
-    }
-
-    @Override
-    public boolean isInterface() {
-        return false;
-    }
-
-    @Override
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
         checkInit();
         return lookup.getMethodByOrdinal(name, ordinal);
     }
 
     @Override
-    public int getMethodOrdinal(String name, List<ClassReference> types) {
+    public int getMethodOrdinal(String name, ClassReference[] types) {
         checkInit();
         return lookup.getMethodOrdinal(name, types);
     }
@@ -289,5 +275,10 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     @Override
     public AnnotationClassInstance[] annotations() {
         return annotations;
+    }
+
+    @Override
+    public short getModifiers() {
+        return Modifiers.ENUM;
     }
 }

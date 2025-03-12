@@ -14,22 +14,22 @@ import java.util.Map;
 
 public class AnnotationClassInstance implements AbstractAnnotationClassInstance {
     public final Map<String, Expr> properties = new HashMap<>();
-    private final AbstractAnnotationClass type;
+    private final ScriptedClass type;
 
-    public AnnotationClassInstance(AbstractAnnotationClass type, Map<String, Expr> appliedProperties) {
+    public AnnotationClassInstance(ScriptedClass type, Map<String, Expr> appliedProperties) {
         this.type = type;
         properties.putAll(appliedProperties);
     }
 
-    public static AnnotationClassInstance fromPropertyMap(AbstractAnnotationClass type, Map<String, Expr> properties) {
+    public static AnnotationClassInstance fromPropertyMap(ScriptedClass type, Map<String, Expr> properties) {
         return new AnnotationClassInstance(type, properties);
     }
 
-    public static AnnotationClassInstance fromSingleProperty(AbstractAnnotationClass type, Expr singleProperty) {
+    public static AnnotationClassInstance fromSingleProperty(ScriptedClass type, Expr singleProperty) {
         return new AnnotationClassInstance(type, Map.of("value", singleProperty));
     }
 
-    public static AnnotationClassInstance noAbstract(AbstractAnnotationClass type) {
+    public static AnnotationClassInstance noAbstract(ScriptedClass type) {
         return new AnnotationClassInstance(type, Map.of());
     }
 

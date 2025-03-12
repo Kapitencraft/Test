@@ -10,7 +10,7 @@ public interface ScriptedCallable {
 
     ClassReference type();
 
-    List<? extends ClassReference> argTypes();
+    ClassReference[] argTypes();
 
     Object call(Environment environment, Interpreter interpreter, List<Object> arguments);
 

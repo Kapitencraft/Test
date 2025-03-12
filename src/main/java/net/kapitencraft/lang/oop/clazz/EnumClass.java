@@ -42,7 +42,7 @@ public interface EnumClass extends ScriptedClass {
     @Override
     default ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
         if ("values".equals(name) && ordinal == 0) {
-            return new NativeMethodImpl(List.of(), this.array().reference(), true, false) {
+            return new NativeMethodImpl(new ClassReference[0], this.array().reference(), true, false) {
                 @Override
                 public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
                     return getConstants();
@@ -53,8 +53,8 @@ public interface EnumClass extends ScriptedClass {
     }
 
     @Override
-    default int getStaticMethodOrdinal(String name, List<ClassReference> args) {
-        if ("values".equals(name) && args.isEmpty()) return 0;
+    default int getStaticMethodOrdinal(String name, ClassReference[] args) {
+        if ("values".equals(name) && args.length == 0) return 0;
         return -1;
     }
 

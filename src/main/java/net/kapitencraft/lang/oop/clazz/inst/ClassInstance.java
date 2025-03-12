@@ -120,6 +120,6 @@ public class ClassInstance implements AbstractClassInstance {
 
     @Override
     public String toString() {
-        return (String) this.type.getMethod("toString", List.of()).call(this.environment, Interpreter.INSTANCE, List.of());
+        return (String) this.type.getMethod("toString", new ClassReference[0]).call(this.environment, Interpreter.INSTANCE, List.of());
     }
 }
