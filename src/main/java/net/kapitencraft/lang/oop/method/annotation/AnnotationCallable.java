@@ -47,28 +47,4 @@ public class AnnotationCallable implements ScriptedCallable {
     public boolean isFinal() {
         return true;
     }
-
-    public static AnnotationCallable intType(@Nullable Integer value) {
-        return new AnnotationCallable(ClassReference.of(VarTypeManager.INTEGER), value);
-    }
-
-    public static AnnotationCallable doubleType(@Nullable Double value) {
-        return new AnnotationCallable(ClassReference.of(VarTypeManager.DOUBLE), value);
-    }
-
-    public static AnnotationCallable boolType(@Nullable Boolean value) {
-        return new AnnotationCallable(ClassReference.of(VarTypeManager.BOOLEAN), value);
-    }
-
-    public static AnnotationCallable stringType(@Nullable String value) {
-        return new AnnotationCallable(ClassReference.of(VarTypeManager.STRING.get()), value);
-    }
-
-    public static AnnotationCallable enumType(ClassReference type, ClassInstance value) { //TODO fix
-        return new AnnotationCallable(type, value);
-    }
-
-    public static AnnotationCallable enumType(ClassReference type) {
-        return new AnnotationCallable(type, null);
-    }
 }

@@ -3,7 +3,7 @@ package test;
 class ArrayTest {
 
     static void main(String[] args) {
-        for (String s : args) {
+        for (String s : args[2::]) {
             System.print(s);
         }
     }

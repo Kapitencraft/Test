@@ -98,6 +98,11 @@ public class RetTypeFinder implements Expr.Visitor<ClassReference> {
     }
 
     @Override
+    public ClassReference visitSliceExpr(Expr.Slice expr) {
+        return findRetType(expr.object);
+    }
+
+    @Override
     public ClassReference visitSwitchExpr(Expr.Switch expr) {
         return findRetType(expr.defaulted);
     }

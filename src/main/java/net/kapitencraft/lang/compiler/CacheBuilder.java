@@ -217,6 +217,17 @@ public class CacheBuilder implements Expr.Visitor<JsonElement>, Stmt.Visitor<Jso
     }
 
     @Override
+    public JsonElement visitSliceExpr(Expr.Slice expr) {
+        JsonObject object = new JsonObject();
+        object.addProperty("TYPE", "slice");
+        object.add("object", cache(expr.object));
+        if (expr.start != null) object.add("start", cache(expr.start));
+        if (expr.end != null) object.add("end", cache(expr.end));
+        if (expr.interval != null) object.add("interval", cache(expr.interval));
+        return object;
+    }
+
+    @Override
     public JsonElement visitSwitchExpr(Expr.Switch expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "switch");

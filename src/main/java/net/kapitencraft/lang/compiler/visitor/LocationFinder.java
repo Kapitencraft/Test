@@ -90,6 +90,11 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
     }
 
     @Override
+    public Token visitSliceExpr(Expr.Slice expr) {
+        return find(expr.object);
+    }
+
+    @Override
     public Token visitSwitchExpr(Expr.Switch expr) {
         return expr.keyword;
     }

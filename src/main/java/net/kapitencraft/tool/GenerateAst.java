@@ -26,6 +26,7 @@ public class GenerateAst {
                 "SpecialSet    : Expr callee; Token name; Token assignType",
                 "StaticSpecial : ClassReference target; Token name; Token assignType",
                 "ArraySpecial  : Expr object; Expr index; Token assignType",
+                "Slice         : Expr object; Expr start; Expr end; Expr interval",
                 "Switch        : Expr provider; Map<Object,Expr> params; Expr defaulted; Token keyword",
                 "CastCheck     : Expr object; ClassReference targetType; Token patternVarName",
                 "Grouping      : Expr expression",

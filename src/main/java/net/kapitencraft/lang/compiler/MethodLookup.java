@@ -18,7 +18,7 @@ import java.util.function.Function;
 
 public class MethodLookup {
     private final List<Pair<ScriptedClass, AbstractMethodMap>> lookup;
-    private final AbstractMethodMap exposed; //TODO make a new one for method lookup k
+    private final AbstractMethodMap exposed;
 
     public MethodLookup(List<Pair<ScriptedClass, AbstractMethodMap>> lookup) {
         this.lookup = lookup;

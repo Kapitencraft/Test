@@ -86,7 +86,6 @@ public class ExprParser extends AbstractParser {
     }
 
     public AnnotationClassInstance parseAnnotationProperties(SourceClassReference typeRef, Token errorPoint) {
-        //TODO transfer to modifiers
         ScriptedClass type = typeRef.get();
 
         if (!type.isAnnotation()) {
@@ -482,7 +481,24 @@ public class ExprParser extends AbstractParser {
         while (true) {
             if (match(S_BRACKET_O)) {
                 Token bracketO = previous();
+                if (match(COLON)) {
+                    Expr end = check(COLON) ? null : expression();
+                    consume(COLON, "':' expected");
+                    Expr interval = check(S_BRACKET_C) ? null : expression();
+                    if (end == null && interval == null) error(bracketO, "slice without any definition");
+                    consume(S_BRACKET_C, "']' expected");
+                    expr = new Expr.Slice(expr, null, end, interval);
+                    continue;
+                }
                 Expr index = expression();
+                if (match(COLON)) {
+                    Expr end = check(COLON) ? null : expression();
+                    consume(COLON, "':' expected");
+                    Expr interval = check(S_BRACKET_C) ? null : expression();
+                    consume(S_BRACKET_C, "']' expected");
+                    expr = new Expr.Slice(expr, index, end, interval);
+                    continue;
+                }
                 consume(S_BRACKET_C, "']' expected");
                 if (!finder.findRetType(expr).get().isArray()) error(bracketO, "array type expected");
                 expr = new Expr.ArrayGet(expr, index);

@@ -34,7 +34,6 @@ public class Util {
         return main != null ? main : other;
     }
 
-    //TODO make args arrays?
     public static boolean matchArgs(ClassReference[] got, ClassReference[] expected) {
         if (got.length != expected.length) return false;
         if (got.length == 0) return true;

@@ -58,7 +58,7 @@ public class GeneratedField extends ScriptedField {
 
     public static GeneratedField fromJson(JsonObject object) {
         ClassReference type = ClassLoader.loadClassReference(object, "type");
-        Expr init = object.has("init") ? CacheLoader.readSubExpr(object, "init") : null;
+        Expr init = CacheLoader.readOptionalSubExpr(object, "init");
         boolean isFinal = object.has("isFinal") && GsonHelper.getAsBoolean(object, "isFinal");
         AnnotationClassInstance[] annotations = CacheLoader.readAnnotations(object);
         return new GeneratedField(type, init, isFinal, annotations);

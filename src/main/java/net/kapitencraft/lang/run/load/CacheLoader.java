@@ -33,8 +33,12 @@ public class CacheLoader {
         return GsonHelper.getAsJsonArray(object, name).asList().stream().map(JsonElement::getAsJsonObject).map(CacheLoader::readStmt).toList();
     }
 
-    public static Expr readSubExpr(JsonObject object, String name) {
+    private static Expr readSubExpr(JsonObject object, String name) {
         return readExpr(GsonHelper.getAsJsonObject(object, name));
+    }
+
+    public static Expr readOptionalSubExpr(JsonObject object, String name) {
+        return object.has(name) ? readSubExpr(object, name) : null;
     }
 
     public static Expr readExpr(JsonObject object) {
@@ -55,6 +59,7 @@ public class CacheLoader {
             case "specialSet" -> readSpecialSet(object);
             case "specialStaticSet" -> readSpecialStaticSet(object);
             case "specialArraySet" -> readSpecialArraySet(object);
+            case "slice" -> readSlice(object);
             case "switch" -> readSwitch(object);
             case "castCheck" -> readCastCheck(object);
             case "grouping" -> readGrouping(object);
@@ -65,6 +70,14 @@ public class CacheLoader {
             case "constructors" -> readConstructor(object);
             default -> throw new IllegalStateException("unknown expr key '" + type + "'");
         };
+    }
+
+    private static Expr readSlice(JsonObject object) {
+        Expr obj = readSubExpr(object, "object");
+        Expr start = readOptionalSubExpr(object, "start");
+        Expr end = readOptionalSubExpr(object, "end");
+        Expr interval = readOptionalSubExpr(object, "interval");
+        return new Expr.Slice(obj, start, end, interval);
     }
 
     private static Expr readArraySet(JsonObject object) {
@@ -328,14 +341,14 @@ public class CacheLoader {
 
     private static Stmt readReturn(JsonObject object) {
         Token keyword = Token.readFromSubObject(object, "keyword");
-        Expr value = object.has("value") ? readSubExpr(object, "value") : null;
+        Expr value = readOptionalSubExpr(object, "value");
         return new Stmt.Return(keyword, value);
     }
 
     private static Stmt readVarDecl(JsonObject object) {
         Token name = Token.readFromSubObject(object, "name");
         ClassReference type = ClassLoader.loadClassReference(object, "targetType");
-        Expr init = object.has("initializer") ? readSubExpr(object, "initializer") : null;
+        Expr init = readOptionalSubExpr(object, "initializer");
         boolean isFinal = GsonHelper.getAsBoolean(object, "isFinal");
         return new Stmt.VarDecl(name, type, init, isFinal);
     }

@@ -25,6 +25,7 @@ public abstract class Expr {
         R visitSpecialSetExpr(SpecialSet expr);
         R visitStaticSpecialExpr(StaticSpecial expr);
         R visitArraySpecialExpr(ArraySpecial expr);
+        R visitSliceExpr(Slice expr);
         R visitSwitchExpr(Switch expr);
         R visitCastCheckExpr(CastCheck expr);
         R visitGroupingExpr(Grouping expr);
@@ -309,6 +310,25 @@ public abstract class Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitArraySpecialExpr(this);
+        }
+    }
+
+    public static class Slice extends Expr {
+        public final Expr object;
+        public final Expr start;
+        public final Expr end;
+        public final Expr interval;
+
+        public Slice(Expr object, Expr start, Expr end, Expr interval) {
+            this.object = object;
+            this.start = start;
+            this.end = end;
+            this.interval = interval;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitSliceExpr(this);
         }
     }
 

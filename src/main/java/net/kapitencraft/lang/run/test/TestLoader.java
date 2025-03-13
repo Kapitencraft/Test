@@ -29,7 +29,6 @@ public class TestLoader {
     }
 
     public static void main(String[] args) {
-
         try {
             JsonArray array = GSON.fromJson(new FileReader(TEST_CONFIG), JsonArray.class);
             List<TestInstance> tests = new ArrayList<>();

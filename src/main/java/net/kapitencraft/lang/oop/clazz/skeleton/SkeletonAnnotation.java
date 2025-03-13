@@ -181,9 +181,4 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     public AnnotationClassInstance[] annotations() {
         return new AnnotationClassInstance[0];
     }
-
-    @Override
-    public List<String> getAbstracts() {
-        return methods.getAbstracts();
-    }
 }

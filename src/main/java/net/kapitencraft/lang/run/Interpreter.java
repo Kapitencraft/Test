@@ -461,6 +461,21 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return array[index] = Math.specialMerge(array[index], expr.assignType);
     }
 
+    @Override
+    public Object visitSliceExpr(Expr.Slice expr) {
+        Object[] array = (Object[]) evaluate(expr.object);
+        int interval = expr.interval != null ? (int) evaluate(expr.interval) : 1;
+        int min = expr.start != null ? (int) evaluate(expr.start) : interval < 0 ? array.length : 0;
+        int max = expr.end != null ? (int) evaluate(expr.end) : interval < 0 ? 0 : array.length;
+        Object[] out = new Object[(max - min) / interval];
+        int index = 0;
+        for (int i = min; i < max; i+=interval) {
+            out[index] = array[i];
+            index++;
+        }
+        return out;
+    }
+
     private boolean isEqual(Object a, Object b) {
         if (a == null && b == null) return true;
         if (a == null) return false;

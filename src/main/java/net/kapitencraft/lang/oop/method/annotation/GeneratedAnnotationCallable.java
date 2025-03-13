@@ -24,8 +24,7 @@ public class GeneratedAnnotationCallable extends AnnotationCallable {
 
     public static GeneratedAnnotationCallable of(JsonObject object) {
         ClassReference target = ClassLoader.loadClassReference(object, "type");
-        Expr expr = null;
-        if (object.has("val")) expr = CacheLoader.readSubExpr(object, "val");
+        Expr expr = CacheLoader.readOptionalSubExpr(object, "val");
         AnnotationClassInstance[] annotations = CacheLoader.readAnnotations(object);
         return new GeneratedAnnotationCallable(target, expr, annotations);
     }
