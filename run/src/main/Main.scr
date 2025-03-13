@@ -3,7 +3,7 @@ package main;
 class Main {
     int x;
 
-    static void main(String args) {
+    static void main(String[] args) {
         System.print((4**0 + 64**0.5)**-2);
     }
 

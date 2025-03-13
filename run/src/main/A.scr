@@ -15,7 +15,7 @@ abstract class A {
         }
     }
 
-    static void main(String args) {
+    static void main(String[] args) {
         A a = new B();
         System.print(a.test(5));
         a = new C();

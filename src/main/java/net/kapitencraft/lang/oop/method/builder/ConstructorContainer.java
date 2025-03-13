@@ -6,10 +6,10 @@ import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.Interpreter;
-import net.kapitencraft.tool.Util;
+import net.kapitencraft.lang.tool.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ public class ConstructorContainer extends DataMethodContainer {
 
                 @Override
                 public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                    return new ClassInstance(targetClass, interpreter);
+                    return new DynamicClassInstance(targetClass, interpreter);
                 }
 
                 @Override
@@ -79,7 +79,7 @@ public class ConstructorContainer extends DataMethodContainer {
 
                     @Override
                     public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                        return new ClassInstance(target, interpreter);
+                        return new DynamicClassInstance(target, interpreter);
                     }
 
                     @Override
@@ -137,7 +137,7 @@ public class ConstructorContainer extends DataMethodContainer {
 
                         @Override
                         public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                            return new ClassInstance(targetClass, interpreter);
+                            return new DynamicClassInstance(targetClass, interpreter);
                         }
 
                         @Override

@@ -1,9 +1,10 @@
-package net.kapitencraft.tool;
+package net.kapitencraft.lang.tool;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;

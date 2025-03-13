@@ -2,37 +2,58 @@ package net.kapitencraft.lang.run.natives.impl;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.wrapper.NativeUtilClass;
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.oop.clazz.ClassType;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
+import net.kapitencraft.lang.run.Interpreter;
+import net.kapitencraft.lang.run.algebra.Operand;
+import net.kapitencraft.lang.run.natives.NativeClassLoader;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
 @ApiStatus.Internal
-public class NativeClassImpl extends NativeUtilClass {
-    private final GeneratedMethodMap methods;
-    private final Map<String, ? extends ScriptedField> fields;
+public class NativeClassImpl implements ScriptedClass {
+    private final GeneratedMethodMap methods, staticMethods;
+    private final Map<String, NativeField> fields, staticFields;
     private final DataMethodContainer constructor;
     private final ClassReference superclass;
     private final ClassReference[] interfaces;
     private final short modifiers;
+    private final String name, pck;
 
     @ApiStatus.Internal
     public NativeClassImpl(String name, String pck,
-                           Map<String, DataMethodContainer> staticMethods, Map<String, ? extends ScriptedField> staticFields,
-                           Map<String, DataMethodContainer> methods, Map<String, ? extends ScriptedField> fields,
+                           Map<String, DataMethodContainer> staticMethods, Map<String, NativeField> staticFields,
+                           Map<String, DataMethodContainer> methods, Map<String, NativeField> fields,
                            DataMethodContainer constructor, ClassReference superclass, ClassReference[] interfaces, short modifiers) {
-        super(staticMethods, staticFields, name, pck);
+        this.name = name;
+        this.pck = pck;
         this.methods = new GeneratedMethodMap(methods);
+        this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.fields = fields;
+        this.staticFields = staticFields;
         this.constructor = constructor;
         this.superclass = superclass;
         this.interfaces = interfaces;
         this.modifiers = modifiers;
+    }
+
+    @Override
+    public String name() {
+        return name;
+    }
+
+    @Override
+    public String pck() {
+        return pck;
     }
 
     @Override
@@ -48,6 +69,21 @@ public class NativeClassImpl extends NativeUtilClass {
     @Override
     public boolean hasField(String name) {
         return fields.containsKey(name);
+    }
+
+    @Override
+    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
+        return null;
+    }
+
+    @Override
+    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
+        return 0;
+    }
+
+    @Override
+    public boolean hasStaticMethod(String name) {
+        return false;
     }
 
     @Override
@@ -71,12 +107,22 @@ public class NativeClassImpl extends NativeUtilClass {
     }
 
     @Override
-    public boolean hasMethod(String name) {
-        return methods.has(name) || superclass != null && super.hasMethod(name);
+    public boolean hasEnclosing(String name) {
+        return false;
     }
 
     @Override
-    public Map<String, ? extends ScriptedField> getFields() {
+    public ClassReference getEnclosing(String name) {
+        return null;
+    }
+
+    @Override
+    public boolean hasMethod(String name) {
+        return methods.has(name) || superclass != null && superclass.get().hasMethod(name);
+    }
+
+    @Override
+    public Map<String, NativeField> getFields() {
         return fields;
     }
 
@@ -86,7 +132,59 @@ public class NativeClassImpl extends NativeUtilClass {
     }
 
     @Override
+    public ClassType getClassType() {
+        return null;
+    }
+
+    @Override
+    public AnnotationClassInstance[] annotations() {
+        return new AnnotationClassInstance[0];
+    }
+
+    @Override
     public ClassReference[] interfaces() {
         return interfaces;
+    }
+
+    @Override
+    public Object getStaticField(String name) {
+        return staticFields.get(name).get(null);
+    }
+
+    @Override
+    public Object assignStaticField(String name, Object val) {
+        staticFields.get(name).set(null, NativeClassLoader.extractNative(val));
+        return val;
+    }
+
+    @Override
+    public boolean hasInit() {
+        return false;
+    }
+
+    @Override
+    public void setInit() {
+
+    }
+
+    @Override
+    public ClassReference[] enclosed() {
+        return new ClassReference[0];
+    }
+
+    @Override
+    public Map<String, ? extends ScriptedField> staticFields() {
+        return Map.of();
+    }
+
+    @Override
+    public Object assignStaticFieldWithOperator(String name, Object val, Token type, ScriptedClass executor, Operand operand) {
+        Object newVal = Interpreter.INSTANCE.visitAlgebra(getStaticField(name), val, executor, type, operand);
+        return assignStaticField(name, newVal);
+    }
+
+    @Override
+    public Object staticSpecialAssign(String name, Token assignType) {
+        return null;// super.staticSpecialAssign(name, assignType);
     }
 }

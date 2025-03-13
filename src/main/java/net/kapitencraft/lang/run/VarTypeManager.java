@@ -7,7 +7,7 @@ import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.Package;
-import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.clazz.primitive.*;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
 
@@ -179,7 +179,7 @@ public class VarTypeManager {
         if (o instanceof Double) return DOUBLE.reference();
         if (o instanceof Boolean) return BOOLEAN.reference();
         if (o instanceof Character) return CHAR.reference();
-        if (o instanceof ClassInstance cI) {
+        if (o instanceof DynamicClassInstance cI) {
             return cI.getType().reference();
         }
         throw new IllegalArgumentException("could not parse object to class: " + o);

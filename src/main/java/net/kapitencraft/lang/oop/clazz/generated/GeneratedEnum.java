@@ -13,7 +13,7 @@ import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.EnumClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
-import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
@@ -26,8 +26,7 @@ import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
-import net.kapitencraft.tool.Util;
-import org.checkerframework.checker.signature.qual.CanonicalNameOrEmpty;
+import net.kapitencraft.lang.tool.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -35,8 +34,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GeneratedEnum implements CacheableClass, EnumClass {
-    private Map<String, ClassInstance> constants;
-    ClassInstance[] constantData;
+    private Map<String, DynamicClassInstance> constants;
+    DynamicClassInstance[] constantData;
 
     private final GeneratedMethodMap methods;
     private final GeneratedMethodMap staticMethods;
@@ -171,18 +170,18 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public void setConstantValues(Map<String, ClassInstance> constants) {
+    public void setConstantValues(Map<String, DynamicClassInstance> constants) {
         this.constants = constants;
-        constantData = this.constants.values().toArray(new ClassInstance[0]);
+        constantData = this.constants.values().toArray(new DynamicClassInstance[0]);
     }
 
     @Override
-    public Map<String, ClassInstance> getConstantValues() {
+    public Map<String, DynamicClassInstance> getConstantValues() {
         return constants;
     }
 
     @Override
-    public ClassInstance[] getConstants() {
+    public DynamicClassInstance[] getConstants() {
         return constantData;
     }
 

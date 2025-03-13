@@ -7,17 +7,14 @@ import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.ast.Stmt;
-import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.load.CompilerLoaderHolder;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
-import net.kapitencraft.tool.Util;
+import net.kapitencraft.lang.tool.Util;
 
 import java.io.*;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class Compiler {
     static boolean hadError = false;

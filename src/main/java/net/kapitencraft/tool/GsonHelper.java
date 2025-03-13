@@ -35,41 +35,41 @@ public class GsonHelper {
      * Does the given JsonObject contain a string field with the given name?
      */
     public static boolean isStringValue(JsonObject pJson, String pMemberName) {
-        return !isValidPrimitive(pJson, pMemberName) ? false : pJson.getAsJsonPrimitive(pMemberName).isString();
+        return isValidPrimitive(pJson, pMemberName) && pJson.getAsJsonPrimitive(pMemberName).isString();
     }
 
     /**
      * Is the given JsonElement a string?
      */
     public static boolean isStringValue(JsonElement pJson) {
-        return !pJson.isJsonPrimitive() ? false : pJson.getAsJsonPrimitive().isString();
+        return pJson.isJsonPrimitive() && pJson.getAsJsonPrimitive().isString();
     }
 
     public static boolean isNumberValue(JsonObject pJson, String pMemberName) {
-        return !isValidPrimitive(pJson, pMemberName) ? false : pJson.getAsJsonPrimitive(pMemberName).isNumber();
+        return isValidPrimitive(pJson, pMemberName) && pJson.getAsJsonPrimitive(pMemberName).isNumber();
     }
 
     public static boolean isNumberValue(JsonElement pJson) {
-        return !pJson.isJsonPrimitive() ? false : pJson.getAsJsonPrimitive().isNumber();
+        return pJson.isJsonPrimitive() && pJson.getAsJsonPrimitive().isNumber();
     }
 
     public static boolean isBooleanValue(JsonObject pJson, String pMemberName) {
-        return !isValidPrimitive(pJson, pMemberName) ? false : pJson.getAsJsonPrimitive(pMemberName).isBoolean();
+        return isValidPrimitive(pJson, pMemberName) && pJson.getAsJsonPrimitive(pMemberName).isBoolean();
     }
 
     public static boolean isBooleanValue(JsonElement pJson) {
-        return !pJson.isJsonPrimitive() ? false : pJson.getAsJsonPrimitive().isBoolean();
+        return pJson.isJsonPrimitive() && pJson.getAsJsonPrimitive().isBoolean();
     }
 
     /**
      * Does the given JsonObject contain an array field with the given name?
      */
     public static boolean isArrayNode(JsonObject pJson, String pMemberName) {
-        return !isValidNode(pJson, pMemberName) ? false : pJson.get(pMemberName).isJsonArray();
+        return isValidNode(pJson, pMemberName) && pJson.get(pMemberName).isJsonArray();
     }
 
     public static boolean isObjectNode(JsonObject pJson, String pMemberName) {
-        return !isValidNode(pJson, pMemberName) ? false : pJson.get(pMemberName).isJsonObject();
+        return isValidNode(pJson, pMemberName) && pJson.get(pMemberName).isJsonObject();
     }
 
     /**
@@ -77,7 +77,7 @@ public class GsonHelper {
      * Java primitive wrapper)?
      */
     public static boolean isValidPrimitive(JsonObject pJson, String pMemberName) {
-        return !isValidNode(pJson, pMemberName) ? false : pJson.get(pMemberName).isJsonPrimitive();
+        return isValidNode(pJson, pMemberName) && pJson.get(pMemberName).isJsonPrimitive();
     }
 
     /**

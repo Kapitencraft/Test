@@ -11,12 +11,11 @@ import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
-import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
-import org.checkerframework.dataflow.qual.Pure;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -176,12 +175,12 @@ public interface ScriptedClass {
         return superclass() != null && superclass().get().hasMethod(name);
     }
 
-    default ClassInstance createInst(List<Expr> params, int ordinal, Interpreter interpreter) {
+    default DynamicClassInstance createInst(List<Expr> params, int ordinal, Interpreter interpreter) {
         return createNativeInst(interpreter.visitArgs(params), ordinal, interpreter);
     }
 
-    default ClassInstance createNativeInst(List<Object> params, int ordinal, Interpreter interpreter) {
-        ClassInstance instance = new ClassInstance(this, interpreter);
+    default DynamicClassInstance createNativeInst(List<Object> params, int ordinal, Interpreter interpreter) {
+        DynamicClassInstance instance = new DynamicClassInstance(this, interpreter);
         instance.construct(params, ordinal, interpreter);
         return instance;
     }

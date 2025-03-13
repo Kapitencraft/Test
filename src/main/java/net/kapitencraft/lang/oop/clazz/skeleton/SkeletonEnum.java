@@ -8,7 +8,7 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.EnumClass;
 import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
-import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -18,11 +18,10 @@ import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
-import net.kapitencraft.tool.Util;
+import net.kapitencraft.lang.tool.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -139,18 +138,18 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public void setConstantValues(Map<String, ClassInstance> constants) {
+    public void setConstantValues(Map<String, DynamicClassInstance> constants) {
 
     }
 
     @Override
-    public Map<String, ClassInstance> getConstantValues() {
+    public Map<String, DynamicClassInstance> getConstantValues() {
         return Map.of();
     }
 
     @Override
-    public ClassInstance[] getConstants() {
-        return new ClassInstance[0];
+    public DynamicClassInstance[] getConstants() {
+        return new DynamicClassInstance[0];
     }
 
     @Override

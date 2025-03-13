@@ -3,7 +3,7 @@ package net.kapitencraft.lang.run;
 import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.inst.AbstractClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.exception.CancelBlock;
@@ -12,7 +12,7 @@ import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
-import net.kapitencraft.tool.Math;
+import net.kapitencraft.lang.tool.Math;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.Pair;
 
@@ -116,7 +116,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitThrowStmt(Stmt.Throw stmt) {
-        AbstractScriptedException exception = new AbstractScriptedException((AbstractClassInstance) evaluate(stmt.value));
+        AbstractScriptedException exception = new AbstractScriptedException((ClassInstance) evaluate(stmt.value));
         pushCallIndex(stmt.keyword.line());
         throw exception;
     }
@@ -317,7 +317,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitCastCheckExpr(Expr.CastCheck expr) {
         Object object = evaluate(expr.object);
-        if (object instanceof AbstractClassInstance instance) {
+        if (object instanceof ClassInstance instance) {
             ScriptedClass type = instance.getType();
             if (type.isParentOf(expr.targetType.get())) {
                 if (expr.patternVarName != null) {
@@ -344,7 +344,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitInstCallExpr(Expr.InstCall expr) {
-        AbstractClassInstance inst = (AbstractClassInstance) evaluate(expr.callee);
+        ClassInstance inst = (ClassInstance) evaluate(expr.callee);
         pushCallIndex(expr.name.line());
         pushCall(inst.getType().absoluteName(), expr.name.lexeme(), inst.getType().name());
         Object data = inst.executeMethod(expr.name.lexeme(), expr.methodOrdinal, this.visitArgs(expr.args), this);
@@ -380,7 +380,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitGetExpr(Expr.Get expr) {
-        return ((AbstractClassInstance) evaluate(expr.object)).getField(expr.name.lexeme());
+        return ((ClassInstance) evaluate(expr.object)).getField(expr.name.lexeme());
     }
 
     @Override
@@ -402,7 +402,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitSetExpr(Expr.Set expr) {
         Object val = evaluate(expr.value);
-        AbstractClassInstance instance = (AbstractClassInstance) evaluate(expr.object);
+        ClassInstance instance = (ClassInstance) evaluate(expr.object);
         if (expr.assignType.type() == TokenType.ASSIGN) {
             return instance.assignField(expr.name.lexeme(), val);
         } else {
@@ -442,7 +442,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitSpecialSetExpr(Expr.SpecialSet expr) {
-        return ((AbstractClassInstance) evaluate(expr.callee)).specialAssign(expr.name.lexeme(), expr.assignType);
+        return ((ClassInstance) evaluate(expr.callee)).specialAssign(expr.name.lexeme(), expr.assignType);
     }
 
     @Override

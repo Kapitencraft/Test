@@ -114,8 +114,9 @@ public class HolderParser extends AbstractParser {
         }
 
         if (reference == null) {
-            reference = SourceClassReference.from(token, VarTypeManager.getOrCreateClass(typeName.toString(), activePackages.getLast()));
+            reference = VarTypeManager.getOrCreateClass(typeName.toString(), activePackages.getLast());
         }
+        //TODO save generics to variable types
         Holder.Generics generics = generics();
         while (match(S_BRACKET_O)) {
             consume(S_BRACKET_C, "']' expected");

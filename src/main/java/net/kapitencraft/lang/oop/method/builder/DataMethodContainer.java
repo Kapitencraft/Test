@@ -11,7 +11,7 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.GsonHelper;
-import net.kapitencraft.tool.Util;
+import net.kapitencraft.lang.tool.Util;
 
 import java.util.*;
 

@@ -1,4 +1,4 @@
-package net.kapitencraft.tool;
+package net.kapitencraft.lang.tool;
 
 import java.io.File;
 import java.io.IOException;

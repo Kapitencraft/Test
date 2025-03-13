@@ -5,7 +5,6 @@ import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
-import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -18,8 +17,7 @@ import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.tool.Pair;
-import net.kapitencraft.tool.Util;
-import org.checkerframework.checker.units.qual.C;
+import net.kapitencraft.lang.tool.Util;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -439,7 +437,6 @@ public class ExprParser extends AbstractParser {
             if (ordinal == -1) ordinal = 0;
             ScriptedCallable callable = target.get().getStaticMethodByOrdinal(name.lexeme(), ordinal);
             checkArguments(args, callable, name);
-
         }
 
         consumeBracketClose("static call");

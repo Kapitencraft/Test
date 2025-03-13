@@ -23,7 +23,7 @@ import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
-import net.kapitencraft.tool.Util;
+import net.kapitencraft.lang.tool.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;

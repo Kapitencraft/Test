@@ -10,9 +10,8 @@ import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
-import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
-import net.kapitencraft.tool.Util;
+import net.kapitencraft.lang.tool.Util;
 
 import java.util.List;
 

@@ -5,7 +5,7 @@ import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.natives.impl.NativeMethodImpl;
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.Interpreter;
 
@@ -16,19 +16,19 @@ public interface EnumClass extends ScriptedClass {
 
     Map<String, ? extends ScriptedField> enumConstants();
 
-    void setConstantValues(Map<String, ClassInstance> constants);
+    void setConstantValues(Map<String, DynamicClassInstance> constants);
 
-    Map<String, ClassInstance> getConstantValues();
+    Map<String, DynamicClassInstance> getConstantValues();
 
-    ClassInstance[] getConstants();
+    DynamicClassInstance[] getConstants();
 
     @Override
     default void clInit() {
         startClInit();
         ScriptedClass.super.clInit();
-        ImmutableMap.Builder<String, ClassInstance> constants = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<String, DynamicClassInstance> constants = new ImmutableMap.Builder<>();
         this.enumConstants().forEach((s, loxField) -> {
-            constants.put(s, (ClassInstance) loxField.initialize(null, Interpreter.INSTANCE));
+            constants.put(s, (DynamicClassInstance) loxField.initialize(null, Interpreter.INSTANCE));
         });
         setConstantValues(constants.build());
         endClInit();

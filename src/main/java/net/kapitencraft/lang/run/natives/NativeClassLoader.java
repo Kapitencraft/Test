@@ -4,16 +4,16 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
+import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.run.natives.impl.NativeClassImpl;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.natives.impl.NativeConstructor;
 import net.kapitencraft.lang.run.natives.impl.NativeFieldImpl;
 import net.kapitencraft.lang.run.natives.impl.NativeMethod;
-import net.kapitencraft.tool.Util;
+import net.kapitencraft.lang.tool.Util;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
@@ -117,15 +117,16 @@ public class NativeClassLoader {
             }
 
 
-            Map<String, NativeFieldImpl> fields = new HashMap<>();
-            Map<String, NativeFieldImpl> staticFields = new HashMap<>();
+            Map<String, NativeField> fields = new HashMap<>();
+            Map<String, NativeField> staticFields = new HashMap<>();
             for (Field declaredField : clazz.getDeclaredFields()) {
                 try {
                     String fieldName = declaredField.isAnnotationPresent(Rename.class) ? declaredField.getAnnotation(Rename.class).value() : declaredField.getName();
                     if (Modifier.isPublic(declaredField.getModifiers()) && !declaredField.isAnnotationPresent(Excluded.class) && (capturedFields == null || Util.arrayContains(capturedFields, fieldName))) {
-                        NativeFieldImpl impl = new NativeFieldImpl(
+                        NativeField impl = new NativeField(
                                 getClassOrThrow(declaredField.getType()),
-                                Modifier.isFinal(declaredField.getModifiers())
+                                Modifier.isFinal(declaredField.getModifiers()),
+                                declaredField
                         );
                         if (Modifier.isStatic(declaredField.getModifiers()))
                             staticFields.put(fieldName, impl);

@@ -10,7 +10,7 @@ import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
-import net.kapitencraft.tool.Util;
+import net.kapitencraft.lang.tool.Util;
 
 import java.util.*;
 import java.util.function.Consumer;

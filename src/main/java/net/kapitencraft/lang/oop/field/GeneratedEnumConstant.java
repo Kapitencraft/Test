@@ -7,7 +7,7 @@ import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.tool.GsonHelper;
@@ -35,7 +35,7 @@ public class GeneratedEnumConstant extends ScriptedField {
 
     @Override
     public Object initialize(Environment environment, Interpreter interpreter) {
-        ClassInstance constant = new ClassInstance(this.target, interpreter);
+        DynamicClassInstance constant = new DynamicClassInstance(this.target, interpreter);
         constant.assignField("ordinal", ordinal);
         constant.assignField("name", name);
         constant.construct(interpreter.visitArgs(this.args), constructorOrdinal, interpreter);
