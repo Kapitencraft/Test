@@ -14,6 +14,7 @@ import net.kapitencraft.lang.run.natives.impl.NativeConstructor;
 import net.kapitencraft.lang.run.natives.impl.NativeFieldImpl;
 import net.kapitencraft.lang.run.natives.impl.NativeMethod;
 import net.kapitencraft.tool.Util;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
 
@@ -21,6 +22,7 @@ import java.lang.reflect.*;
 import java.util.*;
 
 public class NativeClassLoader {
+    @ApiStatus.Internal
     private static final Map<Class<?>, ClassReference> classLookup = new HashMap<>();
 
     static {
@@ -41,6 +43,7 @@ public class NativeClassLoader {
         }
     }
 
+    @ApiStatus.Internal
     public static void load() {
         System.out.println("loading natives...");
         Reflections reflections = new Reflections("net.kapitencraft.lang.run.natives.scripted");
@@ -85,9 +88,10 @@ public class NativeClassLoader {
 
     /**
      * creates and registers a native class for the given java class
+     * <br>Developers should use {@link ScriptedPlugin} or {@link NativeClass}
      * @param clazz the target to create & register
      */
-    public static void createNativeClass(Class<?> clazz, String className, String pck, @Nullable String[] capturedMethods, @Nullable String[] capturedFields) {
+    private static void createNativeClass(Class<?> clazz, String className, String pck, @Nullable String[] capturedMethods, @Nullable String[] capturedFields) {
         try {
             Multimap<String, NativeMethod> methods = HashMultimap.create();
             Multimap<String, NativeMethod> staticMethods = HashMultimap.create();
@@ -161,6 +165,14 @@ public class NativeClassLoader {
         }
     }
 
+    private static ClassReference[] extractInterfaces(Class<?>[] interfaces) {
+        List<ClassReference> extensions = new ArrayList<>();
+        for (Class<?> c : interfaces) {
+            getClass(c).ifPresent(extensions::add);
+        }
+        return extensions.toArray(ClassReference[]::new);
+    }
+
     private static ClassReference getClassOrThrow(Class<?> aClass) {
         if (aClass == null) return null;
         int arrayCount = 0;
@@ -178,6 +190,11 @@ public class NativeClassLoader {
         return c;
     }
 
+    /**
+     * queries the given class for lookup
+     * @param aClass the class to query
+     * @return an optional of the gotten reference
+     */
     public static Optional<ClassReference> getClass(Class<?> aClass) {
         if (aClass == null) return Optional.empty();
         int arrayCount = 0;
@@ -195,6 +212,9 @@ public class NativeClassLoader {
         return Optional.of(c);
     }
 
+    /**
+     * extracts a native value out of a {@link NativeClassInstance} wrapper, or throws if it can't
+     */
     public static Object extractNative(Object reference) {
         if (reference instanceof Number ||
                 reference instanceof String ||
@@ -220,16 +240,6 @@ public class NativeClassLoader {
 
     public static Object[] extractNatives(List<Object> in) {
         return in.stream().map(NativeClassLoader::extractNative).toArray();
-    }
-
-    private static ClassReference[] extractInterfaces(Class<?>[] interfaces) {
-        List<ClassReference> extensions = new ArrayList<>();
-        for (Class<?> c : interfaces) {
-            try {
-                extensions.add(getClassOrThrow(c));
-            } catch (RuntimeException ignored) {}
-        }
-        return extensions.toArray(ClassReference[]::new);
     }
 
     interface ClassObj {

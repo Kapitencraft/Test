@@ -2,6 +2,9 @@ package net.kapitencraft.lang.run.natives;
 
 import java.util.List;
 
+/**
+ * registration handler for classes not added by your own mod (use {@link NativeClass} otherwise)
+ */
 public class ClassRegistration {
     private final List<NativeClassLoader.ClassObj> classes;
 

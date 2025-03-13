@@ -84,7 +84,7 @@ public class CacheLoader {
         Expr obj = readSubExpr(object, "object");
         Expr index = readSubExpr(object, "index");
         Expr value = readSubExpr(object, "value");
-        Token assign =Token.readFromSubObject(object, "assign");
+        Token assign = Token.readFromSubObject(object, "assign");
         ClassReference executor = ClassLoader.loadClassReference(object, "executor");
         Operand operand = Operand.fromJson(object, "operand");
         return new Expr.ArraySet(obj, index, value, assign, executor, operand);

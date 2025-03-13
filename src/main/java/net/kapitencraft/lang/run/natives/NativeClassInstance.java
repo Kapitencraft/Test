@@ -3,7 +3,9 @@ package net.kapitencraft.lang.run.natives;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.run.Interpreter;
+import org.jetbrains.annotations.ApiStatus;
 
+@ApiStatus.Internal
 public class NativeClassInstance extends ClassInstance {
     private final Object obj;
 
