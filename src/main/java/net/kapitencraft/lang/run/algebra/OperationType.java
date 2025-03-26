@@ -31,9 +31,9 @@ public enum OperationType {
         return type;
     }
 
-    public static OperationType of(Token operator) {
+    public static OperationType of(TokenType operator) {
         for (OperationType type : values()) {
-            if (type.type.contains(operator.type())) return type;
+            if (type.type.contains(operator)) return type;
         }
         return null;
     }

@@ -2,18 +2,20 @@ package net.kapitencraft.lang.holder.baked;
 
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.*;
-import net.kapitencraft.lang.oop.clazz.generated.GeneratedInterface;
+import net.kapitencraft.lang.oop.clazz.generated.GeneratedClass;
 import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.GeneratedField;
 import net.kapitencraft.lang.oop.method.GeneratedCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public record BakedInterface(Compiler.ErrorLogger logger, ClassReference target, Pair<Token, GeneratedCallable>[] methods, Pair<Token, GeneratedCallable>[] staticMethods, Map<String, GeneratedField> staticFields, ClassReference[] interfaces, Token name, String pck, Compiler.ClassBuilder[] enclosed, AnnotationClassInstance[] annotations) implements Compiler.ClassBuilder {
@@ -41,14 +43,18 @@ public record BakedInterface(Compiler.ErrorLogger logger, ClassReference target,
         }
 
 
-        return new GeneratedInterface(
+        return new GeneratedClass(
                 DataMethodContainer.bakeBuilders(methods),
                 DataMethodContainer.bakeBuilders(staticMethods),
+                List.of(),
+                Map.of(),
                 staticFields(),
-                interfaces(),
-                enclosed.build(),
+                VarTypeManager.OBJECT,
                 name().lexeme(),
                 pck(),
+                enclosed.build(),
+                interfaces(),
+                Modifiers.INTERFACE,
                 annotations()
         );
     }

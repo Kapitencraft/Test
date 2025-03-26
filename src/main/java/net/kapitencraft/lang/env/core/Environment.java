@@ -1,6 +1,8 @@
 package net.kapitencraft.lang.env.core;
 
+import net.kapitencraft.lang.holder.token.RuntimeToken;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 
@@ -15,7 +17,7 @@ public class Environment {
      * @return the variable added as "this", or throws when it can't be found
      */
     public Object getThis() {
-        return getVar(Token.createNative("this"));
+        return getVar(RuntimeToken.createNative("this"));
     }
 
     public void push() {
@@ -31,19 +33,19 @@ public class Environment {
         vars.define(name, value);
     }
 
-    public Object getVar(Token name) {
+    public Object getVar(RuntimeToken name) {
         return vars.get(name);
     }
 
-    public void assignVar(Token name, Object value) {
+    public void assignVar(RuntimeToken name, Object value) {
         vars.assign(name, value);
     }
 
-    public Object assignVarWithOperator(Token type, Token name, Object value, ScriptedClass executor, Operand operand) {
-        return vars.assignWithOperator(type, name, value, executor, operand);
+    public Object assignVarWithOperator(TokenType type, int line, RuntimeToken name, Object value, ScriptedClass executor, Operand operand) {
+        return vars.assignWithOperator(type, line, name, value, executor, operand);
     }
 
-    public Object specialVarAssign(Token name, Token type) {
+    public Object specialVarAssign(RuntimeToken name, TokenType type) {
         return vars.specialAssign(name, type);
     }
 }

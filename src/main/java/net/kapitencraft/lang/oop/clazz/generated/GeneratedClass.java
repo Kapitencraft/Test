@@ -73,7 +73,8 @@ public final class GeneratedClass implements CacheableClass {
         this.lookup = MethodLookup.createFromClass(this);
     }
 
-    public GeneratedClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, List<ScriptedCallable> constructorData,
+    public GeneratedClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
+                          List<ScriptedCallable> constructorData,
                           Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
                           ClassReference superclass, String name, String packageRepresentation,
                           Map<String, ClassReference> enclosing, ClassReference[] implemented,
@@ -301,11 +302,6 @@ public final class GeneratedClass implements CacheableClass {
     @Override
     public ClassReference[] interfaces() {
         return implemented;
-    }
-
-    @Override
-    public ClassType getClassType() {
-        return ClassType.CLASS;
     }
 
     @Override

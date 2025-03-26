@@ -518,6 +518,7 @@ public class ExprParser extends AbstractParser {
         return expr;
     }
 
+    //TODO create generics stack to get return type
     public void checkArguments(List<Expr> args, ScriptedCallable target, Token loc) {
         ClassReference[] expectedTypes = target.argTypes();
         ClassReference[] givenTypes = argTypes(args);

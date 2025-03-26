@@ -73,17 +73,17 @@ public class NativeClassImpl implements ScriptedClass {
 
     @Override
     public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return null;
+        return staticMethods.getMethodByOrdinal(name, ordinal);
     }
 
     @Override
     public int getStaticMethodOrdinal(String name, ClassReference[] args) {
-        return 0;
+        return staticMethods.getMethodOrdinal(name, args);
     }
 
     @Override
     public boolean hasStaticMethod(String name) {
-        return false;
+        return staticMethods.has(name);
     }
 
     @Override
@@ -132,11 +132,6 @@ public class NativeClassImpl implements ScriptedClass {
     }
 
     @Override
-    public ClassType getClassType() {
-        return null;
-    }
-
-    @Override
     public AnnotationClassInstance[] annotations() {
         return new AnnotationClassInstance[0];
     }
@@ -159,7 +154,7 @@ public class NativeClassImpl implements ScriptedClass {
 
     @Override
     public boolean hasInit() {
-        return false;
+        return true;
     }
 
     @Override

@@ -65,7 +65,7 @@ public class GeneratedEnumConstant extends ScriptedField {
         object.addProperty("ordinal", this.ordinal);
         object.addProperty("name", this.name);
         object.addProperty("constructorOrdinal", this.constructorOrdinal);
-        object.add("args", builder.saveArgs(this.args));
+        //object.add("args", builder.saveArgs(this.args));
         return object;
     }
 

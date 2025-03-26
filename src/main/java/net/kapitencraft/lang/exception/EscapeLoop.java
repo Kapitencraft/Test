@@ -1,13 +1,13 @@
 package net.kapitencraft.lang.exception;
 
-import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 
 public class EscapeLoop extends RuntimeException {
-    public final Token token;
+    public final TokenType type;
 
-    public EscapeLoop(Token token) {
+    public EscapeLoop(TokenType type) {
         super(null, null, false, false);
 
-        this.token = token;
+        this.type = type;
     }
 }

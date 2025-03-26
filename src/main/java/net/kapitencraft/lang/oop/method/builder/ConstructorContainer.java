@@ -21,6 +21,7 @@ public class ConstructorContainer extends DataMethodContainer {
     }
 
     public static ConstructorContainer fromCache(List<ScriptedCallable> methods, ScriptedClass targetClass) {
+        methods = new ArrayList<>(methods); //ensure mutable
         if (methods.isEmpty()) {
             methods.add(new ScriptedCallable() {
 

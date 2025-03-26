@@ -23,10 +23,4 @@ public class ArrayClass extends PrimitiveClass {
     public ScriptedClass getComponentType() {
         return component;
     }
-
-    @Override
-    public String absoluteName() {
-        return super.absoluteName();
-    }
-
 }

@@ -1,0 +1,272 @@
+{
+  "values": {
+    "Expr": {
+      "values": {
+        "Assign": {
+          "name": "Token",
+          "value": "Expr",
+          "type": {
+            "compile": "Token",
+            "runtime": "TokenType"
+          },
+          "executor": "ClassReference",
+          "operand": "Operand"
+        },
+        "SpecialAssign": {
+          "name": "Token",
+          "assignType": {
+            "compile": "Token",
+            "runtime": "TokenType"
+          }
+        },
+        "Binary": {
+          "left": "Expr",
+          "right": "Expr",
+          "operator": "Token",
+          "executor": "ClassReference",
+          "operand": "Operand"
+        },
+        "When": {
+          "condition": "Expr",
+          "ifTrue": "Expr",
+          "ifFalse": "Expr"
+        },
+        "InstCall": {
+          "callee": "Expr",
+          "name": "Token",
+          "methodOrdinal": "int",
+          "args": "Expr[]"
+        },
+        "StaticCall": {
+          "target": "ClassReference",
+          "name": "Token",
+          "methodOrdinal": "int",
+          "args": "Expr[]"
+        },
+        "Get": {
+          "object": "Expr",
+          "name": {
+            "compile": "Token",
+            "runtime": "String"
+          }
+        },
+        "StaticGet": {
+          "target": "ClassReference",
+          "name": {
+            "compile": "Token",
+            "runtime": "String"
+          }
+        },
+        "ArrayGet": {
+          "object": "Expr",
+          "index": "Expr"
+        },
+        "Set": {
+          "object": "Expr",
+          "name": {
+            "compile": "Token",
+            "runtime": "String"
+          },
+          "value": "Expr",
+          "assignType": {
+            "compile": "Token",
+            "runtime": "TokenType"
+          },
+          "$line": "int",
+          "executor": "ClassReference",
+          "operand": "Operand"
+        },
+        "StaticSet": {
+          "target": "ClassReference",
+          "name": {
+            "compile": "Token",
+            "runtime": "String"
+          },
+          "value": "Expr",
+          "assignType": "Token",
+          "executor": "ClassReference",
+          "operand": "Operand"
+        },
+        "ArraySet": {
+          "object": "Expr",
+          "index": "Expr",
+          "value": "Expr",
+          "assignType": {
+            "compile": "Token",
+            "runtime": "TokenType"
+          },
+          "$line": "int",
+          "executor": "ClassReference",
+          "operand": "Operand"
+        },
+        "SpecialSet": {
+          "callee": "Expr",
+          "name": {
+            "compile": "Token",
+            "runtime": "String"
+          },
+          "assignType": {
+            "compile": "Token",
+            "runtime": "TokenType"
+          }
+        },
+        "StaticSpecial": {
+          "target": "ClassReference",
+          "name": {
+            "compile": "Token",
+            "runtime": "String"
+          },
+          "assignType": {
+            "compile": "Token",
+            "runtime": "TokenType"
+          }
+        },
+        "ArraySpecial": {
+          "object": "Expr",
+          "index": "Expr",
+          "assignType": {
+            "compile": "Token",
+            "runtime": "TokenType"
+          }
+        },
+        "Slice": {
+          "object": "Expr",
+          "start": "Expr",
+          "end": "Expr",
+          "interval": "Expr"
+        },
+        "Switch": {
+          "provider": "Expr",
+          "params": "Map<Object,Expr>",
+          "defaulted": "Expr",
+          "keyword": "Token"
+        },
+        "CastCheck": {
+          "object": "Expr",
+          "targetType": "ClassReference",
+          "patternVarName": {
+            "compile": "Token",
+            "runtime": "String"
+          }
+        },
+        "Grouping": {
+          "expression": "Expr"
+        },
+        "Literal": {
+          "literal": {
+            "compile": "Token",
+            "runtime": "LiteralHolder"
+          }
+        },
+        "Logical": {
+          "left": "Expr",
+          "operator": "Token",
+          "right": "Expr"
+        },
+        "Unary": {
+          "operator": {
+            "compile": "Token",
+            "runtime": "TokenType"
+          },
+          "right": "Expr"
+        },
+        "VarRef": {
+          "name": "Token"
+        },
+        "Constructor": {
+          "keyword": "Token",
+          "target": "ClassReference",
+          "params": "Expr[]",
+          "ordinal": "int"
+        }
+      },
+      "imports": [
+        "net.kapitencraft.lang.run.algebra.Operand",
+        "java.util.Map",
+        "net.kapitencraft.lang.holder.LiteralHolder"
+      ]
+    },
+    "Stmt": {
+      "values": {
+        "Block": {
+          "statements": "Stmt[]"
+        },
+        "Expression": {
+          "expression": "Expr"
+        },
+        "If": {
+          "condition": "Expr",
+          "thenBranch": "Stmt",
+          "elseBranch": "Stmt",
+          "elifs": "Pair<Expr,Stmt>[]",
+          "keyword": "Token"
+        },
+        "Return": {
+          "keyword": "Token",
+          "value": "Expr"
+        },
+        "Throw": {
+          "keyword": "Token",
+          "value": "Expr"
+        },
+        "VarDecl": {
+          "name": {
+            "compile": "Token",
+            "runtime": "String"
+          },
+          "type": "ClassReference",
+          "initializer": "Expr",
+          "isFinal": "boolean"
+        },
+        "While": {
+          "condition": "Expr",
+          "body": "Stmt",
+          "keyword": "Token"
+        },
+        "For": {
+          "init": "Stmt",
+          "condition": "Expr",
+          "increment": "Expr",
+          "body": "Stmt",
+          "keyword": "Token"
+        },
+        "ForEach": {
+          "type": "ClassReference",
+          "name": {
+            "compile": "Token",
+            "runtime": "String"
+          },
+          "initializer": "Expr",
+          "body": "Stmt"
+        },
+        "LoopInterruption": {
+          "type": {
+            "compile": "Token",
+            "runtime": "TokenType"
+          }
+        },
+        "Try": {
+          "body": "Block",
+          "catches": {
+            "compile": "Pair<Pair<ClassReference[],Token>,Block>[]",
+            "runtime": "Pair<Pair<ClassReference[],String>,Block>[]"
+          },
+          "finale": "Block"
+        }
+      },
+      "imports": [
+        "net.kapitencraft.tool.Pair"
+      ]
+    }
+  },
+  "imports": {
+    "runtime": [
+      "net.kapitencraft.lang.holder.token.RuntimeToken",
+      "net.kapitencraft.lang.holder.class_ref.ClassReference"
+    ],
+    "compile": [
+      "net.kapitencraft.lang.holder.token.Token",
+      "net.kapitencraft.lang.holder.class_ref.ClassReference"
+    ]
+  }
+}

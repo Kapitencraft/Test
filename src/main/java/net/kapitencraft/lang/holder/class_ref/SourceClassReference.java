@@ -37,7 +37,7 @@ public class SourceClassReference extends ClassReference implements Holder.Valid
 
     @Override
     public String toString() {
-        return "SourceClassReference@" + this.name() + (exists() ? ", applied:" + this.reference.get(null) : "");
+        return "SourceClassReference@" + this.name() + (exists() ? ", applied:" + this.reference.get() : "");
     }
 
     public Token getToken() {

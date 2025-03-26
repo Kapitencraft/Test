@@ -1,6 +1,8 @@
 package net.kapitencraft.lang.run;
 
 import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
+import net.kapitencraft.lang.holder.ast.RuntimeExpr;
+import net.kapitencraft.lang.holder.ast.RuntimeStmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
@@ -19,7 +21,7 @@ import net.kapitencraft.tool.Pair;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Visitor<Void> {
     public static final Interpreter INSTANCE = new Interpreter();
 
     private Environment environment = new Environment();
@@ -72,11 +74,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 });
     }
 
-    public void interpret(List<Stmt> statements, Environment active) {
+    public void interpret(List<RuntimeStmt> statements, Environment active) {
         Environment shadowed = environment;
         try {
             environment = active == null ? environment : active;
-            for (Stmt statement : statements) {
+            for (RuntimeStmt statement : statements) {
                 execute(statement);
             }
         } finally {
@@ -84,13 +86,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
     }
 
-    private void execute(Stmt stmt) {
+    private void execute(RuntimeStmt stmt) {
         if (stmt == null) return;
         stmt.accept(this);
     }
 
     @Override
-    public Void visitVarDeclStmt(Stmt.VarDecl stmt) {
+    public Void visitVarDeclStmt(RuntimeStmt.VarDecl stmt) {
         Object value = null;
         if (stmt.initializer != null) {
             value = evaluate(stmt.initializer);
@@ -101,13 +103,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitExpressionStmt(Stmt.Expression stmt) {
+    public Void visitExpressionStmt(RuntimeStmt.Expression stmt) {
         evaluate(stmt.expression);
         return null;
     }
 
     @Override
-    public Void visitReturnStmt(Stmt.Return stmt) {
+    public Void visitReturnStmt(RuntimeStmt.Return stmt) {
         Object value = null;
         if (stmt.value != null) value = evaluate(stmt.value);
 
@@ -115,20 +117,20 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitThrowStmt(Stmt.Throw stmt) {
+    public Void visitThrowStmt(RuntimeStmt.Throw stmt) {
         AbstractScriptedException exception = new AbstractScriptedException((ClassInstance) evaluate(stmt.value));
         pushCallIndex(stmt.keyword.line());
         throw exception;
     }
 
     @Override
-    public Void visitIfStmt(Stmt.If stmt) {
+    public Void visitIfStmt(RuntimeStmt.If stmt) {
         if (isTruthy(evaluate(stmt.condition))) {
             execute(stmt.thenBranch);
             return null;
         }
 
-        for (Pair<Expr, Stmt> elif : stmt.elifs) {
+        for (Pair<RuntimeExpr, RuntimeStmt> elif : stmt.elifs) {
             if (isTruthy(evaluate(elif.left()))) {
                 execute(elif.right());
                 return null;
@@ -142,18 +144,18 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitBlockStmt(Stmt.Block stmt) {
+    public Void visitBlockStmt(RuntimeStmt.Block stmt) {
         executeBlock(stmt.statements);
         return null;
     }
 
     @Override
-    public Void visitWhileStmt(Stmt.While stmt) {
+    public Void visitWhileStmt(RuntimeStmt.While stmt) {
         while (isTruthy(evaluate(stmt.condition))) {
             try {
                 execute(stmt.body);
             } catch (EscapeLoop escape) {
-                if (escape.token.type() == TokenType.BREAK) break;
+                if (escape.type == TokenType.BREAK) break;
                 //no need to "continue" as the JVM already does it when breaking out of the body
             }
         }
@@ -161,13 +163,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitForStmt(Stmt.For stmt) {
+    public Void visitForStmt(RuntimeStmt.For stmt) {
         this.environment.push();
         for (execute(stmt.init); isTruthy(evaluate(stmt.condition)); evaluate(stmt.increment)) {
             try {
                 execute(stmt.body);
             } catch (EscapeLoop escape) {
-                if (escape.token.type() == TokenType.BREAK) break;
+                if (escape.type == TokenType.BREAK) break;
                 //no need to "continue" as the JVM already does it when breaking out of the body
             }
         }
@@ -176,14 +178,14 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitForEachStmt(Stmt.ForEach stmt) {
+    public Void visitForEachStmt(RuntimeStmt.ForEach stmt) {
         this.environment.push();
         for (Object obj : (Object[]) evaluate(stmt.initializer)) {
-            environment.defineVar(stmt.name.lexeme(), obj);
+            environment.defineVar(stmt.name, obj);
             try {
                 execute(stmt.body);
             } catch (EscapeLoop escape) {
-                if (escape.token.type() == TokenType.BREAK) break;
+                if (escape.type == TokenType.BREAK) break;
                 //no need to "continue" as the JVM already does it when breaking out of the body
             }
         }
@@ -192,25 +194,25 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitLoopInterruptionStmt(Stmt.LoopInterruption stmt) {
-        throw new EscapeLoop(stmt.type);
+    public Void visitLoopInterruptionStmt(RuntimeStmt.LoopInterruption stmt) {
+        throw new EscapeLoop(TokenType.CONTINUE); //stmt.type);
     }
 
     @Override
-    public Void visitTryStmt(Stmt.Try stmt) {
+    public Void visitTryStmt(RuntimeStmt.Try stmt) {
         int stackIndex = this.callStack.stack.size();
         try {
             visitBlockStmt(stmt.body);
         } catch (AbstractScriptedException e) {
             this.callStack.resetToSize(stackIndex);
             boolean handled = false;
-            a: for (Pair<Pair<List<ClassReference>, Token>, Stmt.Block> pair : stmt.catches) {
-                Pair<List<ClassReference>, Token> constData = pair.left();
+            a: for (Pair<Pair<ClassReference[], String>, RuntimeStmt.Block> pair : stmt.catches) {
+                Pair<ClassReference[], String> constData = pair.left();
                 ScriptedClass causer = e.exceptionType.getType();
                 for (ClassReference loxClass : constData.left()) {
                     if (causer.isChildOf(loxClass.get())) {
                         environment.push();
-                        environment.defineVar(constData.right().lexeme(), e.exceptionType);
+                        environment.defineVar(constData.right(), e.exceptionType);
                         visitBlockStmt(pair.right());
                         environment.pop();
                         handled = true;
@@ -225,22 +227,22 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitGroupingExpr(Expr.Grouping expr) {
+    public Object visitGroupingExpr(RuntimeExpr.Grouping expr) {
         return evaluate(expr.expression);
     }
 
     @Override
-    public Object visitLiteralExpr(Expr.Literal expr) {
-        return expr.token.literal().value();
+    public Object visitLiteralExpr(RuntimeExpr.Literal expr) {
+        return expr.token.value();
     }
 
     @Override
-    public Object visitLogicalExpr(Expr.Logical expr) {
+    public Object visitLogicalExpr(RuntimeExpr.Logical expr) {
         Object left = evaluate(expr.left);
 
-        if (expr.operator.type() == TokenType.OR) {
+        if (expr.operator == TokenType.OR) {
             if (isTruthy(left)) return left;
-        } else if (expr.operator.type() == TokenType.XOR) {
+        } else if (expr.operator == TokenType.XOR) {
             return isTruthy(left) ^ isTruthy(evaluate(expr.right));
         } else {
             if (!isTruthy(left)) return left;
@@ -250,14 +252,14 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitVarRefExpr(Expr.VarRef expr) {
+    public Object visitVarRefExpr(RuntimeExpr.VarRef expr) {
         return environment.getVar(expr.name);
     }
 
-    public void executeBlock(List<Stmt> statements) {
+    public void executeBlock(RuntimeStmt[] statements) {
         this.environment.push();
         try {
-            for (Stmt statement : statements) {
+            for (RuntimeStmt statement : statements) {
                 execute(statement);
             }
         } finally {
@@ -266,10 +268,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitUnaryExpr(Expr.Unary expr) {
+    public Object visitUnaryExpr(RuntimeExpr.Unary expr) {
         Object right = evaluate(expr.right);
 
-        return switch (expr.operator.type()) {
+        return switch (expr.operator) {
             case NOT -> !isTruthy(right);
             case SUB -> {
                 if (right instanceof Double)
@@ -284,44 +286,44 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitAssignExpr(Expr.Assign expr) {
+    public Object visitAssignExpr(RuntimeExpr.Assign expr) {
         Object value = evaluate(expr.value);
-        if (expr.type.type() == TokenType.ASSIGN) environment.assignVar(expr.name, value);
-        else value = environment.assignVarWithOperator(expr.type, expr.name, value, expr.executor.get(), expr.operand);
+        if (expr.type == TokenType.ASSIGN) environment.assignVar(expr.name, value);
+        else value = environment.assignVarWithOperator(expr.type, expr.line, expr.name, value, expr.executor.get(), expr.operand);
         return value;
     }
 
     @Override
-    public Object visitSpecialAssignExpr(Expr.SpecialAssign expr) {
+    public Object visitSpecialAssignExpr(RuntimeExpr.SpecialAssign expr) {
         return environment.specialVarAssign(expr.name, expr.assignType);
     }
 
     @Override
-    public Object visitBinaryExpr(Expr.Binary expr) {
+    public Object visitBinaryExpr(RuntimeExpr.Binary expr) {
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
-        return visitAlgebra(left, right, expr.executor.get(), expr.operator, expr.operand);
+        return visitAlgebra(left, right, expr.executor.get(), expr.operator, expr.line, expr.operand);
     }
 
     @Override
-    public Object visitWhenExpr(Expr.When expr) {
+    public Object visitWhenExpr(RuntimeExpr.When expr) {
         return isTruthy(evaluate(expr.condition)) ? evaluate(expr.ifTrue) : evaluate(expr.ifFalse);
     }
 
     @Override
-    public Object visitSwitchExpr(Expr.Switch stmt) {
+    public Object visitSwitchExpr(RuntimeExpr.Switch stmt) {
         Object o = evaluate(stmt.provider);
         return stmt.params.containsKey(o) ? evaluate(stmt.params.get(o)) : evaluate(stmt.defaulted);
     }
 
     @Override
-    public Object visitCastCheckExpr(Expr.CastCheck expr) {
+    public Object visitCastCheckExpr(RuntimeExpr.CastCheck expr) {
         Object object = evaluate(expr.object);
         if (object instanceof ClassInstance instance) {
             ScriptedClass type = instance.getType();
             if (type.isParentOf(expr.targetType.get())) {
                 if (expr.patternVarName != null) {
-                    environment.defineVar(expr.patternVarName.lexeme(), instance);
+                    environment.defineVar(expr.patternVarName, instance);
                 }
                 return true;
             }
@@ -343,7 +345,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 
     @Override
-    public Object visitInstCallExpr(Expr.InstCall expr) {
+    public Object visitInstCallExpr(RuntimeExpr.InstCall expr) {
         ClassInstance inst = (ClassInstance) evaluate(expr.callee);
         pushCallIndex(expr.name.line());
         pushCall(inst.getType().absoluteName(), expr.name.lexeme(), inst.getType().name());
@@ -353,7 +355,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitStaticCallExpr(Expr.StaticCall expr) {
+    public Object visitStaticCallExpr(RuntimeExpr.StaticCall expr) {
         pushCallIndex(expr.name.line());
         pushCall(expr.target.get().absoluteName(), expr.name.lexeme(), expr.target.get().name());
         Object data = staticCall(expr.target.get(), expr.name.lexeme(), expr.methodOrdinal, visitArgs(expr.args));
@@ -365,12 +367,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return target.getStaticMethodByOrdinal(name, ordinal).call(new Environment(), this, args);
     }
 
-    public List<Object> visitArgs(List<Expr> args) {
-        return args.stream().map(this::evaluate).toList();
+    public List<Object> visitArgs(RuntimeExpr[] args) {
+        return Arrays.stream(args).map(this::evaluate).toList();
     }
 
     @Override
-    public Object visitConstructorExpr(Expr.Constructor expr) {
+    public Object visitConstructorExpr(RuntimeExpr.Constructor expr) {
         pushCallIndex(expr.keyword.line());
         pushCall(expr.target.get().absoluteName(), "<init>", expr.target.name());
         Object data = expr.target.get().createInst(expr.params, expr.ordinal, this);
@@ -379,17 +381,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitGetExpr(Expr.Get expr) {
-        return ((ClassInstance) evaluate(expr.object)).getField(expr.name.lexeme());
+    public Object visitGetExpr(RuntimeExpr.Get expr) {
+        return ((ClassInstance) evaluate(expr.object)).getField(expr.name);
     }
 
     @Override
-    public Object visitStaticGetExpr(Expr.StaticGet expr) {
-        return expr.target.get().getStaticField(expr.name.lexeme());
+    public Object visitStaticGetExpr(RuntimeExpr.StaticGet expr) {
+        return expr.target.get().getStaticField(expr.name);
     }
 
     @Override
-    public Object visitArrayGetExpr(Expr.ArrayGet expr) {
+    public Object visitArrayGetExpr(RuntimeExpr.ArrayGet expr) {
         Object[] array = (Object[]) evaluate(expr.object);
         int index = (int) evaluate(expr.index);
         if (array.length < index || index < 0) {
@@ -400,58 +402,58 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitSetExpr(Expr.Set expr) {
+    public Object visitSetExpr(RuntimeExpr.Set expr) {
         Object val = evaluate(expr.value);
         ClassInstance instance = (ClassInstance) evaluate(expr.object);
-        if (expr.assignType.type() == TokenType.ASSIGN) {
-            return instance.assignField(expr.name.lexeme(), val);
+        if (expr.assignType == TokenType.ASSIGN) {
+            return instance.assignField(expr.name, val);
         } else {
-            return instance.assignFieldWithOperator(expr.name.lexeme(), val, expr.assignType, null, null);
+            return instance.assignFieldWithOperator(expr.name, val, expr.line, expr.assignType, null, null);
         }
     }
 
     @Override
-    public Object visitStaticSetExpr(Expr.StaticSet expr) {
+    public Object visitStaticSetExpr(RuntimeExpr.StaticSet expr) {
         Object val = evaluate(expr.value);
-        if (expr.assignType.type() == TokenType.ASSIGN) {
-            return expr.target.get().assignStaticField(expr.name.lexeme(), val);
+        if (expr.assignType == TokenType.ASSIGN) {
+            return expr.target.get().assignStaticField(expr.name, val);
         } else {
-            return expr.target.get().assignStaticFieldWithOperator(expr.name.lexeme(), val, expr.assignType, null, null);
+            return expr.target.get().assignStaticFieldWithOperator(expr.name, val, expr.assignType, expr.line, null, null);
         }
     }
 
-    public Object visitAlgebra(Object left, Object right, ScriptedClass executor, Token operator, Operand operand) {
+    public Object visitAlgebra(Object left, Object right, ScriptedClass executor, TokenType operator, int line, Operand operand) {
         try {
             return executor.doOperation(OperationType.of(operator), operand, operand == Operand.LEFT ? left : right, operand == Operand.LEFT ? right : left);
         } catch (ArithmeticException e) {
-            pushCallIndex(operator.line());
+            pushCallIndex(line);
             throw AbstractScriptedException.createException(VarTypeManager.ARITHMETIC_EXCEPTION, e.getMessage());
         }
     }
 
     @Override
-    public Object visitArraySetExpr(Expr.ArraySet expr) {
+    public Object visitArraySetExpr(RuntimeExpr.ArraySet expr) {
         Object[] array = (Object[]) evaluate(expr.object);
         int index = (int) evaluate(expr.index);
         if (array.length < index || index < 0) {
             pushCallIndex(0);
             throw AbstractScriptedException.createException(VarTypeManager.INDEX_OUT_OF_BOUNDS_EXCEPTION, "index " + expr.index + " out of bounds for length " + array.length);
         }
-        return array[index] = Interpreter.INSTANCE.visitAlgebra(array[index], evaluate(expr.value), null, expr.assignType, null);
+        return array[index] = Interpreter.INSTANCE.visitAlgebra(array[index], evaluate(expr.value), null, expr.assignType, expr.line, null);
     }
 
     @Override
-    public Object visitSpecialSetExpr(Expr.SpecialSet expr) {
-        return ((ClassInstance) evaluate(expr.callee)).specialAssign(expr.name.lexeme(), expr.assignType);
+    public Object visitSpecialSetExpr(RuntimeExpr.SpecialSet expr) {
+        return ((ClassInstance) evaluate(expr.callee)).specialAssign(expr.name, expr.assignType);
     }
 
     @Override
-    public Object visitStaticSpecialExpr(Expr.StaticSpecial expr) {
-        return expr.target.get().staticSpecialAssign(expr.name.lexeme(), expr.assignType);
+    public Object visitStaticSpecialExpr(RuntimeExpr.StaticSpecial expr) {
+        return expr.target.get().staticSpecialAssign(expr.name, expr.assignType);
     }
 
     @Override
-    public Object visitArraySpecialExpr(Expr.ArraySpecial expr) {
+    public Object visitArraySpecialExpr(RuntimeExpr.ArraySpecial expr) {
         Object[] array = (Object[]) evaluate(expr.object);
         int index = (int) evaluate(expr.index);
         if (array.length < index || index < 0) {
@@ -462,7 +464,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitSliceExpr(Expr.Slice expr) {
+    public Object visitSliceExpr(RuntimeExpr.Slice expr) {
         Object[] array = (Object[]) evaluate(expr.object);
         int interval = expr.interval != null ? (int) evaluate(expr.interval) : 1;
         int min = expr.start != null ? (int) evaluate(expr.start) : interval < 0 ? array.length : 0;
@@ -483,7 +485,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return a.equals(b);
     }
 
-    public Object evaluate(Expr expr) {
+    public Object evaluate(RuntimeExpr expr) {
         return expr.accept(this);
     }
 

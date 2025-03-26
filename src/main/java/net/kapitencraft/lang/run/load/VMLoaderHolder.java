@@ -3,26 +3,21 @@ package net.kapitencraft.lang.run.load;
 import com.google.gson.JsonObject;
 import com.google.gson.internal.Streams;
 import com.google.gson.stream.JsonReader;
-import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.*;
-import net.kapitencraft.lang.oop.clazz.generated.GeneratedAnnotation;
 import net.kapitencraft.lang.oop.clazz.generated.GeneratedClass;
 import net.kapitencraft.lang.oop.clazz.generated.GeneratedEnum;
-import net.kapitencraft.lang.oop.clazz.generated.GeneratedInterface;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonAnnotation;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonEnum;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonInterface;
 import net.kapitencraft.tool.GsonHelper;
-import org.checkerframework.checker.units.qual.C;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public class VMLoaderHolder extends ClassLoaderHolder {
     private final JsonObject data;
@@ -72,10 +67,8 @@ public class VMLoaderHolder extends ClassLoaderHolder {
         ScriptedClass target;
         try {
             target = switch (type) {
-                case ANNOTATION -> GeneratedAnnotation.load(data, enclosed, pck());
-                case INTERFACE -> GeneratedInterface.load(data, enclosed, pck());
-                case CLASS -> GeneratedClass.load(data, enclosed, pck());
                 case ENUM -> GeneratedEnum.load(data, enclosed, pck());
+                default -> GeneratedClass.load(data, enclosed, pck());
             };
             this.reference.setTarget(target);
             return target;

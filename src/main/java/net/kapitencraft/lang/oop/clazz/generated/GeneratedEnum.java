@@ -176,11 +176,6 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public Map<String, DynamicClassInstance> getConstantValues() {
-        return constants;
-    }
-
-    @Override
     public DynamicClassInstance[] getConstants() {
         return constantData;
     }

@@ -183,11 +183,6 @@ public class SkeletonInterface implements ScriptedClass {
     }
 
     @Override
-    public ClassType getClassType() {
-        return ClassType.INTERFACE;
-    }
-
-    @Override
     public AnnotationClassInstance[] annotations() {
         return new AnnotationClassInstance[0];
     }

@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.holder.ast.RuntimeExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
@@ -106,21 +107,21 @@ public interface ScriptedClass {
 
     Map<String, ? extends ScriptedField> staticFields();
 
-    default Object staticSpecialAssign(String name, Token assignType) {
+    default Object staticSpecialAssign(String name, TokenType assignType) {
         checkInit();
         Object val = getStaticField(name);
         if (val instanceof Integer) {
-            return this.assignStaticField(name, (int)val + (assignType.type() == TokenType.GROW ? 1 : -1));
+            return this.assignStaticField(name, (int)val + (assignType == TokenType.GROW ? 1 : -1));
         } else if (val instanceof Float) {
-            return this.assignStaticField(name, (float) val + (assignType.type() == TokenType.GROW ? 1 : -1));
+            return this.assignStaticField(name, (float) val + (assignType == TokenType.GROW ? 1 : -1));
         } else {
-            return this.assignStaticField(name, (double)val + (assignType.type() == TokenType.GROW ? 1 : -1));
+            return this.assignStaticField(name, (double)val + (assignType == TokenType.GROW ? 1 : -1));
         }
     }
 
-    default Object assignStaticFieldWithOperator(String name, Object val, Token type, ScriptedClass executor, Operand operand) {
+    default Object assignStaticFieldWithOperator(String name, Object val, TokenType type, int line, ScriptedClass executor, Operand operand) {
         checkInit();
-        Object newVal = Interpreter.INSTANCE.visitAlgebra(getStaticField(name), val, executor, type, operand);
+        Object newVal = Interpreter.INSTANCE.visitAlgebra(getStaticField(name), val, executor, type, line, operand);
         return this.assignStaticField(name, newVal);
     }
 
@@ -130,6 +131,7 @@ public interface ScriptedClass {
     @Contract(pure = true)
     String pck(); //stupid keyword :agony:
 
+    @Contract(pure = true)
     default String absoluteName() {
         return pck() + "." + name();
     }
@@ -175,7 +177,7 @@ public interface ScriptedClass {
         return superclass() != null && superclass().get().hasMethod(name);
     }
 
-    default DynamicClassInstance createInst(List<Expr> params, int ordinal, Interpreter interpreter) {
+    default DynamicClassInstance createInst(RuntimeExpr[] params, int ordinal, Interpreter interpreter) {
         return createNativeInst(interpreter.visitArgs(params), ordinal, interpreter);
     }
 
@@ -209,7 +211,6 @@ public interface ScriptedClass {
                 suspectedParent.isParentOf(this);
     }
 
-
     /**
      * @param name name of the method
      * @param ordinal ID of the given method name generated at step COMPILE
@@ -229,8 +230,6 @@ public interface ScriptedClass {
     ClassReference getEnclosing(String name);
 
     AbstractMethodMap getMethods();
-
-    ClassType getClassType();
 
     AnnotationClassInstance[] annotations();
 

@@ -241,11 +241,6 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public ClassType getClassType() {
-        return ClassType.CLASS;
-    }
-
-    @Override
     public AnnotationClassInstance[] annotations() {
         return new AnnotationClassInstance[0];
     }

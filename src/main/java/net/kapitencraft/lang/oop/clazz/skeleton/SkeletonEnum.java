@@ -143,11 +143,6 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public Map<String, DynamicClassInstance> getConstantValues() {
-        return Map.of();
-    }
-
-    @Override
     public DynamicClassInstance[] getConstants() {
         return new DynamicClassInstance[0];
     }

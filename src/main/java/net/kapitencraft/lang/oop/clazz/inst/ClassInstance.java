@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.oop.clazz.inst;
 
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.algebra.Operand;
@@ -11,9 +12,9 @@ public interface ClassInstance {
 
     Object assignField(String name, Object val);
 
-    Object assignFieldWithOperator(String name, Object val, Token type, ScriptedClass executor, Operand operand);
+    Object assignFieldWithOperator(String name, Object val, int line, TokenType type, ScriptedClass executor, Operand operand);
 
-    Object specialAssign(String name, Token assignType);
+    Object specialAssign(String name, TokenType assignType);
 
     Object getField(String name);
 

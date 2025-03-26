@@ -4,6 +4,7 @@ import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.algebra.Operand;
@@ -45,12 +46,12 @@ public class DynamicClassInstance implements ClassInstance {
         }
 
         @Override
-        public Object assignFieldWithOperator(String name, Object val, Token type, ScriptedClass executor, Operand operand) {
-            return DynamicClassInstance.this.assignFieldWithOperator(name, val, type, executor, operand);
+        public Object assignFieldWithOperator(String name, Object val, int line, TokenType type, ScriptedClass executor, Operand operand) {
+            return DynamicClassInstance.this.assignFieldWithOperator(name, val, line, type, executor, operand);
         }
 
         @Override
-        public Object specialAssign(String name, Token assignType) {
+        public Object specialAssign(String name, TokenType assignType) {
             return DynamicClassInstance.this.specialAssign(name, assignType);
         }
 
@@ -90,12 +91,12 @@ public class DynamicClassInstance implements ClassInstance {
         return getField(name);
     }
 
-    public Object assignFieldWithOperator(String name, Object val, Token type, ScriptedClass executor, Operand operand) {
-        Object newVal = Interpreter.INSTANCE.visitAlgebra(getField(name), val, executor, type, operand);
+    public Object assignFieldWithOperator(String name, Object val, int line, TokenType type, ScriptedClass executor, Operand operand) {
+        Object newVal = Interpreter.INSTANCE.visitAlgebra(getField(name), val, executor, type, line, operand);
         return this.assignField(name, newVal);
     }
 
-    public Object specialAssign(String name, Token assignType) {
+    public Object specialAssign(String name, TokenType assignType) {
         Object val = getField(name);
         return this.assignField(name, Math.specialMerge(val, assignType));
     }

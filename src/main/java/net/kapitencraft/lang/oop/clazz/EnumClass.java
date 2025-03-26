@@ -18,8 +18,6 @@ public interface EnumClass extends ScriptedClass {
 
     void setConstantValues(Map<String, DynamicClassInstance> constants);
 
-    Map<String, DynamicClassInstance> getConstantValues();
-
     DynamicClassInstance[] getConstants();
 
     @Override
@@ -56,10 +54,5 @@ public interface EnumClass extends ScriptedClass {
     default int getStaticMethodOrdinal(String name, ClassReference[] args) {
         if ("values".equals(name) && args.length == 0) return 0;
         return -1;
-    }
-
-    @Override
-    default ClassType getClassType() {
-        return ClassType.ENUM;
     }
 }

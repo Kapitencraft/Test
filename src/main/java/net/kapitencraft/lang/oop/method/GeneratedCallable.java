@@ -49,7 +49,7 @@ public class GeneratedCallable implements ScriptedCallable {
         }
         if (!Modifiers.isAbstract(modifiers)) {
             JsonArray array = new JsonArray();
-            body.stream().map(builder::cache).forEach(array::add);
+            //body.stream().map(builder::cache).forEach(array::add); TODO
             object.add("body", array);
         }
         if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);

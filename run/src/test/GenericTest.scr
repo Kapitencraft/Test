@@ -7,7 +7,6 @@ class GenericTest {
         System.print(test(19f));
         System.print(test(14.));
         Supplier<String> test = new TestA(10);
-        testA(test.get());
     }
 
     static <T> T create(T in) {
