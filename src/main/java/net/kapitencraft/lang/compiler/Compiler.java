@@ -2,6 +2,8 @@ package net.kapitencraft.lang.compiler;
 
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.visitor.LocationFinder;
+import net.kapitencraft.lang.holder.ast.CompileExpr;
+import net.kapitencraft.lang.holder.ast.CompileStmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -46,12 +48,12 @@ public class Compiler {
             Compiler.error(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
         }
 
-        public void error(Stmt loc, String msg) {
+        public void error(CompileStmt loc, String msg) {
             hadError = true;
             error(finder.find(loc), msg);
         }
 
-        public void error(Expr loc, String msg) {
+        public void error(CompileExpr loc, String msg) {
             hadError = true;
             error(finder.find(loc), msg);
         }
@@ -69,7 +71,7 @@ public class Compiler {
             Compiler.warn(loc, msg, fileLoc, lines[loc.line()]);
         }
 
-        public void warn(Stmt loc, String msg) {
+        public void warn(CompileStmt loc, String msg) {
             warn(finder.find(loc), msg);
         }
 

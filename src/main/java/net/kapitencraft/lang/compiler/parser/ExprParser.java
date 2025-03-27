@@ -54,7 +54,7 @@ public class ExprParser extends AbstractParser {
         this.fallback.remove(this.fallback.size() - 1);
     }
 
-    public Expr expression() {
+    public CompileExpr expression() {
         if (match(SWITCH)) {
             return switchExpr();
         }
@@ -150,13 +150,13 @@ public class ExprParser extends AbstractParser {
         CompileExpr expr = castCheck();
         if (match(QUESTION_MARK)) {
             expectCondition(expr);
-            Expr ifTrue = expression();
+            CompileExpr ifTrue = expression();
             consume(TokenType.COLON, "':' expected");
-            Expr ifFalse = expression();
+            CompileExpr ifFalse = expression();
             ClassReference ifTrueClass = finder.findRetType(ifTrue);
             ClassReference ifFalseClass = finder.findRetType(ifFalse);
             if (!(ifTrueClass.get().isParentOf(ifFalseClass.get()) || ifFalseClass.get().isParentOf(ifTrueClass.get()))) error(locFinder.find(ifTrue), "both expressions on when statement must return the same type");
-            expr = new Expr.When(expr, ifTrue, ifFalse);
+            //expr = new Expr.When(expr, ifTrue, ifFalse);
         }
 
         return expr;
@@ -171,20 +171,20 @@ public class ExprParser extends AbstractParser {
                 patternVar = previous();
                 varAnalyser.add(patternVar.lexeme(), loxClass, true, false);
             }
-            return new CompileExpr.CastCheck(expr, loxClass, patternVar);
+            return null;// new CompileExpr.CastCheck(expr, loxClass, patternVar);
         }
 
         return expr;
     }
 
     private CompileExpr assignment() {
-        Expr expr = or();
+        CompileExpr expr = or();
 
         if (match(ASSIGN) || match(OPERATION_ASSIGN)) {
             Token assign = previous();
             CompileExpr value = assignment();
 
-            if (expr instanceof Expr.VarRef variable) {
+            if (expr instanceof CompileExpr.VarRef variable) {
                 Token name = variable.name;
 
                 checkVarExistence(name, assign.type() != TokenType.ASSIGN,
@@ -196,19 +196,19 @@ public class ExprParser extends AbstractParser {
                     executor = Pair.of(VarTypeManager.VOID.reference(), Operand.LEFT);
                 } else executor = getExecutor(varAnalyser.getType(name.lexeme()), assign, value);
 
-                return new CompileExpr.Assign(name, value, assign, executor.left(), executor.right());
-            } else if (expr instanceof Expr.Get get) {
+                return null;// new CompileExpr.Assign(name, value, assign, executor.left(), executor.right());
+            } else if (expr instanceof CompileExpr.Get get) {
                 ClassReference target = finder.findRetType(get.object);
                 expectType(get.name, target.get().getFieldType(get.name.lexeme()), finder.findRetType(value));
 
                 Pair<ClassReference, Operand> executor;
                 if (assign.type() != ASSIGN) executor = getExecutor(target, assign, value);
                 else executor = Pair.of(VarTypeManager.VOID.reference(), Operand.LEFT);
-                return new Expr.Set(get.object, get.name, value, assign, executor.left(), executor.right());
-            } else if (expr instanceof Expr.ArrayGet get) {
+                return null;// new Expr.Set(get.object, get.name, value, assign, executor.left(), executor.right());
+            } else if (expr instanceof CompileExpr.ArrayGet get) {
 
                 Pair<ClassReference, Operand> executor = getExecutor(get, assign, value);
-                return new Expr.ArraySet(get.object, get.index, value, assign, executor.left(), executor.right());
+                return null;// new Expr.ArraySet(get.object, get.index, value, assign, executor.left(), executor.right());
             }
 
             error(assign, "Invalid assignment target.");
@@ -218,15 +218,15 @@ public class ExprParser extends AbstractParser {
 
             Token assign = previous();
 
-            if (expr instanceof Expr.VarRef ref) {
+            if (expr instanceof CompileExpr.VarRef ref) {
                 Token name = ref.name;
 
                 checkVarExistence(name, true, false);
-                return new Expr.SpecialAssign(name, assign);
+                return new CompileExpr.SpecialAssign(name, assign);
             }
 
-            if (expr instanceof Expr.Get get) {
-                return new Expr.SpecialSet(get.object, get.name, assign);
+            if (expr instanceof CompileExpr.Get get) {
+                return new CompileExpr.SpecialSet(get.object, get.name, assign);
             }
 
         }
@@ -234,29 +234,29 @@ public class ExprParser extends AbstractParser {
         return expr;
     }
 
-    private Expr or() {
-        Expr expr = and();
+    private CompileExpr or() {
+        CompileExpr expr = and();
 
         while (match(OR)) {
             Token operator = previous();
-            Expr right = and();
+            CompileExpr right = and();
             expectCondition(expr);
             expectCondition(right);
-            expr = new Expr.Logical(expr, operator, right);
+            //expr = new CompileExpr.Logical(expr, operator, right);
         }
 
         return expr;
     }
 
-    private Expr and() {
-        Expr expr = equality();
+    private CompileExpr and() {
+        CompileExpr expr = equality();
 
         while (match(AND, XOR)) {
             Token operator = previous();
-            Expr right = equality();
+            CompileExpr right = equality();
             expectCondition(expr);
             expectCondition(right);
-            expr = new Expr.Logical(expr, operator, right);
+            //expr = new Expr.Logical(expr, operator, right);
         }
 
         return expr;
@@ -288,91 +288,91 @@ public class ExprParser extends AbstractParser {
         return getExecutor(left, operator, finder.findRetType(rightArg));
     }
 
-    private Expr equality() {
-        Expr expr = comparison();
+    private CompileExpr equality() {
+        CompileExpr expr = comparison();
 
         while (match(EQUALITY)) {
             Token operator = previous();
-            Expr right = comparison();
+            CompileExpr right = comparison();
             Pair<ClassReference, Operand> executorInfo = getExecutor(expr, operator, right);
-            expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
+            //expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
         }
 
         return expr;
     }
 
-    private Expr comparison() {
-        Expr expr = term();
+    private CompileExpr comparison() {
+        CompileExpr expr = term();
 
         while (match(COMPARATORS)) {
             Token operator = previous();
-            Expr right = term();
+            CompileExpr right = term();
             Pair<ClassReference, Operand> executorInfo = getExecutor(expr, operator, right);
-            expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
+            //expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
         }
 
         return expr;
     }
 
-    private Expr term() {
-        Expr expr = factor();
+    private CompileExpr term() {
+        CompileExpr expr = factor();
 
         while (match(SUB, ADD)) {
             Token operator = previous();
-            Expr right = factor();
+            CompileExpr right = factor();
 
             Pair<ClassReference, Operand> executorInfo = getExecutor(expr, operator, right);
-            expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
+            //expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
         }
 
         return expr;
     }
 
-    private Expr factor() {
-        Expr expr = unary();
+    private CompileExpr factor() {
+        CompileExpr expr = unary();
 
         while (match(DIV, MUL, MOD, POW)) {
             Token operator = previous();
-            Expr right = unary();
+            CompileExpr right = unary();
             Pair<ClassReference, Operand> executorInfo = getExecutor(expr, operator, right);
-            expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
+            //expr = new Expr.Binary(expr, operator, executorInfo.left(), executorInfo.right(), right);
         }
 
         return expr;
     }
 
-    private Expr unary() {
+    private CompileExpr unary() {
         if (match(NOT, SUB)) {
             Token operator = previous();
-            Expr right = unary();
+            CompileExpr right = unary();
             if (operator.type() == NOT) expectCondition(right);
             else expectType(right, VarTypeManager.NUMBER.reference());
-            return new Expr.Unary(operator, right);
+            return null;// new Expr.Unary(operator, right);
         }
 
         return call();
     }
 
-    private Expr switchExpr() {
+    private CompileExpr switchExpr() {
         Token keyword = previous();
         consumeBracketOpen("switch");
 
         expectType(VarTypeManager.ENUM, VarTypeManager.STRING, VarTypeManager.INTEGER.reference(), VarTypeManager.DOUBLE.reference(), VarTypeManager.FLOAT.reference(), VarTypeManager.CHAR.reference());
-        Expr provider = expression();
+        CompileExpr provider = expression();
         popExpectation();
 
         consumeBracketClose("switch");
 
         consumeCurlyOpen("switch body");
-        Map<Object, Expr> params = new HashMap<>();
-        Expr def = null;
+        Map<Object, CompileExpr> params = new HashMap<>();
+        CompileExpr def = null;
 
         while (!check(C_BRACKET_C)) {
             if (match(CASE)) {
                 Object key = literal();
                 if (params.containsKey(key)) errorLogger.errorF(previous(), "Duplicate case key '%s'", previous().lexeme());
                 consume(LAMBDA, "not a statement");
-                Expr expr = expression();
+                CompileExpr expr = expression();
                 consumeEndOfArg();
                 params.put(key, expr);
             } else if (match(DEFAULT)) {
@@ -386,11 +386,11 @@ public class ExprParser extends AbstractParser {
         }
 
         consumeCurlyClose("switch body");
-        return new Expr.Switch(provider, params, def, keyword);
+        return null;// new Expr.Switch(provider, params, def, keyword);
     }
 
-    private Expr finishInstCall(Expr.Get get) {
-        List<Expr> arguments = args();
+    private CompileExpr finishInstCall(CompileExpr.Get get) {
+        CompileExpr[] arguments = args();
 
         ClassReference[] givenTypes = argTypes(arguments);
         ScriptedClass targetClass = this.finder.findRetType(get.object).get();
@@ -398,7 +398,7 @@ public class ExprParser extends AbstractParser {
         if (!targetClass.hasMethod(get.name.lexeme())) {
             error(get.name, "unknown method '" + get.name.lexeme() + "'");
             consumeBracketClose("arguments");
-            return new Expr.InstCall(get.object, get.name, -1, arguments);
+            return null;// new CompileExpr.InstCall(get.object, get.name, -1, arguments);
         }
         int ordinal = targetClass.getMethodOrdinal(get.name.lexeme(), givenTypes);
         if (ordinal == -1) ordinal = 0;
@@ -408,21 +408,21 @@ public class ExprParser extends AbstractParser {
 
         consumeBracketClose("arguments");
 
-        return new Expr.InstCall(get.object, get.name, ordinal, arguments);
+        return null;// new CompileExpr.InstCall(get.object, get.name, ordinal, arguments);
     }
 
-    private Expr statics() {
+    private CompileExpr statics() {
         ClassReference target = consumeVarType(generics);
         Token name = previous();
         if (check(BRACKET_O)) return staticCall(target, name);
         if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
         if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
-        return new Expr.StaticGet(target, name);
+        return null; // new CompileExpr.StaticGet(target, name);
     }
 
-    private Expr staticCall(ClassReference target, Token name) {
+    private CompileExpr staticCall(ClassReference target, Token name) {
         consumeBracketOpen("static call");
-        List<Expr> args = args();
+        CompileExpr[] args = args();
 
         int ordinal = 0;
 
@@ -431,7 +431,7 @@ public class ExprParser extends AbstractParser {
             if (!target.get().hasStaticMethod(name.lexeme())) {
                 error(name, "unknown symbol");
                 consumeBracketClose("static call");
-                return new Expr.StaticCall(target, name, ordinal, args);
+                return null;// new CompileExpr.StaticCall(target, name, ordinal, args);
             }
 
             ordinal = target.get().getStaticMethodOrdinal(name.lexeme(), argTypes(args));
@@ -442,22 +442,22 @@ public class ExprParser extends AbstractParser {
 
         consumeBracketClose("static call");
 
-        return new Expr.StaticCall(target, name, ordinal, args);
+        return null;// new CompileExpr.StaticCall(target, name, ordinal, args);
     }
 
-    private Expr staticAssign(ClassReference target, Token name) {
+    private CompileExpr staticAssign(ClassReference target, Token name) {
         Token type = previous();
-        Expr value = expression();
+        CompileExpr value = expression();
         Pair<ClassReference, Operand> executor = getExecutor(target.get().getStaticFieldType(name.lexeme()), type, value);
-        return new Expr.StaticSet(target, name, value, type, executor.left(), executor.right());
+        return null; //new CompileExpr.StaticSet(target, name, value, type, executor.left(), executor.right());
     }
 
-    private Expr staticSpecialAssign(ClassReference target, Token name) {
-        return new Expr.StaticSpecial(target, name, previous());
+    private CompileExpr staticSpecialAssign(ClassReference target, Token name) {
+        return null; // new CompileExpr.StaticSpecial(target, name, previous());
     }
 
-    public List<Expr> args() {
-        List<Expr> arguments = new ArrayList<>();
+    public CompileExpr[] args() {
+        List<CompileExpr> arguments = new ArrayList<>();
         if (!check(BRACKET_C)) {
             do {
                 if (arguments.size() > 255) error(peek(), "Can't have more than 255 arguments");
@@ -465,52 +465,52 @@ public class ExprParser extends AbstractParser {
             } while (match(COMMA));
         }
 
-        return arguments;
+        return arguments.toArray(new CompileExpr[0]);
     }
 
-    public ClassReference[] argTypes(List<Expr> args) {
-        return args.stream().map(this.finder::findRetType).toArray(ClassReference[]::new);
+    public ClassReference[] argTypes(CompileExpr[] args) {
+        return Arrays.stream(args).map(this.finder::findRetType).toArray(ClassReference[]::new);
     }
 
 
-    private Expr call() {
-        Expr expr = primary();
+    private CompileExpr call() {
+        CompileExpr expr = primary();
 
         while (true) {
             if (match(S_BRACKET_O)) {
                 Token bracketO = previous();
                 if (match(COLON)) {
-                    Expr end = check(COLON) ? null : expression();
+                    CompileExpr end = check(COLON) ? null : expression();
                     consume(COLON, "':' expected");
-                    Expr interval = check(S_BRACKET_C) ? null : expression();
+                    CompileExpr interval = check(S_BRACKET_C) ? null : expression();
                     if (end == null && interval == null) error(bracketO, "slice without any definition");
                     consume(S_BRACKET_C, "']' expected");
-                    expr = new Expr.Slice(expr, null, end, interval);
+                    //expr = new Expr.Slice(expr, null, end, interval);
                     continue;
                 }
-                Expr index = expression();
+                CompileExpr index = expression();
                 if (match(COLON)) {
-                    Expr end = check(COLON) ? null : expression();
+                    CompileExpr end = check(COLON) ? null : expression();
                     consume(COLON, "':' expected");
-                    Expr interval = check(S_BRACKET_C) ? null : expression();
+                    CompileExpr interval = check(S_BRACKET_C) ? null : expression();
                     consume(S_BRACKET_C, "']' expected");
-                    expr = new Expr.Slice(expr, index, end, interval);
+                    expr = new CompileExpr.Slice(expr, index, end, interval);
                     continue;
                 }
                 consume(S_BRACKET_C, "']' expected");
                 if (!finder.findRetType(expr).get().isArray()) error(bracketO, "array type expected");
-                expr = new Expr.ArrayGet(expr, index);
+                expr = new CompileExpr.ArrayGet(expr, index);
             } else if (match(BRACKET_O)) {
-                if (expr instanceof Expr.Get get) expr = finishInstCall(get);
+                if (expr instanceof CompileExpr.Get get) expr = finishInstCall(get);
                 else error(locFinder.find(expr), "obj expected");
             } else if (match(DOT)) {
-                if (expr instanceof Expr.Literal && !check(IDENTIFIER)) continue;
+                if (expr instanceof CompileExpr.Literal && !check(IDENTIFIER)) continue;
                 Token name = consume(IDENTIFIER, "Expect property name after '.'");
                 ScriptedClass targetType = finder.findRetType(expr).get();
                 if (!check(BRACKET_O)) { //ensure not to check for field if it's a method
                     if (!targetType.hasField(name.lexeme())) error(name, "unknown symbol");
                 }
-                expr = new Expr.Get(expr, name);
+                //expr = new CompileExpr.Get(expr, name);
             } else {
                 break;
             }
@@ -520,7 +520,7 @@ public class ExprParser extends AbstractParser {
     }
 
     //TODO create generics stack to get return type
-    public void checkArguments(List<Expr> args, ScriptedCallable target, Token loc) {
+    public void checkArguments(CompileExpr[] args, ScriptedCallable target, Token loc) {
         ClassReference[] expectedTypes = target.argTypes();
         ClassReference[] givenTypes = argTypes(args);
         if (expectedTypes.length != givenTypes.length) {
@@ -531,7 +531,7 @@ public class ExprParser extends AbstractParser {
             errorLogger.logError("reason: actual and formal argument lists differ in length");
         } else {
             for (int i = 0; i < givenTypes.length; i++) {
-                expectType(locFinder.find(args.get(i)), givenTypes[i], expectedTypes[i]);
+                expectType(locFinder.find(args[i]), givenTypes[i], expectedTypes[i]);
             }
         }
 
@@ -549,12 +549,12 @@ public class ExprParser extends AbstractParser {
         throw error(peek(), "Expected literal");
     }
 
-    private Expr primary() {
+    private CompileExpr primary() {
         if (match(NEW)) {
             ClassReference loxClass = consumeVarType(generics);
             Token loc = previous();
             consumeBracketOpen("constructors");
-            List<Expr> args = args();
+            CompileExpr[] args = args();
             consumeBracketClose("constructors");
             MethodContainer constructorContainer = loxClass.get().getConstructor();
             int ordinal = constructorContainer.getMethodOrdinal(argTypes(args));
@@ -562,11 +562,11 @@ public class ExprParser extends AbstractParser {
 
             checkArguments(args, callable, loc);
 
-            return new Expr.Constructor(loc, loxClass, args, ordinal);
+            return null; //new CompileExpr.Constructor(loc, loxClass, args, ordinal);
         }
 
         if (match(PRIMITIVE)) {
-            return new Expr.Literal(previous());
+            return new CompileExpr.Literal(previous());
         }
 
         if (match(IDENTIFIER)) {
@@ -577,17 +577,17 @@ public class ExprParser extends AbstractParser {
                     String name = previous.lexeme();
                     if (check(BRACKET_O)) {
                         if (fallback.hasMethod(name)) {
-                            return finishInstCall(new Expr.Get(new Expr.VarRef(Token.createNative("this")), previous));
+                            return null; //finishInstCall(new CompileExpr.Get(new CompileExpr.VarRef(Token.createNative("this")), previous));
                         }
                         if (fallback.hasStaticMethod(name)) {
-                            return staticCall(currentFallback(), previous);
+                            return null; // staticCall(currentFallback(), previous);
                         }
                     } else {
                         if (fallback.hasField(name)) {
-                            return new Expr.Get(new Expr.VarRef(Token.createNative("this")), previous);
+                            return null; // new CompileExpr.Get(new CompileExpr.VarRef(Token.createNative("this")), previous);
                         }
                         if (fallback.hasStaticField(name)) {
-                            return new Expr.StaticGet(currentFallback(), previous);
+                            return null; // new CompileExpr.StaticGet(currentFallback(), previous);
                         }
                     }
                 }
@@ -595,15 +595,15 @@ public class ExprParser extends AbstractParser {
                 return statics();
             }
             checkVarExistence(previous, true, true);
-            return new Expr.VarRef(previous);
+            return new CompileExpr.VarRef(previous);
         }
 
-        if (match(THIS) || match(SUPER)) return new Expr.VarRef(previous());
+        if (match(THIS) || match(SUPER)) return new CompileExpr.VarRef(previous());
 
         if (match(BRACKET_O)) {
-            Expr expr = expression();
+            CompileExpr expr = expression();
             consumeBracketClose("expression");
-            return new Expr.Grouping(expr);
+            return new CompileExpr.Grouping(expr);
         }
 
         throw error(peek(), "Illegal start of expression");

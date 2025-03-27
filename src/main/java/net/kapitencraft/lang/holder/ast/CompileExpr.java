@@ -49,20 +49,22 @@ public abstract class CompileExpr {
     }
 
     public static class Set extends CompileExpr {
-        public final ClassReference executor;
-        public final Token name;
-        public final Token assignType;
-        public final CompileExpr value;
-        public final Operand operand;
         public final CompileExpr object;
+        public final Token name;
+        public final CompileExpr value;
+        public final Token assignType;
+        public final int line;
+        public final ClassReference executor;
+        public final Operand operand;
 
-        public Set(ClassReference executor, Token name, Token assignType, CompileExpr value, Operand operand, CompileExpr object) {
-            this.executor = executor;
-            this.name = name;
-            this.assignType = assignType;
-            this.value = value;
-            this.operand = operand;
+        public Set(CompileExpr object, Token name, CompileExpr value, Token assignType, int line, ClassReference executor, Operand operand) {
             this.object = object;
+            this.name = name;
+            this.value = value;
+            this.assignType = assignType;
+            this.line = line;
+            this.executor = executor;
+            this.operand = operand;
         }
 
         @Override
@@ -72,20 +74,22 @@ public abstract class CompileExpr {
     }
 
     public static class ArraySet extends CompileExpr {
-        public final ClassReference executor;
-        public final CompileExpr index;
-        public final Token assignType;
-        public final CompileExpr value;
-        public final Operand operand;
         public final CompileExpr object;
+        public final CompileExpr index;
+        public final CompileExpr value;
+        public final Token assignType;
+        public final int $line;
+        public final ClassReference executor;
+        public final Operand operand;
 
-        public ArraySet(ClassReference executor, CompileExpr index, Token assignType, CompileExpr value, Operand operand, CompileExpr object) {
-            this.executor = executor;
-            this.index = index;
-            this.assignType = assignType;
-            this.value = value;
-            this.operand = operand;
+        public ArraySet(CompileExpr object, CompileExpr index, CompileExpr value, Token assignType, int line, ClassReference executor, Operand operand) {
             this.object = object;
+            this.index = index;
+            this.value = value;
+            this.assignType = assignType;
+            this.$line = line;
+            this.executor = executor;
+            this.operand = operand;
         }
 
         @Override
@@ -95,14 +99,14 @@ public abstract class CompileExpr {
     }
 
     public static class ArraySpecial extends CompileExpr {
+        public final CompileExpr object;
         public final CompileExpr index;
         public final Token assignType;
-        public final CompileExpr object;
 
-        public ArraySpecial(CompileExpr index, Token assignType, CompileExpr object) {
+        public ArraySpecial(CompileExpr object, CompileExpr index, Token assignType) {
+            this.object = object;
             this.index = index;
             this.assignType = assignType;
-            this.object = object;
         }
 
         @Override
@@ -128,14 +132,14 @@ public abstract class CompileExpr {
 
     public static class Constructor extends CompileExpr {
         public final Token keyword;
-        public final CompileExpr[] params;
         public final ClassReference target;
+        public final CompileExpr[] params;
         public final int ordinal;
 
-        public Constructor(Token keyword, CompileExpr[] params, ClassReference target, int ordinal) {
+        public Constructor(Token keyword, ClassReference target, CompileExpr[] params, int ordinal) {
             this.keyword = keyword;
-            this.params = params;
             this.target = target;
+            this.params = params;
             this.ordinal = ordinal;
         }
 
@@ -146,16 +150,16 @@ public abstract class CompileExpr {
     }
 
     public static class InstCall extends CompileExpr {
-        public final CompileExpr[] args;
         public final CompileExpr callee;
         public final Token name;
         public final int methodOrdinal;
+        public final CompileExpr[] args;
 
-        public InstCall(CompileExpr[] args, CompileExpr callee, Token name, int methodOrdinal) {
-            this.args = args;
+        public InstCall(CompileExpr callee, Token name, int methodOrdinal, CompileExpr[] args) {
             this.callee = callee;
             this.name = name;
             this.methodOrdinal = methodOrdinal;
+            this.args = args;
         }
 
         @Override
@@ -165,20 +169,20 @@ public abstract class CompileExpr {
     }
 
     public static class StaticSet extends CompileExpr {
-        public final ClassReference executor;
-        public final Token name;
-        public final Token assignType;
-        public final CompileExpr value;
-        public final Operand operand;
         public final ClassReference target;
+        public final Token name;
+        public final CompileExpr value;
+        public final Token assignType;
+        public final ClassReference executor;
+        public final Operand operand;
 
-        public StaticSet(ClassReference executor, Token name, Token assignType, CompileExpr value, Operand operand, ClassReference target) {
-            this.executor = executor;
-            this.name = name;
-            this.assignType = assignType;
-            this.value = value;
-            this.operand = operand;
+        public StaticSet(ClassReference target, Token name, CompileExpr value, Token assignType, ClassReference executor, Operand operand) {
             this.target = target;
+            this.name = name;
+            this.value = value;
+            this.assignType = assignType;
+            this.executor = executor;
+            this.operand = operand;
         }
 
         @Override
@@ -189,13 +193,13 @@ public abstract class CompileExpr {
 
     public static class Logical extends CompileExpr {
         public final CompileExpr left;
-        public final CompileExpr right;
         public final Token operator;
+        public final CompileExpr right;
 
-        public Logical(CompileExpr left, CompileExpr right, Token operator) {
+        public Logical(CompileExpr left, Token operator, CompileExpr right) {
             this.left = left;
-            this.right = right;
             this.operator = operator;
+            this.right = right;
         }
 
         @Override
@@ -218,12 +222,12 @@ public abstract class CompileExpr {
     }
 
     public static class Unary extends CompileExpr {
-        public final CompileExpr right;
         public final Token operator;
+        public final CompileExpr right;
 
-        public Unary(CompileExpr right, Token operator) {
-            this.right = right;
+        public Unary(Token operator, CompileExpr right) {
             this.operator = operator;
+            this.right = right;
         }
 
         @Override
@@ -234,13 +238,13 @@ public abstract class CompileExpr {
 
     public static class When extends CompileExpr {
         public final CompileExpr condition;
-        public final CompileExpr ifFalse;
         public final CompileExpr ifTrue;
+        public final CompileExpr ifFalse;
 
-        public When(CompileExpr condition, CompileExpr ifFalse, CompileExpr ifTrue) {
+        public When(CompileExpr condition, CompileExpr ifTrue, CompileExpr ifFalse) {
             this.condition = condition;
-            this.ifFalse = ifFalse;
             this.ifTrue = ifTrue;
+            this.ifFalse = ifFalse;
         }
 
         @Override
@@ -250,14 +254,14 @@ public abstract class CompileExpr {
     }
 
     public static class CastCheck extends CompileExpr {
-        public final Token patternVarName;
-        public final ClassReference targetType;
         public final CompileExpr object;
+        public final ClassReference targetType;
+        public final Token patternVarName;
 
-        public CastCheck(Token patternVarName, ClassReference targetType, CompileExpr object) {
-            this.patternVarName = patternVarName;
-            this.targetType = targetType;
+        public CastCheck(CompileExpr object, ClassReference targetType, Token patternVarName) {
             this.object = object;
+            this.targetType = targetType;
+            this.patternVarName = patternVarName;
         }
 
         @Override
@@ -267,12 +271,12 @@ public abstract class CompileExpr {
     }
 
     public static class StaticGet extends CompileExpr {
-        public final Token name;
         public final ClassReference target;
+        public final Token name;
 
-        public StaticGet(Token name, ClassReference target) {
-            this.name = name;
+        public StaticGet(ClassReference target, Token name) {
             this.target = target;
+            this.name = name;
         }
 
         @Override
@@ -283,14 +287,14 @@ public abstract class CompileExpr {
 
     public static class Switch extends CompileExpr {
         public final CompileExpr provider;
-        public final CompileExpr defaulted;
         public final Map<Object,CompileExpr> params;
+        public final CompileExpr defaulted;
         public final Token keyword;
 
-        public Switch(CompileExpr provider, CompileExpr defaulted, Map<Object,CompileExpr> params, Token keyword) {
+        public Switch(CompileExpr provider, Map<Object,CompileExpr> params, CompileExpr defaulted, Token keyword) {
             this.provider = provider;
-            this.defaulted = defaulted;
             this.params = params;
+            this.defaulted = defaulted;
             this.keyword = keyword;
         }
 
@@ -301,16 +305,16 @@ public abstract class CompileExpr {
     }
 
     public static class Slice extends CompileExpr {
+        public final CompileExpr object;
         public final CompileExpr start;
         public final CompileExpr end;
         public final CompileExpr interval;
-        public final CompileExpr object;
 
-        public Slice(CompileExpr start, CompileExpr end, CompileExpr interval, CompileExpr object) {
+        public Slice(CompileExpr object, CompileExpr start, CompileExpr end, CompileExpr interval) {
+            this.object = object;
             this.start = start;
             this.end = end;
             this.interval = interval;
-            this.object = object;
         }
 
         @Override
@@ -320,12 +324,12 @@ public abstract class CompileExpr {
     }
 
     public static class Get extends CompileExpr {
-        public final Token name;
         public final CompileExpr object;
+        public final Token name;
 
-        public Get(Token name, CompileExpr object) {
-            this.name = name;
+        public Get(CompileExpr object, Token name) {
             this.object = object;
+            this.name = name;
         }
 
         @Override
@@ -335,12 +339,12 @@ public abstract class CompileExpr {
     }
 
     public static class ArrayGet extends CompileExpr {
-        public final CompileExpr index;
         public final CompileExpr object;
+        public final CompileExpr index;
 
-        public ArrayGet(CompileExpr index, CompileExpr object) {
-            this.index = index;
+        public ArrayGet(CompileExpr object, CompileExpr index) {
             this.object = object;
+            this.index = index;
         }
 
         @Override
@@ -350,10 +354,10 @@ public abstract class CompileExpr {
     }
 
     public static class Literal extends CompileExpr {
-        public final Token token;
+        public final Token literal;
 
-        public Literal(Token token) {
-            this.token = token;
+        public Literal(Token literal) {
+            this.literal = literal;
         }
 
         @Override
@@ -363,17 +367,17 @@ public abstract class CompileExpr {
     }
 
     public static class Assign extends CompileExpr {
-        public final ClassReference executor;
         public final Token name;
-        public final Token type;
         public final CompileExpr value;
+        public final Token type;
+        public final ClassReference executor;
         public final Operand operand;
 
-        public Assign(ClassReference executor, Token name, Token type, CompileExpr value, Operand operand) {
-            this.executor = executor;
+        public Assign(Token name, CompileExpr value, Token type, ClassReference executor, Operand operand) {
             this.name = name;
-            this.type = type;
             this.value = value;
+            this.type = type;
+            this.executor = executor;
             this.operand = operand;
         }
 
@@ -384,16 +388,16 @@ public abstract class CompileExpr {
     }
 
     public static class StaticCall extends CompileExpr {
-        public final CompileExpr[] args;
-        public final Token name;
         public final ClassReference target;
+        public final Token name;
         public final int methodOrdinal;
+        public final CompileExpr[] args;
 
-        public StaticCall(CompileExpr[] args, Token name, ClassReference target, int methodOrdinal) {
-            this.args = args;
-            this.name = name;
+        public StaticCall(ClassReference target, Token name, int methodOrdinal, CompileExpr[] args) {
             this.target = target;
+            this.name = name;
             this.methodOrdinal = methodOrdinal;
+            this.args = args;
         }
 
         @Override
@@ -404,16 +408,16 @@ public abstract class CompileExpr {
 
     public static class Binary extends CompileExpr {
         public final CompileExpr left;
-        public final ClassReference executor;
         public final CompileExpr right;
         public final Token operator;
+        public final ClassReference executor;
         public final Operand operand;
 
-        public Binary(CompileExpr left, ClassReference executor, CompileExpr right, Token operator, Operand operand) {
+        public Binary(CompileExpr left, CompileExpr right, Token operator, ClassReference executor, Operand operand) {
             this.left = left;
-            this.executor = executor;
             this.right = right;
             this.operator = operator;
+            this.executor = executor;
             this.operand = operand;
         }
 
@@ -424,14 +428,14 @@ public abstract class CompileExpr {
     }
 
     public static class StaticSpecial extends CompileExpr {
+        public final ClassReference target;
         public final Token name;
         public final Token assignType;
-        public final ClassReference target;
 
-        public StaticSpecial(Token name, Token assignType, ClassReference target) {
+        public StaticSpecial(ClassReference target, Token name, Token assignType) {
+            this.target = target;
             this.name = name;
             this.assignType = assignType;
-            this.target = target;
         }
 
         @Override

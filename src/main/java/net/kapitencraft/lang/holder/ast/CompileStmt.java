@@ -50,15 +50,15 @@ public abstract class CompileStmt {
 
     public static class VarDecl extends CompileStmt {
         public final Token name;
-        public final boolean isFinal;
         public final ClassReference type;
         public final CompileExpr initializer;
+        public final boolean isFinal;
 
-        public VarDecl(Token name, boolean isFinal, ClassReference type, CompileExpr initializer) {
+        public VarDecl(Token name, ClassReference type, CompileExpr initializer, boolean isFinal) {
             this.name = name;
-            this.isFinal = isFinal;
             this.type = type;
             this.initializer = initializer;
+            this.isFinal = isFinal;
         }
 
         @Override
@@ -117,14 +117,14 @@ public abstract class CompileStmt {
     }
 
     public static class Try extends CompileStmt {
-        public final Block finale;
-        public final Pair<Pair<ClassReference[],Token>,Block>[] catches;
         public final Block body;
+        public final Pair<Pair<ClassReference[],Token>,Block>[] catches;
+        public final Block finale;
 
-        public Try(Block finale, Pair<Pair<ClassReference[],Token>,Block>[] catches, Block body) {
-            this.finale = finale;
-            this.catches = catches;
+        public Try(Block body, Pair<Pair<ClassReference[],Token>,Block>[] catches, Block finale) {
             this.body = body;
+            this.catches = catches;
+            this.finale = finale;
         }
 
         @Override
@@ -152,17 +152,17 @@ public abstract class CompileStmt {
 
     public static class If extends CompileStmt {
         public final CompileExpr condition;
-        public final CompileStmt elseBranch;
         public final CompileStmt thenBranch;
-        public final Token keyword;
+        public final CompileStmt elseBranch;
         public final Pair<CompileExpr,CompileStmt>[] elifs;
+        public final Token keyword;
 
-        public If(CompileExpr condition, CompileStmt elseBranch, CompileStmt thenBranch, Token keyword, Pair<CompileExpr,CompileStmt>[] elifs) {
+        public If(CompileExpr condition, CompileStmt thenBranch, CompileStmt elseBranch, Pair<CompileExpr,CompileStmt>[] elifs, Token keyword) {
             this.condition = condition;
-            this.elseBranch = elseBranch;
             this.thenBranch = thenBranch;
-            this.keyword = keyword;
+            this.elseBranch = elseBranch;
             this.elifs = elifs;
+            this.keyword = keyword;
         }
 
         @Override
@@ -172,16 +172,16 @@ public abstract class CompileStmt {
     }
 
     public static class ForEach extends CompileStmt {
-        public final Token name;
         public final ClassReference type;
-        public final CompileStmt body;
+        public final Token name;
         public final CompileExpr initializer;
+        public final CompileStmt body;
 
-        public ForEach(Token name, ClassReference type, CompileStmt body, CompileExpr initializer) {
-            this.name = name;
+        public ForEach(ClassReference type, Token name, CompileExpr initializer, CompileStmt body) {
             this.type = type;
-            this.body = body;
+            this.name = name;
             this.initializer = initializer;
+            this.body = body;
         }
 
         @Override

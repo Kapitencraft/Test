@@ -16,6 +16,17 @@ dependencies {
     implementation 'org.reflections:reflections:0.10.2'
 }
 
+sourceSets {
+}
+
+tasks.register('generateAst', JavaExec) {
+    mainClass = 'net.kapitencraft.lang.tool.GenerateAst'
+
+    classpath = sourceSets.main.runtimeClasspath
+
+    args = []
+}
+
 tasks.register('classLoader', JavaExec) {
     mainClass = 'net.kapitencraft.lang.run.load.ClassLoader'
 

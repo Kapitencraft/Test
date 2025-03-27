@@ -2,6 +2,7 @@ package net.kapitencraft.lang.holder.ast;
 
 import net.kapitencraft.lang.holder.token.RuntimeToken;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.tool.Pair;
 
 public abstract class RuntimeStmt {
@@ -49,16 +50,16 @@ public abstract class RuntimeStmt {
     }
 
     public static class VarDecl extends RuntimeStmt {
-        public final RuntimeToken name;
-        public final boolean isFinal;
+        public final String name;
         public final ClassReference type;
         public final RuntimeExpr initializer;
+        public final boolean isFinal;
 
-        public VarDecl(RuntimeToken name, boolean isFinal, ClassReference type, RuntimeExpr initializer) {
+        public VarDecl(String name, ClassReference type, RuntimeExpr initializer, boolean isFinal) {
             this.name = name;
-            this.isFinal = isFinal;
             this.type = type;
             this.initializer = initializer;
+            this.isFinal = isFinal;
         }
 
         @Override
@@ -117,14 +118,14 @@ public abstract class RuntimeStmt {
     }
 
     public static class Try extends RuntimeStmt {
-        public final Block finale;
-        public final Pair<Pair<ClassReference[],String>,Block>[] catches;
         public final Block body;
+        public final Pair<Pair<ClassReference[],String>,Block>[] catches;
+        public final Block finale;
 
-        public Try(Block finale, Pair<Pair<ClassReference[],String>,Block>[] catches, Block body) {
-            this.finale = finale;
-            this.catches = catches;
+        public Try(Block body, Pair<Pair<ClassReference[],String>,Block>[] catches, Block finale) {
             this.body = body;
+            this.catches = catches;
+            this.finale = finale;
         }
 
         @Override
@@ -152,17 +153,17 @@ public abstract class RuntimeStmt {
 
     public static class If extends RuntimeStmt {
         public final RuntimeExpr condition;
-        public final RuntimeStmt elseBranch;
         public final RuntimeStmt thenBranch;
-        public final RuntimeToken keyword;
+        public final RuntimeStmt elseBranch;
         public final Pair<RuntimeExpr,RuntimeStmt>[] elifs;
+        public final RuntimeToken keyword;
 
-        public If(RuntimeExpr condition, RuntimeStmt elseBranch, RuntimeStmt thenBranch, RuntimeToken keyword, Pair<RuntimeExpr,RuntimeStmt>[] elifs) {
+        public If(RuntimeExpr condition, RuntimeStmt thenBranch, RuntimeStmt elseBranch, Pair<RuntimeExpr,RuntimeStmt>[] elifs, RuntimeToken keyword) {
             this.condition = condition;
-            this.elseBranch = elseBranch;
             this.thenBranch = thenBranch;
-            this.keyword = keyword;
+            this.elseBranch = elseBranch;
             this.elifs = elifs;
+            this.keyword = keyword;
         }
 
         @Override
@@ -172,16 +173,16 @@ public abstract class RuntimeStmt {
     }
 
     public static class ForEach extends RuntimeStmt {
-        public final String name;
         public final ClassReference type;
-        public final RuntimeStmt body;
+        public final String name;
         public final RuntimeExpr initializer;
+        public final RuntimeStmt body;
 
-        public ForEach(String name, ClassReference type, RuntimeStmt body, RuntimeExpr initializer) {
-            this.name = name;
+        public ForEach(ClassReference type, String name, RuntimeExpr initializer, RuntimeStmt body) {
             this.type = type;
-            this.body = body;
+            this.name = name;
             this.initializer = initializer;
+            this.body = body;
         }
 
         @Override
@@ -191,9 +192,9 @@ public abstract class RuntimeStmt {
     }
 
     public static class LoopInterruption extends RuntimeStmt {
-        public final RuntimeToken type;
+        public final TokenType type;
 
-        public LoopInterruption(RuntimeToken type) {
+        public LoopInterruption(TokenType type) {
             this.type = type;
         }
 

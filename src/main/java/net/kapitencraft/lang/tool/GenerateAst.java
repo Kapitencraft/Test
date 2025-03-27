@@ -2,7 +2,6 @@ package net.kapitencraft.lang.tool;
 
 import com.google.gson.*;
 import net.kapitencraft.tool.GsonHelper;
-import org.checkerframework.checker.units.qual.A;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -112,7 +111,7 @@ public class GenerateAst {
 
         // Fields.
         for (FieldDef field : fields) {
-            writer.println("        public final " + field.type + " " + field.name + ";");
+            writer.println("        public final " + field.type.get(type) + " " + field.name + ";");
         }
         writer.println();
 
@@ -121,7 +120,7 @@ public class GenerateAst {
         writer.print("        public " + typeId + "(");
         writer.print(
                 Arrays.stream(fields)
-                        .map(f -> f.type + " " + f.name)
+                        .map(f -> f.type.get(type) + " " + f.name)
                         .collect(Collectors.joining(", "))
         );
         writer.println(") {");
@@ -150,7 +149,7 @@ public class GenerateAst {
 
         private static TypeDef expand(String runtime, String compile) {
             return new TypeDef(
-                    runtime.replaceAll("Expr", "RuntimeExpr").replaceAll("Stmt", "RuntimeStmt").replaceAll("Token", "RuntimeToken"),
+                    runtime.replaceAll("Expr", "RuntimeExpr").replaceAll("Stmt", "RuntimeStmt").replaceAll("Token(?!Type)", "RuntimeToken"),
                     compile.replaceAll("Expr", "CompileExpr").replaceAll("Stmt", "CompileStmt")
             );
         }
@@ -216,6 +215,10 @@ public class GenerateAst {
         public static FieldDef fromJson(String name, JsonElement value) {
             return new FieldDef(name, TypeDef.fromJsonElement(value));
         }
+
+        public FieldDef trim() {
+            return new FieldDef(name.replaceAll("[$%]", ""), type);
+        }
     }
 
     private record AstDef(FieldDef[] compileFields, FieldDef[] runtimeFields) {
@@ -229,9 +232,11 @@ public class GenerateAst {
             for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
                 FieldDef def = FieldDef.fromJson(entry.getKey(), entry.getValue());
                 if (!entry.getKey().startsWith("$")) {
-                    runtime.add(def);
+                    runtime.add(def.trim());
                 }
-                compile.add(def);
+                if (!entry.getKey().startsWith("%")) {
+                    compile.add(def.trim());
+                }
             }
             return new AstDef(
                     compile.toArray(new FieldDef[0]),

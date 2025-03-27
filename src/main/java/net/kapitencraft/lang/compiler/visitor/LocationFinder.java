@@ -113,7 +113,7 @@ public class LocationFinder implements CompileStmt.Visitor<Token>, CompileExpr.V
 
     @Override
     public Token visitLiteralExpr(CompileExpr.Literal expr) {
-        return expr.token;
+        return expr.literal;
     }
 
     @Override

@@ -379,7 +379,7 @@ public class CacheLoader {
             ScriptedClass clazz = ClassLoader.loadClassReference(d, "type").get();
             Map<String, Expr> properties = new HashMap<>();
             GsonHelper.getAsJsonObject(d, "properties").asMap().forEach((string, jsonElement) -> properties.put(string, readExpr((JsonObject) jsonElement)));
-            list.add(new AnnotationClassInstance(clazz, properties));
+            //list.add(new AnnotationClassInstance(clazz, properties));
         }
         return list.toArray(new AnnotationClassInstance[0]);
     }

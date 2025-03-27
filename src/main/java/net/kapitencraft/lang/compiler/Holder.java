@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.ast.CompileExpr;
+import net.kapitencraft.lang.holder.ast.CompileStmt;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.baked.BakedAnnotation;
@@ -91,7 +93,7 @@ public class Holder {
             Map<String, GeneratedField> staticFields = new HashMap<>();
 
             for (Field field : fields()) {
-                Expr initializer = null;
+                CompileExpr initializer = null;
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
                     initializer = stmtParser.expression();
@@ -101,7 +103,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedField fieldDecl = new GeneratedField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new AnnotationClassInstance[0]));
+                GeneratedField fieldDecl = null;// new GeneratedField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new AnnotationClassInstance[0]));
                 if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
                     else fields.put(field.name, fieldDecl);
             }
@@ -109,7 +111,7 @@ public class Holder {
             List<Pair<Token, GeneratedCallable>> methods = new ArrayList<>();
             List<Pair<Token, GeneratedCallable>> staticMethods = new ArrayList<>();
             for (Method method : this.methods()) {
-                List<Stmt> body = null;
+                List<CompileStmt> body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, method.type(), method.generics);
@@ -123,7 +125,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedCallable methodDecl = new GeneratedCallable(method.type(), method.params(), body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
+                GeneratedCallable methodDecl = null;// new GeneratedCallable(method.type(), method.params(), body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
                 if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
                 else methods.add(Pair.of(method.name(), methodDecl));
             }
@@ -133,14 +135,14 @@ public class Holder {
                 stmtParser.apply(method.body(), parser);
                 stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, ClassReference.of(VarTypeManager.VOID), method.generics);
                 stmtParser.pushGenerics(method.generics());
-                List<Stmt> body = stmtParser.parse();
+                List<CompileStmt> body = stmtParser.parse();
                 List<AnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
 
-                GeneratedCallable constDecl = new GeneratedCallable(target, method.params(), body, (short) 0, annotations.toArray(new AnnotationClassInstance[0]));
+                GeneratedCallable constDecl = null;// new GeneratedCallable(target, method.params(), body, (short) 0, annotations.toArray(new AnnotationClassInstance[0]));
                 stmtParser.popMethod();
                 constructors.add(Pair.of(method.name(), constDecl));
             }
@@ -148,9 +150,9 @@ public class Holder {
 
             ImmutableMap.Builder<String, GeneratedEnumConstant> enumConstants = new ImmutableMap.Builder<>();
             for (EnumConstant decl : enumConstants()) {
-                List<Expr> args;
+                CompileExpr[] args;
                 if (decl.arguments.length == 0) {
-                    args = new ArrayList<>();
+                    args = new CompileExpr[0];
                     stmtParser.apply(new Token[0], parser);
                 } else {
                     stmtParser.apply(decl.arguments, parser);
@@ -162,7 +164,7 @@ public class Holder {
 
                 stmtParser.checkArguments(args, callable, decl.name());
 
-                enumConstants.put(decl.name().lexeme(), new GeneratedEnumConstant(target.get(), decl.ordinal(), decl.name().lexeme(), ordinal, args));
+                //enumConstants.put(decl.name().lexeme(), new GeneratedEnumConstant(target.get(), decl.ordinal(), decl.name().lexeme(), ordinal, args));
             }
 
             List<AnnotationClassInstance> annotations = new ArrayList<>();
@@ -194,7 +196,7 @@ public class Holder {
 
             Map<String, GeneratedField> staticFields = new HashMap<>();
             for (Field field : fields()) {
-                Expr initializer = null;
+                CompileExpr initializer = null;
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
                     initializer = stmtParser.expression();
@@ -204,7 +206,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedField fieldDecl = new GeneratedField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new AnnotationClassInstance[0]));
+                GeneratedField fieldDecl = null;// new GeneratedField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new AnnotationClassInstance[0]));
                 if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
                 else logger.error(field.name, "fields on interfaces must be static");
             }
@@ -212,7 +214,7 @@ public class Holder {
             List<Pair<Token, GeneratedCallable>> methods = new ArrayList<>();
             List<Pair<Token, GeneratedCallable>> staticMethods = new ArrayList<>();
             for (Method method : this.methods()) {
-                List<Stmt> body = null;
+                List<CompileStmt> body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     stmtParser.applyMethod(method.params, target(), null, method.type(), method.generics);
@@ -225,7 +227,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedCallable methodDecl = new GeneratedCallable(method.type(), method.params, body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
+                GeneratedCallable methodDecl = null;// new GeneratedCallable(method.type(), method.params, body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
                 if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
                 else methods.add(Pair.of(method.name(), methodDecl));
             }
@@ -256,7 +258,7 @@ public class Holder {
             Map<Token, GeneratedField> fields = new HashMap<>();
             Map<String, GeneratedField> staticFields = new HashMap<>();
             for (Field field : fields()) {
-                Expr initializer = null;
+                CompileExpr initializer = null;
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
                     initializer = stmtParser.expression();
@@ -266,7 +268,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedField fieldDecl = new GeneratedField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new AnnotationClassInstance[0]));
+                GeneratedField fieldDecl = null; // new GeneratedField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new AnnotationClassInstance[0]));
                 if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
                 else fields.put(field.name, fieldDecl);
             }
@@ -274,7 +276,7 @@ public class Holder {
             List<Pair<Token, GeneratedCallable>> methods = new ArrayList<>();
             List<Pair<Token, GeneratedCallable>> staticMethods = new ArrayList<>();
             for (Method method : this.methods()) {
-                List<Stmt> body = null;
+                List<CompileStmt> body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     if (Modifiers.isStatic(method.modifiers))
@@ -290,7 +292,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedCallable methodDecl = new GeneratedCallable(method.type(), method.params(), body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
+                GeneratedCallable methodDecl = null;// new GeneratedCallable(method.type(), method.params(), body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
                 if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
                 else methods.add(Pair.of(method.name(), methodDecl));
             }
@@ -300,14 +302,14 @@ public class Holder {
                 stmtParser.apply(constructor.body(), parser);
                 stmtParser.applyMethod(constructor.params(), target(), parent, ClassReference.of(VarTypeManager.VOID), constructor.generics);
                 stmtParser.pushGenerics(constructor.generics());
-                List<Stmt> body = stmtParser.parse();
+                List<CompileStmt> body = stmtParser.parse();
 
                 List<AnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : constructor.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedCallable constDecl = new GeneratedCallable(target, constructor.params(), body, (short) 0, annotations.toArray(new AnnotationClassInstance[0]));
+                GeneratedCallable constDecl = null;// new GeneratedCallable(target, constructor.params(), body, (short) 0, annotations.toArray(new AnnotationClassInstance[0]));
                 stmtParser.popMethod();
                 constructors.add(Pair.of(constructor.name(), constDecl));
             }

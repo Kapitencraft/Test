@@ -98,7 +98,7 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
             value = evaluate(stmt.initializer);
         }
 
-        environment.defineVar(stmt.name.lexeme(), value);
+        environment.defineVar(stmt.name, value);
         return null;
     }
 
@@ -233,7 +233,7 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
 
     @Override
     public Object visitLiteralExpr(RuntimeExpr.Literal expr) {
-        return expr.token.value();
+        return expr.literal;
     }
 
     @Override

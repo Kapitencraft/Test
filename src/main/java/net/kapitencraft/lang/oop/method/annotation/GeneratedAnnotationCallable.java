@@ -44,6 +44,6 @@ public class GeneratedAnnotationCallable extends AnnotationCallable {
 
     @Override
     public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-        return interpreter.evaluate(expr);
+        return null; //interpreter.evaluate(expr);
     }
 }

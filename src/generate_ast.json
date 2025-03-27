@@ -83,7 +83,11 @@
             "runtime": "String"
           },
           "value": "Expr",
-          "assignType": "Token",
+          "assignType": {
+            "compile": "Token",
+            "runtime": "TokenType"
+          },
+          "%line": "int",
           "executor": "ClassReference",
           "operand": "Operand"
         },
@@ -95,7 +99,7 @@
             "compile": "Token",
             "runtime": "TokenType"
           },
-          "$line": "int",
+          "%line": "int",
           "executor": "ClassReference",
           "operand": "Operand"
         },

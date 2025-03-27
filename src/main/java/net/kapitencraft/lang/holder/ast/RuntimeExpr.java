@@ -2,7 +2,6 @@ package net.kapitencraft.lang.holder.ast;
 
 import net.kapitencraft.lang.holder.token.RuntimeToken;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.run.algebra.Operand;
 import java.util.Map;
@@ -51,22 +50,22 @@ public abstract class RuntimeExpr {
     }
 
     public static class Set extends RuntimeExpr {
-        public final ClassReference executor;
+        public final RuntimeExpr object;
         public final String name;
+        public final RuntimeExpr value;
         public final TokenType assignType;
         public final int line;
-        public final RuntimeExpr value;
+        public final ClassReference executor;
         public final Operand operand;
-        public final RuntimeExpr object;
 
-        public Set(ClassReference executor, String name, TokenType assignType, int line, RuntimeExpr value, Operand operand, RuntimeExpr object) {
-            this.executor = executor;
+        public Set(RuntimeExpr object, String name, RuntimeExpr value, TokenType assignType, int line, ClassReference executor, Operand operand) {
+            this.object = object;
             this.name = name;
+            this.value = value;
             this.assignType = assignType;
             this.line = line;
-            this.value = value;
+            this.executor = executor;
             this.operand = operand;
-            this.object = object;
         }
 
         @Override
@@ -76,22 +75,22 @@ public abstract class RuntimeExpr {
     }
 
     public static class ArraySet extends RuntimeExpr {
-        public final ClassReference executor;
+        public final RuntimeExpr object;
         public final RuntimeExpr index;
+        public final RuntimeExpr value;
         public final TokenType assignType;
         public final int line;
-        public final RuntimeExpr value;
+        public final ClassReference executor;
         public final Operand operand;
-        public final RuntimeExpr object;
 
-        public ArraySet(ClassReference executor, RuntimeExpr index, TokenType assignType, int line, RuntimeExpr value, Operand operand, RuntimeExpr object) {
-            this.executor = executor;
+        public ArraySet(RuntimeExpr object, RuntimeExpr index, RuntimeExpr value, TokenType assignType, int line, ClassReference executor, Operand operand) {
+            this.object = object;
             this.index = index;
+            this.value = value;
             this.assignType = assignType;
             this.line = line;
-            this.value = value;
+            this.executor = executor;
             this.operand = operand;
-            this.object = object;
         }
 
         @Override
@@ -101,14 +100,14 @@ public abstract class RuntimeExpr {
     }
 
     public static class ArraySpecial extends RuntimeExpr {
+        public final RuntimeExpr object;
         public final RuntimeExpr index;
         public final TokenType assignType;
-        public final RuntimeExpr object;
 
-        public ArraySpecial(RuntimeExpr index, TokenType assignType, RuntimeExpr object) {
+        public ArraySpecial(RuntimeExpr object, RuntimeExpr index, TokenType assignType) {
+            this.object = object;
             this.index = index;
             this.assignType = assignType;
-            this.object = object;
         }
 
         @Override
@@ -134,14 +133,14 @@ public abstract class RuntimeExpr {
 
     public static class Constructor extends RuntimeExpr {
         public final RuntimeToken keyword;
-        public final RuntimeExpr[] params;
         public final ClassReference target;
+        public final RuntimeExpr[] params;
         public final int ordinal;
 
-        public Constructor(RuntimeToken keyword, RuntimeExpr[] params, ClassReference target, int ordinal) {
+        public Constructor(RuntimeToken keyword, ClassReference target, RuntimeExpr[] params, int ordinal) {
             this.keyword = keyword;
-            this.params = params;
             this.target = target;
+            this.params = params;
             this.ordinal = ordinal;
         }
 
@@ -152,16 +151,16 @@ public abstract class RuntimeExpr {
     }
 
     public static class InstCall extends RuntimeExpr {
-        public final RuntimeExpr[] args;
         public final RuntimeExpr callee;
         public final RuntimeToken name;
         public final int methodOrdinal;
+        public final RuntimeExpr[] args;
 
-        public InstCall(RuntimeExpr[] args, RuntimeExpr callee, RuntimeToken name, int methodOrdinal) {
-            this.args = args;
+        public InstCall(RuntimeExpr callee, RuntimeToken name, int methodOrdinal, RuntimeExpr[] args) {
             this.callee = callee;
             this.name = name;
             this.methodOrdinal = methodOrdinal;
+            this.args = args;
         }
 
         @Override
@@ -171,22 +170,22 @@ public abstract class RuntimeExpr {
     }
 
     public static class StaticSet extends RuntimeExpr {
-        public final ClassReference executor;
+        public final ClassReference target;
         public final String name;
+        public final RuntimeExpr value;
         public final TokenType assignType;
         public final int line;
-        public final RuntimeExpr value;
+        public final ClassReference executor;
         public final Operand operand;
-        public final ClassReference target;
 
-        public StaticSet(ClassReference executor, String name, TokenType assignType, int line, RuntimeExpr value, Operand operand, ClassReference target) {
-            this.executor = executor;
+        public StaticSet(ClassReference target, String name, RuntimeExpr value, TokenType assignType, int line, ClassReference executor, Operand operand) {
+            this.target = target;
             this.name = name;
+            this.value = value;
             this.assignType = assignType;
             this.line = line;
-            this.value = value;
+            this.executor = executor;
             this.operand = operand;
-            this.target = target;
         }
 
         @Override
@@ -197,13 +196,13 @@ public abstract class RuntimeExpr {
 
     public static class Logical extends RuntimeExpr {
         public final RuntimeExpr left;
-        public final RuntimeExpr right;
         public final TokenType operator;
+        public final RuntimeExpr right;
 
-        public Logical(RuntimeExpr left, RuntimeExpr right, TokenType operator) {
+        public Logical(RuntimeExpr left, TokenType operator, RuntimeExpr right) {
             this.left = left;
-            this.right = right;
             this.operator = operator;
+            this.right = right;
         }
 
         @Override
@@ -226,12 +225,12 @@ public abstract class RuntimeExpr {
     }
 
     public static class Unary extends RuntimeExpr {
-        public final RuntimeExpr right;
         public final TokenType operator;
+        public final RuntimeExpr right;
 
-        public Unary(RuntimeExpr right, TokenType operator) {
-            this.right = right;
+        public Unary(TokenType operator, RuntimeExpr right) {
             this.operator = operator;
+            this.right = right;
         }
 
         @Override
@@ -242,13 +241,13 @@ public abstract class RuntimeExpr {
 
     public static class When extends RuntimeExpr {
         public final RuntimeExpr condition;
-        public final RuntimeExpr ifFalse;
         public final RuntimeExpr ifTrue;
+        public final RuntimeExpr ifFalse;
 
-        public When(RuntimeExpr condition, RuntimeExpr ifFalse, RuntimeExpr ifTrue) {
+        public When(RuntimeExpr condition, RuntimeExpr ifTrue, RuntimeExpr ifFalse) {
             this.condition = condition;
-            this.ifFalse = ifFalse;
             this.ifTrue = ifTrue;
+            this.ifFalse = ifFalse;
         }
 
         @Override
@@ -258,14 +257,14 @@ public abstract class RuntimeExpr {
     }
 
     public static class CastCheck extends RuntimeExpr {
-        public final String patternVarName;
-        public final ClassReference targetType;
         public final RuntimeExpr object;
+        public final ClassReference targetType;
+        public final String patternVarName;
 
-        public CastCheck(String patternVarName, ClassReference targetType, RuntimeExpr object) {
-            this.patternVarName = patternVarName;
-            this.targetType = targetType;
+        public CastCheck(RuntimeExpr object, ClassReference targetType, String patternVarName) {
             this.object = object;
+            this.targetType = targetType;
+            this.patternVarName = patternVarName;
         }
 
         @Override
@@ -275,12 +274,12 @@ public abstract class RuntimeExpr {
     }
 
     public static class StaticGet extends RuntimeExpr {
-        public final String name;
         public final ClassReference target;
+        public final String name;
 
-        public StaticGet(String name, ClassReference target) {
-            this.name = name;
+        public StaticGet(ClassReference target, String name) {
             this.target = target;
+            this.name = name;
         }
 
         @Override
@@ -291,14 +290,14 @@ public abstract class RuntimeExpr {
 
     public static class Switch extends RuntimeExpr {
         public final RuntimeExpr provider;
-        public final RuntimeExpr defaulted;
         public final Map<Object,RuntimeExpr> params;
+        public final RuntimeExpr defaulted;
         public final RuntimeToken keyword;
 
-        public Switch(RuntimeExpr provider, RuntimeExpr defaulted, Map<Object,RuntimeExpr> params, RuntimeToken keyword) {
+        public Switch(RuntimeExpr provider, Map<Object,RuntimeExpr> params, RuntimeExpr defaulted, RuntimeToken keyword) {
             this.provider = provider;
-            this.defaulted = defaulted;
             this.params = params;
+            this.defaulted = defaulted;
             this.keyword = keyword;
         }
 
@@ -309,16 +308,16 @@ public abstract class RuntimeExpr {
     }
 
     public static class Slice extends RuntimeExpr {
+        public final RuntimeExpr object;
         public final RuntimeExpr start;
         public final RuntimeExpr end;
         public final RuntimeExpr interval;
-        public final RuntimeExpr object;
 
-        public Slice(RuntimeExpr start, RuntimeExpr end, RuntimeExpr interval, RuntimeExpr object) {
+        public Slice(RuntimeExpr object, RuntimeExpr start, RuntimeExpr end, RuntimeExpr interval) {
+            this.object = object;
             this.start = start;
             this.end = end;
             this.interval = interval;
-            this.object = object;
         }
 
         @Override
@@ -328,12 +327,12 @@ public abstract class RuntimeExpr {
     }
 
     public static class Get extends RuntimeExpr {
-        public final String name;
         public final RuntimeExpr object;
+        public final String name;
 
-        public Get(String name, RuntimeExpr object) {
-            this.name = name;
+        public Get(RuntimeExpr object, String name) {
             this.object = object;
+            this.name = name;
         }
 
         @Override
@@ -343,12 +342,12 @@ public abstract class RuntimeExpr {
     }
 
     public static class ArrayGet extends RuntimeExpr {
-        public final RuntimeExpr index;
         public final RuntimeExpr object;
+        public final RuntimeExpr index;
 
-        public ArrayGet(RuntimeExpr index, RuntimeExpr object) {
-            this.index = index;
+        public ArrayGet(RuntimeExpr object, RuntimeExpr index) {
             this.object = object;
+            this.index = index;
         }
 
         @Override
@@ -358,10 +357,10 @@ public abstract class RuntimeExpr {
     }
 
     public static class Literal extends RuntimeExpr {
-        public final LiteralHolder token;
+        public final LiteralHolder literal;
 
-        public Literal(LiteralHolder token) {
-            this.token = token;
+        public Literal(LiteralHolder literal) {
+            this.literal = literal;
         }
 
         @Override
@@ -371,20 +370,20 @@ public abstract class RuntimeExpr {
     }
 
     public static class Assign extends RuntimeExpr {
-        public final ClassReference executor;
         public final RuntimeToken name;
-        public final TokenType type;
         public final RuntimeExpr value;
-        public final Operand operand;
+        public final TokenType type;
+        public final ClassReference executor;
         public final int line;
+        public final Operand operand;
 
-        public Assign(ClassReference executor, RuntimeToken name, TokenType type, RuntimeExpr value, Operand operand, int line) {
-            this.executor = executor;
+        public Assign(RuntimeToken name, RuntimeExpr value, TokenType type, ClassReference executor, int line, Operand operand) {
             this.name = name;
-            this.type = type;
             this.value = value;
-            this.operand = operand;
+            this.type = type;
+            this.executor = executor;
             this.line = line;
+            this.operand = operand;
         }
 
         @Override
@@ -394,16 +393,16 @@ public abstract class RuntimeExpr {
     }
 
     public static class StaticCall extends RuntimeExpr {
-        public final RuntimeExpr[] args;
-        public final RuntimeToken name;
         public final ClassReference target;
+        public final RuntimeToken name;
         public final int methodOrdinal;
+        public final RuntimeExpr[] args;
 
-        public StaticCall(RuntimeExpr[] args, RuntimeToken name, ClassReference target, int methodOrdinal) {
-            this.args = args;
-            this.name = name;
+        public StaticCall(ClassReference target, RuntimeToken name, int methodOrdinal, RuntimeExpr[] args) {
             this.target = target;
+            this.name = name;
             this.methodOrdinal = methodOrdinal;
+            this.args = args;
         }
 
         @Override
@@ -414,17 +413,17 @@ public abstract class RuntimeExpr {
 
     public static class Binary extends RuntimeExpr {
         public final RuntimeExpr left;
-        public final ClassReference executor;
         public final RuntimeExpr right;
         public final TokenType operator;
+        public final ClassReference executor;
         public final int line;
         public final Operand operand;
 
-        public Binary(RuntimeExpr left, ClassReference executor, RuntimeExpr right, TokenType operator, int line, Operand operand) {
+        public Binary(RuntimeExpr left, RuntimeExpr right, TokenType operator, ClassReference executor, int line, Operand operand) {
             this.left = left;
-            this.executor = executor;
             this.right = right;
             this.operator = operator;
+            this.executor = executor;
             this.line = line;
             this.operand = operand;
         }
@@ -436,14 +435,14 @@ public abstract class RuntimeExpr {
     }
 
     public static class StaticSpecial extends RuntimeExpr {
+        public final ClassReference target;
         public final String name;
         public final TokenType assignType;
-        public final ClassReference target;
 
-        public StaticSpecial(String name, TokenType assignType, ClassReference target) {
+        public StaticSpecial(ClassReference target, String name, TokenType assignType) {
+            this.target = target;
             this.name = name;
             this.assignType = assignType;
-            this.target = target;
         }
 
         @Override

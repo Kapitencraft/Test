@@ -3,6 +3,7 @@ package net.kapitencraft.lang.run.natives.impl;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
@@ -173,13 +174,13 @@ public class NativeClassImpl implements ScriptedClass {
     }
 
     @Override
-    public Object assignStaticFieldWithOperator(String name, Object val, Token type, ScriptedClass executor, Operand operand) {
-        Object newVal = Interpreter.INSTANCE.visitAlgebra(getStaticField(name), val, executor, type, operand);
+    public Object assignStaticFieldWithOperator(String name, Object val, TokenType type, int line, ScriptedClass executor, Operand operand) {
+        Object newVal = Interpreter.INSTANCE.visitAlgebra(getStaticField(name), val, executor, type, line, operand);
         return assignStaticField(name, newVal);
     }
 
     @Override
-    public Object staticSpecialAssign(String name, Token assignType) {
-        return null;// super.staticSpecialAssign(name, assignType);
+    public Object staticSpecialAssign(String name, TokenType assignType) {
+        return ScriptedClass.super.staticSpecialAssign(name, assignType);
     }
 }
