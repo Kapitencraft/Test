@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+//TODO split into compile & runtime
 public class GeneratedEnumConstant extends ScriptedField {
 
     private final ScriptedClass target;
@@ -38,7 +39,7 @@ public class GeneratedEnumConstant extends ScriptedField {
         DynamicClassInstance constant = new DynamicClassInstance(this.target, interpreter);
         constant.assignField("ordinal", ordinal);
         constant.assignField("name", name);
-        constant.construct(interpreter.visitArgs(this.args), constructorOrdinal, interpreter);
+        //constant.construct(interpreter.visitArgs(this.args), constructorOrdinal, interpreter);
         return constant;
     }
 

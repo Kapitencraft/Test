@@ -2,6 +2,7 @@ package net.kapitencraft.lang.run.natives;
 
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.run.Interpreter;
@@ -39,13 +40,13 @@ public class NativeClassInstance implements ClassInstance {
     }
 
     @Override
-    public Object assignFieldWithOperator(String name, Object val, Token type, ScriptedClass executor, Operand operand) {
-        Object newVal = Interpreter.INSTANCE.visitAlgebra(getField(name), val, executor, type, operand);
+    public Object assignFieldWithOperator(String name, Object val, TokenType type, int line, ScriptedClass executor, Operand operand) {
+        Object newVal = Interpreter.INSTANCE.visitAlgebra(getField(name), val, executor, type, line, operand);
         return assignField(name, newVal);
     }
 
     @Override
-    public Object specialAssign(String name, Token assignType) {
+    public Object specialAssign(String name, TokenType assignType) {
         return null;
     }
 

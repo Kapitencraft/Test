@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.VarTypeParser;
+import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
@@ -125,7 +126,7 @@ public class ExprParser extends AbstractParser {
                 List<String> requiredProperties = new ArrayList<>(abstracts);
                 requiredProperties.removeAll(properties.keySet());
                 if (!requiredProperties.isEmpty()) errorMissingProperties(errorPoint, requiredProperties);
-                return AnnotationClassInstance.fromPropertyMap(type, properties);
+                return null;// AnnotationClassInstance.fromPropertyMap(type, properties);
             } else {
                 current--;
                 singleProperty = literalOrReference();
@@ -138,15 +139,15 @@ public class ExprParser extends AbstractParser {
         } else if (!abstracts.contains("value")) {
             error(previous(), "can not find annotation method 'value'");
         }
-        return AnnotationClassInstance.fromSingleProperty(type, singleProperty);
+        return null; // AnnotationClassInstance.fromSingleProperty(type, singleProperty);
     }
 
     private void errorMissingProperties(Token errorPoint, List<String> propertyNames) {
         error(errorPoint, propertyNames.stream().map(s -> "'" + s + "'").collect(Collectors.joining(", ")) + " missing though required");
     }
 
-    private Expr when() {
-        Expr expr = castCheck();
+    private CompileExpr when() {
+        CompileExpr expr = castCheck();
         if (match(QUESTION_MARK)) {
             expectCondition(expr);
             Expr ifTrue = expression();
@@ -161,8 +162,8 @@ public class ExprParser extends AbstractParser {
         return expr;
     }
 
-    private Expr castCheck() {
-        Expr expr = assignment();
+    private CompileExpr castCheck() {
+        CompileExpr expr = assignment();
         if (match(INSTANCEOF)) {
             ClassReference loxClass = consumeVarType(generics);
             Token patternVar = null;
@@ -170,18 +171,18 @@ public class ExprParser extends AbstractParser {
                 patternVar = previous();
                 varAnalyser.add(patternVar.lexeme(), loxClass, true, false);
             }
-            return new Expr.CastCheck(expr, loxClass, patternVar);
+            return new CompileExpr.CastCheck(expr, loxClass, patternVar);
         }
 
         return expr;
     }
 
-    private Expr assignment() {
+    private CompileExpr assignment() {
         Expr expr = or();
 
         if (match(ASSIGN) || match(OPERATION_ASSIGN)) {
             Token assign = previous();
-            Expr value = assignment();
+            CompileExpr value = assignment();
 
             if (expr instanceof Expr.VarRef variable) {
                 Token name = variable.name;
@@ -195,7 +196,7 @@ public class ExprParser extends AbstractParser {
                     executor = Pair.of(VarTypeManager.VOID.reference(), Operand.LEFT);
                 } else executor = getExecutor(varAnalyser.getType(name.lexeme()), assign, value);
 
-                return new Expr.Assign(name, value, assign, executor.left(), executor.right());
+                return new CompileExpr.Assign(name, value, assign, executor.left(), executor.right());
             } else if (expr instanceof Expr.Get get) {
                 ClassReference target = finder.findRetType(get.object);
                 expectType(get.name, target.get().getFieldType(get.name.lexeme()), finder.findRetType(value));
@@ -264,7 +265,7 @@ public class ExprParser extends AbstractParser {
     private Pair<ClassReference, Operand> getExecutor(ClassReference left, Token operator, ClassReference right) {
         Operand operand = Operand.LEFT;
         ClassReference executor = left;
-        OperationType type = OperationType.of(operator);
+        OperationType type = OperationType.of(operator.type());
         assert type != null;
         ScriptedClass result = left.get().checkOperation(type, operand, right);
         if (result == VarTypeManager.VOID) {
@@ -279,11 +280,11 @@ public class ExprParser extends AbstractParser {
         return Pair.of(executor, operand);
     }
 
-    private Pair<ClassReference, Operand> getExecutor(Expr leftArg, Token operator, Expr rightArg) {
+    private Pair<ClassReference, Operand> getExecutor(CompileExpr leftArg, Token operator, CompileExpr rightArg) {
         return getExecutor(finder.findRetType(leftArg), operator, finder.findRetType(rightArg));
     }
 
-    private Pair<ClassReference, Operand> getExecutor(ClassReference left, Token operator, Expr rightArg) {
+    private Pair<ClassReference, Operand> getExecutor(ClassReference left, Token operator, CompileExpr rightArg) {
         return getExecutor(left, operator, finder.findRetType(rightArg));
     }
 

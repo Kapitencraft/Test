@@ -408,7 +408,7 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
         if (expr.assignType == TokenType.ASSIGN) {
             return instance.assignField(expr.name, val);
         } else {
-            return instance.assignFieldWithOperator(expr.name, val, expr.line, expr.assignType, null, null);
+            return instance.assignFieldWithOperator(expr.name, val, expr.assignType, expr.line, null, null);
         }
     }
 

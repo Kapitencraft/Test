@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import com.google.common.collect.ImmutableList;
 import net.kapitencraft.lang.compiler.Holder;
+import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericSourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
@@ -55,7 +56,7 @@ public class AbstractParser {
         }
     }
 
-    protected void checkVarType(Token name, Expr value) {
+    protected void checkVarType(Token name, CompileExpr value) {
         if (!varAnalyser.has(name.lexeme())) return;
         expectType(name, value, varAnalyser.getType(name.lexeme()));
     }
@@ -80,20 +81,20 @@ public class AbstractParser {
         args.push(ImmutableList.copyOf(types));
     }
 
-    protected ClassReference expectType(Token errorLoc, Expr value, ClassReference type) {
+    protected ClassReference expectType(Token errorLoc, CompileExpr value, ClassReference type) {
         ClassReference got = finder.findRetType(value);
         return expectType(errorLoc, got, type);
     }
 
-    protected ClassReference expectType(Expr value, ClassReference type) {
+    protected ClassReference expectType(CompileExpr value, ClassReference type) {
         return expectType(this.locFinder.find(value), value, type);
     }
 
-    protected void expectCondition(Token errorLoc, Expr gotten) {
+    protected void expectCondition(Token errorLoc, CompileExpr gotten) {
         expectType(errorLoc, gotten, VarTypeManager.BOOLEAN.reference());
     }
 
-    protected void expectCondition(Expr gotten) {
+    protected void expectCondition(CompileExpr gotten) {
         expectCondition(locFinder.find(gotten), gotten);
     }
 

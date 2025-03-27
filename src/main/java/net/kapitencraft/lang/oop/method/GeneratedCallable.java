@@ -90,7 +90,7 @@ public class GeneratedCallable implements ScriptedCallable {
         }
 
         try {
-            interpreter.interpret(body, environment);
+            //interpreter.interpret(body, environment);
         } catch (CancelBlock returnValue) {
             return returnValue.value;
         }

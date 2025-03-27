@@ -1,5 +1,8 @@
 package net.kapitencraft.lang.compiler.visitor;
 
+import net.kapitencraft.lang.holder.ast.CompileExpr;
+import net.kapitencraft.lang.holder.ast.CompileStmt;
+import net.kapitencraft.lang.holder.ast.RuntimeExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.analyser.VarAnalyser;
@@ -7,12 +10,12 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 
-public class RetTypeFinder implements Expr.Visitor<ClassReference> {
+public class RetTypeFinder implements CompileExpr.Visitor<ClassReference> {
     private final VarAnalyser varAnalyser;
 
     //STAGE: Skeleton
 
-    public ClassReference findRetType(Expr expr) {
+    public ClassReference findRetType(CompileExpr expr) {
         return expr.accept(this);
     }
 
@@ -21,124 +24,123 @@ public class RetTypeFinder implements Expr.Visitor<ClassReference> {
     }
 
     @Override
-    public ClassReference visitAssignExpr(Expr.Assign expr) {
+    public ClassReference visitAssignExpr(CompileExpr.Assign expr) {
         return varAnalyser.getType(expr.name.lexeme());
     }
 
     @Override
-    public ClassReference visitSpecialAssignExpr(Expr.SpecialAssign expr) {
+    public ClassReference visitSpecialAssignExpr(CompileExpr.SpecialAssign expr) {
         return varAnalyser.getType(expr.name.lexeme());
     }
 
     @Override
-    public ClassReference visitBinaryExpr(Expr.Binary expr) {
-        return expr.executor.get().checkOperation(OperationType.of(expr.operator), expr.operand, findRetType(expr.operand == Operand.LEFT ? expr.right : expr.left)).reference();
+    public ClassReference visitBinaryExpr(CompileExpr.Binary expr) {
+        return expr.executor.get().checkOperation(OperationType.of(expr.operator.type()), expr.operand, findRetType(expr.operand == Operand.LEFT ? expr.right : expr.left)).reference();
     }
 
     @Override
-    public ClassReference visitWhenExpr(Expr.When expr) {
+    public ClassReference visitWhenExpr(CompileExpr.When expr) {
         return findRetType(expr.ifTrue);
     }
 
     @Override
-    public ClassReference visitInstCallExpr(Expr.InstCall expr) {
-
+    public ClassReference visitInstCallExpr(CompileExpr.InstCall expr) {
         return findRetType(expr.callee).get().getMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).type();
     }
 
     @Override
-    public ClassReference visitStaticCallExpr(Expr.StaticCall expr) {
+    public ClassReference visitStaticCallExpr(CompileExpr.StaticCall expr) {
         if (expr.target == null) return VarTypeManager.VOID.reference();
         return expr.target.get().getStaticMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).type();
     }
 
     @Override
-    public ClassReference visitGetExpr(Expr.Get expr) {
+    public ClassReference visitGetExpr(CompileExpr.Get expr) {
         return findRetType(expr.object).get().getFieldType(expr.name.lexeme());
     }
 
     @Override
-    public ClassReference visitStaticGetExpr(Expr.StaticGet expr) {
+    public ClassReference visitStaticGetExpr(CompileExpr.StaticGet expr) {
         return expr.target == null ? VarTypeManager.VOID.reference() : expr.target.get().getStaticFieldType(expr.name.lexeme());
     }
 
     @Override
-    public ClassReference visitArrayGetExpr(Expr.ArrayGet expr) {
+    public ClassReference visitArrayGetExpr(CompileExpr.ArrayGet expr) {
         return findRetType(expr.object).get().getComponentType().reference();
     }
 
     @Override
-    public ClassReference visitSetExpr(Expr.Set expr) {
+    public ClassReference visitSetExpr(CompileExpr.Set expr) {
         return findRetType(expr.object).get().getFieldType(expr.name.lexeme());
     }
 
     @Override
-    public ClassReference visitStaticSetExpr(Expr.StaticSet expr) {
+    public ClassReference visitStaticSetExpr(CompileExpr.StaticSet expr) {
         return expr.target.get().getStaticFieldType(expr.name.lexeme());
     }
 
     @Override
-    public ClassReference visitArraySetExpr(Expr.ArraySet expr) {
+    public ClassReference visitArraySetExpr(CompileExpr.ArraySet expr) {
         return findRetType(expr.object).get().getComponentType().reference();
     }
 
     @Override
-    public ClassReference visitSpecialSetExpr(Expr.SpecialSet expr) {
+    public ClassReference visitSpecialSetExpr(CompileExpr.SpecialSet expr) {
         return findRetType(expr.callee).get().getFieldType(expr.name.lexeme());
     }
 
     @Override
-    public ClassReference visitStaticSpecialExpr(Expr.StaticSpecial expr) {
+    public ClassReference visitStaticSpecialExpr(CompileExpr.StaticSpecial expr) {
         return expr.target.get().getStaticFieldType(expr.name.lexeme());
     }
 
     @Override
-    public ClassReference visitArraySpecialExpr(Expr.ArraySpecial expr) {
+    public ClassReference visitArraySpecialExpr(CompileExpr.ArraySpecial expr) {
         return null;
     }
 
     @Override
-    public ClassReference visitSliceExpr(Expr.Slice expr) {
+    public ClassReference visitSliceExpr(CompileExpr.Slice expr) {
         return findRetType(expr.object);
     }
 
     @Override
-    public ClassReference visitSwitchExpr(Expr.Switch expr) {
+    public ClassReference visitSwitchExpr(CompileExpr.Switch expr) {
         return findRetType(expr.defaulted);
     }
 
     @Override
-    public ClassReference visitCastCheckExpr(Expr.CastCheck expr) {
+    public ClassReference visitCastCheckExpr(CompileExpr.CastCheck expr) {
         return VarTypeManager.BOOLEAN.reference();
     }
 
     @Override
-    public ClassReference visitGroupingExpr(Expr.Grouping expr) {
+    public ClassReference visitGroupingExpr(CompileExpr.Grouping expr) {
         return findRetType(expr.expression);
     }
 
     @Override
-    public ClassReference visitLiteralExpr(Expr.Literal expr) {
+    public ClassReference visitLiteralExpr(CompileExpr.Literal expr) {
         return expr.token.literal().type().reference();
     }
 
     @Override
-    public ClassReference visitLogicalExpr(Expr.Logical expr) {
+    public ClassReference visitLogicalExpr(CompileExpr.Logical expr) {
         return VarTypeManager.BOOLEAN.reference();
     }
 
     @Override
-    public ClassReference visitUnaryExpr(Expr.Unary expr) {
+    public ClassReference visitUnaryExpr(CompileExpr.Unary expr) {
         return findRetType(expr.right);
     }
 
     @Override
-    public ClassReference visitVarRefExpr(Expr.VarRef expr) {
+    public ClassReference visitVarRefExpr(CompileExpr.VarRef expr) {
         return varAnalyser.getType(expr.name.lexeme());
     }
 
     @Override
-    public ClassReference visitConstructorExpr(Expr.Constructor expr) {
+    public ClassReference visitConstructorExpr(CompileExpr.Constructor expr) {
         return expr.target;
     }
 }

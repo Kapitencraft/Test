@@ -14,6 +14,7 @@ import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.tool.GsonHelper;
 
+//TODO split into compile & runtime
 public class GeneratedField extends ScriptedField {
     private final ClassReference type;
     private final Expr init;
@@ -35,7 +36,7 @@ public class GeneratedField extends ScriptedField {
             }
             return null;
         }
-        return interpreter.evaluate(init);
+        return null; //interpreter.evaluate(init);
     }
 
     public boolean hasInit() {

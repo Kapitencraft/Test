@@ -12,7 +12,7 @@ public interface ClassInstance {
 
     Object assignField(String name, Object val);
 
-    Object assignFieldWithOperator(String name, Object val, int line, TokenType type, ScriptedClass executor, Operand operand);
+    Object assignFieldWithOperator(String name, Object val, TokenType type, int line, ScriptedClass executor, Operand operand);
 
     Object specialAssign(String name, TokenType assignType);
 

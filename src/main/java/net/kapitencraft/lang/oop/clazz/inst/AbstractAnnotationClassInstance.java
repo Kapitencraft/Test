@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.oop.clazz.inst;
 
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.algebra.Operand;
@@ -15,12 +16,12 @@ public interface AbstractAnnotationClassInstance extends ClassInstance {
     }
 
     @Override
-    default Object assignFieldWithOperator(String name, Object val, Token type, ScriptedClass executor, Operand operand) {
+    default Object assignFieldWithOperator(String name, Object val, TokenType type, int line, ScriptedClass executor, Operand operand) {
         throw new IllegalAccessError("can not assign field of annotation");
     }
 
     @Override
-    default Object specialAssign(String name, Token assignType) {
+    default Object specialAssign(String name, TokenType assignType) {
         throw new IllegalAccessError("can not assign field of annotation");
     }
 

@@ -562,7 +562,7 @@ public class Holder {
 
             @Override
             public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                return val == null ? null : interpreter.evaluate(val);
+                return null; //val == null ? null : interpreter.evaluate(val);
             }
 
             @Override

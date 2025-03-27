@@ -46,8 +46,8 @@ public class DynamicClassInstance implements ClassInstance {
         }
 
         @Override
-        public Object assignFieldWithOperator(String name, Object val, int line, TokenType type, ScriptedClass executor, Operand operand) {
-            return DynamicClassInstance.this.assignFieldWithOperator(name, val, line, type, executor, operand);
+        public Object assignFieldWithOperator(String name, Object val, TokenType type, int line, ScriptedClass executor, Operand operand) {
+            return DynamicClassInstance.this.assignFieldWithOperator(name, val, type, line, executor, operand);
         }
 
         @Override
@@ -91,7 +91,8 @@ public class DynamicClassInstance implements ClassInstance {
         return getField(name);
     }
 
-    public Object assignFieldWithOperator(String name, Object val, int line, TokenType type, ScriptedClass executor, Operand operand) {
+    @Override
+    public Object assignFieldWithOperator(String name, Object val, TokenType type, int line, ScriptedClass executor, Operand operand) {
         Object newVal = Interpreter.INSTANCE.visitAlgebra(getField(name), val, executor, type, line, operand);
         return this.assignField(name, newVal);
     }

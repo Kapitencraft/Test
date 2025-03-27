@@ -9,6 +9,7 @@ import net.kapitencraft.lang.run.Interpreter;
 import java.util.HashMap;
 import java.util.Map;
 
+//TODO split into runtime & compile
 public class AnnotationClassInstance implements AbstractAnnotationClassInstance {
     public final Map<String, RuntimeExpr> properties = new HashMap<>();
     private final ScriptedClass type;

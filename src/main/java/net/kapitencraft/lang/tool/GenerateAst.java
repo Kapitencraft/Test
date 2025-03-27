@@ -2,12 +2,11 @@ package net.kapitencraft.lang.tool;
 
 import com.google.gson.*;
 import net.kapitencraft.tool.GsonHelper;
+import org.checkerframework.checker.units.qual.A;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GenerateAst {
@@ -21,70 +20,16 @@ public class GenerateAst {
         Map<String, Map<String, JsonElement>> obj = createObj(object.get("values"));
         obj.forEach((astType, data) -> {
             Imports imports = Imports.fromJsonElement(data.get("imports"));
-            Map<String, Map<String, TypeDef>> valueData = createValues(data.get("values"));
+            Map<String, AstDef> valueData = createValues(data.get("values"));
             defineAst(astType, valueData, imports, defaultImports);
         });
-
-        //defineAstFile("Expr", List.of(
-        //        "Assign        : Token name; Expr value; Token type; ClassReference executor; Operand operand",
-        //        "SpecialAssign : Token name; Token assignType",
-        //        "Binary        : Expr left; Token operator; ClassReference executor; Operand operand; Expr right",
-        //        "When          : Expr condition; Expr ifTrue; Expr ifFalse",
-        //        "InstCall      : Expr callee; Token name; int methodOrdinal; List<Expr> args",
-        //        "StaticCall    : ClassReference target; Token name; int methodOrdinal; List<Expr> args",
-        //        "Get           : Expr object; Token name",
-        //        "StaticGet     : ClassReference target; Token name",
-        //        "ArrayGet      : Expr object; Expr index",
-        //        "Set           : Expr object; Token name; Expr value; Token assignType; ClassReference executor; Operand operand",
-        //        "StaticSet     : ClassReference target; Token name; Expr value; Token assignType; ClassReference executor; Operand operand",
-        //        "ArraySet      : Expr object; Expr index; Expr value; Token assignType; ClassReference executor; Operand operand",
-        //        "SpecialSet    : Expr callee; Token name; Token assignType",
-        //        "StaticSpecial : ClassReference target; Token name; Token assignType",
-        //        "ArraySpecial  : Expr object; Expr index; Token assignType",
-        //        "Slice         : Expr object; Expr start; Expr end; Expr interval",
-        //        "Switch        : Expr provider; Map<Object,Expr> params; Expr defaulted; Token keyword",
-        //        "CastCheck     : Expr object; ClassReference targetType; Token patternVarName",
-        //        "Grouping      : Expr expression",
-        //        //"Lambda   : List<Token> params, Stmt body",
-        //        "Literal       : Token token",
-        //        "Logical       : Expr left; Token operator; Expr right",
-        //        "Unary         : Token operator; Expr right",
-        //        "VarRef        : Token name",
-        //        "Constructor   : Token keyword; ClassReference target; List<Expr> params; int ordinal"
-        //), List.of(
-        //        "net.kapitencraft.lang.run.algebra.Operand",
-        //        "java.util.Map",
-        //        "net.kapitencraft.lang.holder.LiteralHolder"
-        //));
-        //defineAstFile("Stmt",
-        //        List.of(
-        //        "Block            : List<Stmt> statements",
-        //        "Expression       : Expr expression",
-        //        "If               : Expr condition; Stmt thenBranch; Stmt elseBranch; List<Pair<Expr,Stmt>> elifs; Token keyword",
-        //        "Return           : Token keyword; Expr value",
-        //        "Throw            : Token keyword; Expr value",
-        //        "VarDecl          : Token name; ClassReference type; Expr initializer; boolean isFinal",
-        //        "While            : Expr condition; Stmt body; Token keyword",
-        //        "For              : Stmt init; Expr condition; Expr increment; Stmt body; Token keyword",
-        //        "ForEach          : ClassReference type; Token name; Expr initializer; Stmt body",
-        //        "LoopInterruption : Token type",
-        //        "Try              : Block body; List<Pair<Pair<List<ClassReference>,Token>,Block>> catches; Block finale"
-        //), List.of(
-        //        "net.kapitencraft.tool.Pair"
-        //));
     }
 
-    private static Map<String, Map<String, TypeDef>> createValues(JsonElement valuesData) {
+    private static Map<String, AstDef> createValues(JsonElement valuesData) {
         JsonObject object = valuesData.getAsJsonObject();
-        Map<String, Map<String, TypeDef>> values = new HashMap<>();
-        object.asMap().forEach((s, element) -> {
-            Map<String, JsonElement> valueData = element.getAsJsonObject().asMap();
-            Map<String, TypeDef> value = new HashMap<>();
-            valueData.forEach((s1, element1) ->
-                    value.put(s1, TypeDef.fromJsonElement(element1)));
-            values.put(s, value);
-        });
-        return values;
+        Map<String, AstDef> data = new HashMap<>();
+        object.asMap().forEach((s, element) -> data.put(s, AstDef.fromJson(element)));
+        return data;
     }
 
     private static Map<String, Map<String, JsonElement>> createObj(JsonElement element) {
@@ -95,13 +40,13 @@ public class GenerateAst {
         return data;
     }
 
-    private static void defineAst(String baseName, Map<String, Map<String, TypeDef>> data, Imports imports, Imports defaultImports) {
+    private static void defineAst(String baseName, Map<String, AstDef> data, Imports imports, Imports defaultImports) {
         defineAstFile(baseName, EnvironmentType.RUNTIME, data, imports, defaultImports);
         defineAstFile(baseName, EnvironmentType.COMPILE, data, imports, defaultImports);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static void defineAstFile(String baseName, EnvironmentType type, Map<String, Map<String, TypeDef>> data, Imports imports, Imports defaultImports) {
+    private static void defineAstFile(String baseName, EnvironmentType type, Map<String, AstDef> data, Imports imports, Imports defaultImports) {
         String extendedName = type.getName() + baseName;
         String path = DIRECTORY + "/" + extendedName + ".java";
         PrintWriter writer;
@@ -158,31 +103,32 @@ public class GenerateAst {
         writer.println("    }");
     }
 
-    private static void defineType(PrintWriter writer, String baseName, String extendedName, String typeId, Map<String, TypeDef> types, EnvironmentType type) {
+    private static void defineType(PrintWriter writer, String baseName, String extendedName, String typeId, AstDef types, EnvironmentType type) {
         writer.println();
         writer.println("    public static class " + typeId + " extends " +
                 extendedName + " {");
 
+        FieldDef[] fields = types.get(type);
+
         // Fields.
-        types.forEach((s, typeDef) ->
-                writer.println("        public final " + typeDef.get(type) + " " + s + ";"));
+        for (FieldDef field : fields) {
+            writer.println("        public final " + field.type + " " + field.name + ";");
+        }
         writer.println();
 
 
         // Constructor.
         writer.print("        public " + typeId + "(");
         writer.print(
-                types
-                .keySet()
-                .stream()
-                .map(s -> types.get(s).get(type) + " " + s)
-                .collect(Collectors.joining(", "))
+                Arrays.stream(fields)
+                        .map(f -> f.type + " " + f.name)
+                        .collect(Collectors.joining(", "))
         );
         writer.println(") {");
 
         // Store params in fields.
-        for (String name : types.keySet()) {
-            writer.println("            this." + name + " = " + name + ";");
+        for (FieldDef field : fields) {
+            writer.println("            this." + field.name + " = " + field.name + ";");
         }
 
         writer.println("        }");
@@ -263,6 +209,34 @@ public class GenerateAst {
 
         public String getName() {
             return name;
+        }
+    }
+
+    private record FieldDef(String name, TypeDef type) {
+        public static FieldDef fromJson(String name, JsonElement value) {
+            return new FieldDef(name, TypeDef.fromJsonElement(value));
+        }
+    }
+
+    private record AstDef(FieldDef[] compileFields, FieldDef[] runtimeFields) {
+
+        public FieldDef[] get(EnvironmentType type) {
+            return type == EnvironmentType.COMPILE ? compileFields : runtimeFields;
+        }
+
+        public static AstDef fromJson(JsonElement element) {
+            List<FieldDef> compile = new ArrayList<>(), runtime = new ArrayList<>();
+            for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
+                FieldDef def = FieldDef.fromJson(entry.getKey(), entry.getValue());
+                if (!entry.getKey().startsWith("$")) {
+                    runtime.add(def);
+                }
+                compile.add(def);
+            }
+            return new AstDef(
+                    compile.toArray(new FieldDef[0]),
+                    runtime.toArray(new FieldDef[0])
+            );
         }
     }
 }
