@@ -4,7 +4,8 @@ import com.google.common.collect.ImmutableList;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.generic.GenericSourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
+import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.Package;
@@ -14,7 +15,6 @@ import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.compiler.analyser.VarAnalyser;
 import net.kapitencraft.lang.compiler.visitor.LocationFinder;
 import net.kapitencraft.lang.compiler.visitor.RetTypeFinder;
-import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
@@ -26,6 +26,8 @@ import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 @SuppressWarnings({"ThrowableNotThrown", "UnusedReturnValue"})
 public class AbstractParser {
+    protected static final ClassReference WILDCARD = new GenericClassReference("", null, null);
+
     private static final Map<TokenTypeCategory, TokenType[]> categoryLookup = createCategoryLookup();
 
     private static Map<TokenTypeCategory, TokenType[]> createCategoryLookup() {
@@ -99,7 +101,8 @@ public class AbstractParser {
     }
 
     protected ClassReference expectType(Token errorLoc, ClassReference gotten, ClassReference expected) {
-        if (gotten == null) return VarTypeManager.VOID.reference();
+        if (gotten == null) return WILDCARD;
+        if (gotten == WILDCARD) return expected;
         if (expected == VarTypeManager.OBJECT) return gotten;
         if (!gotten.get().isChildOf(expected.get())) errorLogger.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
         return gotten;
@@ -214,16 +217,15 @@ public class AbstractParser {
         ClassReference reference = parser.getClass(t.lexeme());
         if (reference != null && !check(DOT)) {
             Holder.Generics declared = generics(generics);
-            return Optional.of(SourceClassReference.from(t,  reference));
+            if (declared != null) return Optional.of(new AppliedGenericsReference(reference, declared, t));
+            return Optional.of(SourceClassReference.from(t, reference));
         } else
             current--;
         return Optional.empty();
     }
 
     protected SourceClassReference consumeVarType(GenericStack generics) {
-        StringBuilder typeName = new StringBuilder();
         Token token = consumeIdentifier();
-        typeName.append(token.lexeme());
         ClassReference reference = parser.getClass(token.lexeme());
         if (reference == null) {
             Optional<ClassReference> optional = generics.getValue(token.lexeme());
@@ -231,9 +233,8 @@ public class AbstractParser {
         }
         if (reference == null) {
             Package p = VarTypeManager.getPackage(token.lexeme());
-            while (match(DOT)) {
+            while (match(DOT) && p != null) {
                 String id = consumeIdentifier().lexeme();
-                typeName.append(".").append(id);
                 if (p.hasClass(id)) {
                     reference = p.getClass(id);
                     break;
@@ -245,7 +246,6 @@ public class AbstractParser {
         Token last = previous();
         while (match(DOT) && reference != null) {
             String enclosingName = consumeIdentifier().lexeme();
-            typeName.append(".").append(enclosingName);
             if (!reference.get().hasEnclosing(enclosingName)) {
                 return SourceClassReference.from(last, reference);
             }
@@ -262,6 +262,7 @@ public class AbstractParser {
             reference = reference.array();
             last = previous();
         }
+        if (declared != null) return new AppliedGenericsReference(reference, declared, last);
         return SourceClassReference.from(last, reference);
     }
 

@@ -83,7 +83,7 @@ public class ClassLoader {
         }
     }
 
-    public static <T extends ClassLoaderHolder> PackageHolder<T> load(File fileLoc, String end, BiFunction<File, List<T>, T> constructor) {
+    public static <T extends ClassLoaderHolder<T>> PackageHolder<T> load(File fileLoc, String end, BiFunction<File, List<T>, T> constructor) {
         PackageHolder<T> root = new PackageHolder<>();
         List<Pair<File, PackageHolder<T>>> pckLoader = new ArrayList<>();
         pckLoader.add(Pair.of(fileLoc, root));
@@ -132,13 +132,13 @@ public class ClassLoader {
         useClasses(root, (classes, pck) -> classes.forEach((s, classLoaderHolder) -> classLoaderHolder.applySkeleton()));
     }
 
-    public static void generateClasses(PackageHolder<?> root) {
+    public static void generateClasses(PackageHolder<VMLoaderHolder> root) {
         useClasses(root, (classes, pck) -> classes.forEach((name, holder1) -> pck.addNullableClass(name, holder1.loadClass())));
     }
 
 
     //how should I name this...
-    public static <T extends ClassLoaderHolder> void useClasses(PackageHolder<T> root, BiConsumer<Map<String, T>, Package> consumer) {
+    public static <T extends ClassLoaderHolder<T>> void useClasses(PackageHolder<T> root, BiConsumer<Map<String, T>, Package> consumer) {
         List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         while (!packageData.isEmpty()) {
@@ -153,7 +153,7 @@ public class ClassLoader {
         }
     }
 
-    public static <T extends ClassLoaderHolder> void useHolders(PackageHolder<T> root, BiConsumer<String, T> consumer) {
+    public static <T extends ClassLoaderHolder<T>> void useHolders(PackageHolder<T> root, BiConsumer<String, T> consumer) {
         List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         while (!packageData.isEmpty()) {
@@ -176,7 +176,7 @@ public class ClassLoader {
         return GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassOrError).toArray(ClassReference[]::new);
     }
 
-    public static class PackageHolder<T extends ClassLoaderHolder> {
+    public static class PackageHolder<T extends ClassLoaderHolder<T>> {
         private final Map<String, PackageHolder<T>> packages = new HashMap<>();
         private final Map<String, T> classes = new HashMap<>();
 
@@ -190,7 +190,7 @@ public class ClassLoader {
     }
 
 
-    private static class EnclosedClassLoader<T extends ClassLoaderHolder> {
+    private static class EnclosedClassLoader<T extends ClassLoaderHolder<T>> {
         private File file;
         private final Map<String, EnclosedClassLoader<T>> enclosed = new HashMap<>();
 

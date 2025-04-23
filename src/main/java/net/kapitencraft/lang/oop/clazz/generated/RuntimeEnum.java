@@ -1,23 +1,20 @@
 package net.kapitencraft.lang.oop.clazz.generated;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.EnumClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
-import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
-import net.kapitencraft.lang.oop.field.GeneratedField;
+import net.kapitencraft.lang.oop.field.RuntimeEnumConstant;
+import net.kapitencraft.lang.oop.field.RuntimeField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
-import net.kapitencraft.lang.oop.method.GeneratedCallable;
+import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -33,7 +30,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class GeneratedEnum implements CacheableClass, EnumClass {
+public class RuntimeEnum implements EnumClass {
     private Map<String, DynamicClassInstance> constants;
     DynamicClassInstance[] constantData;
 
@@ -44,9 +41,9 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
 
     private final ConstructorContainer constructor;
 
-    private final Map<String, GeneratedField> allFields;
-    private final Map<String, GeneratedEnumConstant> enumConstants;
-    private final Map<String, GeneratedField> allStaticFields;
+    private final Map<String, RuntimeField> allFields;
+    private final Map<String, RuntimeEnumConstant> enumConstants;
+    private final Map<String, RuntimeField> allStaticFields;
 
     private final Map<String, ClassReference> enclosing;
 
@@ -54,9 +51,9 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     private final String name;
     private final String packageRepresentation;
 
-    private final AnnotationClassInstance[] annotations;
+    private final RuntimeAnnotationClassInstance[] annotations;
 
-    public GeneratedEnum(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor, Map<String, GeneratedField> allFields, Map<String, GeneratedEnumConstant> enumConstants, Map<String, GeneratedField> allStaticFields, Map<String, ClassReference> enclosing, ClassReference[] implemented, String name, String packageRepresentation, AnnotationClassInstance[] annotations) {
+    public RuntimeEnum(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor, Map<String, RuntimeField> allFields, Map<String, RuntimeEnumConstant> enumConstants, Map<String, RuntimeField> allStaticFields, Map<String, ClassReference> enclosing, ClassReference[] implemented, String name, String packageRepresentation, RuntimeAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.constructor = constructor.build(this);
@@ -71,12 +68,12 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
         this.lookup = MethodLookup.createFromClass(this);
     }
 
-    public GeneratedEnum(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
-                         List<ScriptedCallable> constructorData,
-                         Map<String, GeneratedField> allFields,
-                         Function<ScriptedClass, Map<String, GeneratedEnumConstant>> enumConstants,
-                         Map<String, GeneratedField> allStaticFields,
-                         Map<String, ClassReference> enclosing, ClassReference[] implemented, String name, String packageRepresentation, AnnotationClassInstance[] annotations) {
+    public RuntimeEnum(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
+                       List<ScriptedCallable> constructorData,
+                       Map<String, RuntimeField> allFields,
+                       Function<ScriptedClass, Map<String, RuntimeEnumConstant>> enumConstants,
+                       Map<String, RuntimeField> allStaticFields,
+                       Map<String, ClassReference> enclosing, ClassReference[] implemented, String name, String packageRepresentation, RuntimeAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.constructor = ConstructorContainer.fromCache(constructorData, this);
@@ -91,7 +88,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
         this.lookup = MethodLookup.createFromClass(this);
     }
 
-    public static GeneratedEnum load(JsonObject data, List<ClassReference> enclosed, String pck) {
+    public static RuntimeEnum load(JsonObject data, List<ClassReference> enclosed, String pck) {
         String name = GsonHelper.getAsString(data, "name");
         ClassReference[] implemented = ClassLoader.loadInterfaces(data);
 
@@ -99,17 +96,17 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
         ImmutableMap<String, DataMethodContainer> staticMethods = DataMethodContainer.load(data, name, "staticMethods");
 
         List<ScriptedCallable> constructorData = new ArrayList<>();
-        GsonHelper.getAsJsonArray(data, "constructors").asList().stream().map(JsonElement::getAsJsonObject).map(GeneratedCallable::load).forEach(constructorData::add);
+        GsonHelper.getAsJsonArray(data, "constructors").asList().stream().map(JsonElement::getAsJsonObject).map(RuntimeCallable::load).forEach(constructorData::add);
 
-        ImmutableMap<String, GeneratedField> fields = GeneratedField.loadFieldMap(data, "fields");
-        ImmutableMap<String, GeneratedField> staticFields = GeneratedField.loadFieldMap(data, "staticFields");
-        Function<ScriptedClass, Map<String, GeneratedEnumConstant>> enumConstants = GeneratedEnumConstant.loadFieldMap(data, "enumConstants");
+        ImmutableMap<String, RuntimeField> fields = RuntimeField.loadFieldMap(data, "fields");
+        ImmutableMap<String, RuntimeField> staticFields = RuntimeField.loadFieldMap(data, "staticFields");
+        Function<ScriptedClass, Map<String, RuntimeEnumConstant>> enumConstants = RuntimeEnumConstant.loadFieldMap(data, "enumConstants");
 
         Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));
 
-        AnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
+        RuntimeAnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
 
-        return new GeneratedEnum(
+        return new RuntimeEnum(
                 methods, staticMethods, constructorData,
                 fields,
                 enumConstants,
@@ -119,49 +116,9 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
                 pck, annotations);
     }
 
-
-    @Override
-    public JsonObject save(CacheBuilder cacheBuilder) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "enum");
-        object.addProperty("name", name);
-        {
-            JsonArray parentInterfaces = new JsonArray();
-            Arrays.stream(this.implemented).map(ClassReference::absoluteName).forEach(parentInterfaces::add);
-            object.add("interfaces", parentInterfaces);
-        }
-        object.add("methods", methods.save(cacheBuilder));
-        object.add("staticMethods", staticMethods.save(cacheBuilder));
-        object.add("constructors", constructor.cache(cacheBuilder));
-        {
-            JsonObject constants = new JsonObject();
-            enumConstants.forEach((name, field) -> constants.add(name, field.cache(cacheBuilder)));
-            object.add("enumConstants", constants);
-        }
-        {
-            JsonObject fields = new JsonObject();
-            allFields.forEach((name, field) -> fields.add(name, field.cache(cacheBuilder)));
-            object.add("fields", fields);
-        }
-        {
-            JsonObject staticFields = new JsonObject();
-            allStaticFields.forEach((name, field) -> staticFields.add(name, field.cache(cacheBuilder)));
-            object.add("staticFields", staticFields);
-        }
-
-        object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
-
-        return object;
-    }
-
     @Override
     public ClassReference[] enclosed() {
         return new ClassReference[0];
-    }
-
-    @Override
-    public MethodLookup methods() {
-        return lookup;
     }
 
     @Override
@@ -214,7 +171,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
 
     @Override
     public ClassReference getStaticFieldType(String name) {
-        return allStaticFields.get(name).getType();
+        return allStaticFields.get(name).type();
     }
 
     @Override
@@ -267,7 +224,7 @@ public class GeneratedEnum implements CacheableClass, EnumClass {
     }
 
     @Override
-    public AnnotationClassInstance[] annotations() {
+    public RuntimeAnnotationClassInstance[] annotations() {
         return annotations;
     }
 

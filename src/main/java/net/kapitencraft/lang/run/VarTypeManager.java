@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 public class VarTypeManager {
-    private static final List<RegistryClassReference> data = new ArrayList<>();
     private static final Package root = new Package("");
     private static final Package LANG_ROOT = getOrCreatePackage("scripted.lang");
     private static final Package ANNOTATION_PCK = LANG_ROOT.getOrCreatePackage("annotations");
@@ -30,7 +29,6 @@ public class VarTypeManager {
 
     static {
         NativeClassLoader.load();
-        loadClasses();
     }
 
     public static final ClassReference OBJECT = getMainClass("Object");
@@ -51,10 +49,6 @@ public class VarTypeManager {
     public static final ClassReference RETENTION_POLICY = getAnnotationClass("RetentionPolicy");
     public static final ClassReference RETENTION = getAnnotationClass("Retention");
 
-
-    private static void loadClasses() {
-        data.forEach(RegistryClassReference::create);
-    }
 
     public static ClassReference getClassForName(String type) {
         int arrayCount = 0;

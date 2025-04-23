@@ -7,14 +7,16 @@ import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.generated.GeneratedClass;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
-import net.kapitencraft.lang.oop.method.annotation.GeneratedAnnotationCallable;
-import net.kapitencraft.lang.oop.method.GeneratedCallable;
+import net.kapitencraft.lang.oop.clazz.CacheableClass;
+import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
+import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
+import net.kapitencraft.lang.oop.method.CompileCallable;
+import net.kapitencraft.lang.oop.method.annotation.CompileAnnotationCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -23,26 +25,20 @@ public record BakedAnnotation(
         Token name, String pck,
         Map<String, Holder.Class.MethodWrapper> methodWrappers,
         Compiler.ClassBuilder[] enclosed,
-        AnnotationClassInstance[] annotations
+        CompileAnnotationClassInstance[] annotations
 ) implements Compiler.ClassBuilder {
 
     @Override
-    public GeneratedClass build() {
-        ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
-        for (Compiler.ClassBuilder builder : enclosed()) {
-            ClassReference loxClass = builder.build().reference();
-            enclosed.put(loxClass.name(), loxClass);
-        }
+    public CompileClass build() {
+        CacheableClass[] enclosed = Arrays.stream(enclosed()).map(Compiler.ClassBuilder::build).toArray(CacheableClass[]::new);
 
         ImmutableMap.Builder<String, DataMethodContainer> builder = new ImmutableMap.Builder<>();
-        methodWrappers.forEach((string, wrapper) -> builder.put(string, new DataMethodContainer(new ScriptedCallable[]{new GeneratedAnnotationCallable(wrapper.type(), wrapper.val(), wrapper.annotations())})));
+        methodWrappers.forEach((string, wrapper) -> builder.put(string, new DataMethodContainer(new ScriptedCallable[]{new CompileAnnotationCallable(wrapper.type(), wrapper.val(), wrapper.annotations())})));
 
-        GeneratedClass loxClass = new GeneratedClass(
+        return new CompileClass(
                 builder.build(), Map.of(), List.of(), Map.of(), Map.of(), VarTypeManager.OBJECT,
                 this.name().lexeme(),
-                this.pck(), enclosed.build(), new ClassReference[0], Modifiers.ANNOTATION, this.annotations());
-        this.target().setTarget(loxClass);
-        return loxClass;
+                this.pck(), enclosed, new ClassReference[0], Modifiers.ANNOTATION, this.annotations());
     }
 
     @Override
@@ -51,7 +47,7 @@ public record BakedAnnotation(
     }
 
     @Override
-    public Pair<Token, GeneratedCallable>[] methods() {
+    public Pair<Token, CompileCallable>[] methods() {
         return new Pair[0];
     }
 

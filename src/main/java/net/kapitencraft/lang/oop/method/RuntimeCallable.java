@@ -3,30 +3,29 @@ package net.kapitencraft.lang.oop.method;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.ast.RuntimeStmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.Interpreter;
-import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 
 import java.util.List;
 
-public class GeneratedCallable implements ScriptedCallable {
+public class RuntimeCallable implements ScriptedCallable {
     private final ClassReference retType;
     private final List<? extends Pair<? extends ClassReference, String>> params;
-    private final List<Stmt> body;
+    private final RuntimeStmt[] body;
     private final short modifiers;
-    private final AnnotationClassInstance[] annotations;
+    private final RuntimeAnnotationClassInstance[] annotations;
 
-    public GeneratedCallable(ClassReference retType, List<? extends Pair<? extends ClassReference, String>> params, List<Stmt> body, short modifiers, AnnotationClassInstance[] annotations) {
+    public RuntimeCallable(ClassReference retType, List<? extends Pair<? extends ClassReference, String>> params, RuntimeStmt[] body, short modifiers, RuntimeAnnotationClassInstance[] annotations) {
         this.retType = retType;
         this.params = params;
         this.body = body;
@@ -34,31 +33,7 @@ public class GeneratedCallable implements ScriptedCallable {
         this.annotations = annotations;
     }
 
-    public JsonObject save(CacheBuilder builder) {
-        JsonObject object = new JsonObject();
-        object.addProperty("retType", retType.absoluteName());
-        {
-            JsonArray array = new JsonArray();
-            params.forEach(pair -> {
-                JsonObject object1 = new JsonObject();
-                object1.addProperty("type", pair.left().absoluteName());
-                object1.addProperty("name", pair.right());
-                array.add(object1);
-            });
-            object.add("params", array);
-        }
-        if (!Modifiers.isAbstract(modifiers)) {
-            JsonArray array = new JsonArray();
-            //body.stream().map(builder::cache).forEach(array::add); TODO
-            object.add("body", array);
-        }
-        if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);
-
-        object.add("annotations", builder.cacheAnnotations(this.annotations));
-        return object;
-    }
-
-    public static GeneratedCallable load(JsonObject data) {
+    public static RuntimeCallable load(JsonObject data) {
         ClassReference retType = ClassLoader.loadClassReference(data, "retType");
         JsonArray paramData = GsonHelper.getAsJsonArray(data, "params");
 
@@ -70,13 +45,13 @@ public class GeneratedCallable implements ScriptedCallable {
 
         short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
 
-        List<Stmt> body;
-        if (Modifiers.isAbstract(modifiers)) body = null;
+        RuntimeStmt[] body;
+        if (Modifiers.isAbstract(modifiers)) body = new RuntimeStmt[0];
         else body = CacheLoader.readStmtList(data, "body");
 
-        AnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
+        RuntimeAnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
 
-        return new GeneratedCallable(retType, params, body, modifiers, annotations);
+        return new RuntimeCallable(retType, params, body, modifiers, annotations);
     }
 
     @Override
@@ -90,7 +65,7 @@ public class GeneratedCallable implements ScriptedCallable {
         }
 
         try {
-            //interpreter.interpret(body, environment);
+            interpreter.interpret(body, environment);
         } catch (CancelBlock returnValue) {
             return returnValue.value;
         }

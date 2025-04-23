@@ -6,22 +6,18 @@ import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
-import net.kapitencraft.lang.oop.clazz.ClassType;
-import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.AnnotationMethodMap;
-import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -178,7 +174,7 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public AnnotationClassInstance[] annotations() {
-        return new AnnotationClassInstance[0];
+    public RuntimeAnnotationClassInstance[] annotations() {
+        return new RuntimeAnnotationClassInstance[0];
     }
 }

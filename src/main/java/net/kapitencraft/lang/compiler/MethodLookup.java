@@ -5,7 +5,8 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.method.GeneratedCallable;
+import net.kapitencraft.lang.oop.method.CompileCallable;
+import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -25,8 +26,8 @@ public class MethodLookup {
         exposed = this.createExposed();
     }
 
-    public void checkFinal(Compiler.ErrorLogger logger, Pair<Token, GeneratedCallable>[] map) {
-        for (Pair<Token, GeneratedCallable> pair : map) {
+    public void checkFinal(Compiler.ErrorLogger logger, Pair<Token, CompileCallable>[] map) {
+        for (Pair<Token, CompileCallable> pair : map) {
             for (Pair<ScriptedClass, AbstractMethodMap> lookupElement : lookup) {
                 Map<String, DataMethodContainer> methodMap = lookupElement.right().asMap();
                 if (!methodMap.containsKey(pair.left().lexeme())) continue; //no method with name found, continuing
@@ -40,7 +41,7 @@ public class MethodLookup {
         }
     }
 
-    public void checkAbstract(Compiler.ErrorLogger logger, Token className, Pair<Token, GeneratedCallable>[] map) {
+    public void checkAbstract(Compiler.ErrorLogger logger, Token className, Pair<Token, CompileCallable>[] map) {
         Map<String, List<Pair<ScriptedClass, ScriptedCallable>>> abstracts = new HashMap<>();
         for (Pair<ScriptedClass, AbstractMethodMap> methods : lookup) {
             methods.right().asMap().forEach((s, dataMethodContainer) -> {
@@ -63,7 +64,7 @@ public class MethodLookup {
                 }
             });
         }
-        for (Pair<Token, GeneratedCallable> pair : map) {
+        for (Pair<Token, CompileCallable> pair : map) {
             List<Pair<ScriptedClass, ScriptedCallable>> methods = abstracts.get(pair.left().lexeme());
             if (methods == null) continue; //no abstract method for that name, continuing
             methods.removeIf(callablePair -> Util.matchArgs(pair.right().argTypes(), callablePair.right().argTypes()));

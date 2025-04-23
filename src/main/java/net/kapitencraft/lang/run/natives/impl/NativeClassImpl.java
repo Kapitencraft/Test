@@ -2,11 +2,9 @@ package net.kapitencraft.lang.run.natives.impl;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
-import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -64,7 +62,7 @@ public class NativeClassImpl implements ScriptedClass {
 
     @Override
     public ClassReference getFieldType(String name) {
-        return fields.containsKey(name) ? fields.get(name).getType() : null;
+        return fields.containsKey(name) ? fields.get(name).type() : null;
     }
 
     @Override
@@ -133,8 +131,8 @@ public class NativeClassImpl implements ScriptedClass {
     }
 
     @Override
-    public AnnotationClassInstance[] annotations() {
-        return new AnnotationClassInstance[0];
+    public RuntimeAnnotationClassInstance[] annotations() {
+        return new RuntimeAnnotationClassInstance[0];
     }
 
     @Override

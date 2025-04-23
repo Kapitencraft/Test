@@ -3,6 +3,7 @@ package net.kapitencraft.lang.holder.class_ref.generic;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.VarTypeManager;
+import org.checkerframework.checker.units.qual.K;
 
 public class GenericClassReference extends ClassReference {
     private final ClassReference lowerBound, upperBound;
@@ -25,6 +26,10 @@ public class GenericClassReference extends ClassReference {
         return absoluteName();
     }
 
+    public String getTypeName() {
+        return name;
+    }
+
     @Override
     public boolean exists() {
         return lowerBound == null || lowerBound.exists() && upperBound == null || upperBound.exists();
@@ -36,8 +41,18 @@ public class GenericClassReference extends ClassReference {
                 lowerBound == null ?
                         VarTypeManager.OBJECT.get() :
                         lowerBound.get() :
-                generics.getValue(name).orElse(lowerBound == null ?
+                unwrap(generics).get(generics);
+    }
+
+    public ClassReference unwrap(GenericStack genericStack) {
+        ClassReference reference = genericStack.getValue(name).orElse(
+                lowerBound == null ?
                         VarTypeManager.OBJECT :
-                        lowerBound).get(generics);
+                        lowerBound
+        );
+        while (reference instanceof GenericClassReference gCR) {
+            reference = gCR.unwrap(genericStack);
+        }
+        return reference;
     }
 }

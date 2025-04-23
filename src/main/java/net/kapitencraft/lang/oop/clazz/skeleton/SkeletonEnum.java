@@ -7,7 +7,7 @@ import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.EnumClass;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
@@ -169,7 +169,7 @@ public class SkeletonEnum implements EnumClass {
 
     @Override
     public ClassReference getFieldType(String name) {
-        return Util.nonNullElse(fields.get(name).getType(), EnumClass.super.getFieldType(name));
+        return Util.nonNullElse(fields.get(name).type(), EnumClass.super.getFieldType(name));
     }
 
     @Override
@@ -179,7 +179,7 @@ public class SkeletonEnum implements EnumClass {
 
     @Override
     public ClassReference getStaticFieldType(String name) {
-        return staticFields.get(name).getType();
+        return staticFields.get(name).type();
     }
 
     @Override
@@ -238,8 +238,8 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public AnnotationClassInstance[] annotations() {
-        return new AnnotationClassInstance[0];
+    public RuntimeAnnotationClassInstance[] annotations() {
+        return new RuntimeAnnotationClassInstance[0];
     }
 
 }

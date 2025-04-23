@@ -4,13 +4,11 @@ import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.ast.RuntimeExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
-import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
@@ -152,7 +150,7 @@ public interface ScriptedClass {
     }
 
     default ClassReference getStaticFieldType(String name) {
-        return staticFields().get(name).getType();
+        return staticFields().get(name).type();
     }
 
     default boolean hasStaticField(String name) {
@@ -231,7 +229,7 @@ public interface ScriptedClass {
 
     AbstractMethodMap getMethods();
 
-    AnnotationClassInstance[] annotations();
+    RuntimeAnnotationClassInstance[] annotations();
 
     // ----- MODIFIERS START -----
 

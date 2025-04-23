@@ -2,13 +2,11 @@ package net.kapitencraft.lang.run.load;
 
 import net.kapitencraft.lang.compiler.*;
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.parser.ExprParser;
 import net.kapitencraft.lang.compiler.parser.HolderParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
-import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 import java.io.File;
@@ -17,7 +15,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Objects;
 
-public class CompilerLoaderHolder extends ClassLoaderHolder {
+public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder> {
     private final String content;
     private final Compiler.ErrorLogger logger;
     private Holder.Class holder;
@@ -91,9 +89,8 @@ public class CompilerLoaderHolder extends ClassLoaderHolder {
         if (checkHolderCreated()) this.holder.applySkeleton(logger);
     }
 
-    @Override
-    public ScriptedClass loadClass() {
-        if (!checkHolderCreated()) return null;
+    public void loadClass() {
+        if (!checkHolderCreated()) return;
 
         if (builder.superclass() != null) {
             MethodLookup lookup = MethodLookup.createFromClass(builder.superclass().get(), builder.interfaces());
@@ -102,7 +99,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder {
                 lookup.checkFinal(logger, builder.methods());
             }
         }
-        return target = builder.build();
+        target = builder.build();
     }
 
     public void validate() {

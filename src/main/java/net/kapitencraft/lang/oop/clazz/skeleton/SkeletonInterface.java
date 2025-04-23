@@ -6,9 +6,8 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -21,7 +20,6 @@ import net.kapitencraft.tool.GsonHelper;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -124,7 +122,7 @@ public class SkeletonInterface implements ScriptedClass {
 
     @Override
     public ClassReference getStaticFieldType(String name) {
-        return staticFields.get(name).getType();
+        return staticFields.get(name).type();
     }
 
     @Override
@@ -183,8 +181,8 @@ public class SkeletonInterface implements ScriptedClass {
     }
 
     @Override
-    public AnnotationClassInstance[] annotations() {
-        return new AnnotationClassInstance[0];
+    public RuntimeAnnotationClassInstance[] annotations() {
+        return new RuntimeAnnotationClassInstance[0];
     }
 
     @Override

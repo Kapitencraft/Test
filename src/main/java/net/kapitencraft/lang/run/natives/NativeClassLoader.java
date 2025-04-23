@@ -11,10 +11,10 @@ import net.kapitencraft.lang.run.natives.impl.NativeClassImpl;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.natives.impl.NativeConstructor;
-import net.kapitencraft.lang.run.natives.impl.NativeFieldImpl;
 import net.kapitencraft.lang.run.natives.impl.NativeMethod;
 import net.kapitencraft.lang.tool.Util;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
 
@@ -241,6 +241,10 @@ public class NativeClassLoader {
 
     public static Object[] extractNatives(List<Object> in) {
         return in.stream().map(NativeClassLoader::extractNative).toArray();
+    }
+
+    public static Object wrapString(@NotNull String s) {
+        return new NativeClassInstance((NativeClassImpl) VarTypeManager.STRING.get(), s);
     }
 
     interface ClassObj {

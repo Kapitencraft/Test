@@ -35,7 +35,7 @@ public class TestLoader {
             for (JsonElement element : array.asList()) {
                 JsonObject object = element.getAsJsonObject();
                 String target = GsonHelper.getAsString(object, "target");
-                String testArgs = GsonHelper.getAsString(object, "arguments", "");
+                String testArgs = GsonHelper.getAsString(object, "args", "");
                 String[] output = GsonHelper.getAsJsonArray(object, "output").asList().stream().map(JsonElement::getAsString).toArray(String[]::new);
                 tests.add(new TestInstance(target, testArgs, output));
             }

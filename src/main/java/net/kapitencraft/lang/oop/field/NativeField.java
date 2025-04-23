@@ -8,7 +8,7 @@ import net.kapitencraft.lang.run.natives.impl.NativeClassImpl;
 
 import java.lang.reflect.Field;
 
-public class NativeField extends ScriptedField {
+public class NativeField implements ScriptedField {
     private final ClassReference type;
     private final boolean isFinal;
     private final Field field;
@@ -41,7 +41,7 @@ public class NativeField extends ScriptedField {
     }
 
     @Override
-    public ClassReference getType() {
+    public ClassReference type() {
         return type;
     }
 

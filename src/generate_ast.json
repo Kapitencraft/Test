@@ -9,6 +9,7 @@
             "compile": "Token",
             "runtime": "TokenType"
           },
+          "%line": "int",
           "executor": "ClassReference",
           "operand": "Operand"
         },
@@ -22,7 +23,11 @@
         "Binary": {
           "left": "Expr",
           "right": "Expr",
-          "operator": "Token",
+          "operator": {
+            "compile": "Token",
+            "runtime": "TokenType"
+          },
+          "%line": "int",
           "executor": "ClassReference",
           "operand": "Operand"
         },
@@ -35,13 +40,15 @@
           "callee": "Expr",
           "name": "Token",
           "methodOrdinal": "int",
-          "args": "Expr[]"
+          "args": "Expr[]",
+          "$retType": "ClassReference"
         },
         "StaticCall": {
           "target": "ClassReference",
           "name": "Token",
           "methodOrdinal": "int",
-          "args": "Expr[]"
+          "args": "Expr[]",
+          "$retType": "ClassReference"
         },
         "Get": {
           "object": "Expr",
@@ -72,7 +79,7 @@
             "compile": "Token",
             "runtime": "TokenType"
           },
-          "$line": "int",
+          "%line": "int",
           "executor": "ClassReference",
           "operand": "Operand"
         },
@@ -93,7 +100,7 @@
         },
         "ArraySet": {
           "object": "Expr",
-          "index": "Expr",
+            "index": "Expr",
           "value": "Expr",
           "assignType": {
             "compile": "Token",
@@ -143,7 +150,7 @@
           "provider": "Expr",
           "params": "Map<Object,Expr>",
           "defaulted": "Expr",
-          "keyword": "Token"
+          "$keyword": "Token"
         },
         "CastCheck": {
           "object": "Expr",
@@ -164,7 +171,10 @@
         },
         "Logical": {
           "left": "Expr",
-          "operator": "Token",
+          "operator": {
+            "compile": "Token",
+            "runtime": "TokenType"
+          },
           "right": "Expr"
         },
         "Unary": {
@@ -178,7 +188,8 @@
           "name": "Token"
         },
         "Constructor": {
-          "keyword": "Token",
+          "$keyword": "Token",
+          "%line": "int",
           "target": "ClassReference",
           "params": "Expr[]",
           "ordinal": "int"
@@ -203,14 +214,15 @@
           "thenBranch": "Stmt",
           "elseBranch": "Stmt",
           "elifs": "Pair<Expr,Stmt>[]",
-          "keyword": "Token"
+          "$keyword": "Token"
         },
         "Return": {
-          "keyword": "Token",
+          "$keyword": "Token",
           "value": "Expr"
         },
         "Throw": {
-          "keyword": "Token",
+          "$keyword": "Token",
+          "%line": "int",
           "value": "Expr"
         },
         "VarDecl": {
@@ -225,14 +237,14 @@
         "While": {
           "condition": "Expr",
           "body": "Stmt",
-          "keyword": "Token"
+          "$keyword": "Token"
         },
         "For": {
           "init": "Stmt",
           "condition": "Expr",
           "increment": "Expr",
           "body": "Stmt",
-          "keyword": "Token"
+          "$keyword": "Token"
         },
         "ForEach": {
           "type": "ClassReference",
@@ -266,7 +278,8 @@
   "imports": {
     "runtime": [
       "net.kapitencraft.lang.holder.token.RuntimeToken",
-      "net.kapitencraft.lang.holder.class_ref.ClassReference"
+      "net.kapitencraft.lang.holder.class_ref.ClassReference",
+      "net.kapitencraft.lang.holder.token.TokenType"
     ],
     "compile": [
       "net.kapitencraft.lang.holder.token.Token",

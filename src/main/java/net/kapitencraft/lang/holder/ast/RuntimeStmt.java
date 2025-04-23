@@ -22,11 +22,9 @@ public abstract class RuntimeStmt {
     }
 
     public static class Return extends RuntimeStmt {
-        public final RuntimeToken keyword;
         public final RuntimeExpr value;
 
-        public Return(RuntimeToken keyword, RuntimeExpr value) {
-            this.keyword = keyword;
+        public Return(RuntimeExpr value) {
             this.value = value;
         }
 
@@ -69,11 +67,11 @@ public abstract class RuntimeStmt {
     }
 
     public static class Throw extends RuntimeStmt {
-        public final RuntimeToken keyword;
+        public final int line;
         public final RuntimeExpr value;
 
-        public Throw(RuntimeToken keyword, RuntimeExpr value) {
-            this.keyword = keyword;
+        public Throw(int line, RuntimeExpr value) {
+            this.line = line;
             this.value = value;
         }
 
@@ -88,14 +86,12 @@ public abstract class RuntimeStmt {
         public final RuntimeExpr condition;
         public final RuntimeExpr increment;
         public final RuntimeStmt body;
-        public final RuntimeToken keyword;
 
-        public For(RuntimeStmt init, RuntimeExpr condition, RuntimeExpr increment, RuntimeStmt body, RuntimeToken keyword) {
+        public For(RuntimeStmt init, RuntimeExpr condition, RuntimeExpr increment, RuntimeStmt body) {
             this.init = init;
             this.condition = condition;
             this.increment = increment;
             this.body = body;
-            this.keyword = keyword;
         }
 
         @Override
@@ -137,12 +133,10 @@ public abstract class RuntimeStmt {
     public static class While extends RuntimeStmt {
         public final RuntimeExpr condition;
         public final RuntimeStmt body;
-        public final RuntimeToken keyword;
 
-        public While(RuntimeExpr condition, RuntimeStmt body, RuntimeToken keyword) {
+        public While(RuntimeExpr condition, RuntimeStmt body) {
             this.condition = condition;
             this.body = body;
-            this.keyword = keyword;
         }
 
         @Override
@@ -156,14 +150,12 @@ public abstract class RuntimeStmt {
         public final RuntimeStmt thenBranch;
         public final RuntimeStmt elseBranch;
         public final Pair<RuntimeExpr,RuntimeStmt>[] elifs;
-        public final RuntimeToken keyword;
 
-        public If(RuntimeExpr condition, RuntimeStmt thenBranch, RuntimeStmt elseBranch, Pair<RuntimeExpr,RuntimeStmt>[] elifs, RuntimeToken keyword) {
+        public If(RuntimeExpr condition, RuntimeStmt thenBranch, RuntimeStmt elseBranch, Pair<RuntimeExpr,RuntimeStmt>[] elifs) {
             this.condition = condition;
             this.thenBranch = thenBranch;
             this.elseBranch = elseBranch;
             this.elifs = elifs;
-            this.keyword = keyword;
         }
 
         @Override

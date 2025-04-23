@@ -132,13 +132,13 @@ public abstract class RuntimeExpr {
     }
 
     public static class Constructor extends RuntimeExpr {
-        public final RuntimeToken keyword;
+        public final int line;
         public final ClassReference target;
         public final RuntimeExpr[] params;
         public final int ordinal;
 
-        public Constructor(RuntimeToken keyword, ClassReference target, RuntimeExpr[] params, int ordinal) {
-            this.keyword = keyword;
+        public Constructor(int line, ClassReference target, RuntimeExpr[] params, int ordinal) {
+            this.line = line;
             this.target = target;
             this.params = params;
             this.ordinal = ordinal;
@@ -292,13 +292,11 @@ public abstract class RuntimeExpr {
         public final RuntimeExpr provider;
         public final Map<Object,RuntimeExpr> params;
         public final RuntimeExpr defaulted;
-        public final RuntimeToken keyword;
 
-        public Switch(RuntimeExpr provider, Map<Object,RuntimeExpr> params, RuntimeExpr defaulted, RuntimeToken keyword) {
+        public Switch(RuntimeExpr provider, Map<Object,RuntimeExpr> params, RuntimeExpr defaulted) {
             this.provider = provider;
             this.params = params;
             this.defaulted = defaulted;
-            this.keyword = keyword;
         }
 
         @Override
@@ -373,16 +371,16 @@ public abstract class RuntimeExpr {
         public final RuntimeToken name;
         public final RuntimeExpr value;
         public final TokenType type;
-        public final ClassReference executor;
         public final int line;
+        public final ClassReference executor;
         public final Operand operand;
 
-        public Assign(RuntimeToken name, RuntimeExpr value, TokenType type, ClassReference executor, int line, Operand operand) {
+        public Assign(RuntimeToken name, RuntimeExpr value, TokenType type, int line, ClassReference executor, Operand operand) {
             this.name = name;
             this.value = value;
             this.type = type;
-            this.executor = executor;
             this.line = line;
+            this.executor = executor;
             this.operand = operand;
         }
 
@@ -415,16 +413,16 @@ public abstract class RuntimeExpr {
         public final RuntimeExpr left;
         public final RuntimeExpr right;
         public final TokenType operator;
-        public final ClassReference executor;
         public final int line;
+        public final ClassReference executor;
         public final Operand operand;
 
-        public Binary(RuntimeExpr left, RuntimeExpr right, TokenType operator, ClassReference executor, int line, Operand operand) {
+        public Binary(RuntimeExpr left, RuntimeExpr right, TokenType operator, int line, ClassReference executor, Operand operand) {
             this.left = left;
             this.right = right;
             this.operator = operator;
-            this.executor = executor;
             this.line = line;
+            this.executor = executor;
             this.operand = operand;
         }
 

@@ -41,3 +41,4 @@ bin/
 ### Mac OS ###
 .DS_Store
 /run/cache/
+/src/main/java/net/kapitencraft/tool/CurseforgeDataCheck.java

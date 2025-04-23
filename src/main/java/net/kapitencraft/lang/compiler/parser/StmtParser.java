@@ -79,7 +79,7 @@ public class StmtParser extends ExprParser {
         }
 
         consumeEndOfArg();
-        return null;// new CompileStmt.VarDecl(name, type, initializer, isFinal);
+        return  new CompileStmt.VarDecl(name, type, initializer, isFinal);
     }
 
     private CompileStmt varDeclaration(boolean isFinal, ClassReference type) {
@@ -223,7 +223,7 @@ public class StmtParser extends ExprParser {
                 CompileStmt stmt = statement();
                 loopIndex--;
                 popScope();
-                return null;// new CompileStmt.ForEach(type.get(), name, init, stmt);
+                return new CompileStmt.ForEach(type.get(), name, init, stmt);
             }
             initializer = varDecl(false, type.get(), name);
         } else if (match(EOA)) {
@@ -278,7 +278,7 @@ public class StmtParser extends ExprParser {
             elseBranch = statementWithScope();
         }
 
-        return null;// new CompileStmt.If(condition, thenBranch, elseBranch, elifs, statement);
+        return new CompileStmt.If(condition, thenBranch, elseBranch, elifs.toArray(Pair[]::new), statement);
     }
 
     private CompileStmt whileStatement() {
@@ -313,11 +313,11 @@ public class StmtParser extends ExprParser {
         return new CompileStmt.Expression(expr);
     }
 
-    public List<CompileStmt> parse() {
-        if (tokens.length == 0) return List.of();
+    public CompileStmt[] parse() {
+        if (tokens.length == 0) return new CompileStmt[0];
         List<CompileStmt> stmts = new ArrayList<>();
         while (!isAtEnd()) stmts.add(declaration());
-        return stmts;
+        return stmts.toArray(CompileStmt[]::new);
     }
 
     public void applyMethod(List<? extends Pair<? extends ClassReference, String>> params, ClassReference targetClass, ClassReference superclass, ClassReference funcRetType, @Nullable Holder.Generics generics) {

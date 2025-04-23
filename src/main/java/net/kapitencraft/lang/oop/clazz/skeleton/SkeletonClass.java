@@ -3,11 +3,9 @@ package net.kapitencraft.lang.oop.clazz.skeleton;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -167,7 +165,7 @@ public class SkeletonClass implements ScriptedClass {
 
     @Override
     public ClassReference getFieldType(String name) {
-        return Optional.ofNullable(this.fields.get(name)).map(SkeletonField::getType).orElseGet(() -> superclass.get().getFieldType(name));
+        return Optional.ofNullable(this.fields.get(name)).map(SkeletonField::type).orElseGet(() -> superclass.get().getFieldType(name));
     }
 
     @Override
@@ -177,7 +175,7 @@ public class SkeletonClass implements ScriptedClass {
 
     @Override
     public ClassReference getStaticFieldType(String name) {
-        return staticFields.get(name).getType();
+        return staticFields.get(name).type();
     }
 
     @Override
@@ -241,8 +239,8 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public AnnotationClassInstance[] annotations() {
-        return new AnnotationClassInstance[0];
+    public RuntimeAnnotationClassInstance[] annotations() {
+        return new RuntimeAnnotationClassInstance[0];
     }
 
     @Override

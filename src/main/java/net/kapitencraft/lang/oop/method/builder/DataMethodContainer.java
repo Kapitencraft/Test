@@ -8,7 +8,8 @@ import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.method.GeneratedCallable;
+import net.kapitencraft.lang.oop.method.CompileCallable;
+import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.lang.tool.Util;
@@ -46,7 +47,7 @@ public class DataMethodContainer implements MethodContainer {
             JsonObject methodData = GsonHelper.getAsJsonObject(data, member);
             methodData.asMap().forEach((name1, element) -> {
                 try {
-                    DataMethodContainer container = new DataMethodContainer(element.getAsJsonArray().asList().stream().map(JsonElement::getAsJsonObject).map(GeneratedCallable::load).toArray(ScriptedCallable[]::new));
+                    DataMethodContainer container = new DataMethodContainer(element.getAsJsonArray().asList().stream().map(JsonElement::getAsJsonObject).map(RuntimeCallable::load).toArray(ScriptedCallable[]::new));
                     methods.put(name1, container);
                 } catch (Exception e) {
                     System.err.printf("error loading method '%s' inside class '%s': %s%n", name1, className, e.getMessage());
@@ -60,7 +61,7 @@ public class DataMethodContainer implements MethodContainer {
     public JsonArray cache(CacheBuilder builder) {
         JsonArray array = new JsonArray(methods.length);
         for (ScriptedCallable method : methods) {
-            if (method instanceof GeneratedCallable function) {
+            if (method instanceof CompileCallable function) {
                 array.add(function.save(builder));
             }
         }

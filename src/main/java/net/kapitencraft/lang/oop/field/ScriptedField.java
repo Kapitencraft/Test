@@ -4,11 +4,11 @@ import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.Interpreter;
 
-public abstract class ScriptedField {
+public interface ScriptedField {
 
-    public abstract Object initialize(Environment environment, Interpreter interpreter);
+    Object initialize(Environment environment, Interpreter interpreter);
 
-    public abstract ClassReference getType();
+    ClassReference type();
 
-    public abstract boolean isFinal();
+    boolean isFinal();
 }

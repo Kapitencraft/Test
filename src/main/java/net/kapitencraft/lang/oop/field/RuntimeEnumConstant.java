@@ -4,28 +4,26 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.env.core.Environment;
+import net.kapitencraft.lang.holder.ast.RuntimeExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.tool.GsonHelper;
 
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-//TODO split into compile & runtime
-public class GeneratedEnumConstant extends ScriptedField {
+public class RuntimeEnumConstant implements ScriptedField {
 
     private final ScriptedClass target;
     private final int ordinal;
     private final String name;
     private final int constructorOrdinal;
-    private final List<Expr> args;
+    private final RuntimeExpr[] args;
 
-    public GeneratedEnumConstant(ScriptedClass target, int ordinal, String name, int constructorOrdinal, List<Expr> args) {
+    public RuntimeEnumConstant(ScriptedClass target, int ordinal, String name, int constructorOrdinal, RuntimeExpr[] args) {
         this.target = target;
         this.ordinal = ordinal;
         this.name = name;
@@ -39,12 +37,12 @@ public class GeneratedEnumConstant extends ScriptedField {
         DynamicClassInstance constant = new DynamicClassInstance(this.target, interpreter);
         constant.assignField("ordinal", ordinal);
         constant.assignField("name", name);
-        //constant.construct(interpreter.visitArgs(this.args), constructorOrdinal, interpreter);
+        constant.construct(interpreter.visitArgs(this.args), constructorOrdinal, interpreter);
         return constant;
     }
 
     @Override
-    public ClassReference getType() {
+    public ClassReference type() {
         return null;
     }
 
@@ -53,12 +51,12 @@ public class GeneratedEnumConstant extends ScriptedField {
         return false;
     }
 
-    public static GeneratedEnumConstant fromJson(JsonObject object, ScriptedClass target) {
+    public static RuntimeEnumConstant fromJson(JsonObject object, ScriptedClass target) {
         int ordinal = GsonHelper.getAsInt(object, "ordinal");
         String name = GsonHelper.getAsString(object, "name");
         int cOrdinal = GsonHelper.getAsInt(object, "constructorOrdinal");
-        List<Expr> args = CacheLoader.readArgs(object, "args");
-        return new GeneratedEnumConstant(target, ordinal, name, cOrdinal, args);
+        RuntimeExpr[] args = CacheLoader.readArgs(object, "args");
+        return new RuntimeEnumConstant(target, ordinal, name, cOrdinal, args);
     }
 
     public JsonObject cache(CacheBuilder builder) {
@@ -70,13 +68,13 @@ public class GeneratedEnumConstant extends ScriptedField {
         return object;
     }
 
-    public static Function<ScriptedClass, Map<String, GeneratedEnumConstant>> loadFieldMap(JsonObject data, String member) {
+    public static Function<ScriptedClass, Map<String, RuntimeEnumConstant>> loadFieldMap(JsonObject data, String member) {
         return target -> {
-            ImmutableMap.Builder<String, GeneratedEnumConstant> fields = new ImmutableMap.Builder<>();
+            ImmutableMap.Builder<String, RuntimeEnumConstant> fields = new ImmutableMap.Builder<>();
             {
                 JsonObject fieldData = GsonHelper.getAsJsonObject(data, member);
                 fieldData.asMap().forEach((name1, element) ->
-                        fields.put(name1, GeneratedEnumConstant.fromJson(element.getAsJsonObject(), target)));
+                        fields.put(name1, RuntimeEnumConstant.fromJson(element.getAsJsonObject(), target)));
             }
             return fields.build();
         };

@@ -45,13 +45,12 @@ public class RetTypeFinder implements CompileExpr.Visitor<ClassReference> {
 
     @Override
     public ClassReference visitInstCallExpr(CompileExpr.InstCall expr) {
-        return findRetType(expr.callee).get().getMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).type();
+        return expr.retType;
     }
 
     @Override
     public ClassReference visitStaticCallExpr(CompileExpr.StaticCall expr) {
-        if (expr.target == null) return VarTypeManager.VOID.reference();
-        return expr.target.get().getStaticMethodByOrdinal(expr.name.lexeme(), expr.methodOrdinal).type();
+        return expr.retType;
     }
 
     @Override
@@ -121,7 +120,7 @@ public class RetTypeFinder implements CompileExpr.Visitor<ClassReference> {
 
     @Override
     public ClassReference visitLiteralExpr(CompileExpr.Literal expr) {
-        return expr.token.literal().type().reference();
+        return expr.literal.literal().type().reference();
     }
 
     @Override

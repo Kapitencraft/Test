@@ -1,6 +1,10 @@
 package net.kapitencraft.lang.holder.token;
 
+import com.google.gson.JsonObject;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
 
@@ -44,5 +48,9 @@ public enum TokenType {
 
     public String id() {
         return name().toLowerCase();
+    }
+
+    public static TokenType readFromSubObject(JsonObject object, String type) {
+        return TokenType.valueOf(object.getAsJsonPrimitive(type).getAsString().toUpperCase());
     }
 }

@@ -14,6 +14,9 @@ import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
+import net.kapitencraft.lang.run.natives.NativeClassInstance;
+import net.kapitencraft.lang.run.natives.NativeClassLoader;
+import net.kapitencraft.lang.run.natives.impl.NativeClassImpl;
 import net.kapitencraft.lang.tool.Math;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.Pair;
@@ -53,7 +56,7 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
                         millisAtStart = System.currentTimeMillis();
                         this.environment.push();
                         ArrayList<Object> obj = new ArrayList<>(); //can't use List.of() because it would add each of the split strings as a single element to the list
-                        obj.add(data.split(" "));
+                        obj.add(Arrays.stream(data.split(" ")).map(NativeClassLoader::wrapString).toArray());
                         method.call(new Environment(), this, obj);
                         if (output) {
                             if (profiling)
@@ -74,7 +77,7 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
                 });
     }
 
-    public void interpret(List<RuntimeStmt> statements, Environment active) {
+    public void interpret(RuntimeStmt[] statements, Environment active) {
         Environment shadowed = environment;
         try {
             environment = active == null ? environment : active;
@@ -119,7 +122,7 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
     @Override
     public Void visitThrowStmt(RuntimeStmt.Throw stmt) {
         AbstractScriptedException exception = new AbstractScriptedException((ClassInstance) evaluate(stmt.value));
-        pushCallIndex(stmt.keyword.line());
+        pushCallIndex(stmt.line);
         throw exception;
     }
 
@@ -180,6 +183,7 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
     @Override
     public Void visitForEachStmt(RuntimeStmt.ForEach stmt) {
         this.environment.push();
+        //TODO fix primitive type crash
         for (Object obj : (Object[]) evaluate(stmt.initializer)) {
             environment.defineVar(stmt.name, obj);
             try {
@@ -233,7 +237,10 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
 
     @Override
     public Object visitLiteralExpr(RuntimeExpr.Literal expr) {
-        return expr.literal;
+        if (expr.literal.value() instanceof String s) {
+            return NativeClassLoader.wrapString(s);
+        }
+        return expr.literal.value();
     }
 
     @Override
@@ -373,7 +380,7 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
 
     @Override
     public Object visitConstructorExpr(RuntimeExpr.Constructor expr) {
-        pushCallIndex(expr.keyword.line());
+        pushCallIndex(expr.line);
         pushCall(expr.target.get().absoluteName(), "<init>", expr.target.name());
         Object data = expr.target.get().createInst(expr.params, expr.ordinal, this);
         popCall();

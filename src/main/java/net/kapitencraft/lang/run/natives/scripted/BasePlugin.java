@@ -26,5 +26,6 @@ public class BasePlugin {
         registration.registerClass(Exception.class, "scripted.lang");
         registration.registerClass(Retention.class, "scripted.lang.annotations");
         registration.registerClass(RetentionPolicy.class, "scripted.lang.annotations");
+        registration.registerClass(Math.class, "scripted.lang");
     }
 }

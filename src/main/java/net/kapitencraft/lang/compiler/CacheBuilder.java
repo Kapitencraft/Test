@@ -7,16 +7,14 @@ import com.google.gson.JsonPrimitive;
 import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.ast.CompileStmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.tool.Util;
 
 import java.util.Arrays;
-import java.util.List;
 
 public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileStmt.Visitor<JsonElement> {
     public JsonElement cache(CompileExpr expr) {
@@ -37,10 +35,10 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         return loxClass.save(this);
     }
 
-    public JsonArray cacheAnnotations(AnnotationClassInstance[] annotations) {
+    public JsonArray cacheAnnotations(CompileAnnotationClassInstance[] annotations) {
         JsonArray array = new JsonArray();
-        for (AnnotationClassInstance instance : annotations) {
-            //AnnotationClassInstance retention;
+        for (CompileAnnotationClassInstance instance : annotations) {
+            CompileAnnotationClassInstance retention;
             //if (retention = instance.getType().getAnnotation(VarTypeManager.RETENTION) != null) {
             //    if (retention.getProperty("value"))
             //    //TODO create annotation processor and implement retention
@@ -48,7 +46,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
             JsonObject data = new JsonObject();
             data.addProperty("type", instance.getType().absoluteName());
             JsonObject properties = new JsonObject();
-            //instance.properties.forEach((string, expr) -> properties.add(string, cache(expr)));
+            instance.properties.forEach((string, expr) -> properties.add(string, cache(expr)));
             data.add("properties", properties);
             array.add(data);
         }
@@ -61,7 +59,8 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         object.addProperty("TYPE", "assign");
         object.add("name", expr.name.toJson());
         object.add("value", cache(expr.value));
-        object.add("type", expr.type.toJson());
+        object.addProperty("type", expr.type.type().id());
+        object.addProperty("line", expr.type.line());
         object.addProperty("executor", expr.executor.get().absoluteName());
         object.addProperty("operand", expr.operand.name());
         return object;
@@ -72,7 +71,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "specialAssign");
         object.add("name", expr.name.toJson());
-        object.add("assignType", expr.assignType.toJson());
+        object.addProperty("assignType", expr.assignType.type().id());
         return object;
     }
 
@@ -81,7 +80,8 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "binary");
         object.add("left", cache(expr.left));
-        object.add("operator", expr.operator.toJson());
+        object.addProperty("operator", expr.operator.type().id());
+        object.addProperty("line", expr.operator.line());
         object.addProperty("executor", expr.executor.absoluteName());
         object.addProperty("operand", expr.operand.name());
         object.add("right", cache(expr.right));
@@ -125,7 +125,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "get");
         object.add("callee", cache(expr.object));
-        object.add("name", expr.name.toJson());
+        object.addProperty("name", expr.name.lexeme());
         return object;
     }
 
@@ -134,7 +134,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "staticGet");
         object.addProperty("target", expr.target.absoluteName());
-        object.add("name", expr.name.toJson());
+        object.addProperty("name", expr.name.lexeme());
         return object;
     }
 
@@ -152,9 +152,10 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "set");
         object.add("callee", cache(expr.object));
-        object.add("name", expr.name.toJson());
+        object.addProperty("name", expr.name.lexeme());
         object.add("value", cache(expr.value));
-        object.add("assignType", expr.assignType.toJson());
+        object.addProperty("assignType", expr.assignType.type().id());
+        object.addProperty("line", expr.assignType.line());
         object.addProperty("executor", expr.executor.absoluteName());
         object.addProperty("operand", expr.operand.name());
         return object;
@@ -165,9 +166,10 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "staticSet");
         object.addProperty("target", expr.target.absoluteName());
-        object.add("name", expr.name.toJson());
+        object.addProperty("name", expr.name.lexeme());
         object.add("value", cache(expr.value));
-        object.add("assignType", expr.assignType.toJson());
+        object.addProperty("assignType", expr.assignType.type().id());
+        object.addProperty("line", expr.assignType.line());
         object.addProperty("executor", expr.executor.absoluteName());
         object.addProperty("operand", expr.operand.name());
         return object;
@@ -180,7 +182,8 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         object.add("object", cache(expr.object));
         object.add("index", cache(expr.index));
         object.add("value", cache(expr.value));
-        object.add("assign", expr.assignType.toJson());
+        object.addProperty("assign", expr.assignType.type().id());
+        object.addProperty("line", expr.assignType.line());
         object.addProperty("executor", expr.executor.absoluteName());
         object.addProperty("operand", expr.operand.name());
         return object;
@@ -191,8 +194,8 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "specialSet");
         object.add("callee", cache(expr.callee));
-        object.add("name", expr.name.toJson());
-        object.add("assignType", expr.assignType.toJson());
+        object.addProperty("name", expr.name.lexeme());
+        object.addProperty("assignType", expr.assignType.type().id());
         return object;
     }
 
@@ -212,7 +215,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         object.addProperty("TYPE", "specialArraySet");
         object.add("object", cache(expr.object));
         object.add("index", cache(expr.index));
-        object.add("assign", expr.assignType.toJson());
+        object.addProperty("assign", expr.assignType.type().id());
         return object;
     }
 
@@ -247,8 +250,8 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "castCheck");
         object.add("object", cache(expr.object));
-        if (expr.patternVarName != null) object.add("patternVarName", expr.patternVarName.toJson());
         object.addProperty("target", expr.targetType.absoluteName());
+        if (expr.patternVarName != null) object.addProperty("patternVarName", expr.patternVarName.lexeme());
         return object;
     }
 
@@ -262,8 +265,9 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
 
     @Override
     public JsonElement visitLiteralExpr(CompileExpr.Literal expr) {
-        JsonObject object = expr.literal.toJson();
+        JsonObject object = new JsonObject();
         object.addProperty("TYPE", "literal");
+        object.add("literal", expr.literal.literal().toJson());
         return object;
     }
 
@@ -281,7 +285,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
     public JsonElement visitUnaryExpr(CompileExpr.Unary expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "unary");
-        object.add("operator", expr.operator.toJson());
+        object.addProperty("operator", expr.operator.type().id());
         object.add("arg", cache(expr.right));
         return object;
     }
@@ -300,7 +304,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         object.addProperty("TYPE", "constructors");
         object.addProperty("target", expr.target.absoluteName());
         object.add("args", saveArgs(expr.params));
-        object.add("keyword", expr.keyword.toJson());
+        object.addProperty("line", expr.keyword.line());
         object.addProperty("ordinal", expr.ordinal);
         return object;
     }
@@ -346,7 +350,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
     public JsonElement visitReturnStmt(CompileStmt.Return stmt) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "return");
-        object.add("keyword", stmt.keyword.toJson());
+        //object.add("keyword", stmt.keyword.toJson());
         if (stmt.value != null) object.add("value", cache(stmt.value));
         return object;
     }
@@ -355,7 +359,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
     public JsonElement visitThrowStmt(CompileStmt.Throw stmt) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "throw");
-        object.add("keyword", stmt.keyword.toJson());
+        object.addProperty("line", stmt.keyword.line());
         object.add("value", cache(stmt.value));
         return object;
     }
@@ -364,7 +368,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
     public JsonElement visitVarDeclStmt(CompileStmt.VarDecl stmt) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "varDecl");
-        object.add("name", stmt.name.toJson());
+        object.addProperty("name", stmt.name.lexeme());
         object.addProperty("targetType", stmt.type.absoluteName());
         if (stmt.initializer != null) object.add("initializer", cache(stmt.initializer));
         object.addProperty("isFinal", stmt.isFinal);
@@ -377,7 +381,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         object.addProperty("TYPE", "while");
         object.add("condition", cache(stmt.condition));
         object.add("body", cache(stmt.body));
-        object.add("keyword", stmt.keyword.toJson());
+        //object.add("keyword", stmt.keyword.toJson());
         return object;
     }
 
@@ -389,7 +393,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         object.add("condition", cache(stmt.condition));
         object.add("increment", cache(stmt.increment));
         object.add("body", cache(stmt.body));
-        object.add("keyword", stmt.keyword.toJson());
+        //object.add("keyword", stmt.keyword.toJson());
         return object;
     }
 
@@ -398,7 +402,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "forEach");
         object.addProperty("type", stmt.type.absoluteName());
-        object.add("name", stmt.name.toJson());
+        object.addProperty("name", stmt.name.lexeme());
         object.add("init", cache(stmt.initializer));
         object.add("body", cache(stmt.body));
         return object;
@@ -408,7 +412,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
     public JsonElement visitLoopInterruptionStmt(CompileStmt.LoopInterruption stmt) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "loopInterrupt");
-        object.add("keyword", stmt.type.toJson());
+        object.addProperty("keyword", stmt.type.type().id());
         return object;
     }
 
@@ -425,7 +429,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
             JsonArray classes = new JsonArray();
             Arrays.stream(pair1.left()).map(ClassReference::absoluteName).forEach(classes::add);
             pair1Dat.add("classes", classes);
-            pair1Dat.add("name", pair1.right().toJson());
+            pair1Dat.addProperty("name", pair1.right().lexeme());
             pairDat.add("initData", pair1Dat);
             pairDat.add("executor", cache(pair.right()));
             array.add(pairDat);

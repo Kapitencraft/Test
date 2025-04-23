@@ -6,11 +6,11 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Objects;
 
-public abstract class ClassLoaderHolder {
+public abstract class ClassLoaderHolder<T extends ClassLoaderHolder<T>> {
     public final File file;
-    protected final ClassLoaderHolder[] children;
+    protected final T[] children;
 
-    public ClassLoaderHolder(File file, ClassLoaderHolder[] children) {
+    public ClassLoaderHolder(File file, T[] children) {
         this.file = file;
         this.children = children;
     }
@@ -21,13 +21,11 @@ public abstract class ClassLoaderHolder {
 
     public abstract void applySkeleton();
 
-    public abstract ScriptedClass loadClass();
-
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (ClassLoaderHolder) obj;
+        var that = (ClassLoaderHolder<T>) obj;
         return Objects.equals(this.file, that.file) &&
                 Arrays.equals(this.children, that.children);
     }

@@ -12,16 +12,17 @@ public record Token(TokenType type, String lexeme, LiteralHolder literal, int li
 
     public JsonObject toJson() {
         JsonObject object = new JsonObject();
-        object.addProperty("type", type.name());
+        //only save string and line
+        //object.addProperty("type", type.name());
         object.addProperty("lexeme", lexeme);
-        object.add("literal", literal.toJson());
+        //object.add("literal", literal.toJson());
         object.addProperty("line", line);
-        object.addProperty("lineStartIndex", lineStartIndex);
+        //object.addProperty("lineStartIndex", lineStartIndex);
         return object;
     }
 
-    public static Token readFromSubObject(JsonObject object, String subElement) {
-        return fromJson(GsonHelper.getAsJsonObject(object, subElement));
+    public static Token readFromSubObject(JsonObject object, String name) {
+        return fromJson(GsonHelper.getAsJsonObject(object, name));
     }
 
     public static Token fromJson(JsonObject object) {

@@ -6,8 +6,6 @@ import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.ast.CompileStmt;
-import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.baked.BakedAnnotation;
 import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.baked.BakedEnum;
@@ -19,15 +17,15 @@ import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonAnnotation;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonEnum;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonInterface;
-import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
-import net.kapitencraft.lang.oop.field.GeneratedField;
+import net.kapitencraft.lang.oop.field.CompileField;
+import net.kapitencraft.lang.oop.field.CompileEnumConstant;
 import net.kapitencraft.lang.oop.field.SkeletonField;
-import net.kapitencraft.lang.oop.method.GeneratedCallable;
+import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
@@ -89,8 +87,8 @@ public class Holder {
         }
 
         public BakedEnum constructEnum(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
-            Map<Token, GeneratedField> fields = new HashMap<>();
-            Map<String, GeneratedField> staticFields = new HashMap<>();
+            Map<Token, CompileField> fields = new HashMap<>();
+            Map<String, CompileField> staticFields = new HashMap<>();
 
             for (Field field : fields()) {
                 CompileExpr initializer = null;
@@ -98,20 +96,20 @@ public class Holder {
                     stmtParser.apply(field.body(), parser);
                     initializer = stmtParser.expression();
                 }
-                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedField fieldDecl = null;// new GeneratedField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new AnnotationClassInstance[0]));
+                CompileField fieldDecl = new CompileField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new CompileAnnotationClassInstance[0]));
                 if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
                     else fields.put(field.name, fieldDecl);
             }
 
-            List<Pair<Token, GeneratedCallable>> methods = new ArrayList<>();
-            List<Pair<Token, GeneratedCallable>> staticMethods = new ArrayList<>();
+            List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
+            List<Pair<Token, CompileCallable>> staticMethods = new ArrayList<>();
             for (Method method : this.methods()) {
-                List<CompileStmt> body = null;
+                CompileStmt[] body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, method.type(), method.generics);
@@ -120,35 +118,35 @@ public class Holder {
                     stmtParser.popMethod();
                 }
 
-                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedCallable methodDecl = null;// new GeneratedCallable(method.type(), method.params(), body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
+                CompileCallable methodDecl = new CompileCallable(method.type(), method.params(), body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
                 if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
                 else methods.add(Pair.of(method.name(), methodDecl));
             }
 
-            List<Pair<Token, GeneratedCallable>> constructors = new ArrayList<>();
+            List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
             for (Constructor method : this.constructors()) {
                 stmtParser.apply(method.body(), parser);
                 stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, ClassReference.of(VarTypeManager.VOID), method.generics);
                 stmtParser.pushGenerics(method.generics());
-                List<CompileStmt> body = stmtParser.parse();
-                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                CompileStmt[] body = stmtParser.parse();
+                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
 
-                GeneratedCallable constDecl = null;// new GeneratedCallable(target, method.params(), body, (short) 0, annotations.toArray(new AnnotationClassInstance[0]));
+                CompileCallable constDecl = new CompileCallable(target, method.params(), body, (short) 0, annotations.toArray(new CompileAnnotationClassInstance[0]));
                 stmtParser.popMethod();
                 constructors.add(Pair.of(method.name(), constDecl));
             }
 
 
-            ImmutableMap.Builder<String, GeneratedEnumConstant> enumConstants = new ImmutableMap.Builder<>();
+            ImmutableMap.Builder<String, CompileEnumConstant> enumConstants = new ImmutableMap.Builder<>();
             for (EnumConstant decl : enumConstants()) {
                 CompileExpr[] args;
                 if (decl.arguments.length == 0) {
@@ -162,12 +160,12 @@ public class Holder {
                 int ordinal = target.get().getConstructor().getMethodOrdinal(stmtParser.argTypes(args));
                 ScriptedCallable callable = target.get().getConstructor().getMethodByOrdinal(ordinal);
 
-                stmtParser.checkArguments(args, callable, decl.name());
+                stmtParser.checkArguments(args, callable, null, decl.name());
 
-                //enumConstants.put(decl.name().lexeme(), new GeneratedEnumConstant(target.get(), decl.ordinal(), decl.name().lexeme(), ordinal, args));
+                enumConstants.put(decl.name().lexeme(), new CompileEnumConstant(decl.ordinal(), decl.name().lexeme(), ordinal, args));
             }
 
-            List<AnnotationClassInstance> annotations = new ArrayList<>();
+            List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
             for (AnnotationObj obj : this.annotations()) {
                 annotations.add(stmtParser.parseAnnotation(obj, parser));
             }
@@ -187,34 +185,33 @@ public class Holder {
                     Arrays.stream(enclosed)
                             .map(classConstructor -> classConstructor.construct(stmtParser, parser, logger))
                             .toArray(Compiler.ClassBuilder[]::new),
-                    annotations.toArray(new AnnotationClassInstance[0])
+                    annotations.toArray(new CompileAnnotationClassInstance[0])
             );
 
         }
 
         public BakedInterface constructInterface(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
-
-            Map<String, GeneratedField> staticFields = new HashMap<>();
+            Map<String, CompileField> staticFields = new HashMap<>();
             for (Field field : fields()) {
                 CompileExpr initializer = null;
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
                     initializer = stmtParser.expression();
                 }
-                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedField fieldDecl = null;// new GeneratedField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new AnnotationClassInstance[0]));
+                CompileField fieldDecl = new CompileField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new CompileAnnotationClassInstance[0]));
                 if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
                 else logger.error(field.name, "fields on interfaces must be static");
             }
 
-            List<Pair<Token, GeneratedCallable>> methods = new ArrayList<>();
-            List<Pair<Token, GeneratedCallable>> staticMethods = new ArrayList<>();
+            List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
+            List<Pair<Token, CompileCallable>> staticMethods = new ArrayList<>();
             for (Method method : this.methods()) {
-                List<CompileStmt> body = null;
+                CompileStmt[] body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     stmtParser.applyMethod(method.params, target(), null, method.type(), method.generics);
@@ -222,17 +219,17 @@ public class Holder {
                     body = stmtParser.parse();
                     stmtParser.popMethod();
                 }
-                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedCallable methodDecl = null;// new GeneratedCallable(method.type(), method.params, body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
+                CompileCallable methodDecl = new CompileCallable(method.type(), method.params, body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
                 if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
                 else methods.add(Pair.of(method.name(), methodDecl));
             }
 
-            List<AnnotationClassInstance> annotations = new ArrayList<>();
+            List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
             for (AnnotationObj obj : this.annotations()) {
                 annotations.add(stmtParser.parseAnnotation(obj, parser));
             }
@@ -249,34 +246,34 @@ public class Holder {
                     Arrays.stream(enclosed)
                             .map(classConstructor -> classConstructor.construct(stmtParser, parser, logger))
                             .toArray(Compiler.ClassBuilder[]::new),
-                    annotations.toArray(new AnnotationClassInstance[0])
+                    annotations.toArray(new CompileAnnotationClassInstance[0])
             );
 
         }
 
         public BakedClass constructClass(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
-            Map<Token, GeneratedField> fields = new HashMap<>();
-            Map<String, GeneratedField> staticFields = new HashMap<>();
+            Map<Token, CompileField> fields = new HashMap<>();
+            Map<String, CompileField> staticFields = new HashMap<>();
             for (Field field : fields()) {
                 CompileExpr initializer = null;
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
                     initializer = stmtParser.expression();
                 }
-                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedField fieldDecl = null; // new GeneratedField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new AnnotationClassInstance[0]));
+                CompileField fieldDecl = new CompileField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new CompileAnnotationClassInstance[0]));
                 if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
                 else fields.put(field.name, fieldDecl);
             }
 
-            List<Pair<Token, GeneratedCallable>> methods = new ArrayList<>();
-            List<Pair<Token, GeneratedCallable>> staticMethods = new ArrayList<>();
+            List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
+            List<Pair<Token, CompileCallable>> staticMethods = new ArrayList<>();
             for (Method method : this.methods()) {
-                List<CompileStmt> body = null;
+                CompileStmt[] body = new CompileStmt[0];
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     if (Modifiers.isStatic(method.modifiers))
@@ -287,34 +284,34 @@ public class Holder {
                     body = stmtParser.parse();
                     stmtParser.popMethod();
                 }
-                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedCallable methodDecl = null;// new GeneratedCallable(method.type(), method.params(), body, method.modifiers, annotations.toArray(new AnnotationClassInstance[0]));
+                CompileCallable methodDecl = new CompileCallable(method.type(), method.params(), body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
                 if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
                 else methods.add(Pair.of(method.name(), methodDecl));
             }
 
-            List<Pair<Token, GeneratedCallable>> constructors = new ArrayList<>();
+            List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
             for (Constructor constructor : this.constructors()) {
                 stmtParser.apply(constructor.body(), parser);
                 stmtParser.applyMethod(constructor.params(), target(), parent, ClassReference.of(VarTypeManager.VOID), constructor.generics);
                 stmtParser.pushGenerics(constructor.generics());
-                List<CompileStmt> body = stmtParser.parse();
+                CompileStmt[] body = stmtParser.parse();
 
-                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : constructor.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                GeneratedCallable constDecl = null;// new GeneratedCallable(target, constructor.params(), body, (short) 0, annotations.toArray(new AnnotationClassInstance[0]));
+                CompileCallable constDecl = new CompileCallable(target, constructor.params(), body, (short) 0, annotations.toArray(new CompileAnnotationClassInstance[0]));
                 stmtParser.popMethod();
                 constructors.add(Pair.of(constructor.name(), constDecl));
             }
 
-            List<AnnotationClassInstance> annotations = new ArrayList<>();
+            List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
             for (AnnotationObj obj : this.annotations()) {
                 annotations.add(stmtParser.parseAnnotation(obj, parser));
             }
@@ -335,27 +332,27 @@ public class Holder {
                             .map(classConstructor -> classConstructor.construct(stmtParser, parser, logger))
                             .toArray(Compiler.ClassBuilder[]::new),
                     this.modifiers,
-                    annotations.toArray(new AnnotationClassInstance[0])
+                    annotations.toArray(new CompileAnnotationClassInstance[0])
             );
         }
 
         public BakedAnnotation constructAnnotation(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
             ImmutableMap.Builder<String, MethodWrapper> methods = new ImmutableMap.Builder<>();
             for (Method method : methods()) {
-                Expr val = null;
+                CompileExpr val = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     val = stmtParser.literalOrReference();
                 }
-                List<AnnotationClassInstance> annotations = new ArrayList<>();
+                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                methods.put(method.name().lexeme(), new MethodWrapper(val, method.type, annotations.toArray(new AnnotationClassInstance[0])));
+                methods.put(method.name().lexeme(), new MethodWrapper(val, method.type, annotations.toArray(new CompileAnnotationClassInstance[0])));
             }
 
-            List<AnnotationClassInstance> annotations = new ArrayList<>();
+            List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
             for (AnnotationObj obj : this.annotations()) {
                 annotations.add(stmtParser.parseAnnotation(obj, parser));
             }
@@ -369,7 +366,7 @@ public class Holder {
                     Arrays.stream(enclosed)
                             .map(classConstructor -> classConstructor.construct(stmtParser, parser, logger))
                             .toArray(Compiler.ClassBuilder[]::new),
-                    annotations.toArray(new AnnotationClassInstance[0])
+                    annotations.toArray(new CompileAnnotationClassInstance[0])
             );
 
         }
@@ -555,7 +552,7 @@ public class Holder {
             );
         }
 
-        public record MethodWrapper(@Nullable Expr val, ClassReference type, AnnotationClassInstance[] annotations) implements ScriptedCallable {
+        public record MethodWrapper(@Nullable CompileExpr val, ClassReference type, CompileAnnotationClassInstance[] annotations) implements ScriptedCallable {
 
             @Override
             public ClassReference[] argTypes() {
@@ -564,7 +561,7 @@ public class Holder {
 
             @Override
             public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                return null; //val == null ? null : interpreter.evaluate(val);
+                throw new IllegalAccessError("can not call method wrapper!");
             }
 
             @Override

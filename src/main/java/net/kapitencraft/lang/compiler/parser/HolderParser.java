@@ -5,6 +5,7 @@ import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
@@ -24,7 +25,7 @@ import static net.kapitencraft.lang.holder.token.TokenType.DOT;
 @SuppressWarnings("ThrowableNotThrown")
 public class HolderParser extends AbstractParser {
     private GenericStack activeGenerics = new GenericStack();
-    private Deque<String> activePackages = new ArrayDeque<>();
+    private final Deque<String> activePackages = new ArrayDeque<>();
 
     public HolderParser(Compiler.ErrorLogger errorLogger) {
         super(errorLogger);
@@ -116,13 +117,14 @@ public class HolderParser extends AbstractParser {
         if (reference == null) {
             reference = VarTypeManager.getOrCreateClass(typeName.toString(), activePackages.getLast());
         }
-        //TODO save generics to variable types
         Holder.Generics generics = generics();
         while (match(S_BRACKET_O)) {
             consume(S_BRACKET_C, "']' expected");
             if (reference != null) reference = reference.array();
         }
-        return reference != null ? SourceClassReference.from(token, reference) : null;
+        if (reference == null) return null;
+        if (generics != null) return new AppliedGenericsReference(reference, generics, token);
+        return SourceClassReference.from(token, reference);
     }
 
 

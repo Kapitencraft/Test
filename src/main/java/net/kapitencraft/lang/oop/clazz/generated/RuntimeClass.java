@@ -1,24 +1,20 @@
 package net.kapitencraft.lang.oop.clazz.generated;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.CacheableClass;
-import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
-import net.kapitencraft.lang.oop.method.GeneratedCallable;
+import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
+import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
-import net.kapitencraft.lang.oop.field.GeneratedField;
+import net.kapitencraft.lang.oop.field.RuntimeField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
@@ -30,7 +26,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public final class GeneratedClass implements CacheableClass {
+public final class RuntimeClass implements ScriptedClass {
     private final GeneratedMethodMap methods;
     private final GeneratedMethodMap staticMethods;
     private final Map<String, DataMethodContainer> allMethods;
@@ -39,8 +35,8 @@ public final class GeneratedClass implements CacheableClass {
 
     private final ConstructorContainer constructor;
 
-    private final Map<String, GeneratedField> allFields;
-    private final Map<String, GeneratedField> allStaticFields;
+    private final Map<String, RuntimeField> allFields;
+    private final Map<String, RuntimeField> allStaticFields;
 
     private final Map<String, ClassReference> enclosing;
 
@@ -51,12 +47,12 @@ public final class GeneratedClass implements CacheableClass {
 
     private final short modifiers;
 
-    private final AnnotationClassInstance[] annotations;
+    private final RuntimeAnnotationClassInstance[] annotations;
 
-    public GeneratedClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor,
-                          Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
-                          Map<String, ClassReference> enclosing,
-                          ClassReference superclass, ClassReference[] implemented, String name, String packageRepresentation, short modifiers, AnnotationClassInstance[] annotations) {
+    public RuntimeClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor,
+                        Map<String, RuntimeField> fields, Map<String, RuntimeField> staticFields,
+                        Map<String, ClassReference> enclosing,
+                        ClassReference superclass, ClassReference[] implemented, String name, String packageRepresentation, short modifiers, RuntimeAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
         this.staticMethods = new GeneratedMethodMap(staticMethods);
@@ -73,12 +69,12 @@ public final class GeneratedClass implements CacheableClass {
         this.lookup = MethodLookup.createFromClass(this);
     }
 
-    public GeneratedClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
-                          List<ScriptedCallable> constructorData,
-                          Map<String, GeneratedField> fields, Map<String, GeneratedField> staticFields,
-                          ClassReference superclass, String name, String packageRepresentation,
-                          Map<String, ClassReference> enclosing, ClassReference[] implemented,
-                          short modifiers, AnnotationClassInstance[] annotations) {
+    public RuntimeClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
+                        List<ScriptedCallable> constructorData,
+                        Map<String, RuntimeField> fields, Map<String, RuntimeField> staticFields,
+                        ClassReference superclass, String name, String packageRepresentation,
+                        Map<String, ClassReference> enclosing, ClassReference[] implemented,
+                        short modifiers, RuntimeAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
         this.staticMethods = new GeneratedMethodMap(staticMethods);
@@ -105,18 +101,18 @@ public final class GeneratedClass implements CacheableClass {
         ImmutableMap<String, DataMethodContainer> staticMethods = DataMethodContainer.load(data, name, "staticMethods");
 
         List<ScriptedCallable> constructorData = new ArrayList<>();
-        GsonHelper.getAsJsonArray(data, "constructors").asList().stream().map(JsonElement::getAsJsonObject).map(GeneratedCallable::load).forEach(constructorData::add);
+        GsonHelper.getAsJsonArray(data, "constructors").asList().stream().map(JsonElement::getAsJsonObject).map(RuntimeCallable::load).forEach(constructorData::add);
 
-        ImmutableMap<String, GeneratedField> fields = GeneratedField.loadFieldMap(data, "fields");
-        ImmutableMap<String, GeneratedField> staticFields = GeneratedField.loadFieldMap(data, "staticFields");
+        ImmutableMap<String, RuntimeField> fields = RuntimeField.loadFieldMap(data, "fields");
+        ImmutableMap<String, RuntimeField> staticFields = RuntimeField.loadFieldMap(data, "staticFields");
 
         short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
 
-        AnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
+        RuntimeAnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
 
         Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));
 
-        return new GeneratedClass(
+        return new RuntimeClass(
                 methods, staticMethods, constructorData,
                 fields, staticFields,
                 superclass,
@@ -128,50 +124,19 @@ public final class GeneratedClass implements CacheableClass {
         );
     }
 
-    public JsonObject save(CacheBuilder cacheBuilder) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "class");
-        object.addProperty("name", name);
-        object.addProperty("superclass", superclass.absoluteName());
-        {
-            JsonArray parentInterfaces = new JsonArray();
-            Arrays.stream(this.implemented).map(ClassReference::absoluteName).forEach(parentInterfaces::add);
-            object.add("interfaces", parentInterfaces);
-        }
-        object.add("methods", methods.save(cacheBuilder));
-        object.add("staticMethods", staticMethods.save(cacheBuilder));
-        object.add("constructors", constructor.cache(cacheBuilder));
-        {
-            JsonObject fields = new JsonObject();
-            allFields.forEach((name, field) -> fields.add(name, field.cache(cacheBuilder)));
-            object.add("fields", fields);
-        }
-        {
-            JsonObject staticFields = new JsonObject();
-            allStaticFields.forEach((name, field) -> staticFields.add(name, field.cache(cacheBuilder)));
-            object.add("staticFields", staticFields);
-        }
-
-        object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
-
-        if (this.modifiers != 0) object.addProperty("modifiers", modifiers);
-
-        return object;
-    }
-
     @Override
     public ClassReference getFieldType(String name) {
-        return Optional.ofNullable(getFields().get(name)).map(ScriptedField::getType).orElse(CacheableClass.super.getFieldType(name));
+        return Optional.ofNullable(getFields().get(name)).map(ScriptedField::type).orElse(ScriptedClass.super.getFieldType(name));
     }
 
     @Override
     public ClassReference getStaticFieldType(String name) {
-        return allStaticFields.get(name).getType();
+        return allStaticFields.get(name).type();
     }
 
     @Override
     public boolean hasField(String name) {
-        return allFields.containsKey(name) || CacheableClass.super.hasField(name);
+        return allFields.containsKey(name) || ScriptedClass.super.hasField(name);
     }
 
     @Override
@@ -186,7 +151,7 @@ public final class GeneratedClass implements CacheableClass {
 
     @Override
     public ScriptedCallable getMethod(String name, ClassReference[] args) {
-        return Optional.ofNullable(allMethods.get(name)).map(container -> container.getMethod(args)).orElse(CacheableClass.super.getMethod(name, args));
+        return Optional.ofNullable(allMethods.get(name)).map(container -> container.getMethod(args)).orElse(ScriptedClass.super.getMethod(name, args));
     }
 
     @Override
@@ -196,12 +161,12 @@ public final class GeneratedClass implements CacheableClass {
 
     @Override
     public boolean hasMethod(String name) {
-        return allMethods.containsKey(name) || CacheableClass.super.hasMethod(name);
+        return allMethods.containsKey(name) || ScriptedClass.super.hasMethod(name);
     }
 
     @Override
     public Map<String, ? extends ScriptedField> getFields() {
-        return Util.mergeMaps(CacheableClass.super.getFields(), allFields);
+        return Util.mergeMaps(ScriptedClass.super.getFields(), allFields);
     }
 
     @Override
@@ -285,11 +250,6 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public MethodLookup methods() {
-        return lookup;
-    }
-
-    @Override
     public String toString() { //jesus
         return "GeneratedClass{" + name + "}[" +
                 "methods=" + allMethods + ", " +
@@ -305,7 +265,7 @@ public final class GeneratedClass implements CacheableClass {
     }
 
     @Override
-    public AnnotationClassInstance[] annotations() {
+    public RuntimeAnnotationClassInstance[] annotations() {
         return annotations;
     }
 

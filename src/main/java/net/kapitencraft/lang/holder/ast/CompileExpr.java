@@ -53,16 +53,14 @@ public abstract class CompileExpr {
         public final Token name;
         public final CompileExpr value;
         public final Token assignType;
-        public final int line;
         public final ClassReference executor;
         public final Operand operand;
 
-        public Set(CompileExpr object, Token name, CompileExpr value, Token assignType, int line, ClassReference executor, Operand operand) {
+        public Set(CompileExpr object, Token name, CompileExpr value, Token assignType, ClassReference executor, Operand operand) {
             this.object = object;
             this.name = name;
             this.value = value;
             this.assignType = assignType;
-            this.line = line;
             this.executor = executor;
             this.operand = operand;
         }
@@ -78,16 +76,14 @@ public abstract class CompileExpr {
         public final CompileExpr index;
         public final CompileExpr value;
         public final Token assignType;
-        public final int $line;
         public final ClassReference executor;
         public final Operand operand;
 
-        public ArraySet(CompileExpr object, CompileExpr index, CompileExpr value, Token assignType, int line, ClassReference executor, Operand operand) {
+        public ArraySet(CompileExpr object, CompileExpr index, CompileExpr value, Token assignType, ClassReference executor, Operand operand) {
             this.object = object;
             this.index = index;
             this.value = value;
             this.assignType = assignType;
-            this.$line = line;
             this.executor = executor;
             this.operand = operand;
         }
@@ -154,12 +150,14 @@ public abstract class CompileExpr {
         public final Token name;
         public final int methodOrdinal;
         public final CompileExpr[] args;
+        public final ClassReference retType;
 
-        public InstCall(CompileExpr callee, Token name, int methodOrdinal, CompileExpr[] args) {
+        public InstCall(CompileExpr callee, Token name, int methodOrdinal, CompileExpr[] args, ClassReference retType) {
             this.callee = callee;
             this.name = name;
             this.methodOrdinal = methodOrdinal;
             this.args = args;
+            this.retType = retType;
         }
 
         @Override
@@ -392,12 +390,14 @@ public abstract class CompileExpr {
         public final Token name;
         public final int methodOrdinal;
         public final CompileExpr[] args;
+        public final ClassReference retType;
 
-        public StaticCall(ClassReference target, Token name, int methodOrdinal, CompileExpr[] args) {
+        public StaticCall(ClassReference target, Token name, int methodOrdinal, CompileExpr[] args, ClassReference retType) {
             this.target = target;
             this.name = name;
             this.methodOrdinal = methodOrdinal;
             this.args = args;
+            this.retType = retType;
         }
 
         @Override

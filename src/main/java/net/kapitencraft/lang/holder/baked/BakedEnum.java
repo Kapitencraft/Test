@@ -3,14 +3,13 @@ package net.kapitencraft.lang.holder.baked;
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.*;
-import net.kapitencraft.lang.oop.clazz.generated.GeneratedEnum;
-import net.kapitencraft.lang.oop.clazz.inst.AnnotationClassInstance;
-import net.kapitencraft.lang.oop.field.GeneratedEnumConstant;
-import net.kapitencraft.lang.oop.field.GeneratedField;
-import net.kapitencraft.lang.oop.method.GeneratedCallable;
+import net.kapitencraft.lang.oop.clazz.generated.CompileEnum;
+import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
+import net.kapitencraft.lang.oop.field.CompileEnumConstant;
+import net.kapitencraft.lang.oop.field.CompileField;
+import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -24,14 +23,14 @@ import java.util.Map;
 public record BakedEnum(
         Compiler.ErrorLogger logger,
         ClassReference target,
-        Pair<Token, GeneratedCallable>[] constructors,
-        Pair<Token, GeneratedCallable>[] methods,
-        Pair<Token, GeneratedCallable>[] staticMethods,
+        Pair<Token, CompileCallable>[] constructors,
+        Pair<Token, CompileCallable>[] methods,
+        Pair<Token, CompileCallable>[] staticMethods,
         ClassReference[] interfaces,
-        Map<String, GeneratedEnumConstant> constants,
-        Map<Token, GeneratedField> fields, Map<String, GeneratedField> staticFields,
+        Map<String, CompileEnumConstant> constants,
+        Map<Token, CompileField> fields, Map<String, CompileField> staticFields,
         Token name, String pck, Compiler.ClassBuilder[] enclosed,
-        AnnotationClassInstance[] annotations
+        CompileAnnotationClassInstance[] annotations
         ) implements Compiler.ClassBuilder {
 
     @Override
@@ -43,14 +42,14 @@ public record BakedEnum(
         }
 
         Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
-        for (Pair<Token, GeneratedCallable> method : this.methods()) {
+        for (Pair<Token, CompileCallable> method : this.methods()) {
             methods.putIfAbsent(method.left().lexeme(), new DataMethodContainer.Builder(this.name()));
             DataMethodContainer.Builder builder = methods.get(method.left().lexeme());
             builder.addMethod(logger, method.right(), method.left());
         }
 
         Map<String, DataMethodContainer.Builder> staticMethods = new HashMap<>();
-        for (Pair<Token, GeneratedCallable> method : this.staticMethods()) {
+        for (Pair<Token, CompileCallable> method : this.staticMethods()) {
             staticMethods.putIfAbsent(method.left().lexeme(), new DataMethodContainer.Builder(this.name()));
             DataMethodContainer.Builder builder = staticMethods.get(method.left().lexeme());
             builder.addMethod(logger, method.right(), method.left());
@@ -63,13 +62,13 @@ public record BakedEnum(
             }
         });
 
-        ConstructorContainer.Builder container = new ConstructorContainer.Builder(finalFields, this.name(), logger);
-        for (Pair<Token, GeneratedCallable> method : this.constructors()) {
+        DataMethodContainer.Builder container = new DataMethodContainer.Builder(this.name());
+        for (Pair<Token, CompileCallable> method : this.constructors()) {
             container.addMethod(logger, method.right(), method.left());
         }
 
 
-        return new GeneratedEnum(
+        return new CompileEnum(
                 DataMethodContainer.bakeBuilders(methods),
                 DataMethodContainer.bakeBuilders(staticMethods),
                 container,

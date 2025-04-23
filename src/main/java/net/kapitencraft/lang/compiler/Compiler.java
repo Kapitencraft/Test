@@ -6,10 +6,9 @@ import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.ast.CompileStmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
-import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.holder.ast.Stmt;
-import net.kapitencraft.lang.oop.method.GeneratedCallable;
+import net.kapitencraft.lang.oop.method.CompileCallable;
+import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.load.CompilerLoaderHolder;
 import net.kapitencraft.tool.GsonHelper;
@@ -101,7 +100,7 @@ public class Compiler {
 
         ClassLoader.useHolders(holder, (s, classHolder) -> classHolder.construct());
 
-        ClassLoader.generateClasses(holder);
+        ClassLoader.useHolders(holder, (name, holder1) -> holder1.loadClass());
 
         if (hadError) System.exit(65);
 
@@ -127,8 +126,8 @@ public class Compiler {
         FileWriter writer = new FileWriter(cacheTarget);
         writer.write(GsonHelper.GSON.toJson(object));
         writer.close();
-        for (ClassReference loxClass : target.enclosed()) {
-            cache(cacheBase, builder, path, (CacheableClass) loxClass.get(), name + "$" + loxClass.get().name());
+        for (CacheableClass loxClass : target.enclosed()) {
+            cache(cacheBase, builder, path, loxClass, name + "$" + loxClass.name());
         }
     }
 
@@ -174,7 +173,7 @@ public class Compiler {
 
         Token name();
 
-        Pair<Token, GeneratedCallable>[] methods();
+        Pair<Token, CompileCallable>[] methods();
 
         ClassReference[] interfaces();
     }
