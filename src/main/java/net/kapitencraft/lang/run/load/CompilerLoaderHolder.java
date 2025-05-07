@@ -37,7 +37,8 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
     }
 
     public void applyConstructor() {
-        Lexer lexer = new Lexer(content, logger);
+        Lexer lexer = new Lexer(logger);
+        lexer.setSource(content);
         List<Token> tokens = lexer.scanTokens();
         String fileName = file.getName().replace(".scr", "");
         HolderParser parser = new HolderParser(logger);

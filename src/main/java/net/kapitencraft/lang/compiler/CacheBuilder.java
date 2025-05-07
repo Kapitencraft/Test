@@ -4,11 +4,16 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import net.kapitencraft.lang.bytecode.exe.Chunk;
+import net.kapitencraft.lang.bytecode.exe.Opcode;
+import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.ast.CompileStmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
@@ -16,13 +21,16 @@ import net.kapitencraft.lang.tool.Util;
 
 import java.util.Arrays;
 
-public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileStmt.Visitor<JsonElement> {
-    public JsonElement cache(CompileExpr expr) {
-        return expr.accept(this);
+public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visitor<Void> {
+    private Chunk.Builder builder;
+
+    //TODO implement
+    public void cache(CompileExpr expr) {
+        expr.accept(this);
     }
 
-    public JsonElement cache(CompileStmt stmt) {
-        return stmt.accept(this);
+    public void cache(CompileStmt stmt) {
+        stmt.accept(this);
     }
 
     public JsonArray saveArgs(CompileExpr[] args) {
@@ -54,7 +62,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
     }
 
     @Override
-    public JsonElement visitAssignExpr(CompileExpr.Assign expr) {
+    public Void visitAssignExpr(CompileExpr.Assign expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "assign");
         object.add("name", expr.name.toJson());
@@ -67,7 +75,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
     }
 
     @Override
-    public JsonElement visitSpecialAssignExpr(CompileExpr.SpecialAssign expr) {
+    public Void visitSpecialAssignExpr(CompileExpr.SpecialAssign expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "specialAssign");
         object.add("name", expr.name.toJson());
@@ -76,26 +84,18 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
     }
 
     @Override
-    public JsonElement visitBinaryExpr(CompileExpr.Binary expr) {
+    public Void visitBinaryExpr(CompileExpr.Binary expr) {
         JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "binary");
-        object.add("left", cache(expr.left));
-        object.addProperty("operator", expr.operator.type().id());
-        object.addProperty("line", expr.operator.line());
-        object.addProperty("executor", expr.executor.absoluteName());
-        object.addProperty("operand", expr.operand.name());
-        object.add("right", cache(expr.right));
-        return object;
+        cache(expr.right);
+        cache(expr.left);
+        return null;
     }
 
     @Override
-    public JsonElement visitWhenExpr(CompileExpr.When expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "when");
-        object.add("condition", cache(expr.condition));
-        object.add("ifTrue", cache(expr.ifTrue));
-        object.add("ifFalse", cache(expr.ifFalse));
-        return object;
+    public Void visitWhenExpr(CompileExpr.When expr) {
+        cache(expr.condition);
+        this.builder.jumpElse(() -> cache(expr.ifTrue), () -> cache(expr.ifFalse));
+        return null;
     }
 
     @Override
@@ -106,7 +106,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
         object.add("name", expr.name.toJson());
         object.addProperty("ordinal", expr.methodOrdinal);
         object.add("args", saveArgs(expr.args));
-        return object;
+        return null;
     }
 
     @Override
@@ -210,13 +210,13 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
     }
 
     @Override
-    public JsonElement visitArraySpecialExpr(CompileExpr.ArraySpecial expr) {
+    public Void visitArraySpecialExpr(CompileExpr.ArraySpecial expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "specialArraySet");
         object.add("object", cache(expr.object));
         object.add("index", cache(expr.index));
         object.addProperty("assign", expr.assignType.type().id());
-        return object;
+        return null;
     }
 
     @Override
@@ -231,7 +231,7 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
     }
 
     @Override
-    public JsonElement visitSwitchExpr(CompileExpr.Switch expr) {
+    public Void visitSwitchExpr(CompileExpr.Switch expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "switch");
         object.add("provider", cache(expr.provider));
@@ -256,42 +256,45 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
     }
 
     @Override
-    public JsonElement visitGroupingExpr(CompileExpr.Grouping expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "grouping");
-        object.add("expr", cache(expr.expression));
-        return object;
+    public Void visitGroupingExpr(CompileExpr.Grouping expr) {
+        cache(expr.expression);
+        return null;
     }
 
     @Override
-    public JsonElement visitLiteralExpr(CompileExpr.Literal expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "literal");
-        object.add("literal", expr.literal.literal().toJson());
-        return object;
+    public Void visitLiteralExpr(CompileExpr.Literal expr) {
+        LiteralHolder literal = expr.literal.literal();
+        ScriptedClass scriptedClass = literal.type();
+        Object value = literal.value();
+        if (scriptedClass == VarTypeManager.DOUBLE) builder.addDoubleConstant((double) value);
+        else if (scriptedClass == VarTypeManager.INTEGER) builder.addIntConstant((int) value);
+        else if (scriptedClass == VarTypeManager.STRING) builder.addStringConstant((String) value);
+        return null;
     }
 
     @Override
-    public JsonElement visitLogicalExpr(CompileExpr.Logical expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "logical");
-        object.add("left", cache(expr.left));
-        object.add("operator", expr.operator.toJson());
-        object.add("right", cache(expr.right));
-        return object;
+    public Void visitLogicalExpr(CompileExpr.Logical expr) {
+        cache(expr.right);
+        cache(expr.left);
+        builder.addCode(switch (expr.operator.type()) {
+            case OR -> Opcode.OR;
+            case XOR -> Opcode.XOR;
+            case AND -> Opcode.AND;
+            default -> throw new IllegalArgumentException("unknown logical type: " + expr.operator);
+        });
+        return null;
     }
 
     @Override
-    public JsonElement visitUnaryExpr(CompileExpr.Unary expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "unary");
-        object.addProperty("operator", expr.operator.type().id());
-        object.add("arg", cache(expr.right));
-        return object;
+    public Void visitUnaryExpr(CompileExpr.Unary expr) {
+        cache(expr.right);
+        if (expr.operator.type() == TokenType.NOT) builder.addCode(Opcode.NOT);
+        else builder.addCode(Opcode.);
+        return null;
     }
 
     @Override
-    public JsonElement visitVarRefExpr(CompileExpr.VarRef expr) {
+    public Void visitVarRefExpr(CompileExpr.VarRef expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "varRef");
         object.add("name", expr.name.toJson());
@@ -310,58 +313,60 @@ public class CacheBuilder implements CompileExpr.Visitor<JsonElement>, CompileSt
     }
 
     @Override
-    public JsonElement visitBlockStmt(CompileStmt.Block stmt) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "block");
-        JsonArray array = new JsonArray();
-        Arrays.stream(stmt.statements).map(this::cache).forEach(array::add);
-        object.add("statements", array);
-        return object;
+    public Void visitBlockStmt(CompileStmt.Block stmt) {
+        for (int i = stmt.statements.length - 1; i >= 0; i--) {
+            this.cache(stmt.statements[i]);
+        }
+        return null;
     }
 
     @Override
-    public JsonElement visitExpressionStmt(CompileStmt.Expression stmt) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "expression");
-        object.add("expr", cache(stmt.expression));
-        return object;
+    public Void visitExpressionStmt(CompileStmt.Expression stmt) {
+        cache(stmt.expression);
+        return null;
     }
 
     @Override
-    public JsonElement visitIfStmt(CompileStmt.If stmt) {
+    public Void visitIfStmt(CompileStmt.If stmt) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "if");
-        object.add("condition", cache(stmt.condition));
-        object.add("then", cache(stmt.thenBranch));
-        if (stmt.elseBranch != null) object.add("elseBranch", cache(stmt.elseBranch));
-        JsonArray array = new JsonArray();
-        Arrays.stream(stmt.elifs).map(pair -> {
-            JsonObject object1 = new JsonObject();
-            object1.add("condition", cache(pair.left()));
-            object1.add("body", cache(pair.right()));
-            return object1;
-        }).forEach(array::add);
-        object.add("elifs", array);
-        object.add("keyword", stmt.keyword.toJson());
-        return object;
+        cache(stmt.condition);
+        int jumpPatch = builder.addJumpIfFalse();
+        cache(stmt.thenBranch);
+        if (stmt.elifs.length > 0 || stmt.elseBranch != null) {
+            int[] branches = new int[stmt.elifs.length + 1];
+            branches[0] = builder.addJump(); //jump from branch past the IF
+            for (int i = 0; i < branches.length; i++) {
+                builder.patchJumpCurrent(jumpPatch);
+                Pair<CompileExpr, CompileStmt> pair = stmt.elifs[i];
+                cache(pair.left());
+                jumpPatch = builder.addJumpIfFalse();
+                cache(pair.right());
+                branches[i + 1] = builder.addJump();
+            }
+            if (stmt.elseBranch != null) {
+                builder.patchJumpCurrent(jumpPatch);
+                cache(stmt.elseBranch);
+            }
+            for (int branch : branches) {
+                builder.patchJumpCurrent(branch);
+            }
+        } else builder.patchJumpCurrent(jumpPatch);
+        return null;
     }
 
     @Override
-    public JsonElement visitReturnStmt(CompileStmt.Return stmt) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "return");
-        //object.add("keyword", stmt.keyword.toJson());
-        if (stmt.value != null) object.add("value", cache(stmt.value));
-        return object;
+    public Void visitReturnStmt(CompileStmt.Return stmt) {
+        cache(stmt.value);
+        builder.addCode(Opcode.RETURN);
+        return null;
     }
 
     @Override
-    public JsonElement visitThrowStmt(CompileStmt.Throw stmt) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "throw");
-        object.addProperty("line", stmt.keyword.line());
-        object.add("value", cache(stmt.value));
-        return object;
+    public Void visitThrowStmt(CompileStmt.Throw stmt) {
+        cache(stmt.value);
+        builder.addCode(Opcode.THROW);
+        return null;
     }
 
     @Override

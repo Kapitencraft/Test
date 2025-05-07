@@ -17,7 +17,6 @@ import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 public class Lexer {
     private static final Map<String, TokenType> keywords;
-    private static final Logger log = LoggerFactory.getLogger(Lexer.class);
 
     static {
         keywords = Arrays.stream(values()).filter(tokenType -> tokenType.isCategory(TokenTypeCategory.KEY_WORD)).collect(Collectors.toMap(tokenType -> tokenType.name().toLowerCase(Locale.ROOT), Function.identity()));
