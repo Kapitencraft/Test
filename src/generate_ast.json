@@ -9,6 +9,7 @@
             "compile": "Token",
             "runtime": "TokenType"
           },
+          "ordinal": "byte",
           "%line": "int",
           "executor": "ClassReference",
           "operand": "Operand"
@@ -185,7 +186,8 @@
           "right": "Expr"
         },
         "VarRef": {
-          "name": "Token"
+          "$name": "Token",
+          "ordinal": "byte"
         },
         "Constructor": {
           "$keyword": "Token",

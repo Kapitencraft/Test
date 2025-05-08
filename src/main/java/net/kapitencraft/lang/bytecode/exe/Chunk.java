@@ -1,13 +1,23 @@
 package net.kapitencraft.lang.bytecode.exe;
 
+import com.google.gson.JsonObject;
+import net.kapitencraft.tool.GsonHelper;
+
 import java.util.ArrayList;
 
-public class Chunk {
-    public final byte[] code, constants;
+public record Chunk(byte[] code, byte[] constants) {
 
-    public Chunk(byte[] code, byte[] constants) {
-        this.code = code;
-        this.constants = constants;
+    public JsonObject save() {
+        JsonObject object = new JsonObject();
+        object.addProperty("code", new String(this.code));
+        object.addProperty("constants", new String(this.constants));
+        return object;
+    }
+
+    public static Chunk load(JsonObject object) {
+        byte[] code = GsonHelper.getAsString(object, "code").getBytes();
+        byte[] constants = GsonHelper.getAsString(object, "constants").getBytes();
+        return new Chunk(code, constants);
     }
 
     public static class Builder {
@@ -42,12 +52,12 @@ public class Chunk {
         public void jump(Runnable toSkip) {
             int reference = addJump();
             toSkip.run();
-            this.code.add(reference, (byte) this.code.size());
+            patchJumpCurrent(reference);
         }
 
         public void addIntConstant(int constant) {
             this.addCode(Opcode.I_CONST);
-            this.code.add((byte) this.constants.size());
+            this.addArg(this.constants.size());
             for (int i = 0; i < 4; i++) {
                 this.constants.add((byte) (constant >> (8 * i) & 255));
             }
@@ -55,7 +65,7 @@ public class Chunk {
 
         public void addDoubleConstant(double constant) {
             this.addCode(Opcode.D_CONST);
-            this.code.add((byte) this.constants.size());
+            this.addArg((byte) this.constants.size());
             long l = Double.doubleToLongBits(constant);
             for (int i = 0; i < 8; i++) {
                 this.constants.add((byte) (l >> (8 * i) & 255));
@@ -64,7 +74,7 @@ public class Chunk {
 
         public void addStringConstant(String constant) {
             this.addCode(Opcode.S_CONST);
-            this.code.add((byte) this.constants.size());
+            this.addArg((byte) this.constants.size());
             for (byte b : constant.getBytes()) {
                 this.constants.add(b);
             }
@@ -84,8 +94,16 @@ public class Chunk {
             return new Chunk(code, constants);
         }
 
+        public void addArg(byte b) {
+            this.code.add(b);
+        }
+
+        public void addArg(int i) {
+            this.addArg((byte) i);
+        }
+
         public void addCode(Opcode opcode) {
-            this.code.add((byte) opcode.ordinal());
+            this.addArg((byte) opcode.ordinal());
         }
 
         public int currentCodeIndex() {
@@ -100,9 +118,14 @@ public class Chunk {
         public int addJump() {
             this.addCode(Opcode.JUMP);
             int index = currentCodeIndex();
-            this.code.add((byte) 0);
-            this.code.add((byte) 0);
+            this.addArg(0);
+            this.addArg(0);
             return index;
+        }
+
+        public void clear() {
+            this.code.clear();
+            this.constants.clear();
         }
     }
 }

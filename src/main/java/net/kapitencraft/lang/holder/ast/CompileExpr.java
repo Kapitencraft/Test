@@ -37,9 +37,11 @@ public abstract class CompileExpr {
 
     public static class VarRef extends CompileExpr {
         public final Token name;
+        public final byte ordinal;
 
-        public VarRef(Token name) {
+        public VarRef(Token name, byte ordinal) {
             this.name = name;
+            this.ordinal = ordinal;
         }
 
         @Override
@@ -114,10 +116,12 @@ public abstract class CompileExpr {
     public static class SpecialAssign extends CompileExpr {
         public final Token name;
         public final Token assignType;
+        public final byte ordinal;
 
-        public SpecialAssign(Token name, Token assignType) {
+        public SpecialAssign(Token name, Token assignType, byte ordinal) {
             this.name = name;
             this.assignType = assignType;
+            this.ordinal = ordinal;
         }
 
         @Override
@@ -370,13 +374,15 @@ public abstract class CompileExpr {
         public final Token type;
         public final ClassReference executor;
         public final Operand operand;
+        public final byte ordinal;
 
-        public Assign(Token name, CompileExpr value, Token type, ClassReference executor, Operand operand) {
+        public Assign(Token name, CompileExpr value, Token type, ClassReference executor, Operand operand, byte ordinal) {
             this.name = name;
             this.value = value;
             this.type = type;
             this.executor = executor;
             this.operand = operand;
+            this.ordinal = ordinal;
         }
 
         @Override

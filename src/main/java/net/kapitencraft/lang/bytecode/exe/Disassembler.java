@@ -7,7 +7,7 @@ public class Disassembler {
     public static void disassemble(Chunk chunk, String name) {
         System.out.printf("== %s ==\n", name);
 
-        byte[] code = chunk.code;
+        byte[] code = chunk.code();
         for (int offset = 0; offset < code.length;) {
             offset = disassembleInstruction(chunk, offset);
         }
@@ -16,7 +16,7 @@ public class Disassembler {
     private static int disassembleInstruction(Chunk chunk, int offset) {
         System.out.printf("%04d ", offset);
 
-        Opcode opcode = Opcode.byId(chunk.code[offset]);
+        Opcode opcode = Opcode.byId(chunk.code()[offset]);
         return switch (opcode) {
             case RETURN,
                  I_NEGATION, I_ADD, I_SUB, I_MUL, I_DIV,
@@ -42,7 +42,7 @@ public class Disassembler {
     }
 
     private static int constInstruction(Opcode opcode, Chunk chunk, int offset, BiFunction<byte[], Integer, Object> getter) {
-        System.out.printf("%-16s %4d '%s'\n", opcode.name(), chunk.code[offset + 1], getter.apply(chunk.constants, (int) chunk.code[offset + 1]));
+        System.out.printf("%-16s %4d '%s'\n", opcode.name(), chunk.code()[offset + 1], getter.apply(chunk.constants(), (int) chunk.code()[offset + 1]));
         return offset + 2;
     }
 

@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.VarTypeParser;
+import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
 import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
@@ -194,11 +195,11 @@ public class ExprParser extends AbstractParser {
                 checkVarType(name, value);
                 Pair<ClassReference, Operand> executor;
                 if (assign.type() == TokenType.ASSIGN) {
-                    varAnalyser.setHasValue(name.lexeme());
+                    varAnalyser.setHasValue(variable.ordinal);
                     executor = Pair.of(WILDCARD, Operand.LEFT);
                 } else executor = getExecutor(varAnalyser.getType(name.lexeme()), assign, value);
 
-                return new CompileExpr.Assign(name, value, assign, executor.left(), executor.right());
+                return new CompileExpr.Assign(name, value, assign, executor.left(), executor.right(), variable.ordinal);
             } else if (expr instanceof CompileExpr.Get get) {
                 ClassReference target = finder.findRetType(get.object);
                 expectType(get.name, target.get().getFieldType(get.name.lexeme()), finder.findRetType(value));
@@ -224,7 +225,7 @@ public class ExprParser extends AbstractParser {
                 Token name = ref.name;
 
                 checkVarExistence(name, true, false);
-                return new CompileExpr.SpecialAssign(name, assign);
+                return new CompileExpr.SpecialAssign(name, assign, ref.ordinal);
             }
 
             if (expr instanceof CompileExpr.Get get) {
@@ -602,20 +603,21 @@ public class ExprParser extends AbstractParser {
 
         if (match(IDENTIFIER)) {
             Token previous = previous();
-            if (!varAnalyser.has(previous.lexeme())) {
+            BytecodeVars.FetchResult result = varAnalyser.get(previous.lexeme());
+            if (result == BytecodeVars.FetchResult.FAIL) {
                 if (currentFallback().exists()) {
                     ScriptedClass fallback = currentFallback().get();
                     String name = previous.lexeme();
                     if (check(BRACKET_O)) {
                         if (fallback.hasMethod(name)) {
-                            return finishInstCall(new CompileExpr.Get(new CompileExpr.VarRef(Token.createNative("this")), previous));
+                            return finishInstCall(new CompileExpr.Get(new CompileExpr.VarRef(Token.createNative("this"), (byte) 0), previous));
                         }
                         if (fallback.hasStaticMethod(name)) {
                             return  staticCall(currentFallback(), previous);
                         }
                     } else {
                         if (fallback.hasField(name)) {
-                            return  new CompileExpr.Get(new CompileExpr.VarRef(Token.createNative("this")), previous);
+                            return  new CompileExpr.Get(new CompileExpr.VarRef(Token.createNative("this"), (byte) 0), previous);
                         }
                         if (fallback.hasStaticField(name)) {
                             return  new CompileExpr.StaticGet(currentFallback(), previous);
@@ -626,10 +628,10 @@ public class ExprParser extends AbstractParser {
                 return statics();
             }
             checkVarExistence(previous, true, true);
-            return new CompileExpr.VarRef(previous);
+            return new CompileExpr.VarRef(previous, result.ordinal());
         }
 
-        if (match(THIS) || match(SUPER)) return new CompileExpr.VarRef(previous());
+        if (match(THIS) || match(SUPER)) return new CompileExpr.VarRef(previous(),  (byte)0);
 
         if (match(BRACKET_O)) {
             CompileExpr expr = expression();

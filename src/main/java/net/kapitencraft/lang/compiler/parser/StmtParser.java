@@ -79,7 +79,7 @@ public class StmtParser extends ExprParser {
         }
 
         consumeEndOfArg();
-        return  new CompileStmt.VarDecl(name, type, initializer, isFinal);
+        return new CompileStmt.VarDecl(name, type, initializer, isFinal);
     }
 
     private CompileStmt varDeclaration(boolean isFinal, ClassReference type) {

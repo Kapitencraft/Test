@@ -20,8 +20,8 @@ public class VirtualMachine {
     }
 
     public static void run(Chunk chunk) {
-        byte[] code = chunk.code;
-        byte[] constants = chunk.constants;
+        byte[] code = chunk.code();
+        byte[] constants = chunk.constants();
         while (index < code.length) {
             switch (Opcode.byId(readByte(code))) {
                 case RETURN -> {

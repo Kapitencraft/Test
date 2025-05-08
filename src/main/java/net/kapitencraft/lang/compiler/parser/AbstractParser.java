@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import com.google.common.collect.ImmutableList;
 import net.kapitencraft.lang.compiler.Holder;
+import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
 import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
@@ -45,22 +46,24 @@ public class AbstractParser {
     protected final LocationFinder locFinder = new LocationFinder();
     protected final Deque<List<ClassReference>> args = new ArrayDeque<>(); //TODO either use or remove
     protected final Compiler.ErrorLogger errorLogger;
-    protected VarAnalyser varAnalyser;
+    protected BytecodeVars varAnalyser;
 
     protected void checkVarExistence(Token name, boolean requireValue, boolean mayBeFinal) {
         String varName = name.lexeme();
-        if (!varAnalyser.has(varName)) {
+        BytecodeVars.FetchResult result = varAnalyser.get(varName);
+        if (result == BytecodeVars.FetchResult.FAIL) {
             error(name, "cannot find symbol");
-        } else if (requireValue && !varAnalyser.hasValue(varName)) {
+        } else if (requireValue && !result.assigned()) {
             error(name, "Variable '" + name.lexeme() + "' might not have been initialized");
-        } else if (!mayBeFinal && varAnalyser.isFinal(varName)) {
+        } else if (!mayBeFinal && !result.canAssign()) {
             error(name, "Can not assign to final variable");
         }
     }
 
     protected void checkVarType(Token name, CompileExpr value) {
-        if (!varAnalyser.has(name.lexeme())) return;
-        expectType(name, value, varAnalyser.getType(name.lexeme()));
+        BytecodeVars.FetchResult result = varAnalyser.get(name.lexeme());
+        if (result == BytecodeVars.FetchResult.FAIL) return;
+        expectType(name, value, result.type());
     }
 
     protected void expectType(ClassReference... types) {
@@ -108,11 +111,12 @@ public class AbstractParser {
         return gotten;
     }
 
-    protected void createVar(Token name, ClassReference type, boolean hasValue, boolean isFinal) {
-        if (varAnalyser.has(name.lexeme())) {
+    protected byte createVar(Token name, ClassReference type, boolean hasValue, boolean isFinal) {
+        BytecodeVars.FetchResult result = varAnalyser.get(name.lexeme());
+        if (result != BytecodeVars.FetchResult.FAIL) {
             errorLogger.errorF(name, "Variable '%s' already defined in current scope", name.lexeme());
         }
-        varAnalyser.add(name.lexeme(), type, hasValue, isFinal);
+        return varAnalyser.add(name.lexeme(), type, hasValue, isFinal);
     }
 
     public AbstractParser(Compiler.ErrorLogger errorLogger) {
@@ -123,7 +127,7 @@ public class AbstractParser {
         this.current = 0;
         this.tokens = toParse;
         this.parser = targetAnalyser;
-        this.varAnalyser = new VarAnalyser();
+        this.varAnalyser = new BytecodeVars();
         this.finder = new RetTypeFinder(varAnalyser);
     }
 
@@ -206,7 +210,7 @@ public class AbstractParser {
     protected Optional<SourceClassReference> tryConsumeVarType(GenericStack generics) {
         Optional<ClassReference> optional = generics.getValue(peek().lexeme());
         if (optional.isPresent()) return Optional.of(SourceClassReference.from(advance(), optional.get()));
-        if (VarTypeManager.hasPackage(peek().lexeme()) && !varAnalyser.has(peek().lexeme())) {
+        if (VarTypeManager.hasPackage(peek().lexeme()) && varAnalyser.get(peek().lexeme()) == BytecodeVars.FetchResult.FAIL) {
             advance();
             if (check(DOT)) {
                 current--;

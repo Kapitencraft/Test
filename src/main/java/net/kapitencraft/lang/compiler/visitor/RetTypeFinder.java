@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.compiler.visitor;
 
+import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
 import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.ast.CompileStmt;
 import net.kapitencraft.lang.holder.ast.RuntimeExpr;
@@ -11,7 +12,7 @@ import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 
 public class RetTypeFinder implements CompileExpr.Visitor<ClassReference> {
-    private final VarAnalyser varAnalyser;
+    private final BytecodeVars varAnalyser;
 
     //STAGE: Skeleton
 
@@ -19,7 +20,7 @@ public class RetTypeFinder implements CompileExpr.Visitor<ClassReference> {
         return expr.accept(this);
     }
 
-    public RetTypeFinder(VarAnalyser varAnalyser) {
+    public RetTypeFinder(BytecodeVars varAnalyser) {
         this.varAnalyser = varAnalyser;
     }
 

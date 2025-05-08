@@ -2,6 +2,7 @@ package net.kapitencraft.lang.oop.method;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.exe.Chunk;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.env.core.Environment;
@@ -44,9 +45,11 @@ public class CompileCallable implements ScriptedCallable {
             object.add("params", array);
         }
         if (!Modifiers.isAbstract(modifiers)) {
-            JsonArray array = new JsonArray();
-            Arrays.stream(body).map(builder::cache).forEach(array::add);
-            object.add("body", array);
+            Chunk.Builder chunk = builder.setup();
+            for (CompileStmt compileStmt : body) {
+                builder.cache(compileStmt);
+            }
+            object.add("body", chunk.build().save());
         }
         if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);
 

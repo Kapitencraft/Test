@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.kapitencraft.lang.bytecode.exe.Chunk;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
+import net.kapitencraft.lang.compiler.visitor.RetTypeFinder;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.ast.CompileStmt;
@@ -18,15 +19,23 @@ import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.tool.Util;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
+import java.util.*;
 
 public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visitor<Void> {
     private Chunk.Builder builder;
+    private final RetTypeFinder typeFinder;
+    private final Stack<Loop> loops = new Stack<>();
 
     //TODO implement
     public void cache(CompileExpr expr) {
         expr.accept(this);
+    }
+
+    private void cacheOrNull(@Nullable CompileExpr expr) {
+        if (expr == null) builder.addCode(Opcode.NULL);
+        else cache(expr);
     }
 
     public void cache(CompileStmt stmt) {
@@ -64,31 +73,80 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     @Override
     public Void visitAssignExpr(CompileExpr.Assign expr) {
         JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "assign");
-        object.add("name", expr.name.toJson());
-        object.add("value", cache(expr.value));
-        object.addProperty("type", expr.type.type().id());
-        object.addProperty("line", expr.type.line());
-        object.addProperty("executor", expr.executor.get().absoluteName());
-        object.addProperty("operand", expr.operand.name());
-        return object;
+        ClassReference reference = typeFinder.findRetType(expr.value);
+        if (expr.type.type() != TokenType.ASSIGN) {
+            cache(expr.value);
+            builder.addCode(Opcode.GET);
+            builder.addArg(expr.ordinal);
+            switch (expr.type.type()) {
+                case ADD_ASSIGN -> builder.addCode(getAdd(reference));
+                case SUB_ASSIGN -> builder.addCode(getSub(reference));
+                case MUL_ASSIGN -> builder.addCode(getMul(reference));
+                case DIV_ASSIGN -> builder.addCode(getDiv(reference));
+                case POW_ASSIGN -> builder.addCode(getPow(reference));
+            }
+        } else {
+            cache(expr.value);
+            builder.addCode(Opcode.ASSIGN);
+            builder.addArg(expr.ordinal);
+        }
+        return null;
     }
 
     @Override
     public Void visitSpecialAssignExpr(CompileExpr.SpecialAssign expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "specialAssign");
-        object.add("name", expr.name.toJson());
-        object.addProperty("assignType", expr.assignType.type().id());
-        return object;
+        switch (expr.assignType.type()) {
+            case GROW ->
+        }
+        builder.addCode(Opcode.GET);
+        builder.addArg(expr.ordinal);
+        builder.addCode(getAdd(expr.));
+        builder.addCode(Opcode.ASSIGN);
+        builder.addArg(expr.ordinal);
+        return null;
     }
 
     @Override
     public Void visitBinaryExpr(CompileExpr.Binary expr) {
-        JsonObject object = new JsonObject();
         cache(expr.right);
         cache(expr.left);
+        switch (expr.operator.type()) {
+            case EQUAL -> builder.addCode(Opcode.EQUAL);
+            case NEQUAL -> builder.addCode(Opcode.NEQUAL);
+            case LEQUAL -> builder.addCode(getLequal(expr.executor));
+            case GEQUAL -> builder.addCode(getGequal(expr.executor));
+            case LESSER -> builder.addCode(getLesser(expr.executor));
+            case GREATER -> builder.addCode(getGreater(expr.executor));
+            case SUB -> builder.addCode(getSub(expr.executor));
+            case ADD -> builder.addCode(getAdd(expr.executor));
+            case MUL -> builder.addCode(getMul(expr.executor));
+            case DIV -> builder.addCode(getDiv(expr.executor));
+            case POW -> builder.addCode(getPow(expr.executor));
+        }
         return null;
+    }
+    private Opcode getGreater(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_GREATER;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_GREATER;
+        throw new IllegalStateException("could not create 'greater' for: " + reference);
+    }
+
+    private Opcode getLesser(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_LESSER;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_LESSER;
+        throw new IllegalStateException("could not create 'lesser' for: " + reference);
+    }
+
+    private Opcode getGequal(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_GEQUAL;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_GEQUAL;
+        throw new IllegalStateException("could not create 'gequal' for: " + reference);
+    }
+
+    private Opcode getLequal(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_LEQUAL;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_LEQUAL;
+        throw new IllegalStateException("could not create 'lequal' for: " + reference);
     }
 
     @Override
@@ -121,12 +179,8 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     }
 
     @Override
-    public JsonElement visitGetExpr(CompileExpr.Get expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "get");
-        object.add("callee", cache(expr.object));
-        object.addProperty("name", expr.name.lexeme());
-        return object;
+    public Void visitGetExpr(CompileExpr.Get expr) {
+        return null;
     }
 
     @Override
@@ -220,14 +274,13 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     }
 
     @Override
-    public JsonElement visitSliceExpr(CompileExpr.Slice expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "slice");
-        object.add("object", cache(expr.object));
-        if (expr.start != null) object.add("start", cache(expr.start));
-        if (expr.end != null) object.add("end", cache(expr.end));
-        if (expr.interval != null) object.add("interval", cache(expr.interval));
-        return object;
+    public Void visitSliceExpr(CompileExpr.Slice expr) {
+        cache(expr.object);
+        cacheOrNull(expr.start);
+        cacheOrNull(expr.end);
+        cacheOrNull(expr.interval);
+        builder.addCode(Opcode.SLICE);
+        return null;
     }
 
     @Override
@@ -289,7 +342,7 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     public Void visitUnaryExpr(CompileExpr.Unary expr) {
         cache(expr.right);
         if (expr.operator.type() == TokenType.NOT) builder.addCode(Opcode.NOT);
-        else builder.addCode(Opcode.);
+        else builder.addCode(getNeg(typeFinder.findRetType(expr.right)));
         return null;
     }
 
@@ -298,18 +351,18 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "varRef");
         object.add("name", expr.name.toJson());
-        return object;
+        return null;
     }
 
     @Override
-    public JsonElement visitConstructorExpr(CompileExpr.Constructor expr) {
+    public Void visitConstructorExpr(CompileExpr.Constructor expr) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "constructors");
         object.addProperty("target", expr.target.absoluteName());
         object.add("args", saveArgs(expr.params));
         object.addProperty("line", expr.keyword.line());
         object.addProperty("ordinal", expr.ordinal);
-        return object;
+        return null;
     }
 
     @Override
@@ -370,40 +423,43 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     }
 
     @Override
-    public JsonElement visitVarDeclStmt(CompileStmt.VarDecl stmt) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "varDecl");
-        object.addProperty("name", stmt.name.lexeme());
-        object.addProperty("targetType", stmt.type.absoluteName());
-        if (stmt.initializer != null) object.add("initializer", cache(stmt.initializer));
-        object.addProperty("isFinal", stmt.isFinal);
-        return object;
+    public Void visitVarDeclStmt(CompileStmt.VarDecl stmt) {
+        cacheOrNull(stmt.initializer);
+        return null;
     }
 
     @Override
-    public JsonElement visitWhileStmt(CompileStmt.While stmt) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "while");
-        object.add("condition", cache(stmt.condition));
-        object.add("body", cache(stmt.body));
-        //object.add("keyword", stmt.keyword.toJson());
-        return object;
+    public Void visitWhileStmt(CompileStmt.While stmt) {
+        int index = builder.currentCodeIndex();
+        cache(stmt.condition);
+        int skip = builder.addJumpIfFalse();
+        loops.add(new Loop((short) index));
+        cache(stmt.body);
+        int returnIndex = builder.addJump();
+        loops.pop().patchBreaks();
+        builder.patchJumpCurrent(skip);
+        builder.patchJump(returnIndex, (short) index);
+        return null;
     }
 
     @Override
-    public JsonElement visitForStmt(CompileStmt.For stmt) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "for");
-        object.add("init", cache(stmt.init));
-        object.add("condition", cache(stmt.condition));
-        object.add("increment", cache(stmt.increment));
-        object.add("body", cache(stmt.body));
-        //object.add("keyword", stmt.keyword.toJson());
-        return object;
+    public Void visitForStmt(CompileStmt.For stmt) {
+        cache(stmt.init);
+        int result = builder.addJumpIfFalse();
+        cache(stmt.condition);
+        int jump1 = builder.addJumpIfFalse();
+        loops.add(new Loop((short) result));
+        cache(stmt.body);
+        cache(stmt.increment);
+        int returnIndex = builder.addJump();
+        loops.pop().patchBreaks();
+        builder.patchJumpCurrent(jump1);
+        builder.patchJump(returnIndex, (short) result);
+        return null;
     }
 
     @Override
-    public JsonElement visitForEachStmt(CompileStmt.ForEach stmt) {
+    public Void visitForEachStmt(CompileStmt.ForEach stmt) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "forEach");
         object.addProperty("type", stmt.type.absoluteName());
@@ -414,11 +470,13 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     }
 
     @Override
-    public JsonElement visitLoopInterruptionStmt(CompileStmt.LoopInterruption stmt) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "loopInterrupt");
-        object.addProperty("keyword", stmt.type.type().id());
-        return object;
+    public Void visitLoopInterruptionStmt(CompileStmt.LoopInterruption stmt) {
+        Loop loop = loops.peek();
+        switch (stmt.type.type()) {
+            case BREAK -> loop.addBreak(builder.addJump());
+            case CONTINUE -> builder.patchJump(builder.addJump(), loop.condition);
+        }
+        return null;
     }
 
     @Override
@@ -442,5 +500,69 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
         object.add("catches", array);
         if (stmt.finale != null) object.add("finale", cache(stmt.finale));
         return object;
+    }
+
+    public Chunk.Builder setup() {
+        this.builder.clear();
+        return this.builder;
+    }
+
+    private Opcode getDiv(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_DIV;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_DIV;
+        throw new IllegalStateException("could not create 'div' for: " + reference);
+    }
+
+    private Opcode getMul(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_MUL;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_MUL;
+        throw new IllegalStateException("could not create 'mul' for: " + reference);
+    }
+
+    private Opcode getSub(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_SUB;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_SUB;
+        throw new IllegalStateException("could not create 'sub' for: " + reference);
+    }
+
+    private Opcode getAdd(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_ADD;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_ADD;
+        throw new IllegalStateException("could not create 'add' for: " + reference);
+    }
+
+    private Opcode getPow(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_POW;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_POW;
+        throw new IllegalStateException("could not create 'pow' for: " + reference);
+    }
+
+    private Opcode getNeg(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_NEGATION;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_NEGATION;
+        throw new IllegalStateException("could not create 'negation' for: " + reference);
+    }
+
+
+    private final class Loop {
+        private final short condition;
+        private final List<Integer> breakIndices;
+
+        private Loop(short condition) {
+            this.condition = condition;
+            this.breakIndices = new ArrayList<>();
+        }
+
+        public short conditionIndex() {
+            return condition;
+        }
+
+        public void addBreak(int patchIndex) {
+            this.breakIndices.add(patchIndex);
+        }
+
+        public void patchBreaks() {
+            this.breakIndices.forEach(builder::patchJumpCurrent);
+        }
     }
 }

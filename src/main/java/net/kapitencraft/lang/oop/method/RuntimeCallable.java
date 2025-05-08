@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.method;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.exe.Chunk;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.exception.CancelBlock;
 import net.kapitencraft.lang.env.core.Environment;
@@ -45,6 +46,7 @@ public class RuntimeCallable implements ScriptedCallable {
 
         short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
 
+        Chunk b = Chunk.load(GsonHelper.getAsJsonObject(data, "body"));
         RuntimeStmt[] body;
         if (Modifiers.isAbstract(modifiers)) body = new RuntimeStmt[0];
         else body = CacheLoader.readStmtList(data, "body");
