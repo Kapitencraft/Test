@@ -72,7 +72,6 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
 
     @Override
     public Void visitAssignExpr(CompileExpr.Assign expr) {
-        JsonObject object = new JsonObject();
         ClassReference reference = typeFinder.findRetType(expr.value);
         if (expr.type.type() != TokenType.ASSIGN) {
             cache(expr.value);

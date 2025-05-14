@@ -2,7 +2,7 @@ package net.kapitencraft.lang.bytecode.exe;
 
 public class VirtualMachine {
     private static int index = 0;
-    private static final Object[] stack = new Object[256];
+    private static final Object[] stack = new Object[1024];
     private static int stackTop = 0;
 
     public static void main(String[] args) {
