@@ -45,10 +45,15 @@ public class VirtualMachine {
                 case D_MUL -> push(((double) pop() * (double) pop()));
                 case I_SUB -> push(((int) pop() - (int) pop()));
                 case D_SUB -> push(((double) pop() - (double) pop()));
+                case IA_LOAD -> push(((int[]) pop())[(int) pop()]);
+                case DA_LOAD -> push(((double[]) pop())[(int) pop()]);
+                case IA_STORE -> push(((int[]) pop())[(int) pop()] = (int) pop());
+                case DA_STORE -> push(((double[]) pop())[(int) pop()] = (double) pop());
                 case NOT -> push(!(boolean) pop());
                 case OR -> push(((boolean) pop() || (boolean) pop()));
                 case AND -> push(((boolean) pop() && (boolean) pop()));
                 case XOR -> push(((boolean) pop() ^ (boolean) pop()));
+                case D2F -> push((float) (double) pop());
                 default -> throw new IllegalArgumentException("unknown opcode: " + code[index-1]);
             }
         }

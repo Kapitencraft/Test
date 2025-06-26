@@ -74,11 +74,15 @@ public record Chunk(byte[] code, byte[] constants) {
 
         public void addStringConstant(String constant) {
             this.addCode(Opcode.S_CONST);
+            injectString(constant);
+        }
+
+        public void injectString(String constant) {
             this.addArg((byte) this.constants.size());
+            this.constants.add((byte) constant.length());
             for (byte b : constant.getBytes()) {
                 this.constants.add(b);
             }
-            this.constants.add((byte) '\0');
         }
 
         public Chunk build() {

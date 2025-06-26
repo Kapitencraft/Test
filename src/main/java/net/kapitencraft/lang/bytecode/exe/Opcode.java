@@ -4,9 +4,11 @@ public enum Opcode {
     RETURN, THROW,
     NULL, TRUE, FALSE,
     GET, ASSIGN, SLICE,
+    IA_STORE, DA_STORE, IA_LOAD, DA_LOAD,
     I_1, D_1,
     I_CONST, D_CONST, S_CONST,
-    CONCENTRATION,
+    INVOKE,
+    CONCENTRATION, D2F,
     AND, XOR, OR, NOT,
     EQUAL, NEQUAL,
     I_LESSER, D_LESSER,
@@ -19,7 +21,7 @@ public enum Opcode {
     I_MUL, D_MUL,
     I_DIV, D_DIV,
     I_POW, D_POW,
-    JUMP, JUMP_IF_FALSE;
+    JUMP, JUMP_IF_FALSE, GET_FIELD, GET_STATIC;
 
     public static Opcode byId(int offset) {
         return values()[offset];

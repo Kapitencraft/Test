@@ -42,10 +42,10 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
         stmt.accept(this);
     }
 
-    public JsonArray saveArgs(CompileExpr[] args) {
-        JsonArray array = new JsonArray();
-        Arrays.stream(args).map(this::cache).forEach(array::add);
-        return array;
+    public void saveArgs(CompileExpr[] args) {
+        for (CompileExpr arg : args) {
+            this.cache(arg);
+        }
     }
 
     public JsonObject cacheClass(CacheableClass loxClass) {
@@ -73,8 +73,8 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     @Override
     public Void visitAssignExpr(CompileExpr.Assign expr) {
         ClassReference reference = typeFinder.findRetType(expr.value);
+        cache(expr.value);
         if (expr.type.type() != TokenType.ASSIGN) {
-            cache(expr.value);
             builder.addCode(Opcode.GET);
             builder.addArg(expr.ordinal);
             switch (expr.type.type()) {
@@ -85,7 +85,6 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
                 case POW_ASSIGN -> builder.addCode(getPow(reference));
             }
         } else {
-            cache(expr.value);
             builder.addCode(Opcode.ASSIGN);
             builder.addArg(expr.ordinal);
         }
@@ -124,6 +123,7 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
         }
         return null;
     }
+
     private Opcode getGreater(ClassReference reference) {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_GREATER;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_GREATER;
@@ -156,48 +156,43 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     }
 
     @Override
-    public JsonElement visitInstCallExpr(CompileExpr.InstCall expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "instCall");
-        object.add("callee", cache(expr.callee));
-        object.add("name", expr.name.toJson());
-        object.addProperty("ordinal", expr.methodOrdinal);
-        object.add("args", saveArgs(expr.args));
+    public Void visitInstCallExpr(CompileExpr.InstCall expr) {
+        cache(expr.callee);
+        saveArgs(expr.args);
+        builder.addCode(Opcode.INVOKE);
+        builder.injectString(expr.name.lexeme());
         return null;
     }
 
     @Override
-    public JsonElement visitStaticCallExpr(CompileExpr.StaticCall expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "staticCall");
-        object.addProperty("target", expr.target.absoluteName());
-        object.add("name", expr.name.toJson());
-        object.addProperty("ordinal", expr.methodOrdinal);
-        object.add("args", saveArgs(expr.args));
-        return object;
+    public Void visitStaticCallExpr(CompileExpr.StaticCall expr) {
+        saveArgs(expr.args);
+        builder.addCode(Opcode.INVOKE);
+        builder.injectString(expr.name.lexeme());
+        return null;
     }
 
     @Override
     public Void visitGetExpr(CompileExpr.Get expr) {
+        builder.addCode(Opcode.GET_FIELD);
+        builder.injectString(expr.name.lexeme());
         return null;
     }
 
     @Override
-    public JsonElement visitStaticGetExpr(CompileExpr.StaticGet expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "staticGet");
-        object.addProperty("target", expr.target.absoluteName());
-        object.addProperty("name", expr.name.lexeme());
-        return object;
+    public Void visitStaticGetExpr(CompileExpr.StaticGet expr) {
+        builder.addCode(Opcode.GET_STATIC);
+        builder.injectString(expr.name.lexeme());
+        return null;
     }
 
     @Override
-    public JsonElement visitArrayGetExpr(CompileExpr.ArrayGet expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "arrayGet");
-        object.add("object", cache(expr.object));
-        object.add("index", cache(expr.index));
-        return object;
+    public Void visitArrayGetExpr(CompileExpr.ArrayGet expr) {
+        cache(expr.object);
+        cache(expr.index);
+        ClassReference reference = typeFinder.findRetType(expr.object);
+        builder.addCode(getArrayLoad(reference));
+        return null;
     }
 
     @Override
@@ -229,17 +224,24 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     }
 
     @Override
-    public JsonElement visitArraySetExpr(CompileExpr.ArraySet expr) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "arraySet");
-        object.add("object", cache(expr.object));
-        object.add("index", cache(expr.index));
-        object.add("value", cache(expr.value));
-        object.addProperty("assign", expr.assignType.type().id());
-        object.addProperty("line", expr.assignType.line());
-        object.addProperty("executor", expr.executor.absoluteName());
-        object.addProperty("operand", expr.operand.name());
-        return object;
+    public Void visitArraySetExpr(CompileExpr.ArraySet expr) {
+        ClassReference reference = typeFinder.findRetType(expr.value);
+        cache(expr.value);
+        if (expr.assignType.type() != TokenType.ASSIGN) {
+
+            builder.addCode(getArrayLoad(reference));
+            switch (expr.assignType.type()) {
+                case ADD_ASSIGN -> builder.addCode(getAdd(reference));
+                case SUB_ASSIGN -> builder.addCode(getSub(reference));
+                case MUL_ASSIGN -> builder.addCode(getMul(reference));
+                case DIV_ASSIGN -> builder.addCode(getDiv(reference));
+                case POW_ASSIGN -> builder.addCode(getPow(reference));
+            }
+        } else {
+            cache(expr.index);
+            builder.addCode(getArrayStore(reference));
+        }
+        return null;
     }
 
     @Override
@@ -504,6 +506,18 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     public Chunk.Builder setup() {
         this.builder.clear();
         return this.builder;
+    }
+
+    private Opcode getArrayLoad(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.IA_LOAD;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.DA_LOAD;
+        throw new IllegalStateException("could not create 'a_load' for: " + reference);
+    }
+
+    private Opcode getArrayStore(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.IA_STORE;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.DA_STORE;
+        throw new IllegalStateException("could not create 'a_store' for: " + reference);
     }
 
     private Opcode getDiv(ClassReference reference) {
