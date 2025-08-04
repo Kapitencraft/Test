@@ -19,6 +19,10 @@ public class VirtualMachine {
         return code[index++];
     }
 
+    private static int read2Byte(byte[] code) {
+        return code[index++] >> 8 | code[index++];
+    }
+
     public static void run(Chunk chunk) {
         byte[] code = chunk.code();
         byte[] constants = chunk.constants();
@@ -28,9 +32,14 @@ public class VirtualMachine {
                     System.out.println(pop());
                     return;
                 }
+                case GET -> push(stack[readByte(code)]);
                 case NULL -> push(null);
                 case TRUE -> push(true);
                 case FALSE -> push(false);
+                case I_1 -> push(1);
+                case D_1 -> push(1d);
+                case I_M1 -> push(-1);
+                case D_M1 -> push(-1d);
                 case I_CONST -> push(constInt(constants, readByte(code)));
                 case D_CONST -> push(constDouble(constants, readByte(code)));
                 case S_CONST -> push(constString(constants, readByte(code)));

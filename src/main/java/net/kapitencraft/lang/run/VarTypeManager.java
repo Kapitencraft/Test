@@ -7,12 +7,14 @@ import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.Package;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.clazz.primitive.*;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 public class VarTypeManager {
     private static final Package root = new Package("");
@@ -181,5 +183,30 @@ public class VarTypeManager {
 
     public static List<ClassReference> getArgsFromObjects(List<Object> objects) {
         return objects.stream().map(VarTypeManager::getClassFromObject).toList();
+    }
+
+    public static String getClassName(ScriptedClass reference) {
+        if (reference == INTEGER)
+            return "I";
+        else if (reference == FLOAT)
+            return "F";
+        else if (reference == DOUBLE)
+            return "D";
+        else if (reference == BOOLEAN)
+            return "B"; //we can use B because we don't have bytes
+        else if (reference == CHAR)
+            return "C";
+        else if (reference == VOID)
+            return "V";
+        else if (reference.isArray())
+            return "[" + getClassName(reference.getComponentType());
+        else
+            return "L" + reference.absoluteName().replaceAll("\\.", "/") + ";";
+    }
+
+    public static String getMethodSignature(ScriptedClass target, String name, ClassReference[] argTypes, ClassReference retType) {
+        return getClassName(target) + name + "(" +
+                Arrays.stream(argTypes).map(ClassReference::get).map(VarTypeManager::getClassName).collect(Collectors.joining()) +
+                ")" + getClassName(retType.get());
     }
 }

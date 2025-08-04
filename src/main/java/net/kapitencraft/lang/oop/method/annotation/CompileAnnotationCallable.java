@@ -23,7 +23,7 @@ public class CompileAnnotationCallable extends AnnotationCallable {
     public JsonObject save(CacheBuilder builder) {
         JsonObject object = new JsonObject();
         object.addProperty("type", this.type().absoluteName());
-        if (this.expr != null) object.add("val", builder.cache(this.expr));
+        //if (this.expr != null) object.add("val", builder.cache(this.expr)); TODO
         object.add("annotations", builder.cacheAnnotations(annotations));
         return object;
     }

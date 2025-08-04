@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.compiler.analyser;
 
-import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
 import org.slf4j.Logger;
@@ -9,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Objects;
 
 public class BytecodeVars {
-    private static final Logger log = LoggerFactory.getLogger(BytecodeVars.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BytecodeVars.class);
     private final Local[] locals = new Local[256];
     private byte localCount, scopeDepth;
 

@@ -37,25 +37,28 @@ public class MathMain {
     }
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-
-        int i;
-        while (true) {
-            do {
-                String s = scanner.nextLine();
-                try {
-                    i = Integer.parseInt(s);
-                    break;
-                } catch (Exception ignored) {
-                    System.out.print("please enter a number");
-                }
-
-            } while (true);
-
-            Map<Integer, Integer> primzahlen = primzahlen(i);
-            if (istPrim(i)) System.out.print("primzahl xD");
-            else primzahlen.forEach((integer, integer2) -> System.out.println(integer + "->" + integer2));
-            System.out.println();
+        //Scanner scanner = new Scanner(System.in);
+//
+        //int i;
+        //while (true) {
+        //    do {
+        //        String s = scanner.nextLine();
+        //        try {
+        //            i = Integer.parseInt(s);
+        //            break;
+        //        } catch (Exception ignored) {
+        //            System.out.print("please enter a number");
+        //        }
+//
+        //    } while (true);
+//
+        //    Map<Integer, Integer> primzahlen = primzahlen(i);
+        //    if (istPrim(i)) System.out.print("primzahl xD");
+        //    else primzahlen.forEach((integer, integer2) -> System.out.println(integer + "->" + integer2));
+        //    System.out.println();
+        //}
+        for (int i = 0; i < 64; i++) {
+            System.out.println(Long.toBinaryString((-1 - 2L << i)));
         }
     }
- }
+}

@@ -37,6 +37,7 @@ import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 public class Holder {
     private static <T extends Validateable> void validateNullable(T[] validateable, Compiler.ErrorLogger logger) {
@@ -72,6 +73,10 @@ public class Holder {
             validateNullable(enclosed, logger);
         }
 
+        public ClassReference[] extractInterfaces() {
+            return Arrays.stream(interfaces).map(SourceClassReference::getReference).toArray(ClassReference[]::new);
+        }
+
         public Compiler.ClassBuilder construct(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
             stmtParser.pushFallback(this.target);
             try {
@@ -101,7 +106,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                CompileField fieldDecl = new CompileField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new CompileAnnotationClassInstance[0]));
+                CompileField fieldDecl = new CompileField(field.type().getReference(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new CompileAnnotationClassInstance[0]));
                 if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
                     else fields.put(field.name, fieldDecl);
             }
@@ -112,8 +117,7 @@ public class Holder {
                 CompileStmt[] body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
-                    stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, method.type(), method.generics);
-                    stmtParser.pushGenerics(method.generics());
+                    stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, method.type().getReference(), method.generics);
                     body = stmtParser.parse();
                     stmtParser.popMethod();
                 }
@@ -123,7 +127,11 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                CompileCallable methodDecl = new CompileCallable(method.type(), method.params(), body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
+                CompileCallable methodDecl = new CompileCallable(
+                        method.type().getReference(),
+                        method.extractParams(),
+                        body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0])
+                );
                 if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
                 else methods.add(Pair.of(method.name(), methodDecl));
             }
@@ -132,7 +140,6 @@ public class Holder {
             for (Constructor method : this.constructors()) {
                 stmtParser.apply(method.body(), parser);
                 stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, ClassReference.of(VarTypeManager.VOID), method.generics);
-                stmtParser.pushGenerics(method.generics());
                 CompileStmt[] body = stmtParser.parse();
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
@@ -140,7 +147,7 @@ public class Holder {
                 }
 
 
-                CompileCallable constDecl = new CompileCallable(target, method.params(), body, (short) 0, annotations.toArray(new CompileAnnotationClassInstance[0]));
+                CompileCallable constDecl = new CompileCallable(target, method.extractParams(), body, (short) 0, annotations.toArray(new CompileAnnotationClassInstance[0]));
                 stmtParser.popMethod();
                 constructors.add(Pair.of(method.name(), constDecl));
             }
@@ -176,7 +183,7 @@ public class Holder {
                     constructors.toArray(Pair[]::new),
                     methods.toArray(Pair[]::new),
                     staticMethods.toArray(Pair[]::new),
-                    interfaces(),
+                    extractInterfaces(),
                     enumConstants.build(),
                     fields,
                     staticFields,
@@ -203,7 +210,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                CompileField fieldDecl = new CompileField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new CompileAnnotationClassInstance[0]));
+                CompileField fieldDecl = new CompileField(field.type().getReference(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new CompileAnnotationClassInstance[0]));
                 if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
                 else logger.error(field.name, "fields on interfaces must be static");
             }
@@ -214,8 +221,7 @@ public class Holder {
                 CompileStmt[] body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
-                    stmtParser.applyMethod(method.params, target(), null, method.type(), method.generics);
-                    stmtParser.pushGenerics(method.generics());
+                    stmtParser.applyMethod(method.params, target(), null, method.type().getReference(), method.generics);
                     body = stmtParser.parse();
                     stmtParser.popMethod();
                 }
@@ -224,7 +230,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                CompileCallable methodDecl = new CompileCallable(method.type(), method.params, body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
+                CompileCallable methodDecl = new CompileCallable(method.type().getReference(), method.extractParams(), body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
                 if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
                 else methods.add(Pair.of(method.name(), methodDecl));
             }
@@ -236,11 +242,11 @@ public class Holder {
 
 
             return new BakedInterface(
-                    logger, target,
+                    logger, generics, target,
                     methods.toArray(new Pair[0]),
                     staticMethods.toArray(new Pair[0]),
                     staticFields,
-                    interfaces,
+                    extractInterfaces(),
                     name,
                     pck,
                     Arrays.stream(enclosed)
@@ -265,7 +271,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                CompileField fieldDecl = new CompileField(field.type(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new CompileAnnotationClassInstance[0]));
+                CompileField fieldDecl = new CompileField(field.type().getReference(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new CompileAnnotationClassInstance[0]));
                 if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
                 else fields.put(field.name, fieldDecl);
             }
@@ -277,10 +283,9 @@ public class Holder {
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     if (Modifiers.isStatic(method.modifiers))
-                        stmtParser.applyStaticMethod(method.params(), method.type());
+                        stmtParser.applyStaticMethod(method.extractParams(), method.type().getReference(), method.generics);
                     else
-                        stmtParser.applyMethod(method.params(), target(), parent, method.type(), method.generics);
-                    stmtParser.pushGenerics(method.generics());
+                        stmtParser.applyMethod(method.params(), target(), parent.getReference(), method.type().getReference(), method.generics);
                     body = stmtParser.parse();
                     stmtParser.popMethod();
                 }
@@ -289,7 +294,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                CompileCallable methodDecl = new CompileCallable(method.type(), method.params(), body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
+                CompileCallable methodDecl = new CompileCallable(method.type().getReference(), method.extractParams(), body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
                 if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
                 else methods.add(Pair.of(method.name(), methodDecl));
             }
@@ -297,8 +302,7 @@ public class Holder {
             List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
             for (Constructor constructor : this.constructors()) {
                 stmtParser.apply(constructor.body(), parser);
-                stmtParser.applyMethod(constructor.params(), target(), parent, ClassReference.of(VarTypeManager.VOID), constructor.generics);
-                stmtParser.pushGenerics(constructor.generics());
+                stmtParser.applyMethod(constructor.params(), target(), parent.getReference(), ClassReference.of(VarTypeManager.VOID), constructor.generics);
                 CompileStmt[] body = stmtParser.parse();
 
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
@@ -306,7 +310,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                CompileCallable constDecl = new CompileCallable(target, constructor.params(), body, (short) 0, annotations.toArray(new CompileAnnotationClassInstance[0]));
+                CompileCallable constDecl = new CompileCallable(target, constructor.extractParams(), body, (short) 0, annotations.toArray(new CompileAnnotationClassInstance[0]));
                 stmtParser.popMethod();
                 constructors.add(Pair.of(constructor.name(), constDecl));
             }
@@ -318,16 +322,17 @@ public class Holder {
 
             return new BakedClass(
                     logger,
+                    generics,
                     this.target(),
                     methods.toArray(new Pair[0]),
                     staticMethods.toArray(new Pair[0]),
                     constructors.toArray(new Pair[0]),
                     fields,
                     staticFields,
-                    this.parent,
+                    this.parent.getReference(),
                     this.name(),
                     this.pck(),
-                    this.interfaces,
+                    this.extractInterfaces(),
                     Arrays.stream(enclosed)
                             .map(classConstructor -> classConstructor.construct(stmtParser, parser, logger))
                             .toArray(Compiler.ClassBuilder[]::new),
@@ -349,14 +354,13 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                methods.put(method.name().lexeme(), new MethodWrapper(val, method.type, annotations.toArray(new CompileAnnotationClassInstance[0])));
+                methods.put(method.name().lexeme(), new MethodWrapper(val, method.type.getReference(), annotations.toArray(new CompileAnnotationClassInstance[0])));
             }
 
             List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
             for (AnnotationObj obj : this.annotations()) {
                 annotations.add(stmtParser.parseAnnotation(obj, parser));
             }
-
 
             return new BakedAnnotation(
                     this.target(),
@@ -390,7 +394,7 @@ public class Holder {
             ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
             List<Token> finalFields = new ArrayList<>();
             for (Field field : this.fields()) {
-                SkeletonField skeletonField = new SkeletonField(field.type(), Modifiers.isFinal(field.modifiers));
+                SkeletonField skeletonField = new SkeletonField(field.type().getReference(), Modifiers.isFinal(field.modifiers));
                 if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name().lexeme(), skeletonField);
                 else {
                     fields.put(field.name().lexeme(), skeletonField);
@@ -448,7 +452,7 @@ public class Holder {
             //fields
             ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
             for (Field field : this.fields()) {
-                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name().lexeme(), new SkeletonField(field.type(), Modifiers.isFinal(field.modifiers)));
+                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name().lexeme(), new SkeletonField(field.type().getReference(), Modifiers.isFinal(field.modifiers)));
                 else {
                     logger.error(field.name(), "fields inside Interfaces must always be static");
                 }
@@ -480,8 +484,9 @@ public class Holder {
             return new SkeletonInterface(
                     this.name().lexeme(),
                     this.pck(),
-                    this.interfaces,
+                    this.extractInterfaces(),
                     staticFields.build(),
+                    this.generics(),
                     enclosed.build(),
                     DataMethodContainer.bakeBuilders(methods),
                     DataMethodContainer.bakeBuilders(staticMethods)
@@ -496,7 +501,7 @@ public class Holder {
             ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
             List<Token> finalFields = new ArrayList<>();
             for (Field field : this.fields()) {
-                SkeletonField skeletonField = new SkeletonField(field.type(), Modifiers.isFinal(field.modifiers));
+                SkeletonField skeletonField = new SkeletonField(field.type().getReference(), Modifiers.isFinal(field.modifiers));
                 if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name().lexeme(), skeletonField);
                 else {
                     fields.put(field.name().lexeme(), skeletonField);
@@ -539,8 +544,9 @@ public class Holder {
             }
 
             return new SkeletonClass(
+                    this.generics,
                     this.name().lexeme(),
-                    this.pck(), this.parent,
+                    this.pck(), this.parent.getReference(),
                     staticFields.build(),
                     fields.build(),
                     enclosed.build(),
@@ -548,7 +554,7 @@ public class Holder {
                     DataMethodContainer.bakeBuilders(staticMethods),
                     constructorBuilder,
                     this.modifiers,
-                    this.interfaces
+                    Arrays.stream(this.interfaces).map(SourceClassReference::getReference).toArray(ClassReference[]::new)
             );
         }
 
@@ -586,7 +592,7 @@ public class Holder {
 
             ImmutableMap.Builder<String, AnnotationCallable> methods = new ImmutableMap.Builder<>();
             for (Method method : methods()) {
-                methods.put(method.name().lexeme(), new SkeletonAnnotationMethod(method.type, method.body().length > 0));
+                methods.put(method.name().lexeme(), new SkeletonAnnotationMethod(method.type.getReference(), method.body().length > 0));
             }
 
             return new SkeletonAnnotation(
@@ -603,6 +609,10 @@ public class Holder {
             validateNullable(annotations, logger);
             if (annotations != null) for (AnnotationObj obj : annotations) obj.validate(logger);
             params.forEach(p -> p.left().validate(logger));
+        }
+
+        public List<? extends Pair<ClassReference, String>> extractParams() {
+            return params.stream().map(p -> p.mapFirst(SourceClassReference::getReference)).toList();
         }
     }
 
@@ -622,6 +632,10 @@ public class Holder {
             validateNullable(annotations, logger);
             type.validate(logger);
             params.forEach(p -> p.left().validate(logger));
+        }
+
+        public List<? extends Pair<ClassReference, String>> extractParams() {
+            return params.stream().map(p -> p.mapFirst(SourceClassReference::getReference)).toList();
         }
     }
 
@@ -653,13 +667,32 @@ public class Holder {
     public record Generic(Token name, SourceClassReference lowerBound, SourceClassReference upperBound, GenericClassReference reference) implements Validateable {
 
         public Generic(Token name, SourceClassReference lowerBound, SourceClassReference upperBound) {
-            this(name, lowerBound, upperBound, new GenericClassReference(name.lexeme(), lowerBound, upperBound));
+            this(name, lowerBound, upperBound,
+                    new GenericClassReference(name.lexeme(),
+                            Optional.ofNullable(lowerBound).map(SourceClassReference::getReference).orElse(null),
+                            Optional.ofNullable(upperBound).map(SourceClassReference::getReference).orElse(null)
+                    )
+            );
         }
 
         @Override
         public void validate(Compiler.ErrorLogger logger) {
             if (lowerBound != null) lowerBound.validate(logger);
             if (upperBound != null) upperBound.validate(logger);
+        }
+    }
+
+    public record AppliedGenerics(Token reference, ClassReference[] references) {
+
+        public void applyToStack(GenericStack stack, Generics reference, Compiler.ErrorLogger logger) {
+            if (reference.variables.length != this.references.length) {
+                logger.error(this.reference, "Wrong number of type arguments: " + this.references.length + "; required: "+ reference.variables.length);
+            }
+            Map<String, ClassReference> referenceMap = new HashMap<>();
+            for (int i = 0; i < reference.variables.length; i++) {
+                referenceMap.put(reference.variables[i].name.lexeme(), references[i]);
+            }
+            stack.push(referenceMap);
         }
     }
 }

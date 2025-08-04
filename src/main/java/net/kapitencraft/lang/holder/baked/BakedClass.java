@@ -2,6 +2,7 @@ package net.kapitencraft.lang.holder.baked;
 
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
@@ -16,6 +17,7 @@ import java.util.*;
 
 public record BakedClass(
         Compiler.ErrorLogger logger,
+        Holder.Generics generics,
         ClassReference target,
         Pair<Token, CompileCallable>[] methods,
         Pair<Token, CompileCallable>[] staticMethods,
@@ -58,7 +60,6 @@ public record BakedClass(
         for (Pair<Token, CompileCallable> method : this.constructors()) {
             container.addMethod(logger, method.right(), method.left());
         }
-
 
         return new CompileClass(
                 DataMethodContainer.bakeBuilders(methods), DataMethodContainer.bakeBuilders(staticMethods),

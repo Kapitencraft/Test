@@ -6,9 +6,9 @@ import net.kapitencraft.lang.run.algebra.Operand;
 import java.util.Map;
 import net.kapitencraft.lang.holder.LiteralHolder;
 
-public abstract class CompileExpr {
+public interface CompileExpr {
 
-    public interface Visitor<R> {
+    interface Visitor<R> {
         R visitVarRefExpr(VarRef expr);
         R visitSetExpr(Set expr);
         R visitArraySetExpr(ArraySet expr);
@@ -35,14 +35,12 @@ public abstract class CompileExpr {
         R visitSpecialSetExpr(SpecialSet expr);
     }
 
-    public static class VarRef extends CompileExpr {
-        public final Token name;
-        public final byte ordinal;
+    <R> R accept(Visitor<R> visitor);
 
-        public VarRef(Token name, byte ordinal) {
-            this.name = name;
-            this.ordinal = ordinal;
-        }
+    record VarRef(
+        Token name, 
+        byte ordinal
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -50,22 +48,14 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class Set extends CompileExpr {
-        public final CompileExpr object;
-        public final Token name;
-        public final CompileExpr value;
-        public final Token assignType;
-        public final ClassReference executor;
-        public final Operand operand;
-
-        public Set(CompileExpr object, Token name, CompileExpr value, Token assignType, ClassReference executor, Operand operand) {
-            this.object = object;
-            this.name = name;
-            this.value = value;
-            this.assignType = assignType;
-            this.executor = executor;
-            this.operand = operand;
-        }
+    record Set(
+        CompileExpr object, 
+        Token name, 
+        CompileExpr value, 
+        Token assignType, 
+        ClassReference executor, 
+        Operand operand
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -73,22 +63,14 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class ArraySet extends CompileExpr {
-        public final CompileExpr object;
-        public final CompileExpr index;
-        public final CompileExpr value;
-        public final Token assignType;
-        public final ClassReference executor;
-        public final Operand operand;
-
-        public ArraySet(CompileExpr object, CompileExpr index, CompileExpr value, Token assignType, ClassReference executor, Operand operand) {
-            this.object = object;
-            this.index = index;
-            this.value = value;
-            this.assignType = assignType;
-            this.executor = executor;
-            this.operand = operand;
-        }
+    record ArraySet(
+        CompileExpr object, 
+        CompileExpr index, 
+        CompileExpr value, 
+        Token assignType, 
+        ClassReference executor, 
+        Operand operand
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -96,16 +78,11 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class ArraySpecial extends CompileExpr {
-        public final CompileExpr object;
-        public final CompileExpr index;
-        public final Token assignType;
-
-        public ArraySpecial(CompileExpr object, CompileExpr index, Token assignType) {
-            this.object = object;
-            this.index = index;
-            this.assignType = assignType;
-        }
+    record ArraySpecial(
+        CompileExpr object, 
+        CompileExpr index, 
+        Token assignType
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -113,16 +90,10 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class SpecialAssign extends CompileExpr {
-        public final Token name;
-        public final Token assignType;
-        public final byte ordinal;
-
-        public SpecialAssign(Token name, Token assignType, byte ordinal) {
-            this.name = name;
-            this.assignType = assignType;
-            this.ordinal = ordinal;
-        }
+    record SpecialAssign(
+        Token name, 
+        Token assignType
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -130,18 +101,12 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class Constructor extends CompileExpr {
-        public final Token keyword;
-        public final ClassReference target;
-        public final CompileExpr[] params;
-        public final int ordinal;
-
-        public Constructor(Token keyword, ClassReference target, CompileExpr[] params, int ordinal) {
-            this.keyword = keyword;
-            this.target = target;
-            this.params = params;
-            this.ordinal = ordinal;
-        }
+    record Constructor(
+        Token keyword, 
+        ClassReference target, 
+        CompileExpr[] params, 
+        int ordinal
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -149,20 +114,14 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class InstCall extends CompileExpr {
-        public final CompileExpr callee;
-        public final Token name;
-        public final int methodOrdinal;
-        public final CompileExpr[] args;
-        public final ClassReference retType;
-
-        public InstCall(CompileExpr callee, Token name, int methodOrdinal, CompileExpr[] args, ClassReference retType) {
-            this.callee = callee;
-            this.name = name;
-            this.methodOrdinal = methodOrdinal;
-            this.args = args;
-            this.retType = retType;
-        }
+    record InstCall(
+        CompileExpr callee, 
+        Token name, 
+        int methodOrdinal, 
+        CompileExpr[] args, 
+        ClassReference retType, 
+        String id
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -170,22 +129,14 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class StaticSet extends CompileExpr {
-        public final ClassReference target;
-        public final Token name;
-        public final CompileExpr value;
-        public final Token assignType;
-        public final ClassReference executor;
-        public final Operand operand;
-
-        public StaticSet(ClassReference target, Token name, CompileExpr value, Token assignType, ClassReference executor, Operand operand) {
-            this.target = target;
-            this.name = name;
-            this.value = value;
-            this.assignType = assignType;
-            this.executor = executor;
-            this.operand = operand;
-        }
+    record StaticSet(
+        ClassReference target, 
+        Token name, 
+        CompileExpr value, 
+        Token assignType, 
+        ClassReference executor, 
+        Operand operand
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -193,29 +144,21 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class Logical extends CompileExpr {
-        public final CompileExpr left;
-        public final Token operator;
-        public final CompileExpr right;
-
-        public Logical(CompileExpr left, Token operator, CompileExpr right) {
-            this.left = left;
-            this.operator = operator;
-            this.right = right;
-        }
-
+    record Logical(
+        CompileExpr left, 
+        Token operator, 
+        CompileExpr right
+    ) implements CompileExpr {
+    
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLogicalExpr(this);
         }
     }
 
-    public static class Grouping extends CompileExpr {
-        public final CompileExpr expression;
-
-        public Grouping(CompileExpr expression) {
-            this.expression = expression;
-        }
+    record Grouping(
+        CompileExpr expression
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -223,14 +166,10 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class Unary extends CompileExpr {
-        public final Token operator;
-        public final CompileExpr right;
-
-        public Unary(Token operator, CompileExpr right) {
-            this.operator = operator;
-            this.right = right;
-        }
+    record Unary(
+        Token operator, 
+        CompileExpr right
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -238,16 +177,11 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class When extends CompileExpr {
-        public final CompileExpr condition;
-        public final CompileExpr ifTrue;
-        public final CompileExpr ifFalse;
-
-        public When(CompileExpr condition, CompileExpr ifTrue, CompileExpr ifFalse) {
-            this.condition = condition;
-            this.ifTrue = ifTrue;
-            this.ifFalse = ifFalse;
-        }
+    record When(
+        CompileExpr condition, 
+        CompileExpr ifTrue, 
+        CompileExpr ifFalse
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -255,16 +189,11 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class CastCheck extends CompileExpr {
-        public final CompileExpr object;
-        public final ClassReference targetType;
-        public final Token patternVarName;
-
-        public CastCheck(CompileExpr object, ClassReference targetType, Token patternVarName) {
-            this.object = object;
-            this.targetType = targetType;
-            this.patternVarName = patternVarName;
-        }
+    record CastCheck(
+        CompileExpr object, 
+        ClassReference targetType, 
+        Token patternVarName
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -272,14 +201,10 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class StaticGet extends CompileExpr {
-        public final ClassReference target;
-        public final Token name;
-
-        public StaticGet(ClassReference target, Token name) {
-            this.target = target;
-            this.name = name;
-        }
+    record StaticGet(
+        ClassReference target, 
+        Token name
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -287,18 +212,12 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class Switch extends CompileExpr {
-        public final CompileExpr provider;
-        public final Map<Object,CompileExpr> params;
-        public final CompileExpr defaulted;
-        public final Token keyword;
-
-        public Switch(CompileExpr provider, Map<Object,CompileExpr> params, CompileExpr defaulted, Token keyword) {
-            this.provider = provider;
-            this.params = params;
-            this.defaulted = defaulted;
-            this.keyword = keyword;
-        }
+    record Switch(
+        CompileExpr provider, 
+        Map<Object,CompileExpr> params, 
+        CompileExpr defaulted, 
+        Token keyword
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -306,18 +225,12 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class Slice extends CompileExpr {
-        public final CompileExpr object;
-        public final CompileExpr start;
-        public final CompileExpr end;
-        public final CompileExpr interval;
-
-        public Slice(CompileExpr object, CompileExpr start, CompileExpr end, CompileExpr interval) {
-            this.object = object;
-            this.start = start;
-            this.end = end;
-            this.interval = interval;
-        }
+    record Slice(
+        CompileExpr object, 
+        CompileExpr start, 
+        CompileExpr end, 
+        CompileExpr interval
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -325,14 +238,10 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class Get extends CompileExpr {
-        public final CompileExpr object;
-        public final Token name;
-
-        public Get(CompileExpr object, Token name) {
-            this.object = object;
-            this.name = name;
-        }
+    record Get(
+        CompileExpr object, 
+        Token name
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -340,14 +249,10 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class ArrayGet extends CompileExpr {
-        public final CompileExpr object;
-        public final CompileExpr index;
-
-        public ArrayGet(CompileExpr object, CompileExpr index) {
-            this.object = object;
-            this.index = index;
-        }
+    record ArrayGet(
+        CompileExpr object, 
+        CompileExpr index
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -355,12 +260,9 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class Literal extends CompileExpr {
-        public final Token literal;
-
-        public Literal(Token literal) {
-            this.literal = literal;
-        }
+    record Literal(
+        Token literal
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -368,22 +270,14 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class Assign extends CompileExpr {
-        public final Token name;
-        public final CompileExpr value;
-        public final Token type;
-        public final ClassReference executor;
-        public final Operand operand;
-        public final byte ordinal;
-
-        public Assign(Token name, CompileExpr value, Token type, ClassReference executor, Operand operand, byte ordinal) {
-            this.name = name;
-            this.value = value;
-            this.type = type;
-            this.executor = executor;
-            this.operand = operand;
-            this.ordinal = ordinal;
-        }
+    record Assign(
+        Token name, 
+        CompileExpr value, 
+        Token type, 
+        byte ordinal, 
+        ClassReference executor, 
+        Operand operand
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -391,20 +285,14 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class StaticCall extends CompileExpr {
-        public final ClassReference target;
-        public final Token name;
-        public final int methodOrdinal;
-        public final CompileExpr[] args;
-        public final ClassReference retType;
-
-        public StaticCall(ClassReference target, Token name, int methodOrdinal, CompileExpr[] args, ClassReference retType) {
-            this.target = target;
-            this.name = name;
-            this.methodOrdinal = methodOrdinal;
-            this.args = args;
-            this.retType = retType;
-        }
+    record StaticCall(
+        ClassReference target, 
+        Token name, 
+        int methodOrdinal, 
+        CompileExpr[] args, 
+        ClassReference retType, 
+        String id
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -412,20 +300,13 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class Binary extends CompileExpr {
-        public final CompileExpr left;
-        public final CompileExpr right;
-        public final Token operator;
-        public final ClassReference executor;
-        public final Operand operand;
-
-        public Binary(CompileExpr left, CompileExpr right, Token operator, ClassReference executor, Operand operand) {
-            this.left = left;
-            this.right = right;
-            this.operator = operator;
-            this.executor = executor;
-            this.operand = operand;
-        }
+    record Binary(
+        CompileExpr left, 
+        CompileExpr right, 
+        Token operator, 
+        ClassReference executor, 
+        Operand operand
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -433,16 +314,11 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class StaticSpecial extends CompileExpr {
-        public final ClassReference target;
-        public final Token name;
-        public final Token assignType;
-
-        public StaticSpecial(ClassReference target, Token name, Token assignType) {
-            this.target = target;
-            this.name = name;
-            this.assignType = assignType;
-        }
+    record StaticSpecial(
+        ClassReference target, 
+        Token name, 
+        Token assignType
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -450,22 +326,15 @@ public abstract class CompileExpr {
         }
     }
 
-    public static class SpecialSet extends CompileExpr {
-        public final CompileExpr callee;
-        public final Token name;
-        public final Token assignType;
-
-        public SpecialSet(CompileExpr callee, Token name, Token assignType) {
-            this.callee = callee;
-            this.name = name;
-            this.assignType = assignType;
-        }
+    record SpecialSet(
+        CompileExpr callee, 
+        Token name, 
+        Token assignType
+    ) implements CompileExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSpecialSetExpr(this);
         }
     }
-
-  public abstract <R> R accept(Visitor<R> visitor);
 }

@@ -24,6 +24,7 @@ import net.kapitencraft.tool.Pair;
 import java.util.*;
 import java.util.function.Consumer;
 
+@Deprecated //will use VirtualMachine instead
 public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Visitor<Void> {
     public static final Interpreter INSTANCE = new Interpreter();
 
@@ -97,66 +98,67 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
     @Override
     public Void visitVarDeclStmt(RuntimeStmt.VarDecl stmt) {
         Object value = null;
-        if (stmt.initializer != null) {
-            value = evaluate(stmt.initializer);
+        if (stmt.initializer() != null) {
+            value = evaluate(stmt.initializer());
         }
 
-        environment.defineVar(stmt.name, value);
+        environment.defineVar(stmt.name(), value);
         return null;
     }
 
     @Override
     public Void visitExpressionStmt(RuntimeStmt.Expression stmt) {
-        evaluate(stmt.expression);
+        evaluate(stmt.expression());
         return null;
     }
 
     @Override
     public Void visitReturnStmt(RuntimeStmt.Return stmt) {
         Object value = null;
-        if (stmt.value != null) value = evaluate(stmt.value);
+        if (stmt.value() != null) value = evaluate(stmt.value());
 
         throw new CancelBlock(value);
     }
 
     @Override
     public Void visitThrowStmt(RuntimeStmt.Throw stmt) {
-        AbstractScriptedException exception = new AbstractScriptedException((ClassInstance) evaluate(stmt.value));
-        pushCallIndex(stmt.line);
-        throw exception;
+        //AbstractScriptedException exception = new AbstractScriptedException((ClassInstance) evaluate(stmt.value));
+        //pushCallIndex(stmt.line);
+        //throw exception;
+        return null;
     }
 
     @Override
     public Void visitIfStmt(RuntimeStmt.If stmt) {
-        if (isTruthy(evaluate(stmt.condition))) {
-            execute(stmt.thenBranch);
+        if (isTruthy(evaluate(stmt.condition()))) {
+            execute(stmt.thenBranch());
             return null;
         }
 
-        for (Pair<RuntimeExpr, RuntimeStmt> elif : stmt.elifs) {
+        for (Pair<RuntimeExpr, RuntimeStmt> elif : stmt.elifs()) {
             if (isTruthy(evaluate(elif.left()))) {
                 execute(elif.right());
                 return null;
             }
         }
 
-        if (stmt.elseBranch != null) {
-            execute(stmt.elseBranch);
+        if (stmt.elseBranch() != null) {
+            execute(stmt.elseBranch());
         }
         return null;
     }
 
     @Override
     public Void visitBlockStmt(RuntimeStmt.Block stmt) {
-        executeBlock(stmt.statements);
+        executeBlock(stmt.statements());
         return null;
     }
 
     @Override
     public Void visitWhileStmt(RuntimeStmt.While stmt) {
-        while (isTruthy(evaluate(stmt.condition))) {
+        while (isTruthy(evaluate(stmt.condition()))) {
             try {
-                execute(stmt.body);
+                execute(stmt.body());
             } catch (EscapeLoop escape) {
                 if (escape.type == TokenType.BREAK) break;
                 //no need to "continue" as the JVM already does it when breaking out of the body
@@ -168,9 +170,9 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
     @Override
     public Void visitForStmt(RuntimeStmt.For stmt) {
         this.environment.push();
-        for (execute(stmt.init); isTruthy(evaluate(stmt.condition)); evaluate(stmt.increment)) {
+        for (execute(stmt.init()); isTruthy(evaluate(stmt.condition())); evaluate(stmt.increment())) {
             try {
-                execute(stmt.body);
+                execute(stmt.body());
             } catch (EscapeLoop escape) {
                 if (escape.type == TokenType.BREAK) break;
                 //no need to "continue" as the JVM already does it when breaking out of the body
@@ -184,10 +186,10 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
     public Void visitForEachStmt(RuntimeStmt.ForEach stmt) {
         this.environment.push();
         //TODO fix primitive type crash
-        for (Object obj : (Object[]) evaluate(stmt.initializer)) {
-            environment.defineVar(stmt.name, obj);
+        for (Object obj : (Object[]) evaluate(stmt.initializer())) {
+            environment.defineVar(stmt.name(), obj);
             try {
-                execute(stmt.body);
+                execute(stmt.body());
             } catch (EscapeLoop escape) {
                 if (escape.type == TokenType.BREAK) break;
                 //no need to "continue" as the JVM already does it when breaking out of the body
@@ -206,11 +208,11 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
     public Void visitTryStmt(RuntimeStmt.Try stmt) {
         int stackIndex = this.callStack.stack.size();
         try {
-            visitBlockStmt(stmt.body);
+            visitBlockStmt(stmt.body());
         } catch (AbstractScriptedException e) {
             this.callStack.resetToSize(stackIndex);
             boolean handled = false;
-            a: for (Pair<Pair<ClassReference[], String>, RuntimeStmt.Block> pair : stmt.catches) {
+            a: for (Pair<Pair<ClassReference[], String>, RuntimeStmt.Block> pair : stmt.catches()) {
                 Pair<ClassReference[], String> constData = pair.left();
                 ScriptedClass causer = e.exceptionType.getType();
                 for (ClassReference loxClass : constData.left()) {
@@ -224,7 +226,7 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
                     }
                 }
             }
-            if (stmt.finale != null) visitBlockStmt(stmt.finale);
+            if (stmt.finale() != null) visitBlockStmt(stmt.finale());
             if (!handled) throw e;
         }
         return null;
@@ -232,35 +234,35 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
 
     @Override
     public Object visitGroupingExpr(RuntimeExpr.Grouping expr) {
-        return evaluate(expr.expression);
+        return evaluate(expr.expression());
     }
 
     @Override
     public Object visitLiteralExpr(RuntimeExpr.Literal expr) {
-        if (expr.literal.value() instanceof String s) {
+        if (expr.literal().value() instanceof String s) {
             return NativeClassLoader.wrapString(s);
         }
-        return expr.literal.value();
+        return expr.literal().value();
     }
 
     @Override
     public Object visitLogicalExpr(RuntimeExpr.Logical expr) {
-        Object left = evaluate(expr.left);
+        Object left = evaluate(expr.left());
 
-        if (expr.operator == TokenType.OR) {
+        if (expr.operator() == TokenType.OR) {
             if (isTruthy(left)) return left;
-        } else if (expr.operator == TokenType.XOR) {
-            return isTruthy(left) ^ isTruthy(evaluate(expr.right));
+        } else if (expr.operator() == TokenType.XOR) {
+            return isTruthy(left) ^ isTruthy(evaluate(expr.right()));
         } else {
             if (!isTruthy(left)) return left;
         }
 
-        return evaluate(expr.right);
+        return evaluate(expr.right());
     }
 
     @Override
     public Object visitVarRefExpr(RuntimeExpr.VarRef expr) {
-        return environment.getVar(expr.name);
+        return 0; // environment.getVar(expr.name);
     }
 
     public void executeBlock(RuntimeStmt[] statements) {
@@ -276,9 +278,9 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
 
     @Override
     public Object visitUnaryExpr(RuntimeExpr.Unary expr) {
-        Object right = evaluate(expr.right);
+        Object right = evaluate(expr.right());
 
-        return switch (expr.operator) {
+        return switch (expr.operator()) {
             case NOT -> !isTruthy(right);
             case SUB -> {
                 if (right instanceof Double)
@@ -294,43 +296,43 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
 
     @Override
     public Object visitAssignExpr(RuntimeExpr.Assign expr) {
-        Object value = evaluate(expr.value);
-        if (expr.type == TokenType.ASSIGN) environment.assignVar(expr.name, value);
-        else value = environment.assignVarWithOperator(expr.type, expr.line, expr.name, value, expr.executor.get(), expr.operand);
+        Object value = evaluate(expr.value());
+        if (expr.type() == TokenType.ASSIGN) environment.assignVar(expr.name(), value);
+        //else value = environment.assignVarWithOperator(expr.type, expr.line, expr.name, value, expr.executor.get(), expr.operand);
         return value;
     }
 
     @Override
     public Object visitSpecialAssignExpr(RuntimeExpr.SpecialAssign expr) {
-        return environment.specialVarAssign(expr.name, expr.assignType);
+        return environment.specialVarAssign(expr.name(), expr.assignType());
     }
 
     @Override
     public Object visitBinaryExpr(RuntimeExpr.Binary expr) {
-        Object left = evaluate(expr.left);
-        Object right = evaluate(expr.right);
-        return visitAlgebra(left, right, expr.executor.get(), expr.operator, expr.line, expr.operand);
+        Object left = evaluate(expr.left());
+        Object right = evaluate(expr.right());
+        return 0; //visitAlgebra(left, right, expr.executor.get(), expr.operator, expr.line, expr.operand);
     }
 
     @Override
     public Object visitWhenExpr(RuntimeExpr.When expr) {
-        return isTruthy(evaluate(expr.condition)) ? evaluate(expr.ifTrue) : evaluate(expr.ifFalse);
+        return isTruthy(evaluate(expr.condition())) ? evaluate(expr.ifTrue()) : evaluate(expr.ifFalse());
     }
 
     @Override
     public Object visitSwitchExpr(RuntimeExpr.Switch stmt) {
-        Object o = evaluate(stmt.provider);
-        return stmt.params.containsKey(o) ? evaluate(stmt.params.get(o)) : evaluate(stmt.defaulted);
+        Object o = evaluate(stmt.provider());
+        return stmt.params().containsKey(o) ? evaluate(stmt.params().get(o)) : evaluate(stmt.defaulted());
     }
 
     @Override
     public Object visitCastCheckExpr(RuntimeExpr.CastCheck expr) {
-        Object object = evaluate(expr.object);
+        Object object = evaluate(expr.object());
         if (object instanceof ClassInstance instance) {
             ScriptedClass type = instance.getType();
-            if (type.isParentOf(expr.targetType.get())) {
-                if (expr.patternVarName != null) {
-                    environment.defineVar(expr.patternVarName, instance);
+            if (type.isParentOf(expr.targetType().get())) {
+                if (expr.patternVarName() != null) {
+                    environment.defineVar(expr.patternVarName(), instance);
                 }
                 return true;
             }
@@ -353,19 +355,19 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
 
     @Override
     public Object visitInstCallExpr(RuntimeExpr.InstCall expr) {
-        ClassInstance inst = (ClassInstance) evaluate(expr.callee);
-        pushCallIndex(expr.name.line());
-        pushCall(inst.getType().absoluteName(), expr.name.lexeme(), inst.getType().name());
-        Object data = inst.executeMethod(expr.name.lexeme(), expr.methodOrdinal, this.visitArgs(expr.args), this);
+        ClassInstance inst = (ClassInstance) evaluate(expr.callee());
+        pushCallIndex(expr.name().line());
+        pushCall(inst.getType().absoluteName(), expr.name().lexeme(), inst.getType().name());
+        Object data = inst.executeMethod(expr.name().lexeme(), expr.methodOrdinal(), this.visitArgs(expr.args()), this);
         popCall();
         return data;
     }
 
     @Override
     public Object visitStaticCallExpr(RuntimeExpr.StaticCall expr) {
-        pushCallIndex(expr.name.line());
-        pushCall(expr.target.get().absoluteName(), expr.name.lexeme(), expr.target.get().name());
-        Object data = staticCall(expr.target.get(), expr.name.lexeme(), expr.methodOrdinal, visitArgs(expr.args));
+        pushCallIndex(expr.name().line());
+        pushCall(expr.target().get().absoluteName(), expr.name().lexeme(), expr.target().get().name());
+        Object data = staticCall(expr.target().get(), expr.name().lexeme(), expr.methodOrdinal(), visitArgs(expr.args()));
         popCall();
         return data;
     }
@@ -380,52 +382,52 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
 
     @Override
     public Object visitConstructorExpr(RuntimeExpr.Constructor expr) {
-        pushCallIndex(expr.line);
-        pushCall(expr.target.get().absoluteName(), "<init>", expr.target.name());
-        Object data = expr.target.get().createInst(expr.params, expr.ordinal, this);
+        //pushCallIndex(expr.line);
+        pushCall(expr.target().get().absoluteName(), "<init>", expr.target().name());
+        Object data = expr.target().get().createInst(expr.params(), expr.ordinal(), this);
         popCall();
         return data;
     }
 
     @Override
     public Object visitGetExpr(RuntimeExpr.Get expr) {
-        return ((ClassInstance) evaluate(expr.object)).getField(expr.name);
+        return ((ClassInstance) evaluate(expr.object())).getField(expr.name());
     }
 
     @Override
     public Object visitStaticGetExpr(RuntimeExpr.StaticGet expr) {
-        return expr.target.get().getStaticField(expr.name);
+        return expr.target().get().getStaticField(expr.name());
     }
 
     @Override
     public Object visitArrayGetExpr(RuntimeExpr.ArrayGet expr) {
-        Object[] array = (Object[]) evaluate(expr.object);
-        int index = (int) evaluate(expr.index);
+        Object[] array = (Object[]) evaluate(expr.object());
+        int index = (int) evaluate(expr.index());
         if (array.length < index || index < 0) {
             pushCallIndex(0);
-            throw AbstractScriptedException.createException(VarTypeManager.INDEX_OUT_OF_BOUNDS_EXCEPTION, "index " + expr.index + " out of bounds for length " + array.length);
+            throw AbstractScriptedException.createException(VarTypeManager.INDEX_OUT_OF_BOUNDS_EXCEPTION, "index " + expr.index() + " out of bounds for length " + array.length);
         }
         return array[index];
     }
 
     @Override
     public Object visitSetExpr(RuntimeExpr.Set expr) {
-        Object val = evaluate(expr.value);
-        ClassInstance instance = (ClassInstance) evaluate(expr.object);
-        if (expr.assignType == TokenType.ASSIGN) {
-            return instance.assignField(expr.name, val);
+        Object val = evaluate(expr.value());
+        ClassInstance instance = (ClassInstance) evaluate(expr.object());
+        if (expr.assignType() == TokenType.ASSIGN) {
+            return instance.assignField(expr.name(), val);
         } else {
-            return instance.assignFieldWithOperator(expr.name, val, expr.assignType, expr.line, null, null);
+            return 0; //instance.assignFieldWithOperator(expr.name, val, expr.assignType, expr.line, null, null);
         }
     }
 
     @Override
     public Object visitStaticSetExpr(RuntimeExpr.StaticSet expr) {
-        Object val = evaluate(expr.value);
-        if (expr.assignType == TokenType.ASSIGN) {
-            return expr.target.get().assignStaticField(expr.name, val);
+        Object val = evaluate(expr.value());
+        if (expr.assignType() == TokenType.ASSIGN) {
+            return expr.target().get().assignStaticField(expr.name(), val);
         } else {
-            return expr.target.get().assignStaticFieldWithOperator(expr.name, val, expr.assignType, expr.line, null, null);
+            return 0;// expr.target.get().assignStaticFieldWithOperator(expr.name, val, expr.assignType, expr.line, null, null);
         }
     }
 
@@ -440,42 +442,42 @@ public class Interpreter implements RuntimeExpr.Visitor<Object>, RuntimeStmt.Vis
 
     @Override
     public Object visitArraySetExpr(RuntimeExpr.ArraySet expr) {
-        Object[] array = (Object[]) evaluate(expr.object);
-        int index = (int) evaluate(expr.index);
+        Object[] array = (Object[]) evaluate(expr.object());
+        int index = (int) evaluate(expr.index());
         if (array.length < index || index < 0) {
             pushCallIndex(0);
-            throw AbstractScriptedException.createException(VarTypeManager.INDEX_OUT_OF_BOUNDS_EXCEPTION, "index " + expr.index + " out of bounds for length " + array.length);
+            throw AbstractScriptedException.createException(VarTypeManager.INDEX_OUT_OF_BOUNDS_EXCEPTION, "index " + expr.index() + " out of bounds for length " + array.length);
         }
-        return array[index] = Interpreter.INSTANCE.visitAlgebra(array[index], evaluate(expr.value), null, expr.assignType, expr.line, null);
+        return 0;//array[index] = Interpreter.INSTANCE.visitAlgebra(array[index], evaluate(expr.value), null, expr.assignType, expr.line, null);
     }
 
     @Override
     public Object visitSpecialSetExpr(RuntimeExpr.SpecialSet expr) {
-        return ((ClassInstance) evaluate(expr.callee)).specialAssign(expr.name, expr.assignType);
+        return ((ClassInstance) evaluate(expr.callee())).specialAssign(expr.name(), expr.assignType());
     }
 
     @Override
     public Object visitStaticSpecialExpr(RuntimeExpr.StaticSpecial expr) {
-        return expr.target.get().staticSpecialAssign(expr.name, expr.assignType);
+        return expr.target().get().staticSpecialAssign(expr.name(), expr.assignType());
     }
 
     @Override
     public Object visitArraySpecialExpr(RuntimeExpr.ArraySpecial expr) {
-        Object[] array = (Object[]) evaluate(expr.object);
-        int index = (int) evaluate(expr.index);
+        Object[] array = (Object[]) evaluate(expr.object());
+        int index = (int) evaluate(expr.index());
         if (array.length < index || index < 0) {
             pushCallIndex(0);
-            throw AbstractScriptedException.createException(VarTypeManager.INDEX_OUT_OF_BOUNDS_EXCEPTION, "index " + expr.index + " out of bounds for length " + array.length);
+            throw AbstractScriptedException.createException(VarTypeManager.INDEX_OUT_OF_BOUNDS_EXCEPTION, "index " + expr.index() + " out of bounds for length " + array.length);
         }
-        return array[index] = Math.specialMerge(array[index], expr.assignType);
+        return array[index] = Math.specialMerge(array[index], expr.assignType());
     }
 
     @Override
     public Object visitSliceExpr(RuntimeExpr.Slice expr) {
-        Object[] array = (Object[]) evaluate(expr.object);
-        int interval = expr.interval != null ? (int) evaluate(expr.interval) : 1;
-        int min = expr.start != null ? (int) evaluate(expr.start) : interval < 0 ? array.length : 0;
-        int max = expr.end != null ? (int) evaluate(expr.end) : interval < 0 ? 0 : array.length;
+        Object[] array = (Object[]) evaluate(expr.object());
+        int interval = expr.interval() != null ? (int) evaluate(expr.interval()) : 1;
+        int min = expr.start() != null ? (int) evaluate(expr.start()) : interval < 0 ? array.length : 0;
+        int max = expr.end() != null ? (int) evaluate(expr.end()) : interval < 0 ? 0 : array.length;
         Object[] out = new Object[(max - min) / interval];
         int index = 0;
         for (int i = min; i < max; i+=interval) {

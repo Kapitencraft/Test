@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.clazz.skeleton;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -32,16 +33,18 @@ public class SkeletonInterface implements ScriptedClass {
 
     private final Map<String, SkeletonField> staticFields;
 
+    private final Holder.Generics generics;
     private final Map<String, ClassReference> enclosed;
 
     private final GeneratedMethodMap methods;
     private final GeneratedMethodMap staticMethods;
 
-    public SkeletonInterface(String name, String pck, ClassReference[] interfaces, Map<String, SkeletonField> staticFields, Map<String, ClassReference> enclosed, Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods) {
+    public SkeletonInterface(String name, String pck, ClassReference[] interfaces, Map<String, SkeletonField> staticFields, Holder.Generics generics, Map<String, ClassReference> enclosed, Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods) {
         this.name = name;
         this.pck = pck;
         this.interfaces = interfaces;
         this.staticFields = staticFields;
+        this.generics = generics;
         this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
         this.staticMethods = new GeneratedMethodMap(staticMethods);
@@ -69,6 +72,7 @@ public class SkeletonInterface implements ScriptedClass {
                 pck,
                 interfaces,
                 staticFields.build(),
+                null,
                 Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
                 methods,
                 staticMethods
@@ -93,6 +97,11 @@ public class SkeletonInterface implements ScriptedClass {
     @Override
     public void setInit() {
 
+    }
+
+    @Override
+    public @Nullable Holder.Generics getGenerics() {
+        return generics;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.oop.clazz;
 
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.ast.RuntimeExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -231,7 +232,7 @@ public interface ScriptedClass {
 
     RuntimeAnnotationClassInstance[] annotations();
 
-    // ----- MODIFIERS START -----
+    //region MODIFIERS
 
     @Contract(pure = true)
     short getModifiers();
@@ -252,5 +253,9 @@ public interface ScriptedClass {
         return (getModifiers() & Modifiers.ANNOTATION) != 0;
     }
 
-    // ----- MODIFIERS END -----
+    default @Nullable Holder.Generics getGenerics() {
+        return null;
+    }
+
+    //endregion
 }

@@ -55,10 +55,10 @@ public class StmtParser extends ExprParser {
             error(peek(), "unreachable statement");
         }
         try {
-            if (match(FINAL)) return varDeclaration(true, consumeVarType(generics));
+            if (match(FINAL)) return varDeclaration(true, consumeVarType(generics).getReference());
 
             Optional<SourceClassReference> type = tryConsumeVarType(generics);
-            return type.map(sourceClassReference -> varDeclaration(false, sourceClassReference)).orElseGet(this::statement);
+            return type.map(sourceClassReference -> varDeclaration(false, sourceClassReference.getReference())).orElseGet(this::statement);
         } catch (ParseError error) {
             synchronize();
             return null;
@@ -140,7 +140,7 @@ public class StmtParser extends ExprParser {
             List<ClassReference> targets = new ArrayList<>();
             consumeBracketOpen("catch");
             do {
-                targets.add(consumeVarType(generics));
+                targets.add(consumeVarType(generics).getReference());
             } while (match(SINGLE_OR));
             pushScope();
             Token name = consumeIdentifier();
@@ -212,20 +212,21 @@ public class StmtParser extends ExprParser {
         CompileStmt initializer;
         if (type.isPresent()) {
             Token name = consumeIdentifier();
+            ClassReference reference = type.get().getReference();
             if (match(COLON)) {
-                ClassReference arrayType = type.get().array();
+                ClassReference arrayType = reference.array();
                 expectType(arrayType);
                 CompileExpr init = expression();
                 popExpectation();
                 expectType(init, arrayType);
                 consumeBracketClose("for");
-                varAnalyser.add(name.lexeme(), type.get(), true, false);
+                varAnalyser.add(name.lexeme(), reference, true, true);
                 CompileStmt stmt = statement();
                 loopIndex--;
                 popScope();
-                return new CompileStmt.ForEach(type.get(), name, init, stmt);
+                return new CompileStmt.ForEach(reference, name, init, stmt);
             }
-            initializer = varDecl(false, type.get(), name);
+            initializer = varDecl(false, reference, name);
         } else if (match(EOA)) {
             initializer = null;
         } else if (match(IDENTIFIER) && parser.hasClass(previous().lexeme())) {
@@ -320,15 +321,15 @@ public class StmtParser extends ExprParser {
         return stmts.toArray(CompileStmt[]::new);
     }
 
-    public void applyMethod(List<? extends Pair<? extends ClassReference, String>> params, ClassReference targetClass, ClassReference superclass, ClassReference funcRetType, @Nullable Holder.Generics generics) {
+    public void applyMethod(List<? extends Pair<SourceClassReference, String>> params, ClassReference targetClass, ClassReference superclass, ClassReference funcRetType, @Nullable Holder.Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
         if (targetClass != null) this.varAnalyser.add("this", targetClass, true, true);
         if (superclass != null) this.varAnalyser.add("super", superclass, true, true);
-        for (Pair<? extends ClassReference, String> param : params) {
-            varAnalyser.add(param.right(), param.left(), true, false);
+        for (Pair<SourceClassReference, String> param : params) {
+            varAnalyser.add(param.right(), param.left().getReference(), true, true);
         }
     }
 
@@ -338,11 +339,14 @@ public class StmtParser extends ExprParser {
         funcRetType = VarTypeManager.VOID.reference();
     }
 
-    public void applyStaticMethod(List<? extends Pair<? extends ClassReference, String>> params, ClassReference funcRetType) {
+    public void applyStaticMethod(List<? extends Pair<? extends ClassReference, String>> params, ClassReference funcRetType, @Nullable Holder.Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
+        if (generics != null) generics.pushToStack(this.generics);
+        else this.generics.push(Map.of());
+
         for (Pair<? extends ClassReference, String> param : params) {
-            varAnalyser.add(param.right(), param.left(), true, false);
+            varAnalyser.add(param.right(), param.left(), true, true);
         }
     }
 }

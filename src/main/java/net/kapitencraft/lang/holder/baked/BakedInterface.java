@@ -2,6 +2,7 @@ package net.kapitencraft.lang.holder.baked;
 
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
@@ -19,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public record BakedInterface(Compiler.ErrorLogger logger, ClassReference target, Pair<Token, CompileCallable>[] methods, Pair<Token, CompileCallable>[] staticMethods, Map<String, CompileField> staticFields, ClassReference[] interfaces, Token name, String pck, Compiler.ClassBuilder[] enclosed, CompileAnnotationClassInstance[] annotations) implements Compiler.ClassBuilder {
+public record BakedInterface(Compiler.ErrorLogger logger, Holder.Generics generics, ClassReference target, Pair<Token, CompileCallable>[] methods, Pair<Token, CompileCallable>[] staticMethods, Map<String, CompileField> staticFields, ClassReference[] interfaces, Token name, String pck, Compiler.ClassBuilder[] enclosed, CompileAnnotationClassInstance[] annotations) implements Compiler.ClassBuilder {
 
     @Override
     public CacheableClass build() {

@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.clazz.generated;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;

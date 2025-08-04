@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.clazz.skeleton;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
@@ -29,6 +30,7 @@ public class SkeletonClass implements ScriptedClass {
     private final Map<String, SkeletonField> fields;
     private final Map<String, SkeletonField> staticFields;
 
+    private final Holder.Generics generics;
     private final Map<String, ClassReference> enclosed;
 
     private final GeneratedMethodMap methods;
@@ -38,7 +40,8 @@ public class SkeletonClass implements ScriptedClass {
     private final short modifiers;
     private final ClassReference[] interfaces;
 
-    public SkeletonClass(String name, String pck, ClassReference superclass,
+    public SkeletonClass(Holder.Generics generics,
+                         String name, String pck, ClassReference superclass,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, ClassReference> enclosed,
                          Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor,
@@ -48,6 +51,7 @@ public class SkeletonClass implements ScriptedClass {
         this.superclass = superclass;
         this.staticFields = staticFields;
         this.fields = fields;
+        this.generics = generics;
         this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
         this.staticMethods = staticMethods;
@@ -61,6 +65,7 @@ public class SkeletonClass implements ScriptedClass {
                          Map<String, ClassReference> enclosed,
                          Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer constructor,
                          short modifiers, ClassReference[] interfaces) {
+        this.generics = null;
         this.name = name;
         this.pck = pck;
         this.superclass = superclass;
@@ -136,6 +141,11 @@ public class SkeletonClass implements ScriptedClass {
     @Override
     public void setInit() {
 
+    }
+
+    @Override
+    public @Nullable Holder.Generics getGenerics() {
+        return generics;
     }
 
     @Override

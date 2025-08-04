@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 public class GenerateAst {
     public static final String DIRECTORY = "src/main/java/net/kapitencraft/lang/holder/ast";
     private static final String SOURCE = "src/generate_ast.json";
+    private static final String COMPILE_MARKER = "%", RUNTIME_MARKER = "$";
 
     public static void main(String[] args) throws IOException {
         JsonObject object = GsonHelper.GSON.fromJson(new FileReader(SOURCE), JsonObject.class);
@@ -74,25 +75,25 @@ public class GenerateAst {
             writer.println(";");
         }
         writer.println();
-        writer.println("public abstract class " + extendedName + " {");
+        writer.println("public interface " + extendedName + " {");
         writer.println();
 
         defineVisitor(writer, baseName, data.keySet());
+
+        writer.println();
+        writer.println("    <R> R accept(Visitor<R> visitor);");
 
         // The AST classes.
         for (String typeId : data.keySet()) {
             defineType(writer, baseName, extendedName, typeId, data.get(typeId), type);
         }
 
-        writer.println();
-        writer.println("  public abstract <R> R accept(Visitor<R> visitor);");
-
         writer.println("}");
         writer.close();
     }
 
     private static void defineVisitor(PrintWriter writer, String baseName, Set<String> types) {
-        writer.println("    public interface Visitor<R> {");
+        writer.println("    interface Visitor<R> {");
 
         for (String type : types) {
             writer.println("        R visit" + type + baseName + "(" +
@@ -104,34 +105,14 @@ public class GenerateAst {
 
     private static void defineType(PrintWriter writer, String baseName, String extendedName, String typeId, AstDef types, EnvironmentType type) {
         writer.println();
-        writer.println("    public static class " + typeId + " extends " +
-                extendedName + " {");
-
         FieldDef[] fields = types.get(type);
+        writer.println("    record " + typeId + "(");
 
-        // Fields.
-        for (FieldDef field : fields) {
-            writer.println("        public final " + field.type.get(type) + " " + field.name + ";");
-        }
-        writer.println();
+        writer.println(Arrays.stream(fields)
+                .map(f -> "        " + f.type.get(type) + " " + f.name)
+                .collect(Collectors.joining(", \n")));
 
-
-        // Constructor.
-        writer.print("        public " + typeId + "(");
-        writer.print(
-                Arrays.stream(fields)
-                        .map(f -> f.type.get(type) + " " + f.name)
-                        .collect(Collectors.joining(", "))
-        );
-        writer.println(") {");
-
-        // Store params in fields.
-        for (FieldDef field : fields) {
-            writer.println("            this." + field.name + " = " + field.name + ";");
-        }
-
-        writer.println("        }");
-
+        writer.println("    ) implements " + extendedName + " {");
 
         // Visitor pattern.
         writer.println();
@@ -231,10 +212,10 @@ public class GenerateAst {
             List<FieldDef> compile = new ArrayList<>(), runtime = new ArrayList<>();
             for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
                 FieldDef def = FieldDef.fromJson(entry.getKey(), entry.getValue());
-                if (!entry.getKey().startsWith("$")) {
+                if (!entry.getKey().startsWith(COMPILE_MARKER)) {
                     runtime.add(def.trim());
                 }
-                if (!entry.getKey().startsWith("%")) {
+                if (!entry.getKey().startsWith(RUNTIME_MARKER)) {
                     compile.add(def.trim());
                 }
             }

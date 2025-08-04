@@ -1,5 +1,7 @@
 package net.kapitencraft.lang.holder.class_ref;
 
+import net.kapitencraft.lang.compiler.Holder;
+import net.kapitencraft.lang.compiler.parser.AbstractParser;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import org.jetbrains.annotations.Nullable;
@@ -62,5 +64,9 @@ public class ClassReference implements Supplier<ScriptedClass> {
 
     public boolean exists() {
         return target != null;
+    }
+
+    public Holder.Generics getGenerics() {
+        return get().getGenerics();
     }
 }

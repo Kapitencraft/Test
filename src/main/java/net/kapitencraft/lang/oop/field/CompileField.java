@@ -39,7 +39,7 @@ public class CompileField implements ScriptedField {
     public JsonElement cache(CacheBuilder cacheBuilder) {
         JsonObject object = new JsonObject();
         object.addProperty("type", type.absoluteName());
-        if (hasInit()) object.add("init", cacheBuilder.cache(init));
+        //if (hasInit()) object.add("init", cacheBuilder.cache(init)); TODO
         if (isFinal) object.addProperty("isFinal", true);
         object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
         return object;

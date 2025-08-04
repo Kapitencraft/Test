@@ -86,10 +86,9 @@ public class CacheLoader {
         RuntimeExpr index = readSubExpr(object, "index");
         RuntimeExpr value = readSubExpr(object, "value");
         TokenType assign = TokenType.readFromSubObject(object, "assign");
-        int line = GsonHelper.getAsInt(object, "line");
         ClassReference executor = ClassLoader.loadClassReference(object, "executor");
         Operand operand = Operand.fromJson(object, "operand");
-        return new RuntimeExpr.ArraySet(obj, index, value, assign, line, executor, operand);
+        return new RuntimeExpr.ArraySet(obj, index, value, assign, executor, operand);
     }
 
     private static RuntimeExpr readSpecialArraySet(JsonObject object) {
@@ -116,10 +115,9 @@ public class CacheLoader {
         String name = GsonHelper.getAsString(object, "name");
         RuntimeExpr value = readSubExpr(object, "value");
         TokenType assignType = TokenType.readFromSubObject(object, "assignType");
-        int line = GsonHelper.getAsInt(object, "line");
         ClassReference executor = ClassLoader.loadClassReference(object, "executor");
         Operand operand = Operand.fromJson(object, "operand");
-        return new RuntimeExpr.StaticSet(target, name, value, assignType, line, executor, operand);
+        return new RuntimeExpr.StaticSet(target, name, value, assignType, executor, operand);
 
     }
 
@@ -135,17 +133,16 @@ public class CacheLoader {
         RuntimeToken name = RuntimeToken.readFromSubObject(object, "name");
         int ordinal = GsonHelper.getAsInt(object, "ordinal");
         RuntimeExpr[] args = readArgs(object, "args");
-        return new RuntimeExpr.StaticCall(target, name, ordinal, args);
+        return null; //new RuntimeExpr.StaticCall(target, name, ordinal, args);
     }
 
     private static RuntimeExpr readBinary(JsonObject object) {
         RuntimeExpr left = readSubExpr(object, "left");
         TokenType operator = TokenType.readFromSubObject(object, "operator");
-        int line = GsonHelper.getAsInt(object, "line");
         ClassReference executor = ClassLoader.loadClassReference(object, "executor");
         Operand operand = Operand.fromJson(object, "operand");
         RuntimeExpr right = readSubExpr(object, "right");
-        return new RuntimeExpr.Binary(left, right, operator, line, executor, operand);
+        return new RuntimeExpr.Binary(left, right, operator, executor, operand);
     }
 
     private static RuntimeExpr readWhen(JsonObject object) {
@@ -160,7 +157,7 @@ public class CacheLoader {
         RuntimeToken name = RuntimeToken.readFromSubObject(object, "name");
         int ordinal = GsonHelper.getAsInt(object, "ordinal");
         RuntimeExpr[] args = readArgs(object, "args");
-        return new RuntimeExpr.InstCall(callee, name, ordinal, args);
+        return null; //new RuntimeExpr.InstCall(callee, name, ordinal, args);
     }
 
     private static RuntimeExpr readGet(JsonObject object) {
@@ -174,10 +171,9 @@ public class CacheLoader {
         String name = GsonHelper.getAsString(object, "name");
         RuntimeExpr value = readSubExpr(object, "value");
         TokenType assignType = TokenType.readFromSubObject(object, "assignType");
-        int line = GsonHelper.getAsInt(object, "line");
         ClassReference executor = ClassLoader.loadClassReference(object, "executor");
         Operand operand = Operand.fromJson(object, "operand");
-        return new RuntimeExpr.Set(callee, name, value, assignType, line, executor, operand);
+        return new RuntimeExpr.Set(callee, name, value, assignType, executor, operand);
     }
 
     private static RuntimeExpr readSpecialSet(JsonObject object) {
@@ -189,19 +185,20 @@ public class CacheLoader {
 
     @SuppressWarnings("deprecation")
     private static RuntimeExpr readSwitch(JsonObject object) {
-        RuntimeExpr provider = readSubExpr(object, "provider");
-        RuntimeExpr defaulted = readSubExpr(object, "defaulted");
-        return new RuntimeExpr.Switch(provider, Util.readMap(
-                GsonHelper.getAsJsonArray(object, "elements"),
-                (object1, name) -> {
-                    JsonPrimitive primitive = object1.getAsJsonPrimitive(name);
-                    if (primitive.isBoolean()) return primitive.getAsBoolean();
-                    else if (primitive.isNumber()) return primitive.getAsNumber();
-                    else if (primitive.isString()) return primitive.getAsString();
-                    return primitive.getAsCharacter();
-                },
-                CacheLoader::readSubExpr
-        ), defaulted);
+        return null;
+        //RuntimeExpr provider = readSubExpr(object, "provider");
+        //RuntimeExpr defaulted = readSubExpr(object, "defaulted");
+        //return new RuntimeExpr.Switch(provider, Util.readMap(
+        //        GsonHelper.getAsJsonArray(object, "elements"),
+        //        (object1, name) -> {
+        //            JsonPrimitive primitive = object1.getAsJsonPrimitive(name);
+        //            if (primitive.isBoolean()) return primitive.getAsBoolean();
+        //            else if (primitive.isNumber()) return primitive.getAsNumber();
+        //            else if (primitive.isString()) return primitive.getAsString();
+        //            return primitive.getAsCharacter();
+        //        },
+        //        CacheLoader::readSubExpr
+        //), defaulted);
     }
 
     private static RuntimeExpr readCastCheck(JsonObject object) {
@@ -233,15 +230,14 @@ public class CacheLoader {
     }
 
     private static RuntimeExpr readVarRef(JsonObject object) {
-        return new RuntimeExpr.VarRef(RuntimeToken.readFromSubObject(object, "name"));
+        return new RuntimeExpr.VarRef(GsonHelper.getAsByte(object, "ordinal"));
     }
 
     private static RuntimeExpr readConstructor(JsonObject object) {
         ClassReference target = ClassLoader.loadClassReference(object, "target");
         RuntimeExpr[] args = readArgs(object, "args");
         int ordinal = GsonHelper.getAsInt(object, "ordinal");
-        int line = GsonHelper.getAsInt(object, "line");
-        return new RuntimeExpr.Constructor(line, target, args, ordinal);
+        return null; //new RuntimeExpr.Constructor(target, args, ordinal);
     }
 
     private static RuntimeExpr readAssign(JsonObject object) {
@@ -251,7 +247,7 @@ public class CacheLoader {
         int line = GsonHelper.getAsInt(object, "line");
         ClassReference executor = ClassLoader.loadClassReference(object, "executor");
         Operand operand = Operand.valueOf(GsonHelper.getAsString(object, "operand"));
-        return new RuntimeExpr.Assign(name, value, type, line, executor, operand);
+        return null; //new RuntimeExpr.Assign(name, value, type, line, executor, operand);
     }
 
     private static RuntimeExpr readSpecialAssign(JsonObject object) {
@@ -321,7 +317,7 @@ public class CacheLoader {
     private static RuntimeStmt readThrow(JsonObject object) {
         int line = GsonHelper.getAsInt(object, "line");
         RuntimeExpr expr = readSubExpr(object, "value");
-        return new RuntimeStmt.Throw(line, expr);
+        return null;// new RuntimeStmt.Throw(line, expr);
     }
 
     private static RuntimeStmt.Block readBlock(JsonObject object) {
@@ -342,12 +338,12 @@ public class CacheLoader {
             RuntimeStmt pairBody = readStmt(GsonHelper.getAsJsonObject(object1, "body"));
             return Pair.of(pairCondition, pairBody);
         }).toList();
-        return new RuntimeStmt.If(condition, then, elseBranch, elifs.toArray(Pair[]::new));
+        return null;// new RuntimeStmt.If(condition, then, elseBranch, elifs.toArray(Pair[]::new));
     }
 
     private static RuntimeStmt readReturn(JsonObject object) {
         RuntimeExpr value = readOptionalSubExpr(object, "value");
-        return new RuntimeStmt.Return(value);
+        return null;// new RuntimeStmt.Return(value);
     }
 
     private static RuntimeStmt readVarDecl(JsonObject object) {
@@ -361,7 +357,7 @@ public class CacheLoader {
     private static RuntimeStmt readWhile(JsonObject object) {
         RuntimeExpr condition = readSubExpr(object, "condition");
         RuntimeStmt body = readStmt(GsonHelper.getAsJsonObject(object, "body"));
-        return new RuntimeStmt.While(condition, body);
+        return null;// new RuntimeStmt.While(condition, body);
     }
 
     private static RuntimeStmt readFor(JsonObject object) {
@@ -369,7 +365,7 @@ public class CacheLoader {
         RuntimeExpr condition = readSubExpr(object, "condition");
         RuntimeExpr increment = readSubExpr(object, "increment");
         RuntimeStmt body = readStmt(GsonHelper.getAsJsonObject(object, "body"));
-        return new RuntimeStmt.For(init, condition, increment, body);
+        return null;// new RuntimeStmt.For(init, condition, increment, body);
     }
 
     private static RuntimeStmt readLoopInterrupt(JsonObject object) {

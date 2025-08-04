@@ -10,7 +10,6 @@
             "runtime": "TokenType"
           },
           "ordinal": "byte",
-          "%line": "int",
           "executor": "ClassReference",
           "operand": "Operand"
         },
@@ -28,7 +27,6 @@
             "compile": "Token",
             "runtime": "TokenType"
           },
-          "%line": "int",
           "executor": "ClassReference",
           "operand": "Operand"
         },
@@ -42,14 +40,16 @@
           "name": "Token",
           "methodOrdinal": "int",
           "args": "Expr[]",
-          "$retType": "ClassReference"
+          "%retType": "ClassReference",
+          "id": "String"
         },
         "StaticCall": {
           "target": "ClassReference",
           "name": "Token",
           "methodOrdinal": "int",
           "args": "Expr[]",
-          "$retType": "ClassReference"
+          "%retType": "ClassReference",
+          "id": "String"
         },
         "Get": {
           "object": "Expr",
@@ -80,7 +80,6 @@
             "compile": "Token",
             "runtime": "TokenType"
           },
-          "%line": "int",
           "executor": "ClassReference",
           "operand": "Operand"
         },
@@ -95,7 +94,6 @@
             "compile": "Token",
             "runtime": "TokenType"
           },
-          "%line": "int",
           "executor": "ClassReference",
           "operand": "Operand"
         },
@@ -107,7 +105,6 @@
             "compile": "Token",
             "runtime": "TokenType"
           },
-          "%line": "int",
           "executor": "ClassReference",
           "operand": "Operand"
         },
@@ -151,7 +148,7 @@
           "provider": "Expr",
           "params": "Map<Object,Expr>",
           "defaulted": "Expr",
-          "$keyword": "Token"
+          "%keyword": "Token"
         },
         "CastCheck": {
           "object": "Expr",
@@ -186,12 +183,12 @@
           "right": "Expr"
         },
         "VarRef": {
-          "$name": "Token",
+          "%name": "Token",
           "ordinal": "byte"
         },
         "Constructor": {
-          "$keyword": "Token",
-          "%line": "int",
+          "%keyword": "Token",
+          "$line": "int",
           "target": "ClassReference",
           "params": "Expr[]",
           "ordinal": "int"
@@ -216,15 +213,15 @@
           "thenBranch": "Stmt",
           "elseBranch": "Stmt",
           "elifs": "Pair<Expr,Stmt>[]",
-          "$keyword": "Token"
+          "%keyword": "Token"
         },
         "Return": {
-          "$keyword": "Token",
+          "%keyword": "Token",
           "value": "Expr"
         },
         "Throw": {
-          "$keyword": "Token",
-          "%line": "int",
+          "%keyword": "Token",
+          "$line": "int",
           "value": "Expr"
         },
         "VarDecl": {
@@ -239,14 +236,14 @@
         "While": {
           "condition": "Expr",
           "body": "Stmt",
-          "$keyword": "Token"
+          "%keyword": "Token"
         },
         "For": {
           "init": "Stmt",
           "condition": "Expr",
           "increment": "Expr",
           "body": "Stmt",
-          "$keyword": "Token"
+          "%keyword": "Token"
         },
         "ForEach": {
           "type": "ClassReference",

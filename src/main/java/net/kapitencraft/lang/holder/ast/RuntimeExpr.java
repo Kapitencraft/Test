@@ -7,9 +7,9 @@ import net.kapitencraft.lang.run.algebra.Operand;
 import java.util.Map;
 import net.kapitencraft.lang.holder.LiteralHolder;
 
-public abstract class RuntimeExpr {
+public interface RuntimeExpr {
 
-    public interface Visitor<R> {
+    interface Visitor<R> {
         R visitVarRefExpr(VarRef expr);
         R visitSetExpr(Set expr);
         R visitArraySetExpr(ArraySet expr);
@@ -36,12 +36,11 @@ public abstract class RuntimeExpr {
         R visitSpecialSetExpr(SpecialSet expr);
     }
 
-    public static class VarRef extends RuntimeExpr {
-        public final RuntimeToken name;
+    <R> R accept(Visitor<R> visitor);
 
-        public VarRef(RuntimeToken name) {
-            this.name = name;
-        }
+    record VarRef(
+        byte ordinal
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -49,24 +48,14 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class Set extends RuntimeExpr {
-        public final RuntimeExpr object;
-        public final String name;
-        public final RuntimeExpr value;
-        public final TokenType assignType;
-        public final int line;
-        public final ClassReference executor;
-        public final Operand operand;
-
-        public Set(RuntimeExpr object, String name, RuntimeExpr value, TokenType assignType, int line, ClassReference executor, Operand operand) {
-            this.object = object;
-            this.name = name;
-            this.value = value;
-            this.assignType = assignType;
-            this.line = line;
-            this.executor = executor;
-            this.operand = operand;
-        }
+    record Set(
+        RuntimeExpr object, 
+        String name, 
+        RuntimeExpr value, 
+        TokenType assignType, 
+        ClassReference executor, 
+        Operand operand
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -74,24 +63,14 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class ArraySet extends RuntimeExpr {
-        public final RuntimeExpr object;
-        public final RuntimeExpr index;
-        public final RuntimeExpr value;
-        public final TokenType assignType;
-        public final int line;
-        public final ClassReference executor;
-        public final Operand operand;
-
-        public ArraySet(RuntimeExpr object, RuntimeExpr index, RuntimeExpr value, TokenType assignType, int line, ClassReference executor, Operand operand) {
-            this.object = object;
-            this.index = index;
-            this.value = value;
-            this.assignType = assignType;
-            this.line = line;
-            this.executor = executor;
-            this.operand = operand;
-        }
+    record ArraySet(
+        RuntimeExpr object, 
+        RuntimeExpr index, 
+        RuntimeExpr value, 
+        TokenType assignType, 
+        ClassReference executor, 
+        Operand operand
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -99,16 +78,11 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class ArraySpecial extends RuntimeExpr {
-        public final RuntimeExpr object;
-        public final RuntimeExpr index;
-        public final TokenType assignType;
-
-        public ArraySpecial(RuntimeExpr object, RuntimeExpr index, TokenType assignType) {
-            this.object = object;
-            this.index = index;
-            this.assignType = assignType;
-        }
+    record ArraySpecial(
+        RuntimeExpr object, 
+        RuntimeExpr index, 
+        TokenType assignType
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -116,14 +90,10 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class SpecialAssign extends RuntimeExpr {
-        public final RuntimeToken name;
-        public final TokenType assignType;
-
-        public SpecialAssign(RuntimeToken name, TokenType assignType) {
-            this.name = name;
-            this.assignType = assignType;
-        }
+    record SpecialAssign(
+        RuntimeToken name, 
+        TokenType assignType
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -131,18 +101,12 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class Constructor extends RuntimeExpr {
-        public final int line;
-        public final ClassReference target;
-        public final RuntimeExpr[] params;
-        public final int ordinal;
-
-        public Constructor(int line, ClassReference target, RuntimeExpr[] params, int ordinal) {
-            this.line = line;
-            this.target = target;
-            this.params = params;
-            this.ordinal = ordinal;
-        }
+    record Constructor(
+        int line, 
+        ClassReference target, 
+        RuntimeExpr[] params, 
+        int ordinal
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -150,18 +114,13 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class InstCall extends RuntimeExpr {
-        public final RuntimeExpr callee;
-        public final RuntimeToken name;
-        public final int methodOrdinal;
-        public final RuntimeExpr[] args;
-
-        public InstCall(RuntimeExpr callee, RuntimeToken name, int methodOrdinal, RuntimeExpr[] args) {
-            this.callee = callee;
-            this.name = name;
-            this.methodOrdinal = methodOrdinal;
-            this.args = args;
-        }
+    record InstCall(
+        RuntimeExpr callee, 
+        RuntimeToken name, 
+        int methodOrdinal, 
+        RuntimeExpr[] args, 
+        String id
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -169,24 +128,14 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class StaticSet extends RuntimeExpr {
-        public final ClassReference target;
-        public final String name;
-        public final RuntimeExpr value;
-        public final TokenType assignType;
-        public final int line;
-        public final ClassReference executor;
-        public final Operand operand;
-
-        public StaticSet(ClassReference target, String name, RuntimeExpr value, TokenType assignType, int line, ClassReference executor, Operand operand) {
-            this.target = target;
-            this.name = name;
-            this.value = value;
-            this.assignType = assignType;
-            this.line = line;
-            this.executor = executor;
-            this.operand = operand;
-        }
+    record StaticSet(
+        ClassReference target, 
+        String name, 
+        RuntimeExpr value, 
+        TokenType assignType, 
+        ClassReference executor, 
+        Operand operand
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -194,16 +143,11 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class Logical extends RuntimeExpr {
-        public final RuntimeExpr left;
-        public final TokenType operator;
-        public final RuntimeExpr right;
-
-        public Logical(RuntimeExpr left, TokenType operator, RuntimeExpr right) {
-            this.left = left;
-            this.operator = operator;
-            this.right = right;
-        }
+    record Logical(
+        RuntimeExpr left, 
+        TokenType operator, 
+        RuntimeExpr right
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -211,12 +155,9 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class Grouping extends RuntimeExpr {
-        public final RuntimeExpr expression;
-
-        public Grouping(RuntimeExpr expression) {
-            this.expression = expression;
-        }
+    record Grouping(
+        RuntimeExpr expression
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -224,14 +165,10 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class Unary extends RuntimeExpr {
-        public final TokenType operator;
-        public final RuntimeExpr right;
-
-        public Unary(TokenType operator, RuntimeExpr right) {
-            this.operator = operator;
-            this.right = right;
-        }
+    record Unary(
+        TokenType operator, 
+        RuntimeExpr right
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -239,16 +176,11 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class When extends RuntimeExpr {
-        public final RuntimeExpr condition;
-        public final RuntimeExpr ifTrue;
-        public final RuntimeExpr ifFalse;
-
-        public When(RuntimeExpr condition, RuntimeExpr ifTrue, RuntimeExpr ifFalse) {
-            this.condition = condition;
-            this.ifTrue = ifTrue;
-            this.ifFalse = ifFalse;
-        }
+    record When(
+        RuntimeExpr condition, 
+        RuntimeExpr ifTrue, 
+        RuntimeExpr ifFalse
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -256,16 +188,11 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class CastCheck extends RuntimeExpr {
-        public final RuntimeExpr object;
-        public final ClassReference targetType;
-        public final String patternVarName;
-
-        public CastCheck(RuntimeExpr object, ClassReference targetType, String patternVarName) {
-            this.object = object;
-            this.targetType = targetType;
-            this.patternVarName = patternVarName;
-        }
+    record CastCheck(
+        RuntimeExpr object, 
+        ClassReference targetType, 
+        String patternVarName
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -273,14 +200,10 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class StaticGet extends RuntimeExpr {
-        public final ClassReference target;
-        public final String name;
-
-        public StaticGet(ClassReference target, String name) {
-            this.target = target;
-            this.name = name;
-        }
+    record StaticGet(
+        ClassReference target, 
+        String name
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -288,16 +211,11 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class Switch extends RuntimeExpr {
-        public final RuntimeExpr provider;
-        public final Map<Object,RuntimeExpr> params;
-        public final RuntimeExpr defaulted;
-
-        public Switch(RuntimeExpr provider, Map<Object,RuntimeExpr> params, RuntimeExpr defaulted) {
-            this.provider = provider;
-            this.params = params;
-            this.defaulted = defaulted;
-        }
+    record Switch(
+        RuntimeExpr provider, 
+        Map<Object,RuntimeExpr> params, 
+        RuntimeExpr defaulted
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -305,18 +223,12 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class Slice extends RuntimeExpr {
-        public final RuntimeExpr object;
-        public final RuntimeExpr start;
-        public final RuntimeExpr end;
-        public final RuntimeExpr interval;
-
-        public Slice(RuntimeExpr object, RuntimeExpr start, RuntimeExpr end, RuntimeExpr interval) {
-            this.object = object;
-            this.start = start;
-            this.end = end;
-            this.interval = interval;
-        }
+    record Slice(
+        RuntimeExpr object, 
+        RuntimeExpr start, 
+        RuntimeExpr end, 
+        RuntimeExpr interval
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -324,14 +236,10 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class Get extends RuntimeExpr {
-        public final RuntimeExpr object;
-        public final String name;
-
-        public Get(RuntimeExpr object, String name) {
-            this.object = object;
-            this.name = name;
-        }
+    record Get(
+        RuntimeExpr object, 
+        String name
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -339,14 +247,10 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class ArrayGet extends RuntimeExpr {
-        public final RuntimeExpr object;
-        public final RuntimeExpr index;
-
-        public ArrayGet(RuntimeExpr object, RuntimeExpr index) {
-            this.object = object;
-            this.index = index;
-        }
+    record ArrayGet(
+        RuntimeExpr object, 
+        RuntimeExpr index
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -354,12 +258,9 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class Literal extends RuntimeExpr {
-        public final LiteralHolder literal;
-
-        public Literal(LiteralHolder literal) {
-            this.literal = literal;
-        }
+    record Literal(
+        LiteralHolder literal
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -367,22 +268,14 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class Assign extends RuntimeExpr {
-        public final RuntimeToken name;
-        public final RuntimeExpr value;
-        public final TokenType type;
-        public final int line;
-        public final ClassReference executor;
-        public final Operand operand;
-
-        public Assign(RuntimeToken name, RuntimeExpr value, TokenType type, int line, ClassReference executor, Operand operand) {
-            this.name = name;
-            this.value = value;
-            this.type = type;
-            this.line = line;
-            this.executor = executor;
-            this.operand = operand;
-        }
+    record Assign(
+        RuntimeToken name, 
+        RuntimeExpr value, 
+        TokenType type, 
+        byte ordinal, 
+        ClassReference executor, 
+        Operand operand
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -390,18 +283,13 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class StaticCall extends RuntimeExpr {
-        public final ClassReference target;
-        public final RuntimeToken name;
-        public final int methodOrdinal;
-        public final RuntimeExpr[] args;
-
-        public StaticCall(ClassReference target, RuntimeToken name, int methodOrdinal, RuntimeExpr[] args) {
-            this.target = target;
-            this.name = name;
-            this.methodOrdinal = methodOrdinal;
-            this.args = args;
-        }
+    record StaticCall(
+        ClassReference target, 
+        RuntimeToken name, 
+        int methodOrdinal, 
+        RuntimeExpr[] args, 
+        String id
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -409,22 +297,13 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class Binary extends RuntimeExpr {
-        public final RuntimeExpr left;
-        public final RuntimeExpr right;
-        public final TokenType operator;
-        public final int line;
-        public final ClassReference executor;
-        public final Operand operand;
-
-        public Binary(RuntimeExpr left, RuntimeExpr right, TokenType operator, int line, ClassReference executor, Operand operand) {
-            this.left = left;
-            this.right = right;
-            this.operator = operator;
-            this.line = line;
-            this.executor = executor;
-            this.operand = operand;
-        }
+    record Binary(
+        RuntimeExpr left, 
+        RuntimeExpr right, 
+        TokenType operator, 
+        ClassReference executor, 
+        Operand operand
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -432,16 +311,11 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class StaticSpecial extends RuntimeExpr {
-        public final ClassReference target;
-        public final String name;
-        public final TokenType assignType;
-
-        public StaticSpecial(ClassReference target, String name, TokenType assignType) {
-            this.target = target;
-            this.name = name;
-            this.assignType = assignType;
-        }
+    record StaticSpecial(
+        ClassReference target, 
+        String name, 
+        TokenType assignType
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -449,22 +323,15 @@ public abstract class RuntimeExpr {
         }
     }
 
-    public static class SpecialSet extends RuntimeExpr {
-        public final RuntimeExpr callee;
-        public final String name;
-        public final TokenType assignType;
-
-        public SpecialSet(RuntimeExpr callee, String name, TokenType assignType) {
-            this.callee = callee;
-            this.name = name;
-            this.assignType = assignType;
-        }
+    record SpecialSet(
+        RuntimeExpr callee, 
+        String name, 
+        TokenType assignType
+    ) implements RuntimeExpr {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSpecialSetExpr(this);
         }
     }
-
-  public abstract <R> R accept(Visitor<R> visitor);
 }

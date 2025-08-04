@@ -5,9 +5,9 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.tool.Pair;
 
-public abstract class RuntimeStmt {
+public interface RuntimeStmt {
 
-    public interface Visitor<R> {
+    interface Visitor<R> {
         R visitReturnStmt(Return stmt);
         R visitExpressionStmt(Expression stmt);
         R visitVarDeclStmt(VarDecl stmt);
@@ -21,12 +21,11 @@ public abstract class RuntimeStmt {
         R visitLoopInterruptionStmt(LoopInterruption stmt);
     }
 
-    public static class Return extends RuntimeStmt {
-        public final RuntimeExpr value;
+    <R> R accept(Visitor<R> visitor);
 
-        public Return(RuntimeExpr value) {
-            this.value = value;
-        }
+    record Return(
+        RuntimeExpr value
+    ) implements RuntimeStmt {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -34,12 +33,9 @@ public abstract class RuntimeStmt {
         }
     }
 
-    public static class Expression extends RuntimeStmt {
-        public final RuntimeExpr expression;
-
-        public Expression(RuntimeExpr expression) {
-            this.expression = expression;
-        }
+    record Expression(
+        RuntimeExpr expression
+    ) implements RuntimeStmt {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -47,18 +43,12 @@ public abstract class RuntimeStmt {
         }
     }
 
-    public static class VarDecl extends RuntimeStmt {
-        public final String name;
-        public final ClassReference type;
-        public final RuntimeExpr initializer;
-        public final boolean isFinal;
-
-        public VarDecl(String name, ClassReference type, RuntimeExpr initializer, boolean isFinal) {
-            this.name = name;
-            this.type = type;
-            this.initializer = initializer;
-            this.isFinal = isFinal;
-        }
+    record VarDecl(
+        String name, 
+        ClassReference type, 
+        RuntimeExpr initializer, 
+        boolean isFinal
+    ) implements RuntimeStmt {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -66,14 +56,10 @@ public abstract class RuntimeStmt {
         }
     }
 
-    public static class Throw extends RuntimeStmt {
-        public final int line;
-        public final RuntimeExpr value;
-
-        public Throw(int line, RuntimeExpr value) {
-            this.line = line;
-            this.value = value;
-        }
+    record Throw(
+        int line, 
+        RuntimeExpr value
+    ) implements RuntimeStmt {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -81,18 +67,12 @@ public abstract class RuntimeStmt {
         }
     }
 
-    public static class For extends RuntimeStmt {
-        public final RuntimeStmt init;
-        public final RuntimeExpr condition;
-        public final RuntimeExpr increment;
-        public final RuntimeStmt body;
-
-        public For(RuntimeStmt init, RuntimeExpr condition, RuntimeExpr increment, RuntimeStmt body) {
-            this.init = init;
-            this.condition = condition;
-            this.increment = increment;
-            this.body = body;
-        }
+    record For(
+        RuntimeStmt init, 
+        RuntimeExpr condition, 
+        RuntimeExpr increment, 
+        RuntimeStmt body
+    ) implements RuntimeStmt {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -100,12 +80,9 @@ public abstract class RuntimeStmt {
         }
     }
 
-    public static class Block extends RuntimeStmt {
-        public final RuntimeStmt[] statements;
-
-        public Block(RuntimeStmt[] statements) {
-            this.statements = statements;
-        }
+    record Block(
+        RuntimeStmt[] statements
+    ) implements RuntimeStmt {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -113,16 +90,11 @@ public abstract class RuntimeStmt {
         }
     }
 
-    public static class Try extends RuntimeStmt {
-        public final Block body;
-        public final Pair<Pair<ClassReference[],String>,Block>[] catches;
-        public final Block finale;
-
-        public Try(Block body, Pair<Pair<ClassReference[],String>,Block>[] catches, Block finale) {
-            this.body = body;
-            this.catches = catches;
-            this.finale = finale;
-        }
+    record Try(
+        Block body, 
+        Pair<Pair<ClassReference[],String>,Block>[] catches, 
+        Block finale
+    ) implements RuntimeStmt {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -130,14 +102,10 @@ public abstract class RuntimeStmt {
         }
     }
 
-    public static class While extends RuntimeStmt {
-        public final RuntimeExpr condition;
-        public final RuntimeStmt body;
-
-        public While(RuntimeExpr condition, RuntimeStmt body) {
-            this.condition = condition;
-            this.body = body;
-        }
+    record While(
+        RuntimeExpr condition, 
+        RuntimeStmt body
+    ) implements RuntimeStmt {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -145,18 +113,12 @@ public abstract class RuntimeStmt {
         }
     }
 
-    public static class If extends RuntimeStmt {
-        public final RuntimeExpr condition;
-        public final RuntimeStmt thenBranch;
-        public final RuntimeStmt elseBranch;
-        public final Pair<RuntimeExpr,RuntimeStmt>[] elifs;
-
-        public If(RuntimeExpr condition, RuntimeStmt thenBranch, RuntimeStmt elseBranch, Pair<RuntimeExpr,RuntimeStmt>[] elifs) {
-            this.condition = condition;
-            this.thenBranch = thenBranch;
-            this.elseBranch = elseBranch;
-            this.elifs = elifs;
-        }
+    record If(
+        RuntimeExpr condition, 
+        RuntimeStmt thenBranch, 
+        RuntimeStmt elseBranch, 
+        Pair<RuntimeExpr,RuntimeStmt>[] elifs
+    ) implements RuntimeStmt {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -164,18 +126,12 @@ public abstract class RuntimeStmt {
         }
     }
 
-    public static class ForEach extends RuntimeStmt {
-        public final ClassReference type;
-        public final String name;
-        public final RuntimeExpr initializer;
-        public final RuntimeStmt body;
-
-        public ForEach(ClassReference type, String name, RuntimeExpr initializer, RuntimeStmt body) {
-            this.type = type;
-            this.name = name;
-            this.initializer = initializer;
-            this.body = body;
-        }
+    record ForEach(
+        ClassReference type, 
+        String name, 
+        RuntimeExpr initializer, 
+        RuntimeStmt body
+    ) implements RuntimeStmt {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -183,18 +139,13 @@ public abstract class RuntimeStmt {
         }
     }
 
-    public static class LoopInterruption extends RuntimeStmt {
-        public final TokenType type;
-
-        public LoopInterruption(TokenType type) {
-            this.type = type;
-        }
+    record LoopInterruption(
+        TokenType type
+    ) implements RuntimeStmt {
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLoopInterruptionStmt(this);
         }
     }
-
-  public abstract <R> R accept(Visitor<R> visitor);
 }

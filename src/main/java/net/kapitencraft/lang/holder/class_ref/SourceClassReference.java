@@ -6,42 +6,44 @@ import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
-public class SourceClassReference extends ClassReference implements Holder.Validateable {
+public class SourceClassReference implements Holder.Validateable {
     private final Token nameToken;
     private final ClassReference reference;
+    private final String name;
 
-    protected SourceClassReference(String name, String pck, Token nameToken, ClassReference reference) {
-        super(name, pck);
+    protected SourceClassReference(String name, Token nameToken, ClassReference reference) {
+        this.name = name;
         this.nameToken = nameToken;
         this.reference = reference;
     }
 
-    @Override
     public ScriptedClass get(GenericStack generics) {
         return reference.get(generics);
     }
 
-    @Override
     public void setTarget(ScriptedClass target) {
         reference.setTarget(target);
     }
 
     public static SourceClassReference from(Token name, ClassReference other) {
-        return new SourceClassReference(other.name(), other.pck(), name, other);
+        return new SourceClassReference(other.name(), name, other);
     }
 
-    @Override
     public String absoluteName() {
         return reference.absoluteName();
     }
 
     @Override
     public String toString() {
-        return "SourceClassReference@" + this.name() + (exists() ? ", applied:" + this.reference.get() : "");
+        return this.getClass().getSimpleName() + "@" + this.name + (exists() ? ", applied:" + this.reference.get() : "");
     }
 
     public Token getToken() {
         return nameToken;
+    }
+
+    public ClassReference getReference() {
+        return reference;
     }
 
     public void validate(Compiler.ErrorLogger logger) {
@@ -49,7 +51,6 @@ public class SourceClassReference extends ClassReference implements Holder.Valid
             logger.errorF(nameToken, "unknown class '%s'", reference.absoluteName());
     }
 
-    @Override
     public boolean exists() {
         return reference.exists();
     }

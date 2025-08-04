@@ -22,11 +22,14 @@ public class VarTypeParser implements Holder.Validateable {
     }
 
     public ClassReference getClass(String clazz) {
-        return implemented.get(clazz);
+        SourceClassReference reference = implemented.get(clazz);
+        if (reference == null)
+            return null;
+        return reference.getReference();
     }
 
     public void addClass(SourceClassReference clazz, String nameOverride) {
-        implemented.put(nameOverride != null ? nameOverride : clazz.name(), clazz);
+        implemented.put(nameOverride != null ? nameOverride : clazz.getReference().name(), clazz);
     }
 
     @Override
