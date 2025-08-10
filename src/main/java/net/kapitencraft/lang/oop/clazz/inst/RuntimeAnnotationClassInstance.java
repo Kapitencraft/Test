@@ -2,7 +2,6 @@ package net.kapitencraft.lang.oop.clazz.inst;
 
 import net.kapitencraft.lang.holder.ast.RuntimeExpr;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.run.Interpreter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +34,6 @@ public class RuntimeAnnotationClassInstance implements AbstractAnnotationClassIn
 
     @Override
     public Object getProperty(String name) {
-        return Interpreter.INSTANCE.evaluate(properties.get(name));
+        return null; //TODO parse final
     }
 }

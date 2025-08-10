@@ -20,7 +20,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public record BakedInterface(Compiler.ErrorLogger logger, Holder.Generics generics, ClassReference target, Pair<Token, CompileCallable>[] methods, Pair<Token, CompileCallable>[] staticMethods, Map<String, CompileField> staticFields, ClassReference[] interfaces, Token name, String pck, Compiler.ClassBuilder[] enclosed, CompileAnnotationClassInstance[] annotations) implements Compiler.ClassBuilder {
+public record BakedInterface(Compiler.ErrorLogger logger, Holder.Generics generics, ClassReference target,
+                             Pair<Token, CompileCallable>[] methods,
+                             Map<String, CompileField> staticFields, ClassReference[] interfaces,
+                             Token name, String pck, Compiler.ClassBuilder[] enclosed,
+                             CompileAnnotationClassInstance[] annotations
+) implements Compiler.ClassBuilder {
 
     @Override
     public CacheableClass build() {
@@ -33,17 +38,8 @@ public record BakedInterface(Compiler.ErrorLogger logger, Holder.Generics generi
             builder.addMethod(logger, method.right(), method.left());
         }
 
-        Map<String, DataMethodContainer.Builder> staticMethods = new HashMap<>();
-        for (Pair<Token, CompileCallable> method : this.staticMethods()) {
-            staticMethods.putIfAbsent(method.left().lexeme(), new DataMethodContainer.Builder(this.name()));
-            DataMethodContainer.Builder builder = staticMethods.get(method.left().lexeme());
-            builder.addMethod(logger, method.right(), method.left());
-        }
-
-
         return new CompileClass(
                 DataMethodContainer.bakeBuilders(methods),
-                DataMethodContainer.bakeBuilders(staticMethods),
                 List.of(),
                 Map.of(),
                 staticFields(),

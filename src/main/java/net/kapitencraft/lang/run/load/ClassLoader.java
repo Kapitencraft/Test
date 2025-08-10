@@ -1,37 +1,36 @@
 package net.kapitencraft.lang.run.load;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
+import net.kapitencraft.lang.bytecode.exe.VirtualMachine;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.run.test.TestLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 import org.checkerframework.checker.units.qual.C;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 public class ClassLoader {
+
     public static final File cacheLoc = new File("./run/cache");
 
+    @SuppressWarnings("AssignmentUsedAsCondition")
     public static void main(String[] args) throws IOException {
         loadClasses();
         System.out.println("Loading complete.");
-        Interpreter interpreter = Interpreter.INSTANCE;
         Scanner scanner = new Scanner(System.in);
         String line = "";
         boolean profiling = false;
-        while (!"!exit".equals(line)) {
+        while (!"exit".equals(line)) {
             if (line != null) {
-                if (line.startsWith("!run ")) {
-                    String data = line.substring(5);
+                if (line.startsWith("run ")) {
+                    String data = line.substring(4);
                     String classRef;
                     if (data.contains(" ")) classRef = data.substring(0, data.indexOf(' '));
                     else classRef = data;
@@ -40,10 +39,14 @@ public class ClassLoader {
                     else {
                         if (data.contains(" ")) data = data.substring(data.indexOf(' ') + 1);
                         else data = "";
-                        interpreter.runMainMethod(target.get(), data, profiling, true);
+                        VirtualMachine.runMainMethod(target.get(), data, profiling, true);
                     }
-                } else if (line.startsWith("!profiler ")) {
-                    switch (line.substring(10)) {
+                } else if (line.startsWith("profiler")) {
+                    if (line.length() < 9) {
+                        System.err.println("missing parameter for profiler command. allowed values:");
+                        System.err.println("\tstart\n\tend\n\ttoggle");
+                    }
+                    switch (line.substring(9)) {
                         case "start" -> {
                             profiling = true;
                             System.out.println("started profiler");
@@ -58,7 +61,23 @@ public class ClassLoader {
                         }
                         default -> System.err.println("unknown profiler operation : \"" + line.substring(10) + "\"");
                     }
-                } else if (!line.isEmpty()) System.err.println("unknown command: \"" + line + "\"");
+                } else if (line.startsWith("debug")) {
+                    if (VirtualMachine.DEBUG = !VirtualMachine.DEBUG) {
+                        System.out.println("enabled debug");
+                    } else {
+                        System.out.println("disabled debug");
+                    }
+                } else if (line.startsWith("test")) {
+                    TestLoader.run();
+                } else if (line.startsWith("help")) {
+                    System.out.println("== HELP ==");
+                    System.out.println("\texit                        - Ends the Program");
+                    System.out.println("\tprofiler [start|end|toggle] - Runs the appropriate profiler action");
+                    System.out.println("\trun <ClassPath>             - Executes the 'main(String[])' method of that class");
+                    System.out.println("\tdebug                       - toggles debug log for the VM");
+                    System.out.println("\ttest                        - Runs the benchmark test");
+                }
+                else if (!line.isEmpty()) System.err.println("unknown command: \"" + line + "\"");
             }
             line = scanner.nextLine();
         }

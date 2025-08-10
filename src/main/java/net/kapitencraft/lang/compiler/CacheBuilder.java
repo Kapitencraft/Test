@@ -9,6 +9,7 @@ import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.ast.CompileStmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
@@ -24,11 +25,9 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     public static final int majorVersion = 1, minorVersion = 0;
 
     private Chunk.Builder builder = new Chunk.Builder();
-    private final RetTypeFinder typeFinder;
     private final Stack<Loop> loops = new Stack<>();
 
     public CacheBuilder() {
-        this.typeFinder = null;
     }
 
     //TODO implement
@@ -75,8 +74,7 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
 
     @Override
     public Void visitAssignExpr(CompileExpr.Assign expr) {
-        ClassReference reference = typeFinder.findRetType(expr.value());
-        assign(reference, expr.value(), expr.type().type(), Opcode.GET, Opcode.ASSIGN, b -> b.addArg(expr.ordinal()));
+        assign(expr.executor(), expr.value(), expr.type().type(), Opcode.GET, Opcode.ASSIGN, b -> b.addArg(expr.ordinal()));
         return null;
     }
 
@@ -152,7 +150,7 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
         cache(expr.callee());
         saveArgs(expr.args());
         builder.addCode(Opcode.INVOKE);
-        builder.injectString(expr.name().lexeme());
+        builder.injectString(expr.id());
         return null;
     }
 
@@ -160,7 +158,7 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     public Void visitStaticCallExpr(CompileExpr.StaticCall expr) {
         saveArgs(expr.args());
         builder.addCode(Opcode.INVOKE);
-        builder.injectString(expr.name().lexeme());
+        builder.injectString(expr.id());
         return null;
     }
 
@@ -182,72 +180,71 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     public Void visitArrayGetExpr(CompileExpr.ArrayGet expr) {
         cache(expr.object());
         cache(expr.index());
-        ClassReference reference = typeFinder.findRetType(expr.object());
-        builder.addCode(getArrayLoad(reference));
+        //ClassReference reference = typeFinder.findRetType(expr.object());
+        //builder.addCode(getArrayLoad(reference));
         return null;
     }
 
     @Override
     public Void visitSetExpr(CompileExpr.Set expr) {
 
-        ClassReference reference = typeFinder.findRetType(expr.object());
-        assign(reference, expr.value(), expr.assignType().type(), Opcode.GET_FIELD, Opcode.PUT_FIELD, b -> b.injectString(expr.name().lexeme()));
+        assign(expr.executor(), expr.value(), expr.assignType().type(), Opcode.GET_FIELD, Opcode.PUT_FIELD, b -> b.injectString(expr.name().lexeme()));
         return null;
     }
 
     @Override
     public Void visitStaticSetExpr(CompileExpr.StaticSet expr) {
-        //TODO store return type in set expressions
-        //assign();
+        assign(expr.executor(), expr.value(), expr.assignType().type(), Opcode.PUT_STATIC, Opcode.GET_STATIC, b -> {});
 
         return null;
     }
 
     @Override
     public Void visitArraySetExpr(CompileExpr.ArraySet expr) {
-        ClassReference reference = typeFinder.findRetType(expr.value());
-        cache(expr.value());
-        if (expr.assignType().type() != TokenType.ASSIGN) {
 
-            builder.addCode(getArrayLoad(reference));
-            switch (expr.assignType().type()) {
-                case ADD_ASSIGN -> builder.addCode(getAdd(reference));
-                case SUB_ASSIGN -> builder.addCode(getSub(reference));
-                case MUL_ASSIGN -> builder.addCode(getMul(reference));
-                case DIV_ASSIGN -> builder.addCode(getDiv(reference));
-                case POW_ASSIGN -> builder.addCode(getPow(reference));
-            }
-        } else {
-            cache(expr.index());
-            builder.addCode(getArrayStore(reference));
-        }
+        ClassReference reference = expr.executor();
+        cache(expr.value());
+        assign(expr.executor(), expr.value(), expr.assignType().type(), getArrayLoad(reference), getArrayStore(reference), builder1 -> {});
         return null;
     }
 
     @Override
     public Void visitSpecialSetExpr(CompileExpr.SpecialSet expr) {
+
+        cache(expr.callee());
+        specialAssign(null, expr.assignType(), Opcode.GET_FIELD, Opcode.PUT_FIELD, b -> b.injectString(expr.name().lexeme()));
         return null;
     }
 
     @Override
     public Void visitStaticSpecialExpr(CompileExpr.StaticSpecial expr) {
+        String id = VarTypeManager.getClassName(expr.target().get());
+        specialAssign(null, expr.assignType(), Opcode.GET_STATIC, Opcode.PUT_STATIC, b -> b.injectString(id));
         return null;
     }
 
     @Override
     public Void visitArraySpecialExpr(CompileExpr.ArraySpecial expr) {
         //TODO make work
-        ClassReference reference = typeFinder.findRetType(expr.object());
-        builder.addCode(expr.assignType().type() == TokenType.GROW ?
-                getPlusOne(reference) :
-                getMinusOne(reference)
-        );
-        cache(expr.index());
-        cache(expr.object());
-        builder.addCode(getArrayLoad(reference));
-        builder.addCode(getAdd(reference));
-        builder.addCode(getArrayStore(reference));
+        ClassReference reference = null; //expr;
+        specialAssign(reference, expr.assignType(), getArrayLoad(reference), getArrayStore(reference), b -> {
+            cache(expr.index());
+            cache(expr.object());
+        });
+
         return null;
+    }
+
+    private void specialAssign(ClassReference reference, Token token, Opcode get, Opcode set, Consumer<Chunk.Builder> meta) {
+        builder.addCode(token.type() == TokenType.GROW ?
+                getPlusOne(reference) : getMinusOne(reference)
+        );
+        meta.accept(builder); //TODO fix multiple invokes
+        builder.addCode(getAdd(reference));
+        builder.addCode(get);
+        builder.addCode(getAdd(reference));
+        meta.accept(builder);
+        builder.addCode(set);
     }
 
     private Opcode getMinusOne(ClassReference reference) {
@@ -292,6 +289,7 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
 
     @Override
     public Void visitCastCheckExpr(CompileExpr.CastCheck expr) {
+        //TODO
         return null;
     }
 
@@ -306,9 +304,25 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
         LiteralHolder literal = expr.literal().literal();
         ScriptedClass scriptedClass = literal.type();
         Object value = literal.value();
-        if (scriptedClass == VarTypeManager.DOUBLE) builder.addDoubleConstant((double) value);
-        else if (scriptedClass == VarTypeManager.INTEGER) builder.addIntConstant((int) value);
-        else if (scriptedClass == VarTypeManager.STRING) builder.addStringConstant((String) value);
+        if (scriptedClass == VarTypeManager.DOUBLE) {
+            double v = (double) value;
+            if (v == 1d)
+                builder.addCode(Opcode.D_1);
+            else if (v == -1d) {
+                builder.addCode(Opcode.D_M1);
+            } else
+                builder.addDoubleConstant((double) value);
+        } else if (scriptedClass == VarTypeManager.INTEGER) {
+            int v = (int) value;
+            if (v == 1)
+                builder.addCode(Opcode.I_1);
+            else if (v == -1) {
+                builder.addCode(Opcode.I_M1);
+            } else
+                builder.addIntConstant((int) value);
+        }
+        else if (VarTypeManager.STRING.is(scriptedClass))
+            builder.addStringConstant((String) value);
         return null;
     }
 
@@ -329,7 +343,7 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     public Void visitUnaryExpr(CompileExpr.Unary expr) {
         cache(expr.right());
         if (expr.operator().type() == TokenType.NOT) builder.addCode(Opcode.NOT);
-        else builder.addCode(getNeg(typeFinder.findRetType(expr.right())));
+        else builder.addCode(getNeg(expr.executor()));
         return null;
     }
 
@@ -342,6 +356,7 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
 
     @Override
     public Void visitConstructorExpr(CompileExpr.Constructor expr) {
+        //TODO
         return null;
     }
 
@@ -370,7 +385,7 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
         if (stmt.elifs().length > 0 || stmt.elseBranch() != null) {
             int[] branches = new int[stmt.elifs().length + 1];
             branches[0] = builder.addJump(); //jump from branch past the IF
-            for (int i = 0; i < branches.length; i++) {
+            for (int i = 0; i < stmt.elifs().length; i++) {
                 builder.patchJumpCurrent(jumpPatch);
                 Pair<CompileExpr, CompileStmt> pair = stmt.elifs()[i];
                 cache(pair.left());
@@ -441,6 +456,7 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
 
     @Override
     public Void visitForEachStmt(CompileStmt.ForEach stmt) {
+        //TODO
         return null;
     }
 
@@ -456,6 +472,7 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
 
     @Override
     public Void visitTryStmt(CompileStmt.Try stmt) {
+        //TODO
         //JsonObject object = new JsonObject();
         //object.addProperty("TYPE", "try");
         //object.add("body", cache(stmt.body));
@@ -485,13 +502,13 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     private Opcode getArrayLoad(ClassReference reference) {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.IA_LOAD;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.DA_LOAD;
-        throw new IllegalStateException("could not create 'a_load' for: " + reference);
+        return Opcode.RA_LOAD;
     }
 
     private Opcode getArrayStore(ClassReference reference) {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.IA_STORE;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.DA_STORE;
-        throw new IllegalStateException("could not create 'a_store' for: " + reference);
+        return Opcode.RA_STORE;
     }
 
     private Opcode getDiv(ClassReference reference) {
@@ -515,6 +532,7 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
     private Opcode getAdd(ClassReference reference) {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_ADD;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_ADD;
+        if (reference.is(VarTypeManager.STRING.get())) return Opcode.CONCENTRATION;
         throw new IllegalStateException("could not create 'add' for: " + reference);
     }
 
@@ -556,10 +574,6 @@ public class CacheBuilder implements CompileExpr.Visitor<Void>, CompileStmt.Visi
         private Loop(short condition) {
             this.condition = condition;
             this.breakIndices = new ArrayList<>();
-        }
-
-        public short conditionIndex() {
-            return condition;
         }
 
         public void addBreak(int patchIndex) {

@@ -1,8 +1,8 @@
 package net.kapitencraft.lang.compiler;
 
 import com.google.common.collect.ImmutableMap;
+import net.kapitencraft.lang.bytecode.exe.Chunk;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.ast.CompileStmt;
@@ -31,13 +31,11 @@ import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.Supplier;
 
 public class Holder {
     private static <T extends Validateable> void validateNullable(T[] validateable, Compiler.ErrorLogger logger) {
@@ -152,7 +150,6 @@ public class Holder {
                 constructors.add(Pair.of(method.name(), constDecl));
             }
 
-
             ImmutableMap.Builder<String, CompileEnumConstant> enumConstants = new ImmutableMap.Builder<>();
             for (EnumConstant decl : enumConstants()) {
                 CompileExpr[] args;
@@ -216,7 +213,6 @@ public class Holder {
             }
 
             List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
-            List<Pair<Token, CompileCallable>> staticMethods = new ArrayList<>();
             for (Method method : this.methods()) {
                 CompileStmt[] body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
@@ -231,8 +227,7 @@ public class Holder {
                 }
 
                 CompileCallable methodDecl = new CompileCallable(method.type().getReference(), method.extractParams(), body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
-                if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
-                else methods.add(Pair.of(method.name(), methodDecl));
+                methods.add(Pair.of(method.name(), methodDecl));
             }
 
             List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
@@ -244,7 +239,6 @@ public class Holder {
             return new BakedInterface(
                     logger, generics, target,
                     methods.toArray(new Pair[0]),
-                    staticMethods.toArray(new Pair[0]),
                     staticFields,
                     extractInterfaces(),
                     name,
@@ -277,7 +271,6 @@ public class Holder {
             }
 
             List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
-            List<Pair<Token, CompileCallable>> staticMethods = new ArrayList<>();
             for (Method method : this.methods()) {
                 CompileStmt[] body = new CompileStmt[0];
                 if (!Modifiers.isAbstract(method.modifiers)) {
@@ -295,8 +288,7 @@ public class Holder {
                 }
 
                 CompileCallable methodDecl = new CompileCallable(method.type().getReference(), method.extractParams(), body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
-                if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
-                else methods.add(Pair.of(method.name(), methodDecl));
+                methods.add(Pair.of(method.name(), methodDecl));
             }
 
             List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
@@ -325,7 +317,6 @@ public class Holder {
                     generics,
                     this.target(),
                     methods.toArray(new Pair[0]),
-                    staticMethods.toArray(new Pair[0]),
                     constructors.toArray(new Pair[0]),
                     fields,
                     staticFields,
@@ -354,7 +345,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                methods.put(method.name().lexeme(), new MethodWrapper(val, method.type.getReference(), annotations.toArray(new CompileAnnotationClassInstance[0])));
+                methods.put(method.name().lexeme(), new MethodWrapper(val, method.type.getReference(), annotations.toArray(new CompileAnnotationClassInstance[0]), method.modifiers()));
             }
 
             List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
@@ -413,17 +404,10 @@ public class Holder {
 
             //methods
             Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
-            Map<String, DataMethodContainer.Builder> staticMethods = new HashMap<>();
             for (Method method : this.methods()) {
-                if (Modifiers.isStatic(method.modifiers)) {
-                    staticMethods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
-                    DataMethodContainer.Builder builder = staticMethods.get(method.name().lexeme());
-                    builder.addMethod(logger, SkeletonMethod.create(method), method.name());
-                } else {
-                    methods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
-                    DataMethodContainer.Builder builder = methods.get(method.name().lexeme());
-                    builder.addMethod(logger, SkeletonMethod.create(method), method.name());
-                }
+                methods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
+                DataMethodContainer.Builder builder = methods.get(method.name().lexeme());
+                builder.addMethod(logger, SkeletonMethod.create(method), method.name());
             }
 
             //constructors
@@ -442,7 +426,6 @@ public class Holder {
                     staticFields.build(), fields.build(),
                     enclosed.build(),
                     DataMethodContainer.bakeBuilders(methods),
-                    DataMethodContainer.bakeBuilders(staticMethods),
                     constructorBuilder
             );
         }
@@ -488,8 +471,7 @@ public class Holder {
                     staticFields.build(),
                     this.generics(),
                     enclosed.build(),
-                    DataMethodContainer.bakeBuilders(methods),
-                    DataMethodContainer.bakeBuilders(staticMethods)
+                    DataMethodContainer.bakeBuilders(methods)
             );
 
         }
@@ -520,17 +502,10 @@ public class Holder {
 
             //methods
             Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
-            Map<String, DataMethodContainer.Builder> staticMethods = new HashMap<>();
             for (Method method : this.methods()) {
-                if (Modifiers.isStatic(method.modifiers)) {
-                    staticMethods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
-                    DataMethodContainer.Builder builder = staticMethods.get(method.name().lexeme());
-                    builder.addMethod(logger, SkeletonMethod.create(method), method.name());
-                } else {
-                    methods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
-                    DataMethodContainer.Builder builder = methods.get(method.name().lexeme());
-                    builder.addMethod(logger, SkeletonMethod.create(method), method.name());
-                }
+                methods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
+                DataMethodContainer.Builder builder = methods.get(method.name().lexeme());
+                builder.addMethod(logger, SkeletonMethod.create(method), method.name());
             }
 
             //constructors
@@ -551,14 +526,13 @@ public class Holder {
                     fields.build(),
                     enclosed.build(),
                     DataMethodContainer.bakeBuilders(methods),
-                    DataMethodContainer.bakeBuilders(staticMethods),
                     constructorBuilder,
                     this.modifiers,
                     Arrays.stream(this.interfaces).map(SourceClassReference::getReference).toArray(ClassReference[]::new)
             );
         }
 
-        public record MethodWrapper(@Nullable CompileExpr val, ClassReference type, CompileAnnotationClassInstance[] annotations) implements ScriptedCallable {
+        public record MethodWrapper(@Nullable CompileExpr val, ClassReference type, CompileAnnotationClassInstance[] annotations, short modifiers) implements ScriptedCallable {
 
             @Override
             public ClassReference[] argTypes() {
@@ -566,7 +540,7 @@ public class Holder {
             }
 
             @Override
-            public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+            public Object call(Object[] arguments) {
                 throw new IllegalAccessError("can not call method wrapper!");
             }
 
@@ -578,6 +552,11 @@ public class Holder {
             @Override
             public boolean isFinal() {
                 return false;
+            }
+
+            @Override
+            public boolean isStatic() {
+                return Modifiers.isStatic(this.modifiers);
             }
         }
 
@@ -693,6 +672,21 @@ public class Holder {
                 referenceMap.put(reference.variables[i].name.lexeme(), references[i]);
             }
             stack.push(referenceMap);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof AppliedGenerics appliedGenerics && referencesEqual(references, appliedGenerics.references);
+        }
+
+        private boolean referencesEqual(ClassReference[] expected, ClassReference[] gotten) {
+            if (expected.length != gotten.length) return false;
+            for (int i = 0; i < expected.length; i++) {
+                if (!expected[i].get().isChildOf(gotten[i].get())) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

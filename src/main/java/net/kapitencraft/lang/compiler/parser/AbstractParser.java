@@ -19,6 +19,7 @@ import net.kapitencraft.lang.compiler.visitor.RetTypeFinder;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -110,6 +111,30 @@ public class AbstractParser {
         if (expected == VarTypeManager.OBJECT) return gotten;
         if (!gotten.get().isChildOf(expected.get()))
             errorLogger.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
+        if (gotten instanceof AppliedGenericsReference reference) {
+            if (expected instanceof AppliedGenericsReference reference1) {
+                Holder.AppliedGenerics gottenAppliedGenerics = reference.getApplied();
+                Holder.AppliedGenerics expectedAppliedGenerics = reference1.getApplied();
+                ClassReference[] expectedGenerics = expectedAppliedGenerics.references();
+                ClassReference[] gottenGenerics = gottenAppliedGenerics.references();
+
+                if (expectedGenerics.length != gottenGenerics.length) {
+                    errorLogger.errorF(gottenAppliedGenerics.reference(), "Wrong number of type arguments: %s; required: %s", gottenGenerics.length, expectedGenerics.length);
+                } else {
+                    for (int i = 0; i < expectedGenerics.length; i++) {
+                        if (!expectedGenerics[i].get().isChildOf(gottenGenerics[i].get())) {
+                            String name = reference1.getGenerics().variables()[i].name().lexeme();
+                            errorLogger.errorF(reference.getApplied().reference(), "incompatible types: inference variable %s has incompatible bounds", name);
+
+                            errorLogger.logError("gotten: " + gottenGenerics[i].name());
+                            errorLogger.logError("lower bounds: " + expectedGenerics[i].name());
+                        }
+                    }
+                }
+            } else {
+                errorLogger.errorF(reference.getApplied().reference(), "Type '%s' does not have type parameters", expected.absoluteName());
+            }
+        }
         return gotten;
     }
 
@@ -243,6 +268,7 @@ public class AbstractParser {
         return Optional.empty();
     }
 
+    @NotNull
     protected SourceClassReference consumeVarType(GenericStack generics) {
         Token token = consumeIdentifier();
         ClassReference reference = parser.getClass(token.lexeme());
@@ -273,7 +299,7 @@ public class AbstractParser {
         }
         if (reference == null) {
             error(token, "unknown symbol");
-            return null; //skip rest
+            return SourceClassReference.from(token, null); //skip rest
         }
         Holder.AppliedGenerics declared = appliedGenerics(generics);
         while (match(S_BRACKET_O)) {

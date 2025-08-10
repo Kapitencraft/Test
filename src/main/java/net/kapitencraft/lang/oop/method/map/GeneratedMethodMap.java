@@ -5,6 +5,7 @@ import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,10 @@ public class GeneratedMethodMap implements AbstractMethodMap {
         return methods.containsKey(name) ? methods.get(name).getMethodOrdinal(args) : -1;
     }
 
+    @Nullable
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return methods.get(name).getMethodByOrdinal(ordinal);
+        DataMethodContainer container = methods.get(name);
+        return container == null ? null : container.getMethodByOrdinal(ordinal);
     }
 
     public boolean has(String name) {

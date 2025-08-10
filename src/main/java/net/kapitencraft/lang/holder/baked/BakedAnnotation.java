@@ -36,7 +36,7 @@ public record BakedAnnotation(
         methodWrappers.forEach((string, wrapper) -> builder.put(string, new DataMethodContainer(new ScriptedCallable[]{new CompileAnnotationCallable(wrapper.type(), wrapper.val(), wrapper.annotations())})));
 
         return new CompileClass(
-                builder.build(), Map.of(), List.of(), Map.of(), Map.of(), VarTypeManager.OBJECT,
+                builder.build(), List.of(), Map.of(), Map.of(), VarTypeManager.OBJECT,
                 this.name().lexeme(),
                 this.pck(), enclosed, new ClassReference[0], Modifiers.ANNOTATION, this.annotations());
     }

@@ -1,16 +1,13 @@
 package net.kapitencraft.lang.run.natives.impl;
 
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
 import net.kapitencraft.lang.run.VarTypeManager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.List;
 
 public class NativeConstructor implements ScriptedCallable {
     private final ClassReference type;
@@ -34,7 +31,7 @@ public class NativeConstructor implements ScriptedCallable {
     }
 
     @Override
-    public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+    public Object call(Object[] arguments) {
         try {
             return constructor.newInstance(NativeClassLoader.extractNatives(arguments));
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
@@ -49,6 +46,11 @@ public class NativeConstructor implements ScriptedCallable {
 
     @Override
     public boolean isFinal() {
+        return false;
+    }
+
+    @Override
+    public boolean isStatic() {
         return false;
     }
 }

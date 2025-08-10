@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 
 public final class RuntimeClass implements ScriptedClass {
     private final GeneratedMethodMap methods;
-    private final GeneratedMethodMap staticMethods;
     private final Map<String, DataMethodContainer> allMethods;
 
     private final MethodLookup lookup;
@@ -49,27 +48,7 @@ public final class RuntimeClass implements ScriptedClass {
 
     private final RuntimeAnnotationClassInstance[] annotations;
 
-    public RuntimeClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor,
-                        Map<String, RuntimeField> fields, Map<String, RuntimeField> staticFields,
-                        Map<String, ClassReference> enclosing,
-                        ClassReference superclass, ClassReference[] implemented, String name, String packageRepresentation, short modifiers, RuntimeAnnotationClassInstance[] annotations) {
-        this.methods = new GeneratedMethodMap(methods);
-        this.allMethods = methods;
-        this.staticMethods = new GeneratedMethodMap(staticMethods);
-        this.constructor = constructor.build(this);
-        this.allFields = fields;
-        this.allStaticFields = staticFields;
-        this.superclass = superclass;
-        this.implemented = implemented;
-        this.name = name;
-        this.enclosing = enclosing;
-        this.packageRepresentation = packageRepresentation;
-        this.modifiers = modifiers;
-        this.annotations = annotations;
-        this.lookup = MethodLookup.createFromClass(this);
-    }
-
-    public RuntimeClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
+    public RuntimeClass(Map<String, DataMethodContainer> methods,
                         List<ScriptedCallable> constructorData,
                         Map<String, RuntimeField> fields, Map<String, RuntimeField> staticFields,
                         ClassReference superclass, String name, String packageRepresentation,
@@ -77,7 +56,6 @@ public final class RuntimeClass implements ScriptedClass {
                         short modifiers, RuntimeAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
-        this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.constructor = ConstructorContainer.fromCache(constructorData, this);
         this.allFields = fields;
         this.allStaticFields = staticFields;
@@ -98,7 +76,6 @@ public final class RuntimeClass implements ScriptedClass {
 
         if (superclass == null) throw new IllegalArgumentException(String.format("could not find target class for class '%s': '%s'", name, GsonHelper.getAsString(data, "superclass")));
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
-        ImmutableMap<String, DataMethodContainer> staticMethods = DataMethodContainer.load(data, name, "staticMethods");
 
         List<ScriptedCallable> constructorData = new ArrayList<>();
         GsonHelper.getAsJsonArray(data, "constructors").asList().stream().map(JsonElement::getAsJsonObject).map(RuntimeCallable::load).forEach(constructorData::add);
@@ -113,7 +90,7 @@ public final class RuntimeClass implements ScriptedClass {
         Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));
 
         return new RuntimeClass(
-                methods, staticMethods, constructorData,
+                methods, constructorData,
                 fields, staticFields,
                 superclass,
                 name, pck,
@@ -140,23 +117,8 @@ public final class RuntimeClass implements ScriptedClass {
     }
 
     @Override
-    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
-        return staticMethods.getMethodOrdinal(name, args);
-    }
-
-    @Override
-    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return staticMethods.getMethodByOrdinal(name, ordinal);
-    }
-
-    @Override
     public ScriptedCallable getMethod(String name, ClassReference[] args) {
         return Optional.ofNullable(allMethods.get(name)).map(container -> container.getMethod(args)).orElse(ScriptedClass.super.getMethod(name, args));
-    }
-
-    @Override
-    public boolean hasStaticMethod(String name) {
-        return staticMethods.has(name);
     }
 
     @Override
@@ -253,7 +215,6 @@ public final class RuntimeClass implements ScriptedClass {
     public String toString() { //jesus
         return "GeneratedClass{" + name + "}[" +
                 "methods=" + allMethods + ", " +
-                "staticMethods=" + staticMethods + ", " +
                 "fields=" + allFields + ", " +
                 "staticFields=" + allStaticFields + ", " +
                 "superclass=" + superclass + ']';

@@ -1,17 +1,14 @@
 package net.kapitencraft.lang.run.natives.impl;
 
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
 import net.kapitencraft.lang.run.VarTypeManager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
 
 public class NativeMethod implements ScriptedCallable {
     private final ClassReference type;
@@ -39,9 +36,9 @@ public class NativeMethod implements ScriptedCallable {
     }
 
     @Override
-    public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+    public Object call(Object[] arguments) {
         try {
-            return method.invoke(instance ? NativeClassLoader.extractNative(environment.getThis()) : null,
+            return method.invoke(instance ? NativeClassLoader.extractNative(arguments[0]) : null,
                     NativeClassLoader.extractNatives(arguments));
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw AbstractScriptedException.createException(VarTypeManager.FUNCTION_CALL_ERROR, e.getMessage());
@@ -58,5 +55,10 @@ public class NativeMethod implements ScriptedCallable {
     @Override
     public boolean isFinal() {
         return Modifiers.isFinal(modifiers);
+    }
+
+    @Override
+    public boolean isStatic() {
+        return Modifiers.isStatic(modifiers);
     }
 }

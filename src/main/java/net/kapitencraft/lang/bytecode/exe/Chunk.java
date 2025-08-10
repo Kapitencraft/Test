@@ -9,14 +9,31 @@ public record Chunk(byte[] code, byte[] constants) {
 
     public JsonObject save() {
         JsonObject object = new JsonObject();
-        object.addProperty("code", new String(this.code));
-        object.addProperty("constants", new String(this.constants));
+        object.addProperty("code", encode(this.code));
+        object.addProperty("constants", encode(this.constants));
         return object;
     }
 
+    private static String encode(byte[] in) {
+        char[] chars = new char[in.length];
+        for (int i = 0; i < in.length; i++) {
+            chars[i] = (char) in[i];
+        }
+        return new String(chars);
+    }
+
+    private static byte[] decode(String in) {
+        char[] chars = in.toCharArray();
+        byte[] bytes = new byte[chars.length];
+        for (int i = 0; i < chars.length; i++) {
+            bytes[i] = (byte) (chars[i] & 255);
+        }
+        return bytes;
+    }
+
     public static Chunk load(JsonObject object) {
-        byte[] code = GsonHelper.getAsString(object, "code").getBytes();
-        byte[] constants = GsonHelper.getAsString(object, "constants").getBytes();
+        byte[] code = decode(GsonHelper.getAsString(object, "code"));
+        byte[] constants = decode(GsonHelper.getAsString(object, "constants"));
         return new Chunk(code, constants);
     }
 
@@ -29,19 +46,17 @@ public record Chunk(byte[] code, byte[] constants) {
         }
 
         public void jumpElse(Runnable ifTrue, Runnable ifFalse) {
-            addCode(Opcode.JUMP_IF_FALSE);
-            int truePatch = this.code.size();
+            int truePatch = addJumpIfFalse();
             ifTrue.run();
-            addCode(Opcode.JUMP);
-            int falsePatch = this.code.size();
-            patchJump(truePatch, (short) falsePatch);
+            int falsePatch = addJump();
+            patchJump(truePatch, (short) currentCodeIndex());
             ifFalse.run();
-            patchJump(falsePatch, (short) this.code.size());
+            patchJump(falsePatch, (short) currentCodeIndex());
         }
 
         public void patchJump(int index, short destination) {
-            this.code.set(index, (byte) (destination & 255));
-            this.code.set(index + 1, (byte) ((destination >> 8) & 255));
+            this.code.set(index, (byte) ((destination >> 8) & 255));
+            this.code.set(index + 1, (byte) (destination & 255));
         }
 
         public void patchJumpCurrent(int index) {
@@ -57,18 +72,18 @@ public record Chunk(byte[] code, byte[] constants) {
 
         public void addIntConstant(int constant) {
             this.addCode(Opcode.I_CONST);
-            this.addArg(this.constants.size());
+            this.add2bArg(this.constants.size());
             for (int i = 0; i < 4; i++) {
-                this.constants.add((byte) (constant >> (8 * i) & 255));
+                this.constants.add((byte) ((constant >> (8 * i)) & 255));
             }
         }
 
         public void addDoubleConstant(double constant) {
             this.addCode(Opcode.D_CONST);
-            this.addArg((byte) this.constants.size());
+            this.add2bArg((byte) this.constants.size());
             long l = Double.doubleToLongBits(constant);
             for (int i = 0; i < 8; i++) {
-                this.constants.add((byte) (l >> (8 * i) & 255));
+                this.constants.add((byte) ((l >> (8 * i)) & 255));
             }
         }
 
@@ -78,7 +93,7 @@ public record Chunk(byte[] code, byte[] constants) {
         }
 
         public void injectString(String constant) {
-            this.addArg((byte) this.constants.size());
+            this.add2bArg(this.constants.size());
             this.constants.add((byte) constant.length());
             for (byte b : constant.getBytes()) {
                 this.constants.add(b);
@@ -86,7 +101,6 @@ public record Chunk(byte[] code, byte[] constants) {
         }
 
         public Chunk build() {
-            this.addCode(Opcode.RETURN);
             byte[] code = new byte[this.code.size()];
             for (int i = 0; i < code.length; i++) {
                 code[i] = this.code.get(i);
@@ -103,11 +117,16 @@ public record Chunk(byte[] code, byte[] constants) {
         }
 
         public void addArg(int i) {
-            this.addArg((byte) i);
+            this.addArg((byte) (i & 255));
+        }
+
+        public void add2bArg(int size) {
+            this.addArg((size >> 8) & 255);
+            this.addArg(size & 255);
         }
 
         public void addCode(Opcode opcode) {
-            this.addArg((byte) opcode.ordinal());
+            this.addArg(opcode.ordinal());
         }
 
         public int currentCodeIndex() {
@@ -116,7 +135,10 @@ public record Chunk(byte[] code, byte[] constants) {
 
         public int addJumpIfFalse() {
             this.addCode(Opcode.JUMP_IF_FALSE);
-            return currentCodeIndex();
+            int index = currentCodeIndex();
+            this.addArg(0);
+            this.addArg(0);
+            return index;
         }
 
         public int addJump() {

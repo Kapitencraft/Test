@@ -83,18 +83,16 @@ public interface ScriptedClass {
 
     default void startClInit() {
         setInit();
-        Interpreter.INSTANCE.pushCallIndex(-1);
-        Interpreter.INSTANCE.pushCall(this.absoluteName(), "<clinit>", this.name());
     }
 
     default void endClInit() {
-        Interpreter.INSTANCE.popCall();
+
     }
 
     default void clInit() {
 
         this.staticFields().forEach((s, loxField) -> {
-            assignStaticField(s, loxField.initialize(null, Interpreter.INSTANCE));
+            assignStaticField(s, loxField.initialize(null, null));
         });
 
         for (ClassReference loxClass : this.enclosed()) {
@@ -116,12 +114,6 @@ public interface ScriptedClass {
         } else {
             return this.assignStaticField(name, (double)val + (assignType == TokenType.GROW ? 1 : -1));
         }
-    }
-
-    default Object assignStaticFieldWithOperator(String name, Object val, TokenType type, int line, ScriptedClass executor, Operand operand) {
-        checkInit();
-        Object newVal = Interpreter.INSTANCE.visitAlgebra(getStaticField(name), val, executor, type, line, operand);
-        return this.assignStaticField(name, newVal);
     }
 
     @Contract(pure = true)
@@ -158,31 +150,9 @@ public interface ScriptedClass {
         return superclass() != null && superclass().get().hasStaticField(name);
     }
 
-    default ScriptedCallable getStaticMethod(String name, ClassReference[] args) {
-        return getStaticMethodByOrdinal(name, getStaticMethodOrdinal(name, args));
-    }
-
-    ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal);
-
-    int getStaticMethodOrdinal(String name, ClassReference[] args);
-
-    boolean hasStaticMethod(String name);
-
-    default ScriptedCallable getMethod(String name, ClassReference[] args) {
-        return getMethodByOrdinal(name, getMethodOrdinal(name, args));
-    }
-
-    default boolean hasMethod(String name) {
-        return superclass() != null && superclass().get().hasMethod(name);
-    }
-
-    default DynamicClassInstance createInst(RuntimeExpr[] params, int ordinal, Interpreter interpreter) {
-        return createNativeInst(interpreter.visitArgs(params), ordinal, interpreter);
-    }
-
-    default DynamicClassInstance createNativeInst(List<Object> params, int ordinal, Interpreter interpreter) {
-        DynamicClassInstance instance = new DynamicClassInstance(this, interpreter);
-        instance.construct(params, ordinal, interpreter);
+    default DynamicClassInstance createNativeInst(Object[] params, int ordinal) {
+        DynamicClassInstance instance = null;// new DynamicClassInstance(this, interpreter);
+        instance.construct(params, ordinal);
         return instance;
     }
 
@@ -210,6 +180,16 @@ public interface ScriptedClass {
                 suspectedParent.isParentOf(this);
     }
 
+    //region method
+
+    default ScriptedCallable getMethod(String name, ClassReference[] args) {
+        return getMethodByOrdinal(name, getMethodOrdinal(name, args));
+    }
+
+    default boolean hasMethod(String name) {
+        return superclass() != null && superclass().get().hasMethod(name);
+    }
+
     /**
      * @param name name of the method
      * @param ordinal ID of the given method name generated at step COMPILE
@@ -224,11 +204,13 @@ public interface ScriptedClass {
      */
     int getMethodOrdinal(String name, ClassReference[] types);
 
+    AbstractMethodMap getMethods();
+
+    //endregion
+
     boolean hasEnclosing(String name);
 
     ClassReference getEnclosing(String name);
-
-    AbstractMethodMap getMethods();
 
     RuntimeAnnotationClassInstance[] annotations();
 

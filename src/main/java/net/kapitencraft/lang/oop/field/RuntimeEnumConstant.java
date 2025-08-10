@@ -34,11 +34,7 @@ public class RuntimeEnumConstant implements ScriptedField {
 
     @Override
     public Object initialize(Environment environment, Interpreter interpreter) {
-        DynamicClassInstance constant = new DynamicClassInstance(this.target, interpreter);
-        constant.assignField("ordinal", ordinal);
-        constant.assignField("name", name);
-        constant.construct(interpreter.visitArgs(this.args), constructorOrdinal, interpreter);
-        return constant;
+        return null;
     }
 
     @Override

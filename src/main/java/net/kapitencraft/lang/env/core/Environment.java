@@ -36,16 +36,4 @@ public class Environment {
     public Object getVar(RuntimeToken name) {
         return vars.get(name);
     }
-
-    public void assignVar(RuntimeToken name, Object value) {
-        vars.assign(name, value);
-    }
-
-    public Object assignVarWithOperator(TokenType type, int line, RuntimeToken name, Object value, ScriptedClass executor, Operand operand) {
-        return vars.assignWithOperator(type, line, name, value, executor, operand);
-    }
-
-    public Object specialVarAssign(RuntimeToken name, TokenType type) {
-        return vars.specialAssign(name, type);
-    }
 }

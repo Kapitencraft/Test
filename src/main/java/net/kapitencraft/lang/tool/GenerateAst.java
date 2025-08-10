@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 public class GenerateAst {
     public static final String DIRECTORY = "src/main/java/net/kapitencraft/lang/holder/ast";
     private static final String SOURCE = "src/generate_ast.json";
-    private static final String COMPILE_MARKER = "%", RUNTIME_MARKER = "$";
 
     public static void main(String[] args) throws IOException {
         JsonObject object = GsonHelper.GSON.fromJson(new FileReader(SOURCE), JsonObject.class);
@@ -41,14 +40,12 @@ public class GenerateAst {
     }
 
     private static void defineAst(String baseName, Map<String, AstDef> data, Imports imports, Imports defaultImports) {
-        defineAstFile(baseName, EnvironmentType.RUNTIME, data, imports, defaultImports);
-        defineAstFile(baseName, EnvironmentType.COMPILE, data, imports, defaultImports);
+        defineAstFile(baseName, data, imports, defaultImports);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static void defineAstFile(String baseName, EnvironmentType type, Map<String, AstDef> data, Imports imports, Imports defaultImports) {
-        String extendedName = type.getName() + baseName;
-        String path = DIRECTORY + "/" + extendedName + ".java";
+    private static void defineAstFile(String baseName, Map<String, AstDef> data, Imports imports, Imports defaultImports) {
+        String path = DIRECTORY + "/" + baseName + ".java";
         PrintWriter writer;
         try {
             File file = new File(path);
@@ -58,24 +55,24 @@ public class GenerateAst {
             }
             writer = new PrintWriter(path, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            System.out.println("Error defining AST '" + extendedName + "': " + e.getMessage());
+            System.out.println("Error defining AST '" + baseName + "': " + e.getMessage());
             return;
         }
 
         writer.println("package net.kapitencraft.lang.holder.ast;");
         writer.println();
-        for (String s : defaultImports.get(type)) {
+        for (String s : defaultImports.get()) {
             writer.print("import ");
             writer.print(s);
             writer.println(";");
         }
-        for (String s : imports.get(type)) {
+        for (String s : imports.get()) {
             writer.print("import ");
             writer.print(s);
             writer.println(";");
         }
         writer.println();
-        writer.println("public interface " + extendedName + " {");
+        writer.println("public interface " + baseName + " {");
         writer.println();
 
         defineVisitor(writer, baseName, data.keySet());
@@ -85,7 +82,7 @@ public class GenerateAst {
 
         // The AST classes.
         for (String typeId : data.keySet()) {
-            defineType(writer, baseName, extendedName, typeId, data.get(typeId), type);
+            defineType(writer, baseName, baseName, typeId, data.get(typeId));
         }
 
         writer.println("}");
@@ -103,13 +100,13 @@ public class GenerateAst {
         writer.println("    }");
     }
 
-    private static void defineType(PrintWriter writer, String baseName, String extendedName, String typeId, AstDef types, EnvironmentType type) {
+    private static void defineType(PrintWriter writer, String baseName, String extendedName, String typeId, AstDef types) {
         writer.println();
-        FieldDef[] fields = types.get(type);
+        FieldDef[] fields = types.get();
         writer.println("    record " + typeId + "(");
 
         writer.println(Arrays.stream(fields)
-                .map(f -> "        " + f.type.get(type) + " " + f.name)
+                .map(f -> "        " + f.type.get() + " " + f.name)
                 .collect(Collectors.joining(", \n")));
 
         writer.println("    ) implements " + extendedName + " {");
@@ -126,11 +123,10 @@ public class GenerateAst {
 
     }
 
-    private record TypeDef(String runtime, String compile) {
+    private record TypeDef(String compile) {
 
-        private static TypeDef expand(String runtime, String compile) {
+        private static TypeDef expand(String compile) {
             return new TypeDef(
-                    runtime.replaceAll("Expr", "RuntimeExpr").replaceAll("Stmt", "RuntimeStmt").replaceAll("Token(?!Type)", "RuntimeToken"),
                     compile.replaceAll("Expr", "CompileExpr").replaceAll("Stmt", "CompileStmt")
             );
         }
@@ -138,32 +134,22 @@ public class GenerateAst {
         public static TypeDef fromJsonElement(JsonElement element) {
             if (element.isJsonPrimitive()) {
                 String val = element.getAsString();
-                return expand(val, val);
-            } else if (element.isJsonObject()) {
-                JsonObject object = element.getAsJsonObject();
-                String runtime = object.getAsJsonPrimitive("runtime").getAsString();
-                String compile = object.getAsJsonPrimitive("compile").getAsString();
-                return expand(runtime, compile);
+                return expand(val);
             }
             throw new JsonParseException("don't know how to turn '" + element + "' into a TypeDef");
         }
 
-        public String get(EnvironmentType type) {
-            return type == EnvironmentType.RUNTIME ? runtime : compile;
+        public String get() {
+            return compile;
         }
     }
 
-    private record Imports(String[] runtime, String[] compile) {
+    private record Imports(String[] compile) {
 
         public static Imports fromJsonElement(JsonElement element) {
             if (element.isJsonArray()) {
                 String[] val = collectArray(element.getAsJsonArray());
-                return new Imports(val, val);
-            } else if (element.isJsonObject()) {
-                JsonObject object = element.getAsJsonObject();
-                String[] runtime = collectArray(object.getAsJsonArray("runtime"));
-                String[] compile = collectArray(object.getAsJsonArray("compile"));
-                return new Imports(runtime, compile);
+                return new Imports(val);
             }
             throw new IllegalArgumentException("don't know how to turn '" + element + "' into a TypeDef");
         }
@@ -172,23 +158,8 @@ public class GenerateAst {
             return array.asList().stream().map(JsonElement::getAsString).toArray(String[]::new);
         }
 
-        public String[] get(EnvironmentType type) {
-            return type == EnvironmentType.RUNTIME ? runtime : compile;
-        }
-    }
-
-    private enum EnvironmentType {
-        RUNTIME("Runtime"),
-        COMPILE("Compile");
-
-        private final String name;
-
-        EnvironmentType(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
+        public String[] get() {
+            return compile;
         }
     }
 
@@ -202,26 +173,20 @@ public class GenerateAst {
         }
     }
 
-    private record AstDef(FieldDef[] compileFields, FieldDef[] runtimeFields) {
+    private record AstDef(FieldDef[] compileFields) {
 
-        public FieldDef[] get(EnvironmentType type) {
-            return type == EnvironmentType.COMPILE ? compileFields : runtimeFields;
+        public FieldDef[] get() {
+            return compileFields;
         }
 
         public static AstDef fromJson(JsonElement element) {
-            List<FieldDef> compile = new ArrayList<>(), runtime = new ArrayList<>();
+            List<FieldDef> compile = new ArrayList<>();
             for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
                 FieldDef def = FieldDef.fromJson(entry.getKey(), entry.getValue());
-                if (!entry.getKey().startsWith(COMPILE_MARKER)) {
-                    runtime.add(def.trim());
-                }
-                if (!entry.getKey().startsWith(RUNTIME_MARKER)) {
-                    compile.add(def.trim());
-                }
+                compile.add(def.trim());
             }
             return new AstDef(
-                    compile.toArray(new FieldDef[0]),
-                    runtime.toArray(new FieldDef[0])
+                    compile.toArray(new FieldDef[0])
             );
         }
     }

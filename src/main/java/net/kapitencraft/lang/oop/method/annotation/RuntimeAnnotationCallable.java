@@ -1,16 +1,11 @@
 package net.kapitencraft.lang.oop.method.annotation;
 
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.CacheBuilder;
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.ast.RuntimeExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
-
-import java.util.List;
 
 public class RuntimeAnnotationCallable extends AnnotationCallable {
     private final RuntimeExpr expr;
@@ -35,7 +30,7 @@ public class RuntimeAnnotationCallable extends AnnotationCallable {
     }
 
     @Override
-    public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-        return interpreter.evaluate(expr);
+    public Object call(Object[] arguments) {
+        return null; //interpreter.evaluate(expr);
     }
 }

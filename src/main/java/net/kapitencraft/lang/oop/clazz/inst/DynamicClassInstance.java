@@ -3,7 +3,6 @@ package net.kapitencraft.lang.oop.clazz.inst;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.Interpreter;
@@ -46,31 +45,21 @@ public class DynamicClassInstance implements ClassInstance {
         }
 
         @Override
-        public Object assignFieldWithOperator(String name, Object val, TokenType type, int line, ScriptedClass executor, Operand operand) {
-            return DynamicClassInstance.this.assignFieldWithOperator(name, val, type, line, executor, operand);
-        }
-
-        @Override
-        public Object specialAssign(String name, TokenType assignType) {
-            return DynamicClassInstance.this.specialAssign(name, assignType);
-        }
-
-        @Override
         public Object getField(String name) {
             return DynamicClassInstance.this.getField(name);
         }
 
         @Override
-        public void construct(List<Object> params, int ordinal, Interpreter interpreter) {
+        public void construct(Object[] params, int ordinal) {
             throw new IllegalAccessError("can not construct super class");
         }
 
         @Override
-        public Object executeMethod(String name, int ordinal, List<Object> arguments, Interpreter interpreter) {
+        public Object executeMethod(String name, int ordinal, Object[] arguments) {
             ScriptedCallable callable = clazz.getMethodByOrdinal(name, ordinal);
             DynamicClassInstance.this.environment.push();
             try {
-                return callable.call(DynamicClassInstance.this.environment, interpreter, arguments);
+                return callable.call(arguments);
             } finally {
                 DynamicClassInstance.this.environment.pop();
             }
@@ -91,30 +80,19 @@ public class DynamicClassInstance implements ClassInstance {
         return getField(name);
     }
 
-    @Override
-    public Object assignFieldWithOperator(String name, Object val, TokenType type, int line, ScriptedClass executor, Operand operand) {
-        Object newVal = Interpreter.INSTANCE.visitAlgebra(getField(name), val, executor, type, line, operand);
-        return this.assignField(name, newVal);
-    }
-
-    public Object specialAssign(String name, TokenType assignType) {
-        Object val = getField(name);
-        return this.assignField(name, Math.specialMerge(val, assignType));
-    }
-
     public Object getField(String name) {
         return this.fields.get(name);
     }
 
-    public void construct(List<Object> params, int ordinal, Interpreter interpreter) {
-        type.getConstructor().getMethodByOrdinal(ordinal).call(this.environment, interpreter, params);
+    public void construct(Object[] params, int ordinal) {
+        type.getConstructor().getMethodByOrdinal(ordinal).call(params);
     }
 
-    public Object executeMethod(String name, int ordinal, List<Object> arguments, Interpreter interpreter) {
+    public Object executeMethod(String name, int ordinal, Object[] arguments) {
         ScriptedCallable callable = type.getMethodByOrdinal(name, ordinal);
         this.environment.push();
         try {
-            return callable.call(this.environment, interpreter, arguments);
+            return callable.call(arguments);
         } finally {
             this.environment.pop();
         }
@@ -122,6 +100,6 @@ public class DynamicClassInstance implements ClassInstance {
 
     @Override
     public String toString() {
-        return (String) this.type.getMethod("toString", new ClassReference[0]).call(this.environment, Interpreter.INSTANCE, List.of());
+        return (String) this.type.getMethod("toString", new ClassReference[0]).call(new Object[0]);
     }
 }

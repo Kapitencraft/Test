@@ -20,7 +20,7 @@ import java.util.Map;
 
 @ApiStatus.Internal
 public class NativeClassImpl implements ScriptedClass {
-    private final GeneratedMethodMap methods, staticMethods;
+    private final GeneratedMethodMap methods;
     private final Map<String, NativeField> fields, staticFields;
     private final DataMethodContainer constructor;
     private final ClassReference superclass;
@@ -30,13 +30,12 @@ public class NativeClassImpl implements ScriptedClass {
 
     @ApiStatus.Internal
     public NativeClassImpl(String name, String pck,
-                           Map<String, DataMethodContainer> staticMethods, Map<String, NativeField> staticFields,
+                           Map<String, NativeField> staticFields,
                            Map<String, DataMethodContainer> methods, Map<String, NativeField> fields,
                            DataMethodContainer constructor, ClassReference superclass, ClassReference[] interfaces, short modifiers) {
         this.name = name;
         this.pck = pck;
         this.methods = new GeneratedMethodMap(methods);
-        this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.fields = fields;
         this.staticFields = staticFields;
         this.constructor = constructor;
@@ -68,21 +67,6 @@ public class NativeClassImpl implements ScriptedClass {
     @Override
     public boolean hasField(String name) {
         return fields.containsKey(name);
-    }
-
-    @Override
-    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return staticMethods.getMethodByOrdinal(name, ordinal);
-    }
-
-    @Override
-    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
-        return staticMethods.getMethodOrdinal(name, args);
-    }
-
-    @Override
-    public boolean hasStaticMethod(String name) {
-        return staticMethods.has(name);
     }
 
     @Override
@@ -169,12 +153,6 @@ public class NativeClassImpl implements ScriptedClass {
     @Override
     public Map<String, ? extends ScriptedField> staticFields() {
         return Map.of();
-    }
-
-    @Override
-    public Object assignStaticFieldWithOperator(String name, Object val, TokenType type, int line, ScriptedClass executor, Operand operand) {
-        Object newVal = Interpreter.INSTANCE.visitAlgebra(getStaticField(name), val, executor, type, line, operand);
-        return assignStaticField(name, newVal);
     }
 
     @Override

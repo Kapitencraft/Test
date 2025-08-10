@@ -117,7 +117,6 @@ public interface RuntimeExpr {
     record InstCall(
         RuntimeExpr callee, 
         RuntimeToken name, 
-        int methodOrdinal, 
         RuntimeExpr[] args, 
         String id
     ) implements RuntimeExpr {
@@ -286,7 +285,6 @@ public interface RuntimeExpr {
     record StaticCall(
         ClassReference target, 
         RuntimeToken name, 
-        int methodOrdinal, 
         RuntimeExpr[] args, 
         String id
     ) implements RuntimeExpr {

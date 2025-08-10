@@ -16,7 +16,6 @@ import java.util.*;
 
 public final class CompileClass implements CacheableClass {
     private final GeneratedMethodMap methods;
-    private final GeneratedMethodMap staticMethods;
     private final Map<String, DataMethodContainer> allMethods;
 
     private final DataMethodContainer constructor;
@@ -35,13 +34,12 @@ public final class CompileClass implements CacheableClass {
 
     private final CompileAnnotationClassInstance[] annotations;
 
-    public CompileClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, DataMethodContainer.Builder constructor,
+    public CompileClass(Map<String, DataMethodContainer> methods, DataMethodContainer.Builder constructor,
                         Map<String, CompileField> fields, Map<String, CompileField> staticFields,
                         CacheableClass[] enclosing,
                         ClassReference superclass, ClassReference[] implemented, String name, String packageRepresentation, short modifiers, CompileAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
-        this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.constructor = constructor.create();
         this.allFields = fields;
         this.allStaticFields = staticFields;
@@ -54,7 +52,7 @@ public final class CompileClass implements CacheableClass {
         this.annotations = annotations;
     }
 
-    public CompileClass(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
+    public CompileClass(Map<String, DataMethodContainer> methods,
                         List<ScriptedCallable> constructorData,
                         Map<String, CompileField> fields, Map<String, CompileField> staticFields,
                         ClassReference superclass, String name, String packageRepresentation,
@@ -62,7 +60,6 @@ public final class CompileClass implements CacheableClass {
                         short modifiers, CompileAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
-        this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.constructor = DataMethodContainer.of(constructorData.toArray(new ScriptedCallable[0]));
         this.allFields = fields;
         this.allStaticFields = staticFields;
@@ -86,7 +83,6 @@ public final class CompileClass implements CacheableClass {
             object.add("interfaces", parentInterfaces);
         }
         object.add("methods", methods.save(cacheBuilder));
-        object.add("staticMethods", staticMethods.save(cacheBuilder));
         object.add("constructors", constructor.cache(cacheBuilder));
         {
             JsonObject fields = new JsonObject();
@@ -114,7 +110,6 @@ public final class CompileClass implements CacheableClass {
     public String toString() { //jesus
         return "GeneratedClass{" + name + "}[" +
                 "methods=" + allMethods + ", " +
-                "staticMethods=" + staticMethods + ", " +
                 "fields=" + allFields + ", " +
                 "staticFields=" + allStaticFields + ", " +
                 "superclass=" + superclass + ']';

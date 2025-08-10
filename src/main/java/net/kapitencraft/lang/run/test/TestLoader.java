@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.run.test;
 
 import com.google.gson.*;
+import net.kapitencraft.lang.bytecode.exe.VirtualMachine;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -18,17 +19,24 @@ public class TestLoader {
     private static final File TEST_CONFIG = new File("./run/test.json");
 
     private record TestInstance(String target, String args, String[] output) {
-        public void run(Interpreter interpreter) {
+        public boolean run() {
             ClassReference reference = VarTypeManager.getClassForName(target);
             if (reference == null || !reference.exists()) {
                 System.err.println("unknown class: " + target);
-                return;
+                return true;
             }
-            interpreter.runMainMethod(reference.get(), args, false, false);
+            try {
+                System.out.printf("\u001B[32mRunning: %s\u001B[0m\n", reference.absoluteName());
+                VirtualMachine.runMainMethod(reference.get(), args, false, false);
+            } catch (Exception e) {
+                System.err.println("program crashed: " + e.getMessage());
+                return true;
+            }
+            return false;
         }
     }
 
-    public static void main(String[] args) {
+    public static void run() {
         try {
             JsonArray array = GSON.fromJson(new FileReader(TEST_CONFIG), JsonArray.class);
             List<TestInstance> tests = new ArrayList<>();
@@ -53,27 +61,30 @@ public class TestLoader {
         private int outputIndex = 0;
         private boolean error = false;
         private TestInstance running;
-        private Interpreter interpreter;
 
         public void setup() {
-            this.interpreter = Interpreter.INSTANCE;
-            interpreter.output = this::checkOutput;
+            Interpreter.output = this::checkOutput;
         }
 
+        @SuppressWarnings("ConstantValue")
         public void runTest(TestInstance instance) {
             this.running = instance;
             this.outputIndex = 0;
             this.error = false;
-            instance.run(interpreter);
+            error |= instance.run();
+            if (instance.output.length > this.outputIndex) {
+                System.err.printf("Missing outputs. got %s but expected %s\n", this.outputIndex, instance.output.length);
+                error = true;
+            }
             if (error) {
-                System.out.println("\u001B[31mError running class '" + instance.target + "'\u001B[0m");
+                System.err.println("Error running class '" + instance.target + "'");
             } else {
-                System.out.println("\u001B[32mSuccessfully tested class '" + instance.target + "'. took " + interpreter.elapsedMillis() + "ms\u001B[0m");
+                System.out.println("\u001B[32mSuccessfully tested class '" + instance.target + "'. took " + Interpreter.elapsedMillis() + "ms\u001B[0m");
             }
         }
 
         public void clear() {
-            this.interpreter.output = System.out::println;
+            Interpreter.output = System.out::println;
         }
 
         private void checkOutput(String output) {

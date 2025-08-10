@@ -33,7 +33,7 @@ public class RuntimeField implements ScriptedField {
             }
             return null;
         }
-        return interpreter.evaluate(init);
+        return null;
     }
 
     public boolean hasInit() {

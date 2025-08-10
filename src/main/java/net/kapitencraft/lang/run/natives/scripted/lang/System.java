@@ -9,10 +9,10 @@ public class System {
 
     @Rename("print")
     public static void println(Object in) {
-        Interpreter.INSTANCE.output.accept(Interpreter.stringify(in));
+        Interpreter.output.accept(Interpreter.stringify(in));
     }
 
     public static int time() {
-        return (int) Interpreter.INSTANCE.elapsedMillis();
+        return (int) Interpreter.elapsedMillis();
     }
 }

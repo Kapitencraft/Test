@@ -117,7 +117,6 @@ public interface CompileExpr {
     record InstCall(
         CompileExpr callee, 
         Token name, 
-        int methodOrdinal, 
         CompileExpr[] args, 
         ClassReference retType, 
         String id
@@ -149,7 +148,7 @@ public interface CompileExpr {
         Token operator, 
         CompileExpr right
     ) implements CompileExpr {
-    
+
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLogicalExpr(this);
@@ -168,7 +167,8 @@ public interface CompileExpr {
 
     record Unary(
         Token operator, 
-        CompileExpr right
+        CompileExpr right, 
+        ClassReference executor
     ) implements CompileExpr {
 
         @Override
@@ -288,7 +288,6 @@ public interface CompileExpr {
     record StaticCall(
         ClassReference target, 
         Token name, 
-        int methodOrdinal, 
         CompileExpr[] args, 
         ClassReference retType, 
         String id

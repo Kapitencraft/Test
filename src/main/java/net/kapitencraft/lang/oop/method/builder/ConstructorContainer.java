@@ -2,13 +2,10 @@ package net.kapitencraft.lang.oop.method.builder;
 
 import com.google.common.collect.Lists;
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.tool.Util;
 
 import java.util.ArrayList;
@@ -36,8 +33,9 @@ public class ConstructorContainer extends DataMethodContainer {
                 }
 
                 @Override
-                public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                    return new DynamicClassInstance(targetClass, interpreter);
+                public Object call(Object[] arguments) {
+                    //TODO
+                    return null; //new DynamicClassInstance(targetClass, interpreter);
                 }
 
                 @Override
@@ -47,6 +45,11 @@ public class ConstructorContainer extends DataMethodContainer {
 
                 @Override
                 public boolean isFinal() {
+                    return false;
+                }
+
+                @Override
+                public boolean isStatic() {
                     return false;
                 }
             });
@@ -79,8 +82,8 @@ public class ConstructorContainer extends DataMethodContainer {
                         }
 
                     @Override
-                    public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                        return new DynamicClassInstance(target, interpreter);
+                    public Object call(Object[] arguments) {
+                        return null; //new DynamicClassInstance(target, interpreter);
                     }
 
                     @Override
@@ -92,6 +95,11 @@ public class ConstructorContainer extends DataMethodContainer {
                     public boolean isFinal() {
                             return false;
                         }
+
+                    @Override
+                    public boolean isStatic() {
+                        return false;
+                    }
                 });
             }
             return new ConstructorContainer(methods.toArray(new ScriptedCallable[0]));
@@ -137,8 +145,8 @@ public class ConstructorContainer extends DataMethodContainer {
                         }
 
                         @Override
-                        public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
-                            return new DynamicClassInstance(targetClass, interpreter);
+                        public Object call(Object[] arguments) {
+                            return null; // new DynamicClassInstance(targetClass, interpreter);
                         }
 
                         @Override
@@ -148,6 +156,11 @@ public class ConstructorContainer extends DataMethodContainer {
 
                         @Override
                         public boolean isFinal() {
+                            return false;
+                        }
+
+                        @Override
+                        public boolean isStatic() {
                             return false;
                         }
                     });

@@ -18,6 +18,6 @@ public class AbstractScriptedException extends RuntimeException {
     }
 
     public static AbstractScriptedException createException(Supplier<ScriptedClass> clazz, String msg) {
-        return new AbstractScriptedException(clazz.get().createNativeInst(List.of(msg), 0, Interpreter.INSTANCE));
+        return new AbstractScriptedException(clazz.get().createNativeInst(new Object[]{msg}, 0));
     }
 }

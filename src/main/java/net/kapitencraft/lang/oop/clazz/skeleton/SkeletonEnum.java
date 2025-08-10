@@ -37,27 +37,25 @@ public class SkeletonEnum implements EnumClass {
     private final Map<String, ClassReference> enclosed;
 
     private final GeneratedMethodMap methods;
-    private final Map<String, DataMethodContainer> staticMethods;
     private final ConstructorContainer constructor;
 
     public SkeletonEnum(String name, String pck,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, ClassReference> enclosed,
-                         Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor) {
+                         Map<String, DataMethodContainer> methods, ConstructorContainer.Builder constructor) {
         this.name = name;
         this.pck = pck;
         this.staticFields = staticFields;
         this.fields = fields;
         this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
-        this.staticMethods = staticMethods;
         this.constructor = constructor.build(this);
     }
 
     public SkeletonEnum(String name, String pck,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, ClassReference> enclosed,
-                         Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
+                         Map<String, DataMethodContainer> methods,
                         ConstructorContainer constructor) {
         this.name = name;
         this.pck = pck;
@@ -65,7 +63,6 @@ public class SkeletonEnum implements EnumClass {
         this.fields = fields;
         this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
-        this.staticMethods = staticMethods;
         this.constructor = constructor;
     }
 
@@ -73,7 +70,6 @@ public class SkeletonEnum implements EnumClass {
         String name = GsonHelper.getAsString(data, "name");
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
-        ImmutableMap<String, DataMethodContainer> staticMethods = SkeletonMethod.readFromCache(data, "staticMethods");
 
         ConstructorContainer constructorContainer = new ConstructorContainer(
                 GsonHelper.getAsJsonArray(data, "constructors").asList()
@@ -102,7 +98,7 @@ public class SkeletonEnum implements EnumClass {
         return new SkeletonEnum(name, pck,
                 staticFields.build(), fields.build(),
                 Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
-                methods, staticMethods,
+                methods,
                 constructorContainer
         );
     }
@@ -183,26 +179,6 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public ScriptedCallable getStaticMethod(String name, ClassReference[] args) {
-        return staticMethods.get(name).getMethod(args);
-    }
-
-    @Override
-    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return Optional.ofNullable(staticMethods.get(name)).map(c -> c.getMethodByOrdinal(ordinal)).orElseGet(() -> EnumClass.super.getStaticMethodByOrdinal(name, ordinal));
-    }
-
-    @Override
-    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
-        return Optional.ofNullable(staticMethods.get(name)).map(c -> c.getMethodOrdinal(args)).orElseGet(() -> EnumClass.super.getStaticMethodOrdinal(name, args));
-    }
-
-    @Override
-    public boolean hasStaticMethod(String name) {
-        return staticMethods.containsKey(name) || "values".equals(name);
-    }
-
-    @Override
     public DataMethodContainer getConstructor() {
         return constructor;
     }
@@ -214,12 +190,13 @@ public class SkeletonEnum implements EnumClass {
 
     @Override
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return methods.getMethodByOrdinal(name, ordinal);
+        return Optional.ofNullable(methods.getMethodByOrdinal(name, ordinal)).orElseGet(() -> EnumClass.super.getMethodByOrdinal(name, ordinal));
     }
 
     @Override
-    public int getMethodOrdinal(String name, ClassReference[] types) {
-        return methods.getMethodOrdinal(name, types);
+    public int getMethodOrdinal(String name, ClassReference[] args) {
+        int ordinal = methods.getMethodOrdinal(name, args);
+        return ordinal == -1 ? EnumClass.super.getMethodOrdinal(name, args) : ordinal;
     }
 
     @Override

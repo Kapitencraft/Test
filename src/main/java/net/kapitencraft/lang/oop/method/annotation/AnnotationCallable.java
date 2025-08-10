@@ -1,12 +1,8 @@
 package net.kapitencraft.lang.oop.method.annotation;
 
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.Interpreter;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 public class AnnotationCallable implements ScriptedCallable {
     private final ClassReference type;
@@ -32,7 +28,7 @@ public class AnnotationCallable implements ScriptedCallable {
     }
 
     @Override
-    public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+    public Object call(Object[] arguments) {
         return value;
     }
 
@@ -43,6 +39,16 @@ public class AnnotationCallable implements ScriptedCallable {
 
     @Override
     public boolean isFinal() {
+        return true;
+    }
+
+    @Override
+    public boolean isStatic() {
+        return false;
+    }
+
+    @Override
+    public boolean isNative() {
         return true;
     }
 }

@@ -114,26 +114,6 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public ScriptedCallable getStaticMethod(String name, ClassReference[] args) {
-        return null;
-    }
-
-    @Override
-    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return null;
-    }
-
-    @Override
-    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
-        return -1;
-    }
-
-    @Override
-    public boolean hasStaticMethod(String name) {
-        return false;
-    }
-
-    @Override
     public MethodContainer getConstructor() {
         return null;
     }

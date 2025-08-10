@@ -35,7 +35,6 @@ public class RuntimeEnum implements EnumClass {
     DynamicClassInstance[] constantData;
 
     private final GeneratedMethodMap methods;
-    private final GeneratedMethodMap staticMethods;
 
     private final MethodLookup lookup;
 
@@ -53,29 +52,13 @@ public class RuntimeEnum implements EnumClass {
 
     private final RuntimeAnnotationClassInstance[] annotations;
 
-    public RuntimeEnum(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor, Map<String, RuntimeField> allFields, Map<String, RuntimeEnumConstant> enumConstants, Map<String, RuntimeField> allStaticFields, Map<String, ClassReference> enclosing, ClassReference[] implemented, String name, String packageRepresentation, RuntimeAnnotationClassInstance[] annotations) {
-        this.methods = new GeneratedMethodMap(methods);
-        this.staticMethods = new GeneratedMethodMap(staticMethods);
-        this.constructor = constructor.build(this);
-        this.allFields = allFields;
-        this.enumConstants = enumConstants;
-        this.allStaticFields = allStaticFields;
-        this.enclosing = enclosing;
-        this.implemented = implemented;
-        this.name = name;
-        this.packageRepresentation = packageRepresentation;
-        this.annotations = annotations;
-        this.lookup = MethodLookup.createFromClass(this);
-    }
-
-    public RuntimeEnum(Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods,
+    public RuntimeEnum(Map<String, DataMethodContainer> methods,
                        List<ScriptedCallable> constructorData,
                        Map<String, RuntimeField> allFields,
                        Function<ScriptedClass, Map<String, RuntimeEnumConstant>> enumConstants,
                        Map<String, RuntimeField> allStaticFields,
                        Map<String, ClassReference> enclosing, ClassReference[] implemented, String name, String packageRepresentation, RuntimeAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
-        this.staticMethods = new GeneratedMethodMap(staticMethods);
         this.constructor = ConstructorContainer.fromCache(constructorData, this);
         this.allFields = allFields;
         this.enumConstants = enumConstants.apply(this);
@@ -93,7 +76,6 @@ public class RuntimeEnum implements EnumClass {
         ClassReference[] implemented = ClassLoader.loadInterfaces(data);
 
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
-        ImmutableMap<String, DataMethodContainer> staticMethods = DataMethodContainer.load(data, name, "staticMethods");
 
         List<ScriptedCallable> constructorData = new ArrayList<>();
         GsonHelper.getAsJsonArray(data, "constructors").asList().stream().map(JsonElement::getAsJsonObject).map(RuntimeCallable::load).forEach(constructorData::add);
@@ -107,7 +89,7 @@ public class RuntimeEnum implements EnumClass {
         RuntimeAnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
 
         return new RuntimeEnum(
-                methods, staticMethods, constructorData,
+                methods, constructorData,
                 fields,
                 enumConstants,
                 staticFields,
@@ -172,23 +154,6 @@ public class RuntimeEnum implements EnumClass {
     @Override
     public ClassReference getStaticFieldType(String name) {
         return allStaticFields.get(name).type();
-    }
-
-    @Override
-    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        checkInit();
-        return staticMethods.has(name) ? Optional.ofNullable(staticMethods.getMethodByOrdinal(name, ordinal)).orElseGet(() -> EnumClass.super.getStaticMethodByOrdinal(name, ordinal)) : EnumClass.super.getStaticMethodByOrdinal(name, ordinal);
-    }
-
-    @Override
-    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
-        checkInit();
-        return staticMethods.has(name) ? staticMethods.getMethodOrdinal(name, args) : EnumClass.super.getStaticMethodOrdinal(name, args);
-    }
-
-    @Override
-    public boolean hasStaticMethod(String name) {
-        return staticMethods.has(name);
     }
 
     @Override

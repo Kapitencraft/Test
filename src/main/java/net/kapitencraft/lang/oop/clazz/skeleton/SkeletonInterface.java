@@ -37,9 +37,8 @@ public class SkeletonInterface implements ScriptedClass {
     private final Map<String, ClassReference> enclosed;
 
     private final GeneratedMethodMap methods;
-    private final GeneratedMethodMap staticMethods;
 
-    public SkeletonInterface(String name, String pck, ClassReference[] interfaces, Map<String, SkeletonField> staticFields, Holder.Generics generics, Map<String, ClassReference> enclosed, Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods) {
+    public SkeletonInterface(String name, String pck, ClassReference[] interfaces, Map<String, SkeletonField> staticFields, Holder.Generics generics, Map<String, ClassReference> enclosed, Map<String, DataMethodContainer> methods) {
         this.name = name;
         this.pck = pck;
         this.interfaces = interfaces;
@@ -47,14 +46,12 @@ public class SkeletonInterface implements ScriptedClass {
         this.generics = generics;
         this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
-        this.staticMethods = new GeneratedMethodMap(staticMethods);
     }
 
     public static ScriptedClass fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
         String name = GsonHelper.getAsString(data, "name");
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
-        ImmutableMap<String, DataMethodContainer> staticMethods = SkeletonMethod.readFromCache(data, "staticMethods");
 
         ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
         {
@@ -74,8 +71,7 @@ public class SkeletonInterface implements ScriptedClass {
                 staticFields.build(),
                 null,
                 Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
-                methods,
-                staticMethods
+                methods
         );
     }
 
@@ -132,21 +128,6 @@ public class SkeletonInterface implements ScriptedClass {
     @Override
     public ClassReference getStaticFieldType(String name) {
         return staticFields.get(name).type();
-    }
-
-    @Override
-    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return staticMethods.getMethodByOrdinal(name, ordinal);
-    }
-
-    @Override
-    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
-        return staticMethods.getMethodOrdinal(name, args);
-    }
-
-    @Override
-    public boolean hasStaticMethod(String name) {
-        return staticMethods.has(name);
     }
 
     @Override

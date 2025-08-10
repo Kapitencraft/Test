@@ -20,7 +20,6 @@ public record BakedClass(
         Holder.Generics generics,
         ClassReference target,
         Pair<Token, CompileCallable>[] methods,
-        Pair<Token, CompileCallable>[] staticMethods,
         Pair<Token, CompileCallable>[] constructors,
         Map<Token, CompileField> fields,
         Map<String, CompileField> staticFields,
@@ -42,13 +41,6 @@ public record BakedClass(
             builder.addMethod(logger, method.right(), method.left());
         }
 
-        Map<String, DataMethodContainer.Builder> staticMethods = new HashMap<>();
-        for (Pair<Token, CompileCallable> method : this.staticMethods()) {
-            staticMethods.putIfAbsent(method.left().lexeme(), new DataMethodContainer.Builder(this.name()));
-            DataMethodContainer.Builder builder = staticMethods.get(method.left().lexeme());
-            builder.addMethod(logger, method.right(), method.left());
-        }
-
         List<Token> finalFields = new ArrayList<>();
         fields.forEach((name, field) -> {
             if (field.isFinal() && !field.hasInit()) {
@@ -62,7 +54,7 @@ public record BakedClass(
         }
 
         return new CompileClass(
-                DataMethodContainer.bakeBuilders(methods), DataMethodContainer.bakeBuilders(staticMethods),
+                DataMethodContainer.bakeBuilders(methods),
                 container,
                 create(this.fields()),
                 this.staticFields(),

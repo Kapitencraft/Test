@@ -23,7 +23,6 @@ public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
         try {
             return getValue(name.lexeme()).val;
         } catch (NullPointerException e) {
-            Interpreter.INSTANCE.pushCallIndex(name.line());
             throw AbstractScriptedException.createException(VarTypeManager.MISSING_VAR_ERROR, "Variable '" + name.lexeme() + "' not found in current scope");
         }
     }
@@ -32,25 +31,8 @@ public class VarEnv extends Leveled<String, VarEnv.Wrapper> {
         try {
             getValue(name.lexeme()).val = value;
         } catch (NullPointerException e) {
-            Interpreter.INSTANCE.pushCallIndex(name.line());
             throw AbstractScriptedException.createException(VarTypeManager.MISSING_VAR_ERROR, "Variable '" + name.lexeme() + "' not found in current scope");
         }
-    }
-
-    public Object assignWithOperator(TokenType type, int line, RuntimeToken name, Object value, ScriptedClass executor, Operand operand) {
-        Object current = get(name);
-        Object result = Interpreter.INSTANCE.visitAlgebra(current, value, executor, type, line, operand);
-        this.assign(name, result);
-        return result;
-    }
-
-    public Object specialAssign(RuntimeToken name, TokenType type) {
-        Object value = get(name);
-        if (value instanceof Integer) {
-            this.assign(name, (int) value + (type == TokenType.GROW ? 1 : -1));
-        } else if (value instanceof Double)
-            this.assign(name, (double) value + (type == TokenType.GROW ? 1 : -1));
-        return get(name);
     }
 
     static class Wrapper {

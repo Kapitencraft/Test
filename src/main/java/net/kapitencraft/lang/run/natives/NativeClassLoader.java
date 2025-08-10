@@ -94,7 +94,6 @@ public class NativeClassLoader {
     private static void createNativeClass(Class<?> clazz, String className, String pck, @Nullable String[] capturedMethods, @Nullable String[] capturedFields) {
         try {
             Multimap<String, NativeMethod> methods = HashMultimap.create();
-            Multimap<String, NativeMethod> staticMethods = HashMultimap.create();
             for (Method declaredMethod : clazz.getDeclaredMethods()) {
                 if (Modifier.isPublic(declaredMethod.getModifiers()) && !declaredMethod.isAnnotationPresent(Excluded.class) && (capturedMethods == null || Util.arrayContains(capturedMethods, declaredMethod.getName()))) {
                     try {
@@ -107,10 +106,7 @@ public class NativeClassLoader {
                                 !isStatic,
                                 Modifiers.fromJavaMods(declaredMethod.getModifiers())
                         );
-                        if (isStatic)
-                            staticMethods.put(methodName, method);
-                        else
-                            methods.put(methodName, method);
+                        methods.put(methodName, method);
                     } catch (RuntimeException ignored) {
                     }
                 }
@@ -153,7 +149,7 @@ public class NativeClassLoader {
             }
 
             type.setTarget(new NativeClassImpl(className, pck,
-                    bakeMethods(staticMethods), staticFields,
+                    staticFields,
                     bakeMethods(methods), fields,
                     new DataMethodContainer(constructors.toArray(new NativeConstructor[0])),
                     getClassOrThrow(clazz.getSuperclass()),
@@ -239,8 +235,8 @@ public class NativeClassLoader {
         return builder.build();
     }
 
-    public static Object[] extractNatives(List<Object> in) {
-        return in.stream().map(NativeClassLoader::extractNative).toArray();
+    public static Object[] extractNatives(Object[] in) {
+        return Arrays.stream(in).map(NativeClassLoader::extractNative).toArray();
     }
 
     public static Object wrapString(@NotNull String s) {

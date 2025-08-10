@@ -609,7 +609,7 @@ public class HolderParser extends AbstractParser {
         private Holder.Generics generics;
         private Holder.AnnotationObj[] annotations;
         private final Map<TokenType, List<TokenType>> illegalCombinations = new HashMap<>();
-        private final TokenType[] interrupt = {IDENTIFIER, TokenType.CLASS, net.kapitencraft.lang.holder.token.TokenType.INTERFACE, ANNOTATION, ENUM, EOF};
+        private final TokenType[] interrupt = {IDENTIFIER, CLASS, INTERFACE, ANNOTATION, ENUM, EOF};
         private boolean defaultAbstract = false;
         private final boolean allowGenerics;
 

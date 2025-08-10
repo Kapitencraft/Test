@@ -2,7 +2,6 @@ package net.kapitencraft.lang.run;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
-import net.kapitencraft.lang.holder.class_ref.RegistryClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
@@ -11,6 +10,7 @@ import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.clazz.primitive.*;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
+import net.kapitencraft.tool.StringReader;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -208,5 +208,43 @@ public class VarTypeManager {
         return getClassName(target) + name + "(" +
                 Arrays.stream(argTypes).map(ClassReference::get).map(VarTypeManager::getClassName).collect(Collectors.joining()) +
                 ")" + getClassName(retType.get());
+    }
+
+    public static ClassReference[] parseArgTypes(StringReader reader) {
+        List<ClassReference> references = new ArrayList<>();
+        while (reader.peek() != ')') {
+            references.add(parseType(reader));
+        }
+        reader.skip();
+        return references.toArray(new ClassReference[0]);
+    }
+
+    public static ClassReference parseType(StringReader reader) {
+        switch (reader.read()) {
+            case 'I' -> {
+                return VarTypeManager.INTEGER.reference();
+            }
+            case 'F' -> {
+                return VarTypeManager.FLOAT.reference();
+            }
+            case 'D' -> {
+                return VarTypeManager.DOUBLE.reference();
+            }
+            case 'B' -> {
+                return VarTypeManager.BOOLEAN.reference();
+            }
+            case 'C' -> {
+                return VarTypeManager.CHAR.reference();
+            }
+            case 'V' -> {
+                return VarTypeManager.VOID.reference();
+            }
+            case 'L' -> {
+                String type = reader.readUntil(';');
+                reader.skip();
+                return getClassForName(type.replaceAll("/", "."));
+            }
+            default -> throw new IllegalArgumentException("unknown type start: '" + reader.peek(-1) + "'");
+        }
     }
 }

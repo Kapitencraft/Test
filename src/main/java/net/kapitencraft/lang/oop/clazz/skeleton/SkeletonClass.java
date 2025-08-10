@@ -34,7 +34,6 @@ public class SkeletonClass implements ScriptedClass {
     private final Map<String, ClassReference> enclosed;
 
     private final GeneratedMethodMap methods;
-    private final Map<String, DataMethodContainer> staticMethods;
     private final ConstructorContainer constructor;
 
     private final short modifiers;
@@ -44,7 +43,7 @@ public class SkeletonClass implements ScriptedClass {
                          String name, String pck, ClassReference superclass,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, ClassReference> enclosed,
-                         Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer.Builder constructor,
+                         Map<String, DataMethodContainer> methods, ConstructorContainer.Builder constructor,
                          short modifiers, ClassReference[] interfaces) {
         this.name = name;
         this.pck = pck;
@@ -54,7 +53,6 @@ public class SkeletonClass implements ScriptedClass {
         this.generics = generics;
         this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
-        this.staticMethods = staticMethods;
         this.constructor = constructor.build(this);
         this.modifiers = modifiers;
         this.interfaces = interfaces;
@@ -63,7 +61,7 @@ public class SkeletonClass implements ScriptedClass {
     public SkeletonClass(String name, String pck, ClassReference superclass,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, ClassReference> enclosed,
-                         Map<String, DataMethodContainer> methods, Map<String, DataMethodContainer> staticMethods, ConstructorContainer constructor,
+                         Map<String, DataMethodContainer> methods, ConstructorContainer constructor,
                          short modifiers, ClassReference[] interfaces) {
         this.generics = null;
         this.name = name;
@@ -73,7 +71,6 @@ public class SkeletonClass implements ScriptedClass {
         this.fields = fields;
         this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
-        this.staticMethods = staticMethods;
         this.constructor = constructor;
         this.modifiers = modifiers;
         this.interfaces = interfaces;
@@ -86,7 +83,6 @@ public class SkeletonClass implements ScriptedClass {
         ClassReference[] interfaces = ClassLoader.loadInterfaces(data);
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
-        ImmutableMap<String, DataMethodContainer> staticMethods = SkeletonMethod.readFromCache(data, "staticMethods");
 
         ConstructorContainer constructorContainer = new ConstructorContainer(
                 GsonHelper.getAsJsonArray(data, "constructors").asList()
@@ -117,7 +113,7 @@ public class SkeletonClass implements ScriptedClass {
         return new SkeletonClass(name, pck, superclass,
                 staticFields.build(), fields.build(),
                 Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
-                methods, staticMethods,
+                methods,
                 constructorContainer,
                 modifiers,
                 interfaces);
@@ -165,7 +161,7 @@ public class SkeletonClass implements ScriptedClass {
 
     @Override
     public String pck() {
-        return pck + "." + name;
+        return pck;
     }
 
     @Override
@@ -186,26 +182,6 @@ public class SkeletonClass implements ScriptedClass {
     @Override
     public ClassReference getStaticFieldType(String name) {
         return staticFields.get(name).type();
-    }
-
-    @Override
-    public ScriptedCallable getStaticMethod(String name, ClassReference[] args) {
-        return staticMethods.get(name).getMethod(args);
-    }
-
-    @Override
-    public ScriptedCallable getStaticMethodByOrdinal(String name, int ordinal) {
-        return staticMethods.get(name).getMethodByOrdinal(ordinal);
-    }
-
-    @Override
-    public int getStaticMethodOrdinal(String name, ClassReference[] args) {
-        return staticMethods.get(name).getMethodOrdinal(args);
-    }
-
-    @Override
-    public boolean hasStaticMethod(String name) {
-        return staticMethods.containsKey(name);
     }
 
     @Override

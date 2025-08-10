@@ -18,6 +18,10 @@ public class AppliedGenericsReference extends ClassReference {
         this.reference = reference;
     }
 
+    public static boolean genericsEqual(AppliedGenericsReference gotten, AppliedGenericsReference expected) {
+        return expected.generics.equals(gotten.generics);
+    }
+
     public void push(GenericStack genericStack, Compiler.ErrorLogger logger) {
         this.generics.applyToStack(genericStack, this.reference.getGenerics(), logger);
     }
@@ -29,11 +33,15 @@ public class AppliedGenericsReference extends ClassReference {
 
     @Override
     public boolean is(ScriptedClass scriptedClass) {
-        return reference.is(scriptedClass);
+        return scriptedClass instanceof AppliedGenericsReference aGR && aGR.reference.is(this.get()) && aGR.generics.equals(this.generics);
     }
 
     @Override
     public ScriptedClass get(@Nullable GenericStack generics) {
         return reference.get(generics);
+    }
+
+    public Holder.AppliedGenerics getApplied() {
+        return generics;
     }
 }

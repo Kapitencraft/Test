@@ -5,15 +5,12 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.exe.Chunk;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.CompileStmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.tool.Pair;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class CompileCallable implements ScriptedCallable {
@@ -36,12 +33,7 @@ public class CompileCallable implements ScriptedCallable {
         object.addProperty("retType", retType.absoluteName());
         {
             JsonArray array = new JsonArray();
-            params.forEach(pair -> {
-                JsonObject object1 = new JsonObject();
-                object1.addProperty("type", pair.left().absoluteName());
-                object1.addProperty("name", pair.right());
-                array.add(object1);
-            });
+            params.stream().map(Pair::left).map(ClassReference::absoluteName).forEach(array::add);
             object.add("params", array);
         }
         if (!Modifiers.isAbstract(modifiers)) {
@@ -58,7 +50,7 @@ public class CompileCallable implements ScriptedCallable {
     }
 
     @Override
-    public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+    public Object call(Object[] arguments) {
         throw new IllegalAccessError("can not run Compile Callable!");
     }
 
@@ -70,6 +62,11 @@ public class CompileCallable implements ScriptedCallable {
     @Override
     public boolean isFinal() {
         return Modifiers.isFinal(modifiers);
+    }
+
+    @Override
+    public boolean isStatic() {
+        return Modifiers.isStatic(modifiers);
     }
 
     @Override

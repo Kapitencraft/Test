@@ -5,13 +5,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 
@@ -43,8 +42,7 @@ public class SkeletonMethod implements ScriptedCallable {
     public static SkeletonMethod fromJson(JsonObject object) {
         ClassReference retType = ClassLoader.loadClassReference(object, "retType");
         ClassReference[] args = GsonHelper.getAsJsonArray(object, "params").asList().stream()
-                .map(JsonElement::getAsJsonObject)
-                .map(object1 -> ClassLoader.loadClassReference(object1, "type"))
+                .map(JsonElement::getAsString).map(VarTypeManager::getClassOrError)
                 .toArray(ClassReference[]::new);
 
         short modifiers = object.has("modifiers") ? GsonHelper.getAsShort(object, "modifiers") : 0;
@@ -74,7 +72,7 @@ public class SkeletonMethod implements ScriptedCallable {
     }
 
     @Override
-    public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+    public Object call(Object[] arguments) {
         return null;
     }
 
@@ -86,5 +84,10 @@ public class SkeletonMethod implements ScriptedCallable {
     @Override
     public boolean isFinal() {
         return Modifiers.isFinal(modifiers);
+    }
+
+    @Override
+    public boolean isStatic() {
+        return Modifiers.isStatic(modifiers);
     }
 }

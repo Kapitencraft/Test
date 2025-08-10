@@ -2,13 +2,9 @@ package net.kapitencraft.lang.oop.method.annotation;
 
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
-import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.ast.CompileExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
-import net.kapitencraft.lang.run.Interpreter;
-
-import java.util.List;
 
 public class CompileAnnotationCallable extends AnnotationCallable {
     private final CompileExpr expr;
@@ -34,7 +30,7 @@ public class CompileAnnotationCallable extends AnnotationCallable {
     }
 
     @Override
-    public Object call(Environment environment, Interpreter interpreter, List<Object> arguments) {
+    public Object call(Object[] arguments) {
         throw new IllegalAccessError("can not call compile annotation method");
     }
 }

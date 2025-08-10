@@ -1,10 +1,7 @@
 package net.kapitencraft.lang.func;
 
-import net.kapitencraft.lang.env.core.Environment;
+import net.kapitencraft.lang.bytecode.exe.Chunk;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.Interpreter;
-
-import java.util.List;
 
 public interface ScriptedCallable {
 
@@ -12,9 +9,19 @@ public interface ScriptedCallable {
 
     ClassReference[] argTypes();
 
-    Object call(Environment environment, Interpreter interpreter, List<Object> arguments);
+    Object call(Object[] arguments);
+
+    default Chunk getChunk() {
+        return null;
+    }
 
     boolean isAbstract();
 
     boolean isFinal();
+
+    boolean isStatic();
+
+    default boolean isNative() {
+        return true;
+    }
 }

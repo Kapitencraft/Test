@@ -21,6 +21,7 @@ import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.tool.Util;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -351,9 +352,13 @@ public class ExprParser extends AbstractParser {
         if (match(NOT, SUB)) {
             Token operator = previous();
             CompileExpr right = unary();
-            if (operator.type() == NOT) expectCondition(right);
-            else expectType(right, VarTypeManager.NUMBER.reference());
-            return new CompileExpr.Unary(operator, right);
+            ClassReference executor;
+            if (operator.type() == NOT) {
+                expectCondition(right);
+                executor = VarTypeManager.BOOLEAN.reference();
+            }
+            else executor = expectType(right, VarTypeManager.NUMBER.reference());
+            return new CompileExpr.Unary(operator, right, executor);
         }
 
         return call();
@@ -393,72 +398,6 @@ public class ExprParser extends AbstractParser {
 
         consumeCurlyClose("switch body");
         return new CompileExpr.Switch(provider, params, def, keyword);
-    }
-
-    private CompileExpr finishInstCall(CompileExpr.Get get) {
-        CompileExpr[] arguments = args();
-
-        ClassReference[] givenTypes = argTypes(arguments);
-        ClassReference obj = this.finder.findRetType(get.object());
-        ScriptedClass targetClass = obj.get();
-
-        Token name = get.name();
-        if (!targetClass.hasMethod(name.lexeme())) {
-            error(name, "unknown method '" + name.lexeme() + "'");
-            consumeBracketClose("arguments");
-            return new CompileExpr.InstCall(get.object(), name, -1, arguments, WILDCARD, "?");
-        }
-        int ordinal = targetClass.getMethodOrdinal(name.lexeme(), givenTypes);
-        if (ordinal == -1) ordinal = 0;
-        ScriptedCallable callable = targetClass.getMethodByOrdinal(name.lexeme(), ordinal);
-
-        ClassReference retType = checkArguments(arguments, callable, obj, name);
-        String signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), givenTypes, retType);
-
-        consumeBracketClose("arguments");
-
-        return new CompileExpr.InstCall(get.object(), name, ordinal, arguments, retType, signature);
-    }
-
-    private CompileExpr statics() {
-        ClassReference target = consumeVarType(generics).getReference();
-        Token name = previous();
-        if (check(BRACKET_O)) return staticCall(target, name);
-        if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
-        if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
-        return new CompileExpr.StaticGet(target, name);
-    }
-
-    private CompileExpr staticCall(ClassReference target, Token name) {
-        consumeBracketOpen("static call");
-        CompileExpr[] args = args();
-
-        int ordinal = 0;
-
-
-        String signature = "?";
-        ClassReference retType = WILDCARD;
-        if (target != null) {
-            ScriptedClass targetClass = target.get();
-            if (!targetClass.hasStaticMethod(name.lexeme())) {
-                error(name, "unknown symbol");
-                consumeBracketClose("static call");
-                return new CompileExpr.StaticCall(target, name, ordinal, args, WILDCARD, "?");
-            }
-            ClassReference[] argTypes = argTypes(args);
-            ordinal = targetClass.getStaticMethodOrdinal(name.lexeme(), argTypes);
-            if (ordinal == -1) {
-                ordinal = 0;
-            }
-            ScriptedCallable callable = targetClass.getStaticMethodByOrdinal(name.lexeme(), ordinal);
-
-            retType = checkArguments(args, callable, null, name);
-            signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), argTypes, retType);
-        }
-
-        consumeBracketClose("static call");
-
-        return new CompileExpr.StaticCall(target, name, ordinal, args, retType, signature);
     }
 
     private CompileExpr staticAssign(ClassReference target, Token name) {
@@ -517,7 +456,8 @@ public class ExprParser extends AbstractParser {
                 if (!finder.findRetType(expr).get().isArray()) error(bracketO, "array type expected");
                 expr = new CompileExpr.ArrayGet(expr, index);
             } else if (match(BRACKET_O)) {
-                if (expr instanceof CompileExpr.Get get) expr = finishInstCall(get);
+                if (expr instanceof CompileExpr.Get get)
+                    expr = finishCall(get.name(), finder.findRetType(get.object()), get.object());
                 else error(locFinder.find(expr), "obj expected");
             } else if (match(DOT)) {
                 if (expr instanceof CompileExpr.Literal && !check(IDENTIFIER)) continue;
@@ -551,6 +491,7 @@ public class ExprParser extends AbstractParser {
         }
 
         ClassReference type = target.type();
+        //TODO figure out how to extract gotten generics
         if (type instanceof GenericClassReference genericClassReference) {
             GenericStack genericStack = new GenericStack();
             if (obj instanceof AppliedGenericsReference reference) {
@@ -604,6 +545,24 @@ public class ExprParser extends AbstractParser {
 
             checkArguments(args, callable, null, loc);
 
+            Holder.Generics classGenerics = loxClass.get().getGenerics();
+            if (classGenerics != null) {
+                Map<String, ClassReference> types = new HashMap<>();
+                for (int i = 0; i < callable.argTypes().length; i++) {
+                    if (callable.argTypes()[i] instanceof GenericClassReference genericClassReference) {
+                        types.put(
+                                genericClassReference.getTypeName(),
+                                finder.findRetType(args[i])
+                        );
+                    }
+                }
+                List<ClassReference> ordered = new ArrayList<>();
+                for (int i = 0; i < classGenerics.variables().length; i++) {
+                    ordered.add(types.get(classGenerics.variables()[i].name().lexeme()));
+                }
+                loxClass = new AppliedGenericsReference(loxClass, new Holder.AppliedGenerics(loc, ordered.toArray(new ClassReference[0])));
+            }
+
             return new CompileExpr.Constructor(loc, loxClass, args, ordinal);
         }
 
@@ -616,19 +575,16 @@ public class ExprParser extends AbstractParser {
             BytecodeVars.FetchResult result = varAnalyser.get(previous.lexeme());
             if (result == BytecodeVars.FetchResult.FAIL) {
                 if (currentFallback().exists()) {
-                    ScriptedClass fallback = currentFallback().get();
+                    ClassReference fallbackReference = currentFallback();
+                    ScriptedClass fallback = fallbackReference.get();
                     String name = previous.lexeme();
-                    if (check(BRACKET_O)) {
+                    if (match(BRACKET_O)) {
                         if (fallback.hasMethod(name)) {
-                            return finishInstCall(new CompileExpr.Get(
-                                    new CompileExpr.VarRef(
+                            return finishCall(previous, fallbackReference, new CompileExpr.VarRef(
                                             Token.createNative("this"),
-                                            (byte) 0),
-                                    previous)
+                                            (byte) 0
+                                    )
                             );
-                        }
-                        if (fallback.hasStaticMethod(name)) {
-                            return  staticCall(currentFallback(), previous);
                         }
                     } else {
                         if (fallback.hasField(name)) {
@@ -639,7 +595,7 @@ public class ExprParser extends AbstractParser {
                             );
                         }
                         if (fallback.hasStaticField(name)) {
-                            return  new CompileExpr.StaticGet(currentFallback(), previous);
+                            return  new CompileExpr.StaticGet(fallbackReference, previous);
                         }
                     }
                 }
@@ -665,5 +621,44 @@ public class ExprParser extends AbstractParser {
         }
 
         throw error(peek(), "Illegal start of expression");
+    }
+
+    private CompileExpr statics() {
+        ClassReference target = consumeVarType(generics).getReference();
+        Token name = previous();
+        if (match(BRACKET_O)) return finishCall(name, target, null);
+        if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
+        if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
+        return new CompileExpr.StaticGet(target, name);
+    }
+
+    private CompileExpr finishCall(Token name, ClassReference objType, @Nullable CompileExpr obj) {
+        CompileExpr[] arguments = args();
+
+        ClassReference[] givenTypes = argTypes(arguments);
+        ScriptedClass targetClass = objType.get();
+
+        if (!targetClass.hasMethod(name.lexeme())) {
+            error(name, "unknown method '" + name.lexeme() + "'");
+            consumeBracketClose("arguments");
+            return new CompileExpr.StaticCall(objType, name, arguments, WILDCARD, "?");
+        }
+        int ordinal = targetClass.getMethodOrdinal(name.lexeme(), givenTypes);
+        if (ordinal == -1) ordinal = 0;
+        ScriptedCallable callable = targetClass.getMethodByOrdinal(name.lexeme(), ordinal);
+
+        ClassReference retType = checkArguments(arguments, callable, objType, name);
+        String signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), givenTypes, retType);
+
+        consumeBracketClose("arguments");
+
+        if (callable.isStatic()) {
+            return new CompileExpr.StaticCall(objType, name, arguments, retType, signature);
+        } else {
+            if (obj == null) {
+                error(name, "Non-static method can not be referenced from a static context");
+            }
+            return new CompileExpr.InstCall(obj, name, arguments, retType, signature);
+        }
     }
 }
