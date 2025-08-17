@@ -1,11 +1,10 @@
 package net.kapitencraft.lang.compiler;
 
 import com.google.common.collect.ImmutableMap;
-import net.kapitencraft.lang.bytecode.exe.Chunk;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.holder.ast.CompileExpr;
-import net.kapitencraft.lang.holder.ast.CompileStmt;
+import net.kapitencraft.lang.holder.ast.Expr;
+import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.baked.BakedAnnotation;
 import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.baked.BakedEnum;
@@ -94,7 +93,7 @@ public class Holder {
             Map<String, CompileField> staticFields = new HashMap<>();
 
             for (Field field : fields()) {
-                CompileExpr initializer = null;
+                Expr initializer = null;
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
                     initializer = stmtParser.expression();
@@ -112,7 +111,7 @@ public class Holder {
             List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
             List<Pair<Token, CompileCallable>> staticMethods = new ArrayList<>();
             for (Method method : this.methods()) {
-                CompileStmt[] body = null;
+                Stmt[] body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, method.type().getReference(), method.generics);
@@ -138,7 +137,7 @@ public class Holder {
             for (Constructor method : this.constructors()) {
                 stmtParser.apply(method.body(), parser);
                 stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, ClassReference.of(VarTypeManager.VOID), method.generics);
-                CompileStmt[] body = stmtParser.parse();
+                Stmt[] body = stmtParser.parse();
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
@@ -152,9 +151,9 @@ public class Holder {
 
             ImmutableMap.Builder<String, CompileEnumConstant> enumConstants = new ImmutableMap.Builder<>();
             for (EnumConstant decl : enumConstants()) {
-                CompileExpr[] args;
+                Expr[] args;
                 if (decl.arguments.length == 0) {
-                    args = new CompileExpr[0];
+                    args = new Expr[0];
                     stmtParser.apply(new Token[0], parser);
                 } else {
                     stmtParser.apply(decl.arguments, parser);
@@ -197,7 +196,7 @@ public class Holder {
         public BakedInterface constructInterface(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
             Map<String, CompileField> staticFields = new HashMap<>();
             for (Field field : fields()) {
-                CompileExpr initializer = null;
+                Expr initializer = null;
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
                     initializer = stmtParser.expression();
@@ -214,7 +213,7 @@ public class Holder {
 
             List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
             for (Method method : this.methods()) {
-                CompileStmt[] body = null;
+                Stmt[] body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     stmtParser.applyMethod(method.params, target(), null, method.type().getReference(), method.generics);
@@ -255,7 +254,7 @@ public class Holder {
             Map<Token, CompileField> fields = new HashMap<>();
             Map<String, CompileField> staticFields = new HashMap<>();
             for (Field field : fields()) {
-                CompileExpr initializer = null;
+                Expr initializer = null;
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
                     initializer = stmtParser.expression();
@@ -272,7 +271,7 @@ public class Holder {
 
             List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
             for (Method method : this.methods()) {
-                CompileStmt[] body = new CompileStmt[0];
+                Stmt[] body = new Stmt[0];
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     if (Modifiers.isStatic(method.modifiers))
@@ -295,7 +294,7 @@ public class Holder {
             for (Constructor constructor : this.constructors()) {
                 stmtParser.apply(constructor.body(), parser);
                 stmtParser.applyMethod(constructor.params(), target(), parent.getReference(), ClassReference.of(VarTypeManager.VOID), constructor.generics);
-                CompileStmt[] body = stmtParser.parse();
+                Stmt[] body = stmtParser.parse();
 
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : constructor.annotations()) {
@@ -335,7 +334,7 @@ public class Holder {
         public BakedAnnotation constructAnnotation(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
             ImmutableMap.Builder<String, MethodWrapper> methods = new ImmutableMap.Builder<>();
             for (Method method : methods()) {
-                CompileExpr val = null;
+                Expr val = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     val = stmtParser.literalOrReference();
@@ -532,7 +531,7 @@ public class Holder {
             );
         }
 
-        public record MethodWrapper(@Nullable CompileExpr val, ClassReference type, CompileAnnotationClassInstance[] annotations, short modifiers) implements ScriptedCallable {
+        public record MethodWrapper(@Nullable Expr val, ClassReference type, CompileAnnotationClassInstance[] annotations, short modifiers) implements ScriptedCallable {
 
             @Override
             public ClassReference[] argTypes() {

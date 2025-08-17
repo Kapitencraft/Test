@@ -1,191 +1,192 @@
 package net.kapitencraft.lang.compiler.visitor;
 
-import net.kapitencraft.lang.holder.ast.CompileExpr;
-import net.kapitencraft.lang.holder.ast.CompileStmt;
+import net.kapitencraft.lang.holder.ast.Expr;
+import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 
-public class LocationFinder implements CompileStmt.Visitor<Token>, CompileExpr.Visitor<Token> {
+public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> {
 
-    public Token find(CompileStmt stmt) {
+    public Token find(Stmt stmt) {
         return stmt.accept(this);
     }
 
-    public Token find(CompileExpr expr) {
+    public Token find(Expr expr) {
         return expr.accept(this);
     }
 
     @Override
-    public Token visitAssignExpr(CompileExpr.Assign expr) {
+    public Token visitAssignExpr(Expr.Assign expr) {
         return expr.name();
     }
 
     @Override
-    public Token visitSpecialAssignExpr(CompileExpr.SpecialAssign expr) {
+    public Token visitSpecialAssignExpr(Expr.SpecialAssign expr) {
         return expr.name();
     }
 
     @Override
-    public Token visitBinaryExpr(CompileExpr.Binary expr) {
+    public Token visitBinaryExpr(Expr.Binary expr) {
         return find(expr.left());
     }
 
     @Override
-    public Token visitWhenExpr(CompileExpr.When expr) {
+    public Token visitWhenExpr(Expr.When expr) {
         return find(expr.condition());
     }
 
     @Override
-    public Token visitInstCallExpr(CompileExpr.InstCall expr) {
+    public Token visitInstCallExpr(Expr.InstCall expr) {
         return expr.name();
     }
 
     @Override
-    public Token visitStaticCallExpr(CompileExpr.StaticCall expr) {
+    public Token visitStaticCallExpr(Expr.StaticCall expr) {
         return expr.name();
     }
 
     @Override
-    public Token visitGetExpr(CompileExpr.Get expr) {
+    public Token visitGetExpr(Expr.Get expr) {
         return expr.name();
     }
 
     @Override
-    public Token visitStaticGetExpr(CompileExpr.StaticGet expr) {
+    public Token visitStaticGetExpr(Expr.StaticGet expr) {
         return expr.name();
     }
 
     @Override
-    public Token visitArrayGetExpr(CompileExpr.ArrayGet expr) {
+    public Token visitArrayGetExpr(Expr.ArrayGet expr) {
         return find(expr.object());
     }
 
     @Override
-    public Token visitSetExpr(CompileExpr.Set expr) {
+    public Token visitSetExpr(Expr.Set expr) {
         return expr.name();
     }
 
     @Override
-    public Token visitStaticSetExpr(CompileExpr.StaticSet expr) {
+    public Token visitStaticSetExpr(Expr.StaticSet expr) {
         return expr.name();
     }
 
     @Override
-    public Token visitArraySetExpr(CompileExpr.ArraySet expr) {
+    public Token visitArraySetExpr(Expr.ArraySet expr) {
         return expr.assignType();
     }
 
     @Override
-    public Token visitSpecialSetExpr(CompileExpr.SpecialSet expr) {
+    public Token visitSpecialSetExpr(Expr.SpecialSet expr) {
         return expr.name();
     }
 
     @Override
-    public Token visitStaticSpecialExpr(CompileExpr.StaticSpecial expr) {
+    public Token visitStaticSpecialExpr(Expr.StaticSpecial expr) {
         return expr.name();
     }
 
     @Override
-    public Token visitArraySpecialExpr(CompileExpr.ArraySpecial expr) {
+    public Token visitArraySpecialExpr(Expr.ArraySpecial expr) {
         return expr.assignType();
     }
 
     @Override
-    public Token visitSliceExpr(CompileExpr.Slice expr) {
+    public Token visitSliceExpr(Expr.Slice expr) {
         return find(expr.object());
     }
 
     @Override
-    public Token visitSwitchExpr(CompileExpr.Switch expr) {
+    public Token visitSwitchExpr(Expr.Switch expr) {
         return expr.keyword();
     }
 
     @Override
-    public Token visitCastCheckExpr(CompileExpr.CastCheck expr) {
+    public Token visitCastCheckExpr(Expr.CastCheck expr) {
         return find(expr.object());
     }
 
     @Override
-    public Token visitGroupingExpr(CompileExpr.Grouping expr) {
+    public Token visitGroupingExpr(Expr.Grouping expr) {
         return find(expr.expression());
     }
 
     @Override
-    public Token visitLiteralExpr(CompileExpr.Literal expr) {
+    public Token visitLiteralExpr(Expr.Literal expr) {
         return expr.literal();
     }
 
     @Override
-    public Token visitLogicalExpr(CompileExpr.Logical expr) {
+    public Token visitLogicalExpr(Expr.Logical expr) {
         return expr.operator();
     }
 
     @Override
-    public Token visitUnaryExpr(CompileExpr.Unary expr) {
+    public Token visitUnaryExpr(Expr.Unary expr) {
         return expr.operator();
     }
 
     @Override
-    public Token visitVarRefExpr(CompileExpr.VarRef expr) {
+    public Token visitVarRefExpr(Expr.VarRef expr) {
         return expr.name();
     }
 
     @Override
-    public Token visitConstructorExpr(CompileExpr.Constructor expr) {
+    public Token visitConstructorExpr(Expr.Constructor expr) {
         return expr.keyword();
     }
 
     @Override
-    public Token visitBlockStmt(CompileStmt.Block stmt) {
+    public Token visitBlockStmt(Stmt.Block stmt) {
         return null; //don't return anything
     }
 
     @Override
-    public Token visitExpressionStmt(CompileStmt.Expression stmt) {
+    public Token visitExpressionStmt(Stmt.Expression stmt) {
         return find(stmt.expression());
     }
 
     @Override
-    public Token visitIfStmt(CompileStmt.If stmt) {
+    public Token visitIfStmt(Stmt.If stmt) {
         return stmt.keyword();
     }
 
     @Override
-    public Token visitReturnStmt(CompileStmt.Return stmt) {
+    public Token visitReturnStmt(Stmt.Return stmt) {
         return stmt.keyword();
     }
 
     @Override
-    public Token visitThrowStmt(CompileStmt.Throw stmt) {
+    public Token visitThrowStmt(Stmt.Throw stmt) {
         return stmt.keyword();
     }
 
     @Override
-    public Token visitVarDeclStmt(CompileStmt.VarDecl stmt) {
+    public Token visitVarDeclStmt(Stmt.VarDecl stmt) {
         return stmt.name();
     }
 
     @Override
-    public Token visitWhileStmt(CompileStmt.While stmt) {
+    public Token visitWhileStmt(Stmt.While stmt) {
         return stmt.keyword();
     }
 
     @Override
-    public Token visitForStmt(CompileStmt.For stmt) {
+    public Token visitForStmt(Stmt.For stmt) {
         return stmt.keyword();
     }
 
     @Override
-    public Token visitForEachStmt(CompileStmt.ForEach stmt) {
+    public Token visitForEachStmt(Stmt.ForEach stmt) {
         return stmt.name();
     }
 
     @Override
-    public Token visitLoopInterruptionStmt(CompileStmt.LoopInterruption stmt) {
+    public Token visitLoopInterruptionStmt(Stmt.LoopInterruption stmt) {
         return stmt.type();
     }
 
     @Override
-    public Token visitTryStmt(CompileStmt.Try stmt) {
+    public Token visitTryStmt(Stmt.Try stmt) {
         return null;
     }
 }

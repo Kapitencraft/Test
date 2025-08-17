@@ -24,7 +24,7 @@ public interface Stmt {
 
     record Return(
         Token keyword, 
-        CompileExpr value
+        Expr value
     ) implements Stmt {
 
         @Override
@@ -34,7 +34,7 @@ public interface Stmt {
     }
 
     record Expression(
-        CompileExpr expression
+        Expr expression
     ) implements Stmt {
 
         @Override
@@ -46,7 +46,7 @@ public interface Stmt {
     record VarDecl(
         Token name, 
         ClassReference type, 
-        CompileExpr initializer, 
+        Expr initializer, 
         boolean isFinal
     ) implements Stmt {
 
@@ -58,7 +58,7 @@ public interface Stmt {
 
     record Throw(
         Token keyword, 
-        CompileExpr value
+        Expr value
     ) implements Stmt {
 
         @Override
@@ -68,10 +68,10 @@ public interface Stmt {
     }
 
     record For(
-        CompileStmt init, 
-        CompileExpr condition, 
-        CompileExpr increment, 
-        CompileStmt body, 
+        Stmt init, 
+        Expr condition, 
+        Expr increment, 
+        Stmt body, 
         Token keyword
     ) implements Stmt {
 
@@ -82,7 +82,7 @@ public interface Stmt {
     }
 
     record Block(
-        CompileStmt[] statements
+        Stmt[] statements
     ) implements Stmt {
 
         @Override
@@ -104,8 +104,8 @@ public interface Stmt {
     }
 
     record While(
-        CompileExpr condition, 
-        CompileStmt body, 
+        Expr condition, 
+        Stmt body, 
         Token keyword
     ) implements Stmt {
 
@@ -116,10 +116,10 @@ public interface Stmt {
     }
 
     record If(
-        CompileExpr condition, 
-        CompileStmt thenBranch, 
-        CompileStmt elseBranch, 
-        Pair<CompileExpr,CompileStmt>[] elifs, 
+        Expr condition, 
+        Stmt thenBranch, 
+        Stmt elseBranch, 
+        Pair<Expr,Stmt>[] elifs, 
         Token keyword
     ) implements Stmt {
 
@@ -132,8 +132,9 @@ public interface Stmt {
     record ForEach(
         ClassReference type, 
         Token name, 
-        CompileExpr initializer, 
-        CompileStmt body
+        Expr initializer, 
+        Stmt body, 
+        int baseVar
     ) implements Stmt {
 
         @Override

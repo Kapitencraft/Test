@@ -52,12 +52,14 @@ public class TestLoader {
             execution.setup();
             tests.forEach(execution::runTest);
             execution.clear();
+            System.out.println("test complete. " + execution.getSucceeded() + " successful");
         } catch (FileNotFoundException e) {
             System.err.println("file not found: " + e.getMessage());
         }
     }
 
     private static class TestExecution {
+        private int succeeded = 0;
         private int outputIndex = 0;
         private boolean error = false;
         private TestInstance running;
@@ -79,6 +81,7 @@ public class TestLoader {
             if (error) {
                 System.err.println("Error running class '" + instance.target + "'");
             } else {
+                succeeded++;
                 System.out.println("\u001B[32mSuccessfully tested class '" + instance.target + "'. took " + Interpreter.elapsedMillis() + "ms\u001B[0m");
             }
         }
@@ -96,6 +99,14 @@ public class TestLoader {
                 error = true;
             }
             outputIndex++;
+        }
+
+        public boolean error() {
+            return this.error;
+        }
+
+        public int getSucceeded() {
+            return succeeded;
         }
     }
 }

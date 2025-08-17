@@ -3,7 +3,7 @@ package net.kapitencraft.lang.oop.field;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.holder.ast.CompileExpr;
+import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.Interpreter;
 
@@ -12,9 +12,9 @@ public class CompileEnumConstant implements ScriptedField {
     private final int ordinal;
     private final String name;
     private final int constructorOrdinal;
-    private final CompileExpr[] args;
+    private final Expr[] args;
 
-    public CompileEnumConstant(int ordinal, String name, int constructorOrdinal, CompileExpr[] args) {
+    public CompileEnumConstant(int ordinal, String name, int constructorOrdinal, Expr[] args) {
         this.ordinal = ordinal;
         this.name = name;
         this.constructorOrdinal = constructorOrdinal;

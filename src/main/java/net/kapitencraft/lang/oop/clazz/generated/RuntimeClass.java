@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 
 public final class RuntimeClass implements ScriptedClass {
     private final GeneratedMethodMap methods;
-    private final Map<String, DataMethodContainer> allMethods;
 
     private final MethodLookup lookup;
 
@@ -55,7 +54,6 @@ public final class RuntimeClass implements ScriptedClass {
                         Map<String, ClassReference> enclosing, ClassReference[] implemented,
                         short modifiers, RuntimeAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
-        this.allMethods = methods;
         this.constructor = ConstructorContainer.fromCache(constructorData, this);
         this.allFields = fields;
         this.allStaticFields = staticFields;
@@ -118,12 +116,12 @@ public final class RuntimeClass implements ScriptedClass {
 
     @Override
     public ScriptedCallable getMethod(String name, ClassReference[] args) {
-        return Optional.ofNullable(allMethods.get(name)).map(container -> container.getMethod(args)).orElse(ScriptedClass.super.getMethod(name, args));
+        return Optional.ofNullable(methods.get(name)).map(container -> container.getMethod(args)).orElse(ScriptedClass.super.getMethod(name, args));
     }
 
     @Override
     public boolean hasMethod(String name) {
-        return allMethods.containsKey(name) || ScriptedClass.super.hasMethod(name);
+        return methods.has(name) || ScriptedClass.super.hasMethod(name);
     }
 
     @Override
@@ -214,7 +212,7 @@ public final class RuntimeClass implements ScriptedClass {
     @Override
     public String toString() { //jesus
         return "GeneratedClass{" + name + "}[" +
-                "methods=" + allMethods + ", " +
+                "methods=" + methods.asMap() + ", " +
                 "fields=" + allFields + ", " +
                 "staticFields=" + allStaticFields + ", " +
                 "superclass=" + superclass + ']';

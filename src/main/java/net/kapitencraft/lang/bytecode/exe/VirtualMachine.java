@@ -8,6 +8,7 @@ import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
 import net.kapitencraft.tool.StringReader;
+import org.jetbrains.annotations.Contract;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -33,7 +34,7 @@ public class VirtualMachine {
             this.stackBottom = stackBottom;
             Chunk chunk = callable.getChunk();
             this.code = chunk.code();
-            this.constants = chunk.constants();
+            this.constants = chunk.constants(); //TODO ensure always using the implemented method
         }
 
         @Override
@@ -83,6 +84,7 @@ public class VirtualMachine {
                         System.err.println("Caused by: " + e.exceptionType.getType().absoluteName() + ": " + e.exceptionType.getField("message"));
                         System.exit(65);
                     } catch (Exception e) {
+                        System.out.println("current ip: " + frame.ip);
                         Disassembler.disassemble(frame.callable.getChunk(), "Error");
                         throw e;
                     } finally {
@@ -96,10 +98,11 @@ public class VirtualMachine {
     public static void run() {
         while (callStackTop > 0) {
             func: while (frame.ip < frame.code.length) {
-                switch (Opcode.byId(readByte())) {
-                    case RETURN -> {
-                        break func;
-                    }
+                Opcode o = Opcode.byId(readByte());
+                if (DEBUG) System.out.printf("[DEBUG]: Executing %s\n", o);
+                switch (o) {
+                    case POP -> stackIndex--;
+                    case POP_2 -> stackIndex -= 2;
                     case INVOKE -> {
                         String execute = constString(frame.constants, read2Byte());
                         StringReader reader = new StringReader(execute);
@@ -115,23 +118,44 @@ public class VirtualMachine {
 
                         if (callable.isNative()) {
                             Object[] args = new Object[length];
-                            System.arraycopy(stack, callableStackTop, args, 0, length);//todo remove parsing types
+                            System.arraycopy(stack, callableStackTop, args, 0, length);
                             push(callable.call(args));
                         } else
-                            pushCall(new CallFrame(callable, callableStackTop)); //TODO fix index
+                            pushCall(new CallFrame(callable, callableStackTop));
                     }
+                    case NEW -> {
+                        read2Byte();
+
+                    }
+                    case RETURN -> {
+                        break func;
+                    }
+                    case SLICE -> slice();
                     case JUMP -> frame.ip = read2Byte();
                     case JUMP_IF_FALSE -> {
                         if (!(boolean) pop()) frame.ip = read2Byte();
                         else frame.ip += 2;
                     }
-                    case GET -> push(stack[frame.stackBottom + readByte()]);
+                    case ARRAY_LENGTH -> push(arrayLength(pop()));
+                    case GET -> get(readByte());
+                    case GET_0 -> get(0);
+                    case GET_1 -> get(1);
+                    case GET_2 -> get(2);
+                    case ASSIGN -> assign(readByte());
+                    case ASSIGN_0 -> assign(0);
+                    case ASSIGN_1 -> assign(1);
+                    case ASSIGN_2 -> assign(2);
                     case NULL -> push(null);
                     case TRUE -> push(true);
                     case FALSE -> push(false);
-                    case I_1 -> push(1);
-                    case D_1 -> push(1d);
                     case I_M1 -> push(-1);
+                    case I_0 -> push(0);
+                    case I_1 -> push(1);
+                    case I_2 -> push(2);
+                    case I_3 -> push(3);
+                    case I_4 -> push(4);
+                    case I_5 -> push(5);
+                    case D_1 -> push(1d);
                     case D_M1 -> push(-1d);
                     case I_CONST -> push(constInt(frame.constants, read2Byte()));
                     case D_CONST -> push(constDouble(frame.constants, read2Byte()));
@@ -151,10 +175,14 @@ public class VirtualMachine {
                     case D_SUB -> push((double) pop() - (double) pop());
                     case IA_LOAD -> push(((int[]) pop())[(int) pop()]);
                     case DA_LOAD -> push(((double[]) pop())[(int) pop()]);
+                    case CA_LOAD -> push(((char[]) pop())[(int) pop()]);
                     case RA_LOAD -> push(((Object[]) pop())[(int) pop()]);
                     case IA_STORE -> push(((int[]) pop())[(int) pop()] = (int) pop());
                     case DA_STORE -> push(((double[]) pop())[(int) pop()] = (double) pop());
+                    case CA_STORE -> push(((char[]) pop())[(int) pop()] = (char) pop());
                     case RA_STORE -> push(((Object[]) pop())[(int) pop()] = pop());
+                    case EQUAL -> push(pop() == pop());
+                    case NEQUAL -> push(pop() != pop());
                     case I_GEQUAL -> push((int) pop() >= (int) pop());
                     case D_GEQUAL -> push((double) pop() >= (double) pop());
                     case I_LEQUAL -> push((int) pop() <= (int) pop());
@@ -168,13 +196,44 @@ public class VirtualMachine {
                     case AND -> push((boolean) pop() && (boolean) pop());
                     case XOR -> push((boolean) pop() ^ (boolean) pop());
                     case D2F -> push((float) (double) pop());
-                    default -> throw new IllegalArgumentException("unknown opcode: " + frame.code[frame.ip - 1]);
+                    default -> throw new IllegalArgumentException("unknown opcode: " + o);
                 }
             }
             if (--callStackTop > 0) {
                 popCall();
             }
         }
+    }
+
+    private static <T> void slice() {
+        Integer rawInterval = (Integer) pop();
+        Integer rawEnd = (Integer) pop();
+        Integer rawStart = (Integer) pop();
+        T[] array = (T[]) pop();
+        int interval = rawInterval != null ? rawInterval : 1;
+        int min = rawStart != null ? rawStart : interval < 0 ? array.length : 0;
+        int max = rawEnd != null ? rawEnd : interval < 0 ? 0 : array.length;
+        T[] out = (T[]) new Object[(max - min) / interval];
+        int index = 0;
+        for (int i = min; i < max; i+=interval) {
+            out[index] = array[i];
+            index++;
+        }
+        push(out);
+    }
+
+    private static <T> int arrayLength(Object o) {
+        return ((T[]) o).length;
+    }
+
+    private static void get(int i) {
+        push(stack[frame.stackBottom + i]);
+        if (DEBUG) System.out.printf("[DEBUG]: GET: %s\n", frame.stackBottom + i);
+    }
+
+    private static void assign(int i) {
+        stack[frame.stackBottom + i] = stack[stackIndex - 1]; //DO NOT MODIFY THE STACK
+        if (DEBUG) System.out.printf("[DEBUG]: ASSIGN: %s\n", frame.stackBottom + i);
     }
 
     private static void popCall() {
@@ -208,6 +267,7 @@ public class VirtualMachine {
         return new String(s);
     }
 
+    @Contract(pure = true)
     public static double constDouble(byte[] constants, int index) {
         long d = 0;
         for (int i = 0; i < 8; i++) {

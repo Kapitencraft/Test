@@ -1,26 +1,25 @@
 package net.kapitencraft.lang.oop.clazz.inst;
 
-import net.kapitencraft.lang.holder.ast.CompileExpr;
+import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.run.Interpreter;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class CompileAnnotationClassInstance implements AbstractAnnotationClassInstance {
-    public final Map<String, CompileExpr> properties = new HashMap<>();
+    public final Map<String, Expr> properties = new HashMap<>();
     private final ScriptedClass type;
 
-    public CompileAnnotationClassInstance(ScriptedClass type, Map<String, CompileExpr> appliedProperties) {
+    public CompileAnnotationClassInstance(ScriptedClass type, Map<String, Expr> appliedProperties) {
         this.type = type;
         properties.putAll(appliedProperties);
     }
 
-    public static CompileAnnotationClassInstance fromPropertyMap(ScriptedClass type, Map<String, CompileExpr> properties) {
+    public static CompileAnnotationClassInstance fromPropertyMap(ScriptedClass type, Map<String, Expr> properties) {
         return new CompileAnnotationClassInstance(type, properties);
     }
 
-    public static CompileAnnotationClassInstance fromSingleProperty(ScriptedClass type, CompileExpr singleProperty) {
+    public static CompileAnnotationClassInstance fromSingleProperty(ScriptedClass type, Expr singleProperty) {
         return new CompileAnnotationClassInstance(type, Map.of("value", singleProperty));
     }
 

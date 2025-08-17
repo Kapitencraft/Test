@@ -12,7 +12,9 @@
         },
         "SpecialAssign": {
           "name": "Token",
-          "assignType": "Token"
+          "assignType": "Token",
+          "ordinal": "int",
+          "executor": "ClassReference"
         },
         "Binary": {
           "left": "Expr",
@@ -189,7 +191,8 @@
           "type": "ClassReference",
           "name": "Token",
           "initializer": "Expr",
-          "body": "Stmt"
+          "body": "Stmt",
+          "baseVar": "int"
         },
         "LoopInterruption": {
           "type": "Token"

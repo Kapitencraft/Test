@@ -205,9 +205,11 @@ public class VarTypeManager {
     }
 
     public static String getMethodSignature(ScriptedClass target, String name, ClassReference[] argTypes, ClassReference retType) {
-        return getClassName(target) + name + "(" +
-                Arrays.stream(argTypes).map(ClassReference::get).map(VarTypeManager::getClassName).collect(Collectors.joining()) +
-                ")" + getClassName(retType.get());
+        return getClassName(target) + name + "(" + getArgsSignature(argTypes) + ")" + getClassName(retType.get());
+    }
+
+    public static String getArgsSignature(ClassReference[] argTypes) {
+        return Arrays.stream(argTypes).map(ClassReference::get).map(VarTypeManager::getClassName).collect(Collectors.joining());
     }
 
     public static ClassReference[] parseArgTypes(StringReader reader) {

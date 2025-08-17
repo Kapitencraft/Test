@@ -5,6 +5,7 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,6 +47,11 @@ public class AnnotationMethodMap implements AbstractMethodMap {
     @Override
     public Map<String, DataMethodContainer> asMap() {
         return forLookup;
+    }
+
+    @Override
+    public @Nullable DataMethodContainer get(String name) {
+        return forLookup.get(name);
     }
 
     protected Map<String, AnnotationCallable> getMethods() {

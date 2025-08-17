@@ -127,7 +127,7 @@ public class GenerateAst {
 
         private static TypeDef expand(String compile) {
             return new TypeDef(
-                    compile.replaceAll("Expr", "CompileExpr").replaceAll("Stmt", "CompileStmt")
+                    compile
             );
         }
 

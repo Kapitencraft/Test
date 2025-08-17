@@ -6,7 +6,7 @@ import net.kapitencraft.lang.bytecode.exe.Chunk;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.holder.ast.CompileStmt;
+import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 import net.kapitencraft.tool.Pair;
@@ -16,11 +16,11 @@ import java.util.List;
 public class CompileCallable implements ScriptedCallable {
     private final ClassReference retType;
     private final List<? extends Pair<? extends ClassReference, String>> params;
-    private final CompileStmt[] body;
+    private final Stmt[] body;
     private final short modifiers;
     private final CompileAnnotationClassInstance[] annotations;
 
-    public CompileCallable(ClassReference retType, List<? extends Pair<? extends ClassReference, String>> params, CompileStmt[] body, short modifiers, CompileAnnotationClassInstance[] annotations) {
+    public CompileCallable(ClassReference retType, List<? extends Pair<? extends ClassReference, String>> params, Stmt[] body, short modifiers, CompileAnnotationClassInstance[] annotations) {
         this.retType = retType;
         this.params = params;
         this.body = body;
@@ -38,7 +38,7 @@ public class CompileCallable implements ScriptedCallable {
         }
         if (!Modifiers.isAbstract(modifiers)) {
             Chunk.Builder chunk = builder.setup();
-            for (CompileStmt compileStmt : body) {
+            for (Stmt compileStmt : body) {
                 builder.cache(compileStmt);
             }
             object.add("body", chunk.build().save());

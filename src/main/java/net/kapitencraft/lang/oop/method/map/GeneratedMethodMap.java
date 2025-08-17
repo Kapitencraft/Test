@@ -44,4 +44,9 @@ public class GeneratedMethodMap implements AbstractMethodMap {
     public Map<String, DataMethodContainer> asMap() {
         return methods;
     }
+
+    @Override
+    public @Nullable DataMethodContainer get(String name) {
+        return methods.get(name);
+    }
 }

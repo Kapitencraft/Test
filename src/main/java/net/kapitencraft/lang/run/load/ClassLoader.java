@@ -1,9 +1,13 @@
 package net.kapitencraft.lang.run.load;
 
 import com.google.gson.*;
+import net.kapitencraft.lang.bytecode.exe.Disassembler;
 import net.kapitencraft.lang.bytecode.exe.VirtualMachine;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.Package;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.test.TestLoader;
@@ -76,6 +80,32 @@ public class ClassLoader {
                     System.out.println("\trun <ClassPath>             - Executes the 'main(String[])' method of that class");
                     System.out.println("\tdebug                       - toggles debug log for the VM");
                     System.out.println("\ttest                        - Runs the benchmark test");
+                    System.out.println("\tlist                        - Lists all methods of the given class and their content");
+                } else if (line.startsWith("list ")) {
+                    String classRef = line.substring(5);
+                    ClassReference target = VarTypeManager.getClassForName(classRef);
+                    if (target == null) System.err.println("unable to find class for id '" + classRef + "'");
+                    else {
+                        ScriptedClass scriptedClass = target.get();
+                        System.out.println("==== Info ====");
+                        System.out.println("Name:    " + scriptedClass.name());
+                        System.out.println("Package: " + scriptedClass.pck());
+                        System.out.println("\n=== Methods ===");
+                        Map<String, DataMethodContainer> methods = scriptedClass.getMethods().asMap();
+                        methods.forEach((string, dataMethodContainer) -> {
+                            for (ScriptedCallable method : dataMethodContainer.getMethods()) {
+                                String name = string + "(" + VarTypeManager.getArgsSignature(method.argTypes()) + ")" + VarTypeManager.getClassName(method.type().get());
+                                if (method.isNative()) {
+                                    System.out.println("== " + name + " ==");
+                                    System.out.println("<Native>");
+                                } else {
+                                    Disassembler.disassemble(method.getChunk(), name);
+                                }
+                                System.out.println();
+                            }
+                        });
+                        System.out.println("==== Info End ====");
+                    }
                 }
                 else if (!line.isEmpty()) System.err.println("unknown command: \"" + line + "\"");
             }

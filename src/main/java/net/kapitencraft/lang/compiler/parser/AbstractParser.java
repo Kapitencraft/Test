@@ -1,9 +1,10 @@
 package net.kapitencraft.lang.compiler.parser;
 
 import com.google.common.collect.ImmutableList;
+import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
-import net.kapitencraft.lang.holder.ast.CompileExpr;
+import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
@@ -11,9 +12,7 @@ import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.VarTypeParser;
-import net.kapitencraft.lang.compiler.analyser.VarAnalyser;
 import net.kapitencraft.lang.compiler.visitor.LocationFinder;
 import net.kapitencraft.lang.compiler.visitor.RetTypeFinder;
 import net.kapitencraft.lang.holder.token.Token;
@@ -23,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.Supplier;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
@@ -50,7 +48,7 @@ public class AbstractParser {
     protected final Compiler.ErrorLogger errorLogger;
     protected BytecodeVars varAnalyser;
 
-    protected void checkVarExistence(Token name, boolean requireValue, boolean mayBeFinal) {
+    protected ClassReference checkVarExistence(Token name, boolean requireValue, boolean mayBeFinal) {
         String varName = name.lexeme();
         BytecodeVars.FetchResult result = varAnalyser.get(varName);
         if (result == BytecodeVars.FetchResult.FAIL) {
@@ -60,9 +58,10 @@ public class AbstractParser {
         } else if (!mayBeFinal && !result.canAssign()) {
             error(name, "Can not assign to final variable");
         }
+        return result.type();
     }
 
-    protected void checkVarType(Token name, CompileExpr value) {
+    protected void checkVarType(Token name, Expr value) {
         BytecodeVars.FetchResult result = varAnalyser.get(name.lexeme());
         if (result == BytecodeVars.FetchResult.FAIL) return;
         expectType(name, value, result.type());
@@ -88,20 +87,20 @@ public class AbstractParser {
         args.push(ImmutableList.copyOf(types));
     }
 
-    protected ClassReference expectType(Token errorLoc, CompileExpr value, ClassReference type) {
+    protected ClassReference expectType(Token errorLoc, Expr value, ClassReference type) {
         ClassReference got = finder.findRetType(value);
         return expectType(errorLoc, got, type);
     }
 
-    protected ClassReference expectType(CompileExpr value, ClassReference type) {
+    protected ClassReference expectType(Expr value, ClassReference type) {
         return expectType(this.locFinder.find(value), value, type);
     }
 
-    protected void expectCondition(Token errorLoc, CompileExpr gotten) {
+    protected void expectCondition(Token errorLoc, Expr gotten) {
         expectType(errorLoc, gotten, VarTypeManager.BOOLEAN.reference());
     }
 
-    protected void expectCondition(CompileExpr gotten) {
+    protected void expectCondition(Expr gotten) {
         expectCondition(locFinder.find(gotten), gotten);
     }
 

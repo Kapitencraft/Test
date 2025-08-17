@@ -49,9 +49,9 @@ public interface Expr {
     }
 
     record Set(
-        CompileExpr object, 
+        Expr object, 
         Token name, 
-        CompileExpr value, 
+        Expr value, 
         Token assignType, 
         ClassReference executor, 
         Operand operand
@@ -64,9 +64,9 @@ public interface Expr {
     }
 
     record ArraySet(
-        CompileExpr object, 
-        CompileExpr index, 
-        CompileExpr value, 
+        Expr object, 
+        Expr index, 
+        Expr value, 
         Token assignType, 
         ClassReference executor, 
         Operand operand
@@ -79,8 +79,8 @@ public interface Expr {
     }
 
     record ArraySpecial(
-        CompileExpr object, 
-        CompileExpr index, 
+        Expr object, 
+        Expr index, 
         Token assignType, 
         ClassReference executor
     ) implements Expr {
@@ -93,7 +93,9 @@ public interface Expr {
 
     record SpecialAssign(
         Token name, 
-        Token assignType
+        Token assignType, 
+        int ordinal, 
+        ClassReference executor
     ) implements Expr {
 
         @Override
@@ -105,7 +107,7 @@ public interface Expr {
     record Constructor(
         Token keyword, 
         ClassReference target, 
-        CompileExpr[] params, 
+        Expr[] params, 
         int ordinal
     ) implements Expr {
 
@@ -116,9 +118,9 @@ public interface Expr {
     }
 
     record InstCall(
-        CompileExpr callee, 
+        Expr callee, 
         Token name, 
-        CompileExpr[] args, 
+        Expr[] args, 
         ClassReference retType, 
         String id
     ) implements Expr {
@@ -132,7 +134,7 @@ public interface Expr {
     record StaticSet(
         ClassReference target, 
         Token name, 
-        CompileExpr value, 
+        Expr value, 
         Token assignType, 
         ClassReference executor, 
         Operand operand
@@ -145,9 +147,9 @@ public interface Expr {
     }
 
     record Logical(
-        CompileExpr left, 
+        Expr left, 
         Token operator, 
-        CompileExpr right
+        Expr right
     ) implements Expr {
 
         @Override
@@ -157,7 +159,7 @@ public interface Expr {
     }
 
     record Grouping(
-        CompileExpr expression
+        Expr expression
     ) implements Expr {
 
         @Override
@@ -168,7 +170,7 @@ public interface Expr {
 
     record Unary(
         Token operator, 
-        CompileExpr right, 
+        Expr right, 
         ClassReference executor
     ) implements Expr {
 
@@ -179,9 +181,9 @@ public interface Expr {
     }
 
     record When(
-        CompileExpr condition, 
-        CompileExpr ifTrue, 
-        CompileExpr ifFalse
+        Expr condition, 
+        Expr ifTrue, 
+        Expr ifFalse
     ) implements Expr {
 
         @Override
@@ -191,7 +193,7 @@ public interface Expr {
     }
 
     record CastCheck(
-        CompileExpr object, 
+        Expr object, 
         ClassReference targetType, 
         Token patternVarName
     ) implements Expr {
@@ -214,9 +216,9 @@ public interface Expr {
     }
 
     record Switch(
-        CompileExpr provider, 
-        Map<Object,CompileExpr> params, 
-        CompileExpr defaulted, 
+        Expr provider, 
+        Map<Object,Expr> params, 
+        Expr defaulted, 
         Token keyword
     ) implements Expr {
 
@@ -227,10 +229,10 @@ public interface Expr {
     }
 
     record Slice(
-        CompileExpr object, 
-        CompileExpr start, 
-        CompileExpr end, 
-        CompileExpr interval
+        Expr object, 
+        Expr start, 
+        Expr end, 
+        Expr interval
     ) implements Expr {
 
         @Override
@@ -240,7 +242,7 @@ public interface Expr {
     }
 
     record Get(
-        CompileExpr object, 
+        Expr object, 
         Token name
     ) implements Expr {
 
@@ -251,8 +253,8 @@ public interface Expr {
     }
 
     record ArrayGet(
-        CompileExpr object, 
-        CompileExpr index
+        Expr object, 
+        Expr index
     ) implements Expr {
 
         @Override
@@ -273,7 +275,7 @@ public interface Expr {
 
     record Assign(
         Token name, 
-        CompileExpr value, 
+        Expr value, 
         Token type, 
         byte ordinal, 
         ClassReference executor, 
@@ -289,7 +291,7 @@ public interface Expr {
     record StaticCall(
         ClassReference target, 
         Token name, 
-        CompileExpr[] args, 
+        Expr[] args, 
         ClassReference retType, 
         String id
     ) implements Expr {
@@ -301,8 +303,8 @@ public interface Expr {
     }
 
     record Binary(
-        CompileExpr left, 
-        CompileExpr right, 
+        Expr left, 
+        Expr right, 
         Token operator, 
         ClassReference executor, 
         Operand operand
@@ -328,7 +330,7 @@ public interface Expr {
     }
 
     record SpecialSet(
-        CompileExpr callee, 
+        Expr callee, 
         Token name, 
         Token assignType, 
         ClassReference retType
