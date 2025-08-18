@@ -103,6 +103,11 @@ public class VirtualMachine {
                 switch (o) {
                     case POP -> stackIndex--;
                     case POP_2 -> stackIndex -= 2;
+                    case DUP -> stack[stackIndex] = stack[stackIndex++ - 1];
+                    case DUP2 -> {
+                        stack[stackIndex] = stack[stackIndex++ - 2];
+                        stack[stackIndex] = stack[stackIndex++ - 2];
+                    }
                     case INVOKE -> {
                         String execute = constString(frame.constants, read2Byte());
                         StringReader reader = new StringReader(execute);
