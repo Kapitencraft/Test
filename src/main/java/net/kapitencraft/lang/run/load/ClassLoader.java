@@ -29,6 +29,7 @@ public class ClassLoader {
         loadClasses();
         System.out.println("Loading complete.");
         Scanner scanner = new Scanner(System.in);
+        scanner.useDelimiter("\n");
         String line = "";
         boolean profiling = false;
         while (!"exit".equals(line)) {
@@ -109,7 +110,7 @@ public class ClassLoader {
                 }
                 else if (!line.isEmpty()) System.err.println("unknown command: \"" + line + "\"");
             }
-            line = scanner.nextLine();
+            line = scanner.next();
         }
     }
 
@@ -126,7 +127,7 @@ public class ClassLoader {
         pck.addClass(holder.name, holder.reference);
         if (holder.children.length > 0) {
             Package internal = pck.getOrCreatePackage(holder.name);
-            for (VMLoaderHolder child : ((VMLoaderHolder[]) holder.children)) {
+            for (VMLoaderHolder child : holder.children) {
                 loadHolderReference(internal, child);
             }
         }

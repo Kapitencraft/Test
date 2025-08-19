@@ -240,13 +240,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 getPlusOne(reference) : getMinusOne(reference)
         );
 
-        builder.addCode(getAdd(reference));
-        meta.accept(builder); //TODO fix multiple invokes
-        builder.addCode(get);
-        builder.addCode(getAdd(reference));
-        meta.accept(builder);
-        builder.addCode(set);
-
         specialAssign(expr.executor(), expr.assignType(), Opcode.GET_STATIC, Opcode.PUT_STATIC, b -> b.injectString(id));
         return null;
     }
