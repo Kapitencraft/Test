@@ -234,6 +234,19 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitStaticSpecialExpr(Expr.StaticSpecial expr) {
         String id = VarTypeManager.getClassName(expr.target().get());
+
+        ClassReference reference = expr.executor();
+        builder.addCode(expr.assignType().type() == TokenType.GROW ?
+                getPlusOne(reference) : getMinusOne(reference)
+        );
+
+        builder.addCode(getAdd(reference));
+        meta.accept(builder); //TODO fix multiple invokes
+        builder.addCode(get);
+        builder.addCode(getAdd(reference));
+        meta.accept(builder);
+        builder.addCode(set);
+
         specialAssign(expr.executor(), expr.assignType(), Opcode.GET_STATIC, Opcode.PUT_STATIC, b -> b.injectString(id));
         return null;
     }
@@ -247,19 +260,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         builder.addCode(getAdd(reference));
         cache(expr.index());
         cache(expr.object());
-
-        meta.accept(builder); //TODO fix multiple invokes
-        builder.addCode(get);
-        builder.addCode(getAdd(reference));
-        meta.accept(builder);
-        builder.addCode(set);
-
-
-        specialAssign(reference, expr.assignType(), getArrayLoad(reference), getArrayStore(reference), b -> {
-            cache(expr.index());
-            cache(expr.object());
-        });
-
+        builder.addCode(Opcode.DUP2_X1);
         return null;
     }
 

@@ -108,6 +108,38 @@ public class VirtualMachine {
                         stack[stackIndex] = stack[stackIndex++ - 2];
                         stack[stackIndex] = stack[stackIndex++ - 2];
                     }
+                    case DUP_X1 -> {
+                        Object obj = stack[stackIndex - 1];
+                        stack[stackIndex - 1] = stack[stackIndex - 2];
+                        stack[stackIndex - 2] = obj;
+                        stack[stackIndex++] = obj;
+                    }
+                    case DUP_X2 -> {
+                        Object obj = stack[stackIndex - 1];
+                        stack[stackIndex - 1] = stack[stackIndex - 2];
+                        stack[stackIndex - 2] = stack[stackIndex - 3];
+                        stack[stackIndex - 3] = obj;
+                        stack[stackIndex++] = obj;
+                    }
+                    case DUP2_X1 -> {
+                        Object obj = stack[stackIndex - 2];
+                        Object obj1 = stack[stackIndex - 1];
+                        stack[stackIndex - 1] = stack[stackIndex - 3];
+                        stack[stackIndex - 3] = obj;
+                        stack[stackIndex - 2] = obj1;
+                        stack[stackIndex++] = obj;
+                        stack[stackIndex++] = obj1;
+                    }
+                    case DUP2_X2 -> {
+                        Object obj = stack[stackIndex - 2];
+                        Object obj1 = stack[stackIndex - 1];
+                        stack[stackIndex - 2] = stack[stackIndex - 4];
+                        stack[stackIndex - 1] = stack[stackIndex - 3];
+                        stack[stackIndex - 4] = obj;
+                        stack[stackIndex - 3] = obj1;
+                        stack[stackIndex++] = obj;
+                        stack[stackIndex++] = obj1;
+                    }
                     case INVOKE -> {
                         String execute = constString(frame.constants, read2Byte());
                         StringReader reader = new StringReader(execute);
