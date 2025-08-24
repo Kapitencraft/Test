@@ -34,7 +34,7 @@ public class Disassembler {
             case GET, ASSIGN -> var(opcode, chunk, offset);
             case I_CONST -> intConstInstruction(opcode, chunk, offset);
             case D_CONST -> doubleConstInstruction(opcode, chunk, offset);
-            case S_CONST -> stringConstInstruction(opcode, chunk, offset);
+            case NEW, S_CONST -> stringConstInstruction(opcode, chunk, offset);
             case INVOKE -> invoke(chunk, offset);
             case JUMP, JUMP_IF_FALSE -> jump(opcode, chunk, offset);
             case SWITCH -> 0;
@@ -42,7 +42,6 @@ public class Disassembler {
             case GET_STATIC -> 0;
             case PUT_FIELD -> 0;
             case PUT_STATIC -> 0;
-            case NEW -> 0;
         };
     }
 

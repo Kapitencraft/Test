@@ -115,8 +115,8 @@ public final class RuntimeClass implements ScriptedClass {
     }
 
     @Override
-    public ScriptedCallable getMethod(String name, ClassReference[] args) {
-        return Optional.ofNullable(methods.get(name)).map(container -> container.getMethod(args)).orElse(ScriptedClass.super.getMethod(name, args));
+    public ScriptedCallable getMethod(String signature) {
+        return lookup.get(signature);
     }
 
     @Override
@@ -146,16 +146,6 @@ public final class RuntimeClass implements ScriptedClass {
     @Override
     public boolean isInterface() {
         return false;
-    }
-
-    @Override
-    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return lookup.getMethodByOrdinal(name, ordinal);
-    }
-
-    @Override
-    public int getMethodOrdinal(String name, ClassReference[] types) {
-        return lookup.getMethodOrdinal(name, types);
     }
 
     @Override

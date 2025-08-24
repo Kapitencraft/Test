@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 
 public class DynamicClassInstance implements ClassInstance {
-    private final Environment environment;
     private final Map<String, Object> fields = new HashMap<>();
     private final ScriptedClass type;
 
@@ -22,62 +21,12 @@ public class DynamicClassInstance implements ClassInstance {
         return type;
     }
 
-    public DynamicClassInstance(ScriptedClass type, Interpreter interpreter) {
-        this.environment = new Environment();
+    public DynamicClassInstance(ScriptedClass type) {
         this.type = type;
-        environment.defineVar("this", this);
-        ClassReference superClass = this.type.superclass();
-        if (superClass != null)
-            environment.defineVar("super", new SuperWrapper(superClass.get()));
-        this.executeConstructor(interpreter);
     }
 
-    private class SuperWrapper implements ClassInstance {
-        private final ScriptedClass clazz;
-
-        private SuperWrapper(ScriptedClass clazz) {
-            this.clazz = clazz;
-        }
-
-        @Override
-        public Object assignField(String name, Object val) {
-            return DynamicClassInstance.this.assignField(name, val);
-        }
-
-        @Override
-        public Object getField(String name) {
-            return DynamicClassInstance.this.getField(name);
-        }
-
-        @Override
-        public void construct(Object[] params, int ordinal) {
-            throw new IllegalAccessError("can not construct super class");
-        }
-
-        @Override
-        public Object executeMethod(String name, int ordinal, Object[] arguments) {
-            ScriptedCallable callable = clazz.getMethodByOrdinal(name, ordinal);
-            DynamicClassInstance.this.environment.push();
-            try {
-                return callable.call(arguments);
-            } finally {
-                DynamicClassInstance.this.environment.pop();
-            }
-        }
-
-        @Override
-        public ScriptedClass getType() {
-            return clazz;
-        }
-    }
-
-    private void executeConstructor(Interpreter interpreter) {
-        this.type.getFields().forEach((string, loxField) -> this.fields.put(string, loxField.initialize(this.environment, interpreter)));
-    }
-
-    public Object assignField(String name, Object val) {
+    public void assignField(String name, Object val) {
         this.fields.put(name, val);
-        return getField(name);
     }
 
     public Object getField(String name) {
@@ -88,18 +37,8 @@ public class DynamicClassInstance implements ClassInstance {
         type.getConstructor().getMethodByOrdinal(ordinal).call(params);
     }
 
-    public Object executeMethod(String name, int ordinal, Object[] arguments) {
-        ScriptedCallable callable = type.getMethodByOrdinal(name, ordinal);
-        this.environment.push();
-        try {
-            return callable.call(arguments);
-        } finally {
-            this.environment.pop();
-        }
-    }
-
     @Override
     public String toString() {
-        return (String) this.type.getMethod("toString", new ClassReference[0]).call(new Object[0]);
+        return (String) this.type.getMethod("toString()").call(new Object[0]);
     }
 }

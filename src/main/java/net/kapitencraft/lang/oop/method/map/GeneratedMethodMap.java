@@ -5,16 +5,20 @@ import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class GeneratedMethodMap implements AbstractMethodMap {
     private final Map<String, DataMethodContainer> methods;
+    private final Map<String, ScriptedCallable> plainMap;
 
     public GeneratedMethodMap(Map<String, DataMethodContainer> methods) {
         this.methods = methods;
+        this.plainMap = ScriptedCallable.parseMethods(methods);
     }
 
     public static GeneratedMethodMap empty() {
@@ -35,6 +39,11 @@ public class GeneratedMethodMap implements AbstractMethodMap {
     public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
         DataMethodContainer container = methods.get(name);
         return container == null ? null : container.getMethodByOrdinal(ordinal);
+    }
+
+    @Override
+    public ScriptedCallable getMethod(String signature) {
+        return plainMap.get(signature);
     }
 
     public boolean has(String name) {

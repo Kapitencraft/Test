@@ -36,8 +36,8 @@ public interface EnumClass extends ScriptedClass {
     }
 
     @Override
-    default ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        if ("values".equals(name) && ordinal == 0) {
+    default ScriptedCallable getMethod(String signature) {
+        if ("values()".equals(signature)) {
             return new NativeMethodImpl(new ClassReference[0], this.array().reference(), true, false) {
                 @Override
                 public Object call(Object[] arguments) {
@@ -51,12 +51,6 @@ public interface EnumClass extends ScriptedClass {
             };
         }
         return null;
-    }
-
-    @Override
-    default int getMethodOrdinal(String name, ClassReference[] args) {
-        if ("values".equals(name) && args.length == 0) return 0;
-        return -1;
     }
 
     @Override

@@ -119,18 +119,13 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
+    public ScriptedCallable getMethod(String signature) {
+        return methods.getMethod(signature);
+    }
+
+    @Override
     public short getModifiers() {
         return Modifiers.ANNOTATION;
-    }
-
-    @Override
-    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return null;
-    }
-
-    @Override
-    public int getMethodOrdinal(String name, ClassReference[] types) {
-        return -1;
     }
 
     @Override

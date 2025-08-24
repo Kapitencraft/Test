@@ -31,9 +31,8 @@ public class NativeClassInstance implements ClassInstance {
     }
 
     @Override
-    public Object assignField(String name, Object val) {
+    public void assignField(String name, Object val) {
         type.getFields().get(name).set(obj, NativeClassLoader.extractNative(val));
-        return val;
     }
 
     @Override
@@ -44,11 +43,6 @@ public class NativeClassInstance implements ClassInstance {
     @Override
     public void construct(Object[] params, int ordinal) {
         type.getConstructor().getMethodByOrdinal(ordinal).call(params);
-    }
-
-    @Override
-    public Object executeMethod(String name, int ordinal, Object[] arguments) {
-        return type.getMethodByOrdinal(name, ordinal).call(arguments);
     }
 
     @Override

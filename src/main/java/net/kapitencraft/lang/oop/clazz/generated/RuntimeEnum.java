@@ -162,18 +162,6 @@ public class RuntimeEnum implements EnumClass {
     }
 
     @Override
-    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        checkInit();
-        return lookup.getMethodByOrdinal(name, ordinal);
-    }
-
-    @Override
-    public int getMethodOrdinal(String name, ClassReference[] types) {
-        checkInit();
-        return lookup.getMethodOrdinal(name, types);
-    }
-
-    @Override
     public boolean hasEnclosing(String name) {
         return enclosing.containsKey(name);
     }
@@ -196,5 +184,10 @@ public class RuntimeEnum implements EnumClass {
     @Override
     public short getModifiers() {
         return Modifiers.ENUM;
+    }
+
+    @Override
+    public ScriptedCallable getMethod(String signature) {
+        return Optional.ofNullable(methods.getMethod(signature)).orElseGet(() -> EnumClass.super.getMethod(signature));
     }
 }

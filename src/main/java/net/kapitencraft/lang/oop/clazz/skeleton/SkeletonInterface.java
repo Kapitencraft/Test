@@ -136,18 +136,13 @@ public class SkeletonInterface implements ScriptedClass {
     }
 
     @Override
+    public ScriptedCallable getMethod(String signature) {
+        return methods.getMethod(signature);
+    }
+
+    @Override
     public short getModifiers() {
         return Modifiers.INTERFACE;
-    }
-
-    @Override
-    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return methods.getMethodByOrdinal(name, ordinal);
-    }
-
-    @Override
-    public int getMethodOrdinal(String name, ClassReference[] types) {
-        return methods.getMethodOrdinal(name, types);
     }
 
     @Override

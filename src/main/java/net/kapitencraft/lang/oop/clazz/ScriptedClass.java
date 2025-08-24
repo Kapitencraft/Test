@@ -182,27 +182,15 @@ public interface ScriptedClass {
 
     //region method
 
-    default ScriptedCallable getMethod(String name, ClassReference[] args) {
-        return getMethodByOrdinal(name, getMethodOrdinal(name, args));
-    }
+    /**
+     * @param signature the signature of the method, without declaring class or return type
+     * @return the method for the signature or null if it couldn't be found
+     */
+    ScriptedCallable getMethod(String signature);
 
     default boolean hasMethod(String name) {
         return superclass() != null && superclass().get().hasMethod(name);
     }
-
-    /**
-     * @param name name of the method
-     * @param ordinal ID of the given method name generated at step COMPILE
-     * @return the method that corresponds to the given ID
-     */
-    ScriptedCallable getMethodByOrdinal(String name, int ordinal);
-
-    /**
-     * @param name name of the method
-     * @param types argument types
-     * @return the ID of the given method name and argument types; -1 if none could be found
-     */
-    int getMethodOrdinal(String name, ClassReference[] types);
 
     AbstractMethodMap getMethods();
 

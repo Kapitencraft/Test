@@ -40,6 +40,11 @@ public class AnnotationMethodMap implements AbstractMethodMap {
     }
 
     @Override
+    public ScriptedCallable getMethod(String signature) {
+        return methods.get(signature.substring(0, signature.length() - 2));
+    }
+
+    @Override
     public boolean has(String name) {
         return methods.containsKey(name);
     }

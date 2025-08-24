@@ -204,8 +204,12 @@ public class VarTypeManager {
             return "L" + reference.absoluteName().replaceAll("\\.", "/") + ";";
     }
 
-    public static String getMethodSignature(ScriptedClass target, String name, ClassReference[] argTypes, ClassReference retType) {
-        return getClassName(target) + name + "(" + getArgsSignature(argTypes) + ")" + getClassName(retType.get());
+    public static String getMethodSignature(ScriptedClass target, String name, ClassReference[] argTypes) {
+        return getClassName(target) + getMethodSignatureNoTarget(name, argTypes);
+    }
+
+    public static String getMethodSignatureNoTarget(String name, ClassReference[] argTypes) {
+        return name + "(" + getArgsSignature(argTypes) + ")";
     }
 
     public static String getArgsSignature(ClassReference[] argTypes) {
@@ -240,6 +244,9 @@ public class VarTypeManager {
             }
             case 'V' -> {
                 return VarTypeManager.VOID.reference();
+            }
+            case '[' -> {
+                return parseType(reader).array();
             }
             case 'L' -> {
                 String type = reader.readUntil(';');

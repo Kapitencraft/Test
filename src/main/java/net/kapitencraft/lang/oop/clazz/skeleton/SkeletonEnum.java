@@ -184,19 +184,13 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
+    public ScriptedCallable getMethod(String signature) {
+        return Optional.ofNullable(methods.getMethod(signature)).orElseGet(() -> EnumClass.super.getMethod(signature));
+    }
+
+    @Override
     public short getModifiers() {
         return Modifiers.ENUM;
-    }
-
-    @Override
-    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return Optional.ofNullable(methods.getMethodByOrdinal(name, ordinal)).orElseGet(() -> EnumClass.super.getMethodByOrdinal(name, ordinal));
-    }
-
-    @Override
-    public int getMethodOrdinal(String name, ClassReference[] args) {
-        int ordinal = methods.getMethodOrdinal(name, args);
-        return ordinal == -1 ? EnumClass.super.getMethodOrdinal(name, args) : ordinal;
     }
 
     @Override

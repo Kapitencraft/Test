@@ -92,11 +92,6 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public ScriptedCallable getMethod(String name, ClassReference[] args) {
-        return null;
-    }
-
-    @Override
     public boolean hasMethod(String name) {
         return false;
     }
@@ -117,13 +112,8 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
+    public ScriptedCallable getMethod(String signature) {
         return null;
-    }
-
-    @Override
-    public int getMethodOrdinal(String name, ClassReference[] types) {
-        return -1;
     }
 
     @Override

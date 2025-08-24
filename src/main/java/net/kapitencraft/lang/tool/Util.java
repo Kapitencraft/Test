@@ -3,7 +3,9 @@ package net.kapitencraft.lang.tool;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -128,5 +130,9 @@ public class Util {
     public static <T> boolean arrayContains(T[] array, T val) {
         for (T t : array) if (t.equals(val)) return true;
         return false;
+    }
+
+    public static ScriptedCallable getClosest(ScriptedClass targetClass, String methodSignatureNoTarget) {
+        return null;
     }
 }

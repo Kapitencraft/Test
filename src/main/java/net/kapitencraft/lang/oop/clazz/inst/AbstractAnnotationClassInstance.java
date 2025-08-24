@@ -7,7 +7,7 @@ import net.kapitencraft.lang.run.algebra.Operand;
 public interface AbstractAnnotationClassInstance extends ClassInstance {
 
     @Override
-    default Object assignField(String name, Object val) {
+    default void assignField(String name, Object val) {
         throw new IllegalAccessError("can not assign field of annotation");
     }
 
@@ -19,11 +19,6 @@ public interface AbstractAnnotationClassInstance extends ClassInstance {
     @Override
     default void construct(Object[] params, int ordinal) {
         throw new IllegalAccessError("can not construct annotation");
-    }
-
-    @Override
-    default Object executeMethod(String name, int ordinal, Object[] arguments) {
-        return getProperty(name);
     }
 
     Object getProperty(String name);

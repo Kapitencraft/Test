@@ -75,18 +75,13 @@ public class NativeClassImpl implements ScriptedClass {
     }
 
     @Override
+    public ScriptedCallable getMethod(String signature) {
+        return methods.getMethod(signature);
+    }
+
+    @Override
     public short getModifiers() {
         return modifiers;
-    }
-
-    @Override
-    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return methods.getMethodByOrdinal(name, ordinal);
-    }
-
-    @Override
-    public int getMethodOrdinal(String name, ClassReference[] types) {
-        return methods.getMethodOrdinal(name, types);
     }
 
     @Override

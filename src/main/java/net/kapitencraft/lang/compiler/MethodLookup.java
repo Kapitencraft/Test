@@ -10,6 +10,7 @@ import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.tool.Util;
 
@@ -19,12 +20,14 @@ import java.util.function.Function;
 
 public class MethodLookup {
     private final List<Pair<ScriptedClass, AbstractMethodMap>> lookup;
-    private final AbstractMethodMap exposed;
+    private final Map<String, ScriptedCallable> exposed;
 
     public MethodLookup(List<Pair<ScriptedClass, AbstractMethodMap>> lookup) {
         this.lookup = lookup;
         exposed = this.createExposed();
     }
+
+    //region compile
 
     public void checkFinal(Compiler.ErrorLogger logger, Pair<Token, CompileCallable>[] map) {
         for (Pair<Token, CompileCallable> pair : map) {
@@ -79,6 +82,8 @@ public class MethodLookup {
         });
     }
 
+    //endregion
+
     public static MethodLookup createFromClass(ScriptedClass scriptedClass, ClassReference... interfaces) {
         List<ScriptedClass> parentMap = createParentMap(scriptedClass);
         List<ScriptedClass> allParents = new ArrayList<>();
@@ -113,37 +118,15 @@ public class MethodLookup {
         return Util.invert(parents);
     }
 
-    private GeneratedMethodMap createExposed() {
-        Map<String, DataMethodContainer> map = new HashMap<>();
+    private Map<String, ScriptedCallable> createExposed() {
+        Map<String, ScriptedCallable> map = new HashMap<>();
         for (Pair<ScriptedClass, AbstractMethodMap> pair : lookup) {
-            pair.right().asMap().forEach((s, dataMethodContainer) -> {
-                if (!map.containsKey(s)) map.put(s, dataMethodContainer);
-                else {
-                    DataMethodContainer val = map.get(s);
-                    ScriptedCallable[] valMethods = val.getMethods();
-                    ScriptedCallable[] subMethods = dataMethodContainer.getMethods();
-                    List<ScriptedCallable> newMethods = new ArrayList<>();
-                    a:  for (ScriptedCallable valMethod : valMethods) {
-                        for (ScriptedCallable subMethod : subMethods) {
-                            if (Util.matchArgs(valMethod.argTypes(), subMethod.argTypes())) {
-                                newMethods.add(subMethod);
-                                continue a;
-                            }
-                        }
-                        newMethods.add(valMethod);
-                    }
-                    map.put(s, new DataMethodContainer(newMethods.toArray(new ScriptedCallable[0])));
-                }
-            });
+            map.putAll(ScriptedCallable.parseMethods(pair.right().asMap()));
         }
-        return new GeneratedMethodMap(ImmutableMap.copyOf(map));
+        return map;
     }
 
-    public int getMethodOrdinal(String name, ClassReference[] args) {
-        return exposed.getMethodOrdinal(name, args);
-    }
-
-    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return exposed.getMethodByOrdinal(name, ordinal);
+    public ScriptedCallable get(String signature) {
+        return exposed.get(signature);
     }
 }

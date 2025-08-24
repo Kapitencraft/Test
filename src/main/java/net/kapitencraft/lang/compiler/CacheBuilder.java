@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.exe.Chunk;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.compiler.visitor.RetTypeFinder;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -382,7 +383,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitConstructorExpr(Expr.Constructor expr) {
         builder.addCode(Opcode.NEW);
-        //TODO
+        ScriptedClass target = expr.target().get();
+        builder.injectString(VarTypeManager.getClassName(target));
+        saveArgs(expr.params());
+        builder.addCode(Opcode.INVOKE);
+        ScriptedCallable callable = target.getConstructor().getMethodByOrdinal(expr.ordinal());
+        builder.injectString(VarTypeManager.getMethodSignature(target, "<init>", callable.argTypes()));
         return null;
     }
 

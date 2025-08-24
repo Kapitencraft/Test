@@ -654,12 +654,10 @@ public class ExprParser extends AbstractParser {
             consumeBracketClose("arguments");
             return new Expr.StaticCall(objType, name, arguments, WILDCARD, "?");
         }
-        int ordinal = targetClass.getMethodOrdinal(name.lexeme(), givenTypes);
-        if (ordinal == -1) ordinal = 0;
-        ScriptedCallable callable = targetClass.getMethodByOrdinal(name.lexeme(), ordinal);
+        ScriptedCallable callable = Util.getClosest(targetClass, VarTypeManager.getMethodSignatureNoTarget(name.lexeme(), givenTypes));
 
         ClassReference retType = checkArguments(arguments, callable, objType, name);
-        String signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), givenTypes, retType);
+        String signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), givenTypes);
 
         consumeBracketClose("arguments");
 

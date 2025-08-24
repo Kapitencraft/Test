@@ -4,6 +4,8 @@ import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
+import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
@@ -64,7 +66,7 @@ public class VirtualMachine {
 
     public static void runMainMethod(ScriptedClass target, String data, boolean profiling, boolean output) {
         if (!target.hasMethod("main")) return;
-        Optional.ofNullable(target.getMethod("main", new ClassReference[] {VarTypeManager.STRING.array()}))
+        Optional.ofNullable(target.getMethod("main([Lscripted/lang/String)"))
                 .ifPresentOrElse(method -> {
                     if (!method.isStatic()) {
                         System.err.println("Non-static method can not be referenced from a static context");
@@ -144,11 +146,8 @@ public class VirtualMachine {
                         String execute = constString(frame.constants, read2Byte());
                         StringReader reader = new StringReader(execute);
                         ClassReference type = VarTypeManager.parseType(reader);
-                        String name = reader.readUntil('(');
-                        reader.skip(); //skip (
-                        ClassReference[] argTypes = VarTypeManager.parseArgTypes(reader);
+                        ScriptedCallable callable = type.get().getMethod(reader.getRemaining());
 
-                        ScriptedCallable callable = type.get().getMethod(name, argTypes);
                         int length = callable.argTypes().length;
                         if (!callable.isStatic()) length++; //remove callee too
                         int callableStackTop = stackIndex - length;
@@ -161,8 +160,9 @@ public class VirtualMachine {
                             pushCall(new CallFrame(callable, callableStackTop));
                     }
                     case NEW -> {
-                        read2Byte();
-
+                        StringReader reader = new StringReader(constString(frame.constants, read2Byte()));
+                        ClassReference reference = VarTypeManager.parseType(reader);
+                        push(new DynamicClassInstance(reference.get()));
                     }
                     case RETURN -> {
                         break func;
