@@ -13,6 +13,7 @@ import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
+import net.kapitencraft.tool.StringReader;
 
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class RuntimeCallable implements ScriptedCallable {
         ClassReference retType = ClassLoader.loadClassReference(data, "retType");
         JsonArray paramData = GsonHelper.getAsJsonArray(data, "params");
 
-        List<ClassReference> params = paramData.asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassOrError).toList();
+        List<ClassReference> params = paramData.asList().stream().map(JsonElement::getAsString).map(StringReader::new).map(VarTypeManager::parseType).toList();
 
         short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
 

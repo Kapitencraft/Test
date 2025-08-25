@@ -656,7 +656,7 @@ public class ExprParser extends AbstractParser {
         }
         ScriptedCallable callable = Util.getClosest(targetClass, VarTypeManager.getMethodSignatureNoTarget(name.lexeme(), givenTypes));
 
-        ClassReference retType = checkArguments(arguments, callable, objType, name);
+        ClassReference retType = callable == null ? VarTypeManager.VOID.reference() : checkArguments(arguments, callable, objType, name);
         String signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), givenTypes);
 
         consumeBracketClose("arguments");

@@ -133,6 +133,10 @@ public class Util {
     }
 
     public static ScriptedCallable getClosest(ScriptedClass targetClass, String methodSignatureNoTarget) {
+        String name = methodSignatureNoTarget.substring(0, methodSignatureNoTarget.indexOf('('));
+        if (!targetClass.hasMethod(name)) {
+            return null;
+        }
         return null;
     }
 }

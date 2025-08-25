@@ -114,16 +114,6 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public boolean hasInit() {
-        return false;
-    }
-
-    @Override
-    public void setInit() {
-
-    }
-
-    @Override
     public ClassReference[] enclosed() {
         return enclosed.values().toArray(new ClassReference[0]);
     }

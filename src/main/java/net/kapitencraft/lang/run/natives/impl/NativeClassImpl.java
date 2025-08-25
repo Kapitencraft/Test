@@ -131,16 +131,6 @@ public class NativeClassImpl implements ScriptedClass {
     }
 
     @Override
-    public boolean hasInit() {
-        return true;
-    }
-
-    @Override
-    public void setInit() {
-
-    }
-
-    @Override
     public ClassReference[] enclosed() {
         return new ClassReference[0];
     }

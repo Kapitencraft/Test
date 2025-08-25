@@ -86,16 +86,6 @@ public class SkeletonInterface implements ScriptedClass {
     }
 
     @Override
-    public boolean hasInit() {
-        return false;
-    }
-
-    @Override
-    public void setInit() {
-
-    }
-
-    @Override
     public @Nullable Holder.Generics getGenerics() {
         return generics;
     }

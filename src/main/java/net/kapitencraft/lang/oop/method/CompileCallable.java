@@ -9,6 +9,7 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class CompileCallable implements ScriptedCallable {
 
     public JsonObject save(CacheBuilder builder) {
         JsonObject object = new JsonObject();
-        object.addProperty("retType", retType.absoluteName());
+        object.addProperty("retType", VarTypeManager.getClassName(retType.get()));
         {
             JsonArray array = new JsonArray();
             params.stream().map(Pair::left).map(ClassReference::absoluteName).forEach(array::add);

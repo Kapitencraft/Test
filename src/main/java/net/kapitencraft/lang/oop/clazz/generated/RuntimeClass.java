@@ -168,18 +168,6 @@ public final class RuntimeClass implements ScriptedClass {
         return superclass;
     }
 
-    boolean init = false;
-
-    @Override
-    public boolean hasInit() {
-        return init;
-    }
-
-    @Override
-    public void setInit() {
-        init = true;
-    }
-
     @Override
     public Map<String, ? extends ScriptedField> staticFields() {
         return allStaticFields;

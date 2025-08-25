@@ -327,16 +327,6 @@ public class NativeClassLoader {
         }
 
         @Override
-        public boolean hasInit() {
-            return false;
-        }
-
-        @Override
-        public void setInit() {
-
-        }
-
-        @Override
         public ClassReference[] enclosed() {
             return new ClassReference[0];
         }

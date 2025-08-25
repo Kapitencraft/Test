@@ -43,15 +43,6 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public boolean hasInit() {
-        return true;
-    }
-
-    @Override
-    public void setInit() {
-    }
-
-    @Override
     public Map<String, ? extends ScriptedField> staticFields() {
         return Map.of();
     }

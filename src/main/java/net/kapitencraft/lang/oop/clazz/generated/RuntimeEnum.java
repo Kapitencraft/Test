@@ -119,18 +119,6 @@ public class RuntimeEnum implements EnumClass {
         return constantData;
     }
 
-    boolean init = false;
-
-    @Override
-    public boolean hasInit() {
-        return init;
-    }
-
-    @Override
-    public void setInit() {
-        init = true;
-    }
-
     @Override
     public Map<String, ? extends ScriptedField> staticFields() {
         return Util.mergeMaps(allStaticFields, enumConstants);
