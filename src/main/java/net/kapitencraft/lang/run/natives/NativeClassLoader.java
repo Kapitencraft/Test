@@ -4,9 +4,15 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.NativeField;
+import net.kapitencraft.lang.oop.field.ScriptedField;
+import net.kapitencraft.lang.oop.method.builder.MethodContainer;
+import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.run.natives.impl.NativeClassImpl;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -83,6 +89,7 @@ public class NativeClassLoader {
 
     private static void setupLookup(Class<?> clazz, String name, String pck) {
         ClassReference reference = VarTypeManager.getOrCreateClass(name, pck);
+        reference.setTarget(new NativeWrapper(name, pck)); //set target for reference
         classLookup.put(clazz, reference);
     }
 
@@ -95,16 +102,17 @@ public class NativeClassLoader {
         try {
             Multimap<String, NativeMethod> methods = HashMultimap.create();
             for (Method declaredMethod : clazz.getDeclaredMethods()) {
-                if (Modifier.isPublic(declaredMethod.getModifiers()) && !declaredMethod.isAnnotationPresent(Excluded.class) && (capturedMethods == null || Util.arrayContains(capturedMethods, declaredMethod.getName()))) {
+                int modifiers = declaredMethod.getModifiers();
+                if (Modifier.isPublic(modifiers) && !declaredMethod.isAnnotationPresent(Excluded.class) && (capturedMethods == null || Util.arrayContains(capturedMethods, declaredMethod.getName()))) {
                     try {
-                        boolean isStatic = Modifier.isStatic(declaredMethod.getModifiers());
+                        boolean isStatic = Modifier.isStatic(modifiers);
                         String methodName = declaredMethod.isAnnotationPresent(Rename.class) ? declaredMethod.getAnnotation(Rename.class).value() : declaredMethod.getName();
                         NativeMethod method = new NativeMethod(
                                 getClassOrThrow(declaredMethod.getReturnType()),
                                 Arrays.stream(declaredMethod.getParameterTypes()).map(NativeClassLoader::getClassOrThrow).toArray(ClassReference[]::new),
                                 declaredMethod,
                                 !isStatic,
-                                Modifiers.fromJavaMods(declaredMethod.getModifiers())
+                                Modifiers.fromJavaMods(modifiers)
                         );
                         methods.put(methodName, method);
                     } catch (RuntimeException ignored) {
@@ -307,6 +315,85 @@ public class NativeClassLoader {
         @Override
         public void registerReference() {
             NativeClassLoader.setupLookup(target, name, pck);
+        }
+    }
+
+    private static class NativeWrapper implements ScriptedClass {
+        private final String name, pck;
+
+        public NativeWrapper(String name, String pck) {
+            this.name = name;
+            this.pck = pck;
+        }
+
+        @Override
+        public boolean hasInit() {
+            return false;
+        }
+
+        @Override
+        public void setInit() {
+
+        }
+
+        @Override
+        public ClassReference[] enclosed() {
+            return new ClassReference[0];
+        }
+
+        @Override
+        public Map<String, ? extends ScriptedField> staticFields() {
+            return Map.of();
+        }
+
+        @Override
+        public String name() {
+            return name;
+        }
+
+        @Override
+        public String pck() {
+            return pck;
+        }
+
+        @Override
+        public @Nullable ClassReference superclass() {
+            return null;
+        }
+
+        @Override
+        public MethodContainer getConstructor() {
+            return null;
+        }
+
+        @Override
+        public ScriptedCallable getMethod(String signature) {
+            return null;
+        }
+
+        @Override
+        public AbstractMethodMap getMethods() {
+            return null;
+        }
+
+        @Override
+        public boolean hasEnclosing(String name) {
+            return false;
+        }
+
+        @Override
+        public ClassReference getEnclosing(String name) {
+            return null;
+        }
+
+        @Override
+        public RuntimeAnnotationClassInstance[] annotations() {
+            return new RuntimeAnnotationClassInstance[0];
+        }
+
+        @Override
+        public short getModifiers() {
+            return 0;
         }
     }
 }

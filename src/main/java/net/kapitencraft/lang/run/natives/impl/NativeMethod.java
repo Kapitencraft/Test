@@ -38,8 +38,8 @@ public class NativeMethod implements ScriptedCallable {
     @Override
     public Object call(Object[] arguments) {
         try {
-            return method.invoke(instance ? NativeClassLoader.extractNative(arguments[0]) : null,
-                    NativeClassLoader.extractNatives(arguments));
+            //TODO fix passing obj
+            return method.invoke(instance ? NativeClassLoader.extractNative(arguments[0]) : null, NativeClassLoader.extractNatives(arguments));
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw AbstractScriptedException.createException(VarTypeManager.FUNCTION_CALL_ERROR, e.getMessage());
         } catch (Throwable e) {

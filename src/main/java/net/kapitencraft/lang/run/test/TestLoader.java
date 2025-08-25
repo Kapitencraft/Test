@@ -36,6 +36,10 @@ public class TestLoader {
         }
     }
 
+    public static void main(String[] args) {
+        run();
+    }
+
     public static void run() {
         try {
             JsonArray array = GSON.fromJson(new FileReader(TEST_CONFIG), JsonArray.class);

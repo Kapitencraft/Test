@@ -8,12 +8,10 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.test.TestLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
-import org.checkerframework.checker.units.qual.C;
 
 import java.io.*;
 import java.util.*;

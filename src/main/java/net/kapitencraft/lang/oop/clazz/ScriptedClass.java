@@ -37,7 +37,6 @@ public interface ScriptedClass {
     }
 
     default Object getStaticField(String name) {
-        checkInit();
         return staticFieldData.get(name);
     }
 
@@ -67,26 +66,9 @@ public interface ScriptedClass {
                 operand == Operand.LEFT ? selfS + otherS  : otherS + selfS : null;
     }
 
-    default void checkInit() {
-        if (!hasInit() && !Interpreter.suppressClassLoad) clInit();
-    }
-
     default Object assignStaticField(String name, Object val) {
-        checkInit();
         staticFieldData.put(name, val);
         return getStaticField(name);
-    }
-
-    boolean hasInit();
-
-    void setInit();
-
-    default void startClInit() {
-        setInit();
-    }
-
-    default void endClInit() {
-
     }
 
     default void clInit() {
@@ -105,7 +87,6 @@ public interface ScriptedClass {
     Map<String, ? extends ScriptedField> staticFields();
 
     default Object staticSpecialAssign(String name, TokenType assignType) {
-        checkInit();
         Object val = getStaticField(name);
         if (val instanceof Integer) {
             return this.assignStaticField(name, (int)val + (assignType == TokenType.GROW ? 1 : -1));

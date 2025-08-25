@@ -20,14 +20,12 @@ public interface EnumClass extends ScriptedClass {
 
     @Override
     default void clInit() {
-        startClInit();
         ScriptedClass.super.clInit();
         ImmutableMap.Builder<String, DynamicClassInstance> constants = new ImmutableMap.Builder<>();
         this.enumConstants().forEach((s, loxField) -> {
             constants.put(s, (DynamicClassInstance) loxField.initialize(null, null));
         });
         setConstantValues(constants.build());
-        endClInit();
     }
 
     @Override
