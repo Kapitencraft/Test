@@ -10,7 +10,5 @@ public interface ClassInstance {
 
     Object getField(String name);
 
-    void construct(Object[] params, int ordinal);
-
     ScriptedClass getType();
 }

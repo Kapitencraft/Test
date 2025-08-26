@@ -130,10 +130,6 @@ public final class RuntimeClass implements ScriptedClass {
     }
 
     @Override
-    public MethodContainer getConstructor() {
-        return constructor;
-    }
-    @Override
     public boolean isAbstract() {
         return Modifiers.isAbstract(modifiers);
     }

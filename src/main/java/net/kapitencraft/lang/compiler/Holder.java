@@ -31,6 +31,7 @@ import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
 import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -160,8 +161,7 @@ public class Holder {
                     args = stmtParser.args();
                 }
 
-                int ordinal = target.get().getConstructor().getMethodOrdinal(stmtParser.argTypes(args));
-                ScriptedCallable callable = target.get().getConstructor().getMethodByOrdinal(ordinal);
+                ScriptedCallable callable = Util.getClosest(target.get(), VarTypeManager.getMethodSignatureNoTarget("<init>", stmtParser.argTypes(args)));
 
                 stmtParser.checkArguments(args, callable, null, decl.name());
 

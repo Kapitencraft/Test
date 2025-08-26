@@ -93,11 +93,6 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public MethodContainer getConstructor() {
-        return null;
-    }
-
-    @Override
     public short getModifiers() {
         return 0;
     }

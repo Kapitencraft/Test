@@ -33,10 +33,6 @@ public class DynamicClassInstance implements ClassInstance {
         return this.fields.get(name);
     }
 
-    public void construct(Object[] params, int ordinal) {
-        type.getConstructor().getMethodByOrdinal(ordinal).call(params);
-    }
-
     @Override
     public String toString() {
         return (String) this.type.getMethod("toString()").call(new Object[0]);

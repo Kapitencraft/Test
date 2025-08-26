@@ -141,8 +141,6 @@ public interface ScriptedClass {
         return superclass() != null ? superclass().get().getFields() : Map.of();
     }
 
-    MethodContainer getConstructor();
-
     default boolean is(ScriptedClass other) {
         return other == this;
     }

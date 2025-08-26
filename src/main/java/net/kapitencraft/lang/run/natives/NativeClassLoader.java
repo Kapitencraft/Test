@@ -318,72 +318,56 @@ public class NativeClassLoader {
         }
     }
 
-    private static class NativeWrapper implements ScriptedClass {
-        private final String name, pck;
-
-        public NativeWrapper(String name, String pck) {
-            this.name = name;
-            this.pck = pck;
-        }
+    private record NativeWrapper(String name, String pck) implements ScriptedClass {
 
         @Override
-        public ClassReference[] enclosed() {
-            return new ClassReference[0];
-        }
+            public ClassReference[] enclosed() {
+                return new ClassReference[0];
+            }
 
-        @Override
-        public Map<String, ? extends ScriptedField> staticFields() {
-            return Map.of();
-        }
+            @Override
+            public Map<String, ? extends ScriptedField> staticFields() {
+                return Map.of();
+            }
 
-        @Override
-        public String name() {
-            return name;
-        }
+            @Override
+            public @Nullable ClassReference superclass() {
+                return null;
+            }
 
-        @Override
-        public String pck() {
-            return pck;
-        }
+            @Override
+            public MethodContainer getConstructor() {
+                return null;
+            }
 
-        @Override
-        public @Nullable ClassReference superclass() {
-            return null;
-        }
+            @Override
+            public ScriptedCallable getMethod(String signature) {
+                return null;
+            }
 
-        @Override
-        public MethodContainer getConstructor() {
-            return null;
-        }
+            @Override
+            public AbstractMethodMap getMethods() {
+                return null;
+            }
 
-        @Override
-        public ScriptedCallable getMethod(String signature) {
-            return null;
-        }
+            @Override
+            public boolean hasEnclosing(String name) {
+                return false;
+            }
 
-        @Override
-        public AbstractMethodMap getMethods() {
-            return null;
-        }
+            @Override
+            public ClassReference getEnclosing(String name) {
+                return null;
+            }
 
-        @Override
-        public boolean hasEnclosing(String name) {
-            return false;
-        }
+            @Override
+            public RuntimeAnnotationClassInstance[] annotations() {
+                return new RuntimeAnnotationClassInstance[0];
+            }
 
-        @Override
-        public ClassReference getEnclosing(String name) {
-            return null;
+            @Override
+            public short getModifiers() {
+                return 0;
+            }
         }
-
-        @Override
-        public RuntimeAnnotationClassInstance[] annotations() {
-            return new RuntimeAnnotationClassInstance[0];
-        }
-
-        @Override
-        public short getModifiers() {
-            return 0;
-        }
-    }
 }

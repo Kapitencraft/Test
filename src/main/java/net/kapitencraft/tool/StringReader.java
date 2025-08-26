@@ -14,6 +14,11 @@ public class StringReader {
         this.string = string;
     }
 
+    public StringReader(final String string, int cursor) {
+        this.string = string;
+        this.cursor = cursor;
+    }
+
     public String getString() {
         return string;
     }

@@ -137,7 +137,7 @@
           "keyword": "Token",
           "target": "ClassReference",
           "params": "Expr[]",
-          "ordinal": "int"
+          "signature": "String"
         }
       },
       "imports": [

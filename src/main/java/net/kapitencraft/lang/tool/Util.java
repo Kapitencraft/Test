@@ -6,7 +6,10 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
+import net.kapitencraft.tool.StringReader;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -137,6 +140,21 @@ public class Util {
         if (!targetClass.hasMethod(name)) {
             return null;
         }
-        return null;
+        DataMethodContainer container = targetClass.getMethods().get(name);
+        ClassReference[] references = VarTypeManager.parseArgTypes(new StringReader(methodSignatureNoTarget, methodSignatureNoTarget.indexOf('(') + 1));
+        int match = 0;
+        ScriptedCallable matchEntry = container.getMethods()[0];
+        for (ScriptedCallable method : container.getMethods()) {
+            ClassReference[] argTypes = method.argTypes();
+            for (int i = 0; i < argTypes.length; i++) {
+                if (argTypes[i].equals(references[i])) {
+                    if (i + 1 > match) {
+                        match = i;
+                        matchEntry = method;
+                    }
+                }
+            }
+        }
+        return matchEntry;
     }
 }

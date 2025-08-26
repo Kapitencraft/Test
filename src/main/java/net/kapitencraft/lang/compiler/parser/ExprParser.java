@@ -661,7 +661,7 @@ public class ExprParser extends AbstractParser {
 
         consumeBracketClose("arguments");
 
-        if (callable.isStatic()) {
+        if (callable == null || callable.isStatic()) {
             return new Expr.StaticCall(objType, name, arguments, retType, signature);
         } else {
             if (obj == null) {

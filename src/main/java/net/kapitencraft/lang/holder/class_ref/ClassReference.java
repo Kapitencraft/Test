@@ -69,4 +69,9 @@ public class ClassReference implements Supplier<ScriptedClass> {
     public Holder.Generics getGenerics() {
         return get().getGenerics();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj) || obj instanceof ClassReference cR && Objects.equals(cR.target, this.target);
+    }
 }
