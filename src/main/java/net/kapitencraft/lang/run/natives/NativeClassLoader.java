@@ -336,11 +336,6 @@ public class NativeClassLoader {
             }
 
             @Override
-            public MethodContainer getConstructor() {
-                return null;
-            }
-
-            @Override
             public ScriptedCallable getMethod(String signature) {
                 return null;
             }

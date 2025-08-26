@@ -12,11 +12,6 @@ import java.util.Map;
 public interface ScriptedInterface extends ScriptedClass {
 
     @Override
-    default MethodContainer getConstructor() {
-        return null;
-    }
-
-    @Override
     default Map<String, ? extends ScriptedField> getFields() {
         return Map.of();
     }

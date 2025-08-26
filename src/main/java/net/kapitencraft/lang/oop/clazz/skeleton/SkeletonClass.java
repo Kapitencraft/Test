@@ -175,11 +175,6 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public DataMethodContainer getConstructor() {
-        return constructor;
-    }
-
-    @Override
     public ScriptedCallable getMethod(String signature) {
         return methods.getMethod(signature);
     }

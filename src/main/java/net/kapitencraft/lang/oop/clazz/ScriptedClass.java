@@ -133,7 +133,6 @@ public interface ScriptedClass {
 
     default DynamicClassInstance createNativeInst(Object[] params, int ordinal) {
         DynamicClassInstance instance = null;// new DynamicClassInstance(this, interpreter);
-        instance.construct(params, ordinal);
         return instance;
     }
 

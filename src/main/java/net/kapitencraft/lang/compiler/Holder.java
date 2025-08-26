@@ -165,7 +165,7 @@ public class Holder {
 
                 stmtParser.checkArguments(args, callable, null, decl.name());
 
-                enumConstants.put(decl.name().lexeme(), new CompileEnumConstant(decl.ordinal(), decl.name().lexeme(), ordinal, args));
+                enumConstants.put(decl.name().lexeme(), new CompileEnumConstant(decl.ordinal(), decl.name().lexeme(), args));
             }
 
             List<CompileAnnotationClassInstance> annotations = new ArrayList<>();

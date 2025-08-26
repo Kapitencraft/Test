@@ -11,13 +11,11 @@ public class CompileEnumConstant implements ScriptedField {
 
     private final int ordinal;
     private final String name;
-    private final int constructorOrdinal;
     private final Expr[] args;
 
-    public CompileEnumConstant(int ordinal, String name, int constructorOrdinal, Expr[] args) {
+    public CompileEnumConstant(int ordinal, String name, Expr[] args) {
         this.ordinal = ordinal;
         this.name = name;
-        this.constructorOrdinal = constructorOrdinal;
         this.args = args;
     }
 
@@ -41,7 +39,6 @@ public class CompileEnumConstant implements ScriptedField {
         JsonObject object = new JsonObject();
         object.addProperty("ordinal", this.ordinal);
         object.addProperty("name", this.name);
-        object.addProperty("constructorOrdinal", this.constructorOrdinal);
         //object.add("args", builder.saveArgs(this.args)); TODO
         return object;
     }

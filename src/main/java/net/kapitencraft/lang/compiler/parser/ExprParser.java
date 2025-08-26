@@ -550,9 +550,7 @@ public class ExprParser extends AbstractParser {
                 consumeCurlyClose("anonymous class");
             }
 
-            MethodContainer constructorContainer = loxClass.get().getConstructor();
-            int ordinal = constructorContainer.getMethodOrdinal(argTypes(args));
-            ScriptedCallable callable = constructorContainer.getMethodByOrdinal(ordinal);
+            ScriptedCallable callable = loxClass.get().getMethod(VarTypeManager.getMethodSignatureNoTarget("<init>", argTypes(args)));
 
             checkArguments(args, callable, null, loc);
 

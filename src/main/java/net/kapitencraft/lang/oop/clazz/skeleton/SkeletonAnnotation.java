@@ -104,11 +104,6 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public MethodContainer getConstructor() {
-        return null;
-    }
-
-    @Override
     public ScriptedCallable getMethod(String signature) {
         return methods.getMethod(signature);
     }

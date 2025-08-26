@@ -121,11 +121,6 @@ public class SkeletonInterface implements ScriptedClass {
     }
 
     @Override
-    public MethodContainer getConstructor() {
-        return null;
-    }
-
-    @Override
     public ScriptedCallable getMethod(String signature) {
         return methods.getMethod(signature);
     }

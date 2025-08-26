@@ -169,11 +169,6 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public DataMethodContainer getConstructor() {
-        return constructor;
-    }
-
-    @Override
     public ScriptedCallable getMethod(String signature) {
         return Optional.ofNullable(methods.getMethod(signature)).orElseGet(() -> EnumClass.super.getMethod(signature));
     }

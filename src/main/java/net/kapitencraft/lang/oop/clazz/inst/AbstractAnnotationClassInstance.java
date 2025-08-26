@@ -16,10 +16,5 @@ public interface AbstractAnnotationClassInstance extends ClassInstance {
         throw new IllegalAccessError("can not get field of annotation");
     }
 
-    @Override
-    default void construct(Object[] params, int ordinal) {
-        throw new IllegalAccessError("can not construct annotation");
-    }
-
     Object getProperty(String name);
 }

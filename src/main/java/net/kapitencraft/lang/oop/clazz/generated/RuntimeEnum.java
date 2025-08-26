@@ -145,11 +145,6 @@ public class RuntimeEnum implements EnumClass {
     }
 
     @Override
-    public MethodContainer getConstructor() {
-        return constructor;
-    }
-
-    @Override
     public boolean hasEnclosing(String name) {
         return enclosing.containsKey(name);
     }

@@ -13,12 +13,10 @@ import org.jetbrains.annotations.ApiStatus;
 public class NativeClassInstance implements ClassInstance {
     private final Object obj;
     private final NativeClassImpl type;
-    private final Environment environment = new Environment();
 
     public NativeClassInstance(NativeClassImpl type, Object obj) {
         this.obj = obj;
         this.type = type;
-        this.environment.defineVar("this", this);
     }
 
     public Object getObject() {
@@ -38,11 +36,6 @@ public class NativeClassInstance implements ClassInstance {
     @Override
     public Object getField(String name) {
         return type.getFields().get(name).get(obj);
-    }
-
-    @Override
-    public void construct(Object[] params, int ordinal) {
-        type.getConstructor().getMethodByOrdinal(ordinal).call(params);
     }
 
     @Override

@@ -70,11 +70,6 @@ public class NativeClassImpl implements ScriptedClass {
     }
 
     @Override
-    public MethodContainer getConstructor() {
-        return constructor;
-    }
-
-    @Override
     public ScriptedCallable getMethod(String signature) {
         return methods.getMethod(signature);
     }
