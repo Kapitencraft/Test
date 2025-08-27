@@ -385,11 +385,13 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         builder.addCode(Opcode.NEW);
         ScriptedClass target = expr.target().get();
         builder.injectString(VarTypeManager.getClassName(target));
-        saveArgs(expr.params());
-        builder.addCode(Opcode.INVOKE);
 
-        ScriptedCallable callable = target.getConstructor().getMethodByOrdinal(expr.ordinal());
-        builder.injectString(VarTypeManager.getMethodSignature(target, "<init>", callable.argTypes()));
+        if (expr.signature() != null) {
+            saveArgs(expr.params());
+            builder.addCode(Opcode.INVOKE);
+            builder.injectString(expr.signature());
+        }
+
         return null;
     }
 

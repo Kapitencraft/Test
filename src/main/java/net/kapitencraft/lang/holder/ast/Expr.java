@@ -108,7 +108,7 @@ public interface Expr {
         Token keyword, 
         ClassReference target, 
         Expr[] params, 
-        int ordinal
+        String signature
     ) implements Expr {
 
         @Override

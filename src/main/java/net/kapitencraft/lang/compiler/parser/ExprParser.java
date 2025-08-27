@@ -550,8 +550,9 @@ public class ExprParser extends AbstractParser {
                 consumeCurlyClose("anonymous class");
             }
 
-            ScriptedCallable callable = loxClass.get().getMethod(VarTypeManager.getMethodSignatureNoTarget("<init>", argTypes(args)));
+            String signature = VarTypeManager.getMethodSignatureNoTarget("<init>", argTypes(args));
 
+            ScriptedCallable callable = loxClass.get().getMethod(signature);
             checkArguments(args, callable, null, loc);
 
             Holder.Generics classGenerics = loxClass.get().getGenerics();
@@ -572,7 +573,7 @@ public class ExprParser extends AbstractParser {
                 loxClass = new AppliedGenericsReference(loxClass, new Holder.AppliedGenerics(loc, ordered.toArray(new ClassReference[0])));
             }
 
-            return new Expr.Constructor(loc, loxClass, args, ordinal);
+            return new Expr.Constructor(loc, loxClass, args, signature);
         }
 
         if (match(PRIMITIVE)) {
