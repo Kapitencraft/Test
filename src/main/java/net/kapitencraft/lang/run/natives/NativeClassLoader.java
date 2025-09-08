@@ -141,16 +141,15 @@ public class NativeClassLoader {
                 }
             }
             ClassReference type = getClassOrThrow(clazz);
-            List<NativeConstructor> constructors = new ArrayList<>();
             for (Constructor<?> constructor : clazz.getConstructors()) {
                 try {
                     if (!constructor.isAnnotationPresent(Excluded.class)) {
-                        NativeConstructor method = new NativeConstructor(
+                        NativeMethod method = new NativeMethod(
                                 type,
                                 Arrays.stream(constructor.getParameterTypes()).map(NativeClassLoader::getClassOrThrow).toArray(ClassReference[]::new),
                                 constructor
                         );
-                        constructors.add(method);
+                        methods.put("<init>", method);
                     }
                 } catch (RuntimeException ignored) {
                 }
@@ -159,7 +158,6 @@ public class NativeClassLoader {
             type.setTarget(new NativeClassImpl(className, pck,
                     staticFields,
                     bakeMethods(methods), fields,
-                    new DataMethodContainer(constructors.toArray(new NativeConstructor[0])),
                     getClassOrThrow(clazz.getSuperclass()),
                     extractInterfaces(clazz.getInterfaces()),
                     Modifiers.fromJavaMods(clazz.getModifiers())

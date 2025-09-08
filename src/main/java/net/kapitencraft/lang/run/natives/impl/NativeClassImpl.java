@@ -22,7 +22,6 @@ import java.util.Map;
 public class NativeClassImpl implements ScriptedClass {
     private final GeneratedMethodMap methods;
     private final Map<String, NativeField> fields, staticFields;
-    private final DataMethodContainer constructor;
     private final ClassReference superclass;
     private final ClassReference[] interfaces;
     private final short modifiers;
@@ -32,13 +31,12 @@ public class NativeClassImpl implements ScriptedClass {
     public NativeClassImpl(String name, String pck,
                            Map<String, NativeField> staticFields,
                            Map<String, DataMethodContainer> methods, Map<String, NativeField> fields,
-                           DataMethodContainer constructor, ClassReference superclass, ClassReference[] interfaces, short modifiers) {
+                           ClassReference superclass, ClassReference[] interfaces, short modifiers) {
         this.name = name;
         this.pck = pck;
         this.methods = new GeneratedMethodMap(methods);
         this.fields = fields;
         this.staticFields = staticFields;
-        this.constructor = constructor;
         this.superclass = superclass;
         this.interfaces = interfaces;
         this.modifiers = modifiers;
