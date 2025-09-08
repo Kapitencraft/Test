@@ -13,7 +13,6 @@ public class ObfuscationReader extends Reader {
         this.in = in;
     }
 
-
     @Override
     public int read(@NotNull char[] cbuf, int off, int len) throws IOException {
         char[] inBuf = new char[len];

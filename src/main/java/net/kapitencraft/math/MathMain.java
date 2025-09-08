@@ -57,8 +57,35 @@ public class MathMain {
         //    else primzahlen.forEach((integer, integer2) -> System.out.println(integer + "->" + integer2));
         //    System.out.println();
         //}
-        for (int i = 0; i < 64; i++) {
-            System.out.println(Long.toBinaryString((-1 - 2L << i)));
+        int[] numbers = new int[] {
+                342, 525, 154, 356, 856, 734, 429, 692, 347, 845, 256, 584, 846, 523, 342, 953, 826, 862
+        };
+        sortArray(numbers);
+        System.out.println(Arrays.toString(numbers));
+    }
+
+    private static int invertColor(int i) {
+        for (int j = 0; j < 3; j++) {
+            int val = (255 - (i >> ((1 + j) * 8)) & 255);
+            int mask = 0xFF << ((1 + j) * 8);
+            i = (i & ~mask) | (val << ((1 + j) * 8));
         }
+        return i;
+    }
+
+    private static void sortArray(int[] numbers) {
+        for (int i = 0; i < numbers.length - 1; i++) {
+            int p = i;
+            while (p >= 0 && numbers[p] > numbers[p + 1]) {
+                swap(numbers, p);
+                p--;
+            }
+        }
+    }
+
+    private static void swap(int[] numbers, int p) {
+        int c = numbers[p];
+        numbers[p] = numbers[p + 1];
+        numbers[p + 1] = c;
     }
 }

@@ -20,15 +20,11 @@ public class RuntimeEnumConstant implements ScriptedField {
     private final ScriptedClass target;
     private final int ordinal;
     private final String name;
-    private final int constructorOrdinal;
-    private final RuntimeExpr[] args;
 
-    public RuntimeEnumConstant(ScriptedClass target, int ordinal, String name, int constructorOrdinal, RuntimeExpr[] args) {
+    public RuntimeEnumConstant(ScriptedClass target, int ordinal, String name) {
         this.target = target;
         this.ordinal = ordinal;
         this.name = name;
-        this.constructorOrdinal = constructorOrdinal;
-        this.args = args;
     }
 
 
@@ -50,17 +46,13 @@ public class RuntimeEnumConstant implements ScriptedField {
     public static RuntimeEnumConstant fromJson(JsonObject object, ScriptedClass target) {
         int ordinal = GsonHelper.getAsInt(object, "ordinal");
         String name = GsonHelper.getAsString(object, "name");
-        int cOrdinal = GsonHelper.getAsInt(object, "constructorOrdinal");
-        RuntimeExpr[] args = CacheLoader.readArgs(object, "args");
-        return new RuntimeEnumConstant(target, ordinal, name, cOrdinal, args);
+        return new RuntimeEnumConstant(target, ordinal, name);
     }
 
     public JsonObject cache(CacheBuilder builder) {
         JsonObject object = new JsonObject();
         object.addProperty("ordinal", this.ordinal);
         object.addProperty("name", this.name);
-        object.addProperty("constructorOrdinal", this.constructorOrdinal);
-        //object.add("args", builder.saveArgs(this.args));
         return object;
     }
 

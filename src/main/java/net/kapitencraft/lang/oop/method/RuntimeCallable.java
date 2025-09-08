@@ -33,7 +33,7 @@ public class RuntimeCallable implements ScriptedCallable {
     }
 
     public static RuntimeCallable load(JsonObject data) {
-        ClassReference retType = ClassLoader.loadClassReference(data, "retType");
+        ClassReference retType = VarTypeManager.parseType(new StringReader(GsonHelper.getAsString(data, "retType")));
         JsonArray paramData = GsonHelper.getAsJsonArray(data, "params");
 
         List<ClassReference> params = paramData.asList().stream().map(JsonElement::getAsString).map(StringReader::new).map(VarTypeManager::parseType).toList();

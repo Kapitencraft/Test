@@ -161,9 +161,10 @@ public class Holder {
                     args = stmtParser.args();
                 }
 
-                ScriptedCallable callable = Util.getClosest(target.get(), VarTypeManager.getMethodSignatureNoTarget("<init>", stmtParser.argTypes(args)));
+                ScriptedCallable callable = Util.getClosest(target.get(), "<init>", stmtParser.argTypes(args));
 
-                stmtParser.checkArguments(args, callable, null, decl.name());
+                //TODO
+                //stmtParser.checkArguments(args, callable, null, decl.name());
 
                 enumConstants.put(decl.name().lexeme(), new CompileEnumConstant(decl.ordinal(), decl.name().lexeme(), args));
             }

@@ -552,26 +552,29 @@ public class ExprParser extends AbstractParser {
 
             String signature = VarTypeManager.getMethodSignatureNoTarget("<init>", argTypes(args));
 
-            ScriptedCallable callable = loxClass.get().getMethod(signature);
-            checkArguments(args, callable, null, loc);
+            ScriptedCallable callable = Util.getClosest(loxClass.get(), "<init>", argTypes(args));
 
-            Holder.Generics classGenerics = loxClass.get().getGenerics();
-            if (classGenerics != null) {
-                Map<String, ClassReference> types = new HashMap<>();
-                for (int i = 0; i < callable.argTypes().length; i++) {
-                    if (callable.argTypes()[i] instanceof GenericClassReference genericClassReference) {
-                        types.put(
-                                genericClassReference.getTypeName(),
-                                finder.findRetType(args[i])
-                        );
+            if (callable != null) {
+                checkArguments(args, callable, null, loc);
+
+                Holder.Generics classGenerics = loxClass.get().getGenerics();
+                if (classGenerics != null) {
+                    Map<String, ClassReference> types = new HashMap<>();
+                    for (int i = 0; i < callable.argTypes().length; i++) {
+                        if (callable.argTypes()[i] instanceof GenericClassReference genericClassReference) {
+                            types.put(
+                                    genericClassReference.getTypeName(),
+                                    finder.findRetType(args[i])
+                            );
+                        }
                     }
+                    List<ClassReference> ordered = new ArrayList<>();
+                    for (int i = 0; i < classGenerics.variables().length; i++) {
+                        ordered.add(types.get(classGenerics.variables()[i].name().lexeme()));
+                    }
+                    loxClass = new AppliedGenericsReference(loxClass, new Holder.AppliedGenerics(loc, ordered.toArray(new ClassReference[0])));
                 }
-                List<ClassReference> ordered = new ArrayList<>();
-                for (int i = 0; i < classGenerics.variables().length; i++) {
-                    ordered.add(types.get(classGenerics.variables()[i].name().lexeme()));
-                }
-                loxClass = new AppliedGenericsReference(loxClass, new Holder.AppliedGenerics(loc, ordered.toArray(new ClassReference[0])));
-            }
+            } else signature = null;
 
             return new Expr.Constructor(loc, loxClass, args, signature);
         }
@@ -653,7 +656,7 @@ public class ExprParser extends AbstractParser {
             consumeBracketClose("arguments");
             return new Expr.StaticCall(objType, name, arguments, WILDCARD, "?");
         }
-        ScriptedCallable callable = Util.getClosest(targetClass, VarTypeManager.getMethodSignatureNoTarget(name.lexeme(), givenTypes));
+        ScriptedCallable callable = Util.getClosest(targetClass, name.lexeme(), givenTypes);
 
         ClassReference retType = callable == null ? VarTypeManager.VOID.reference() : checkArguments(arguments, callable, objType, name);
         String signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), givenTypes);

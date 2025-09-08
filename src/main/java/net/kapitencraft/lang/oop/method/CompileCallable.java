@@ -34,7 +34,7 @@ public class CompileCallable implements ScriptedCallable {
         object.addProperty("retType", VarTypeManager.getClassName(retType.get()));
         {
             JsonArray array = new JsonArray();
-            params.stream().map(Pair::left).map(ClassReference::absoluteName).forEach(array::add);
+            params.stream().map(Pair::left).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
             object.add("params", array);
         }
         if (!Modifiers.isAbstract(modifiers)) {

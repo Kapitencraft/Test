@@ -66,7 +66,7 @@ public class VirtualMachine {
 
     public static void runMainMethod(ScriptedClass target, String data, boolean profiling, boolean output) {
         if (!target.hasMethod("main")) return;
-        Optional.ofNullable(target.getMethod("main([Lscripted/lang/String)"))
+        Optional.ofNullable(target.getMethod("main([Lscripted/lang/String;)"))
                 .ifPresentOrElse(method -> {
                     if (!method.isStatic()) {
                         System.err.println("Non-static method can not be referenced from a static context");

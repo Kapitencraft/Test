@@ -135,19 +135,19 @@ public class Util {
         return false;
     }
 
-    public static ScriptedCallable getClosest(ScriptedClass targetClass, String methodSignatureNoTarget) {
-        String name = methodSignatureNoTarget.substring(0, methodSignatureNoTarget.indexOf('('));
+    public static ScriptedCallable getClosest(ScriptedClass targetClass, String name, ClassReference[] args) {
         if (!targetClass.hasMethod(name)) {
             return null;
         }
         DataMethodContainer container = targetClass.getMethods().get(name);
-        ClassReference[] references = VarTypeManager.parseArgTypes(new StringReader(methodSignatureNoTarget, methodSignatureNoTarget.indexOf('(') + 1));
+        if (container == null)
+            throw new IllegalStateException("unable to obtain method container for name '" + name + "' on class '" + targetClass.absoluteName() + "'");
         int match = 0;
-        ScriptedCallable matchEntry = container.getMethods()[0];
+            ScriptedCallable matchEntry = container.getMethods()[0];
         for (ScriptedCallable method : container.getMethods()) {
             ClassReference[] argTypes = method.argTypes();
             for (int i = 0; i < argTypes.length; i++) {
-                if (argTypes[i].equals(references[i])) {
+                if (argTypes[i].equals(args[i])) {
                     if (i + 1 > match) {
                         match = i;
                         matchEntry = method;

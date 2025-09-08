@@ -13,6 +13,7 @@ import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
+import net.kapitencraft.tool.StringReader;
 
 import java.util.List;
 
@@ -40,9 +41,9 @@ public class SkeletonMethod implements ScriptedCallable {
     }
 
     public static SkeletonMethod fromJson(JsonObject object) {
-        ClassReference retType = ClassLoader.loadClassReference(object, "retType");
+        ClassReference retType = VarTypeManager.parseType(new StringReader(GsonHelper.getAsString(object, "retType")));
         ClassReference[] args = GsonHelper.getAsJsonArray(object, "params").asList().stream()
-                .map(JsonElement::getAsString).map(VarTypeManager::getClassOrError)
+                .map(JsonElement::getAsString).map(StringReader::new).map(VarTypeManager::parseType)
                 .toArray(ClassReference[]::new);
 
         short modifiers = object.has("modifiers") ? GsonHelper.getAsShort(object, "modifiers") : 0;
