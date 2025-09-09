@@ -58,7 +58,7 @@ public class MathMain {
         //    System.out.println();
         //}
         int[] numbers = new int[] {
-                342, 525, 154, 356, 856, 734, 429, 692, 347, 845, 256, 584, 846, 523, 342, 953, 826, 862
+                51, 95, 66, 72, 42, 38, 39, 41, 15
         };
         sortArray(numbers);
         System.out.println(Arrays.toString(numbers));
@@ -74,18 +74,21 @@ public class MathMain {
     }
 
     private static void sortArray(int[] numbers) {
-        for (int i = 0; i < numbers.length - 1; i++) {
-            int p = i;
-            while (p >= 0 && numbers[p] > numbers[p + 1]) {
-                swap(numbers, p);
-                p--;
+        int pivot = numbers[0];
+        for (int i = 0; i < numbers.length; i++) {
+            if (numbers[i] > pivot && numbers[numbers.length - i] < pivot) {
+                swap(numbers, i, numbers.length - i);
             }
         }
     }
 
     private static void swap(int[] numbers, int p) {
-        int c = numbers[p];
-        numbers[p] = numbers[p + 1];
-        numbers[p + 1] = c;
+        swap(numbers, p, p+1);
+    }
+
+    private static void swap(int[] numbers, int i1, int i2) {
+        int c = numbers[i1];
+        numbers[i1] = numbers[i2];
+        numbers[i2] = c;
     }
 }

@@ -7,6 +7,7 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
 import net.kapitencraft.lang.run.VarTypeManager;
 
+import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 

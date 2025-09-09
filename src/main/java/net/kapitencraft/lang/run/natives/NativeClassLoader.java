@@ -100,7 +100,7 @@ public class NativeClassLoader {
      */
     private static void createNativeClass(Class<?> clazz, String className, String pck, @Nullable String[] capturedMethods, @Nullable String[] capturedFields) {
         try {
-            Multimap<String, NativeMethod> methods = HashMultimap.create();
+            Multimap<String, ScriptedCallable> methods = HashMultimap.create();
             for (Method declaredMethod : clazz.getDeclaredMethods()) {
                 int modifiers = declaredMethod.getModifiers();
                 if (Modifier.isPublic(modifiers) && !declaredMethod.isAnnotationPresent(Excluded.class) && (capturedMethods == null || Util.arrayContains(capturedMethods, declaredMethod.getName()))) {
@@ -144,7 +144,7 @@ public class NativeClassLoader {
             for (Constructor<?> constructor : clazz.getConstructors()) {
                 try {
                     if (!constructor.isAnnotationPresent(Excluded.class)) {
-                        NativeMethod method = new NativeMethod(
+                        NativeConstructor method = new NativeConstructor(
                                 type,
                                 Arrays.stream(constructor.getParameterTypes()).map(NativeClassLoader::getClassOrThrow).toArray(ClassReference[]::new),
                                 constructor
@@ -231,11 +231,11 @@ public class NativeClassLoader {
         throw new IllegalArgumentException("cannot extract native from '" + reference + "'");
     }
 
-    private static Map<String, DataMethodContainer> bakeMethods(Multimap<String, NativeMethod> methods) {
+    private static Map<String, DataMethodContainer> bakeMethods(Multimap<String, ScriptedCallable> methods) {
         ImmutableMap.Builder<String, DataMethodContainer> builder = new ImmutableMap.Builder<>();
         for (String s : methods.keySet()) {
-            Collection<NativeMethod> nativeMethods = methods.get(s);
-            DataMethodContainer container = new DataMethodContainer(nativeMethods.toArray(new NativeMethod[0]));
+            Collection<ScriptedCallable> nativeMethods = methods.get(s);
+            DataMethodContainer container = new DataMethodContainer(nativeMethods.toArray(new ScriptedCallable[0]));
             builder.put(s, container);
         }
         return builder.build();
