@@ -7,65 +7,47 @@ public class QuickSort {
 
     public static void swap(int[] array, int i1, int i2) {
         if (i1 == i2) return;
-        System.out.println("swapping: " + i1 + "&" + i2);
+        //System.out.println("swapping: " + i1 + "&" + i2);
         int c = array[i1];
         array[i1] = array[i2];
         array[i2] = c;
     }
 
-    public static void quickSort(int[] array, int minI, int maxI) {
-        //TODO set size dynamically
-        if (minI == maxI) {
-            return;
-        }
-
-        int m = minI + (maxI - minI) / 2;
-        int pivot = array[m];
-        System.out.println(pivot + " " + minI + " " + maxI + " " + m);
-
-        for (int i = minI; i < m; i++) {
-            int large = maxI - (i - minI) - 1;
-            if (array[i] > pivot && array[large] < pivot) {
-                swap(array, i, large);
-                continue;
-            }
-            if (array[i] > array[large]) {
-                swap(array, i, large);
-            }
-            if (array[i] > pivot && array[large] > pivot) {
-                pivot = array[i];
-                swap(array, m, i);
-            } else if (array[i] < pivot && array[large] < pivot) {
-                pivot = array[large];
-                swap(array, m, large);
+    public static void quickSort(int[] array, int start, int end) {
+        int p = array[start]; //pivot
+        int l = start + 1; //pointer to the insert point for the next smaller element. points before the element being taken next
+        int r = end; //pointer to the insert point for the next larger element. points to the element being taken next
+        int sort = array[l]; //element to be sorted
+        while (l < r) {
+            if (sort <= p) {
+                array[l++] = sort;
+                sort = array[l];
+            } else {
+                int c = array[r];
+                array[r--] = sort;
+                sort = c;
             }
         }
-
-        System.out.println(Arrays.toString(array));
-
-        if ((maxI - minI) <= 2) {
-            return;
-        }
-
-        quickSort(array, minI, m + 1);
-        quickSort(array, m + 1, maxI);
+        swap(array, start, l);
+        if (l - start > 1) quickSort(array, start, l - 1);
+        if (r + 1 < end) quickSort(array, r + 1, end);
     }
 
     public static void main(String[] args) {
-        int[] array = new int[] {5, 18, 35, 96, 24, 75, 9, 81, 94, 4, 7, 24, 70, 73, 62, 15, 4, 58, 25, 4, 13, 77, 74, 99, 77, 73, 2};
+        int[] array = new int[] {92, 58, 30, 56, 11, 22, 33, 55, 79, 90, 45, 3, 39, 11, 14, 67, 23, 68, 37, 25, 22, 92, 36, 84, 38, 19, 86, 39, 1, 63, 56, 95, 10, 79, 61, 62, 26, 36, 32, 72, 53, 21, 48, 0, 24, 25, 62, 84, 66, 5, 71, 26, 40, 99, 72, 61, 98, 41, 51, 28, 16, 39, 2, 79, 53, 24, 28, 97, 56, 17, 37, 39, 29, 72, 24, 5, 70, 92, 36, 2, 75, 70, 34, 34, 91, 72, 87, 37, 66, 70, 14, 52, 21};
         System.out.println(Arrays.toString(array));
-        quickSort(array, 0, array.length);
+        quickSort(array, 0, array.length - 1);
         System.out.println(Arrays.toString(array));
 
         //Random random = new Random();
         //for (int i = 0; i < 1000; i++) {
 //
-        //    int[] array = new int[random.nextInt(100)];
+        //    int[] array = new int[10 + random.nextInt(90)];
         //    for (int i1 = 0; i1 < array.length; i1++) {
         //        array[i1] = random.nextInt(100);
         //    }
         //    System.out.println(Arrays.toString(array));
-        //    quickSort(array, 0, array.length);
+        //    quickSort(array, 0, array.length - 1);
         //    System.out.println(Arrays.toString(array));
         //}
     }
