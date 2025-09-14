@@ -18,8 +18,6 @@ public final class CompileClass implements CacheableClass {
     private final GeneratedMethodMap methods;
     private final Map<String, DataMethodContainer> allMethods;
 
-    private final DataMethodContainer constructor;
-
     private final Map<String, CompileField> allFields;
     private final Map<String, CompileField> allStaticFields;
 
@@ -34,13 +32,12 @@ public final class CompileClass implements CacheableClass {
 
     private final CompileAnnotationClassInstance[] annotations;
 
-    public CompileClass(Map<String, DataMethodContainer> methods, DataMethodContainer.Builder constructor,
+    public CompileClass(Map<String, DataMethodContainer> methods,
                         Map<String, CompileField> fields, Map<String, CompileField> staticFields,
                         CacheableClass[] enclosing,
                         ClassReference superclass, ClassReference[] implemented, String name, String packageRepresentation, short modifiers, CompileAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
-        this.constructor = constructor.create();
         this.allFields = fields;
         this.allStaticFields = staticFields;
         this.superclass = superclass;
@@ -53,14 +50,12 @@ public final class CompileClass implements CacheableClass {
     }
 
     public CompileClass(Map<String, DataMethodContainer> methods,
-                        List<ScriptedCallable> constructorData,
                         Map<String, CompileField> fields, Map<String, CompileField> staticFields,
                         ClassReference superclass, String name, String packageRepresentation,
                         CacheableClass[] enclosing, ClassReference[] implemented,
                         short modifiers, CompileAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
-        this.constructor = DataMethodContainer.of(constructorData.toArray(new ScriptedCallable[0]));
         this.allFields = fields;
         this.allStaticFields = staticFields;
         this.superclass = superclass;
@@ -83,7 +78,6 @@ public final class CompileClass implements CacheableClass {
             object.add("interfaces", parentInterfaces);
         }
         object.add("methods", methods.save(cacheBuilder));
-        object.add("constructors", constructor.cache(cacheBuilder));
         {
             JsonObject fields = new JsonObject();
             allFields.forEach((name, field) -> fields.add(name, field.cache(cacheBuilder)));

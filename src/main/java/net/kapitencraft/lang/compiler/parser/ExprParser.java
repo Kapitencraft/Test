@@ -550,9 +550,12 @@ public class ExprParser extends AbstractParser {
                 consumeCurlyClose("anonymous class");
             }
 
-            String signature = VarTypeManager.getMethodSignatureNoTarget("<init>", argTypes(args));
-
-            ScriptedCallable callable = Util.getClosest(loxClass.get(), "<init>", argTypes(args));
+            String signature = null;
+            ScriptedCallable callable = null;
+            if (args.length != 0 || !loxClass.get().hasMethod("<init>")) {
+                signature = VarTypeManager.getMethodSignature(loxClass.get(), "<init>", argTypes(args));
+                callable = Util.getClosest(loxClass.get(), "<init>", argTypes(args));
+            }
 
             if (callable != null) {
                 checkArguments(args, callable, null, loc);
@@ -657,9 +660,12 @@ public class ExprParser extends AbstractParser {
             return new Expr.StaticCall(objType, name, arguments, WILDCARD, "?");
         }
         ScriptedCallable callable = Util.getClosest(targetClass, name.lexeme(), givenTypes);
-
-        ClassReference retType = callable == null ? VarTypeManager.VOID.reference() : checkArguments(arguments, callable, objType, name);
-        String signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), givenTypes);
+        ClassReference retType = VarTypeManager.VOID.reference();
+        String signature = null;
+        if (callable != null) {
+            retType = checkArguments(arguments, callable, objType, name);
+            signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), callable.argTypes());
+        }
 
         consumeBracketClose("arguments");
 

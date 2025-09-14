@@ -28,27 +28,33 @@ public class QuickSort {
                 sort = c;
             }
         }
-        swap(array, start, l);
-        if (l - start > 1) quickSort(array, start, l - 1);
+        if (sort <= p) {
+            array[l++] = sort;
+        } else {
+            array[r--] = sort;
+        }
+
+        swap(array, start, l - 1);
+        if (l - start > 2) quickSort(array, start, l - 2);
         if (r + 1 < end) quickSort(array, r + 1, end);
     }
 
     public static void main(String[] args) {
-        int[] array = new int[] {92, 58, 30, 56, 11, 22, 33, 55, 79, 90, 45, 3, 39, 11, 14, 67, 23, 68, 37, 25, 22, 92, 36, 84, 38, 19, 86, 39, 1, 63, 56, 95, 10, 79, 61, 62, 26, 36, 32, 72, 53, 21, 48, 0, 24, 25, 62, 84, 66, 5, 71, 26, 40, 99, 72, 61, 98, 41, 51, 28, 16, 39, 2, 79, 53, 24, 28, 97, 56, 17, 37, 39, 29, 72, 24, 5, 70, 92, 36, 2, 75, 70, 34, 34, 91, 72, 87, 37, 66, 70, 14, 52, 21};
-        System.out.println(Arrays.toString(array));
-        quickSort(array, 0, array.length - 1);
-        System.out.println(Arrays.toString(array));
+        //int[] array = new int[] {92, 58, 30, 56, 11, 22, 33, 55, 79, 90, 45, 3, 39, 11, 14, 67, 23, 68, 37, 25, 22, 92, 36, 84, 38, 19, 86, 39, 1, 63, 56, 95, 10, 79, 61, 62, 26, 36, 32, 72, 53, 21, 48, 0, 24, 25, 62, 84, 66, 5, 71, 26, 40, 99, 72, 61, 98, 41, 51, 28, 16, 39, 2, 79, 53, 24, 28, 97, 56, 17, 37, 39, 29, 72, 24, 5, 70, 92, 36, 2, 75, 70, 34, 34, 91, 72, 87, 37, 66, 70, 14, 52, 21};
+        //System.out.println(Arrays.toString(array));
+        //quickSort(array, 0, array.length - 1);
+        //System.out.println(Arrays.toString(array));
 
-        //Random random = new Random();
-        //for (int i = 0; i < 1000; i++) {
-//
-        //    int[] array = new int[10 + random.nextInt(90)];
-        //    for (int i1 = 0; i1 < array.length; i1++) {
-        //        array[i1] = random.nextInt(100);
-        //    }
-        //    System.out.println(Arrays.toString(array));
-        //    quickSort(array, 0, array.length - 1);
-        //    System.out.println(Arrays.toString(array));
-        //}
+        Random random = new Random();
+        for (int i = 0; i < 1000; i++) {
+
+            int[] array = new int[10 + random.nextInt(90)];
+            for (int i1 = 0; i1 < array.length; i1++) {
+                array[i1] = random.nextInt(100);
+            }
+            System.out.println(Arrays.toString(array));
+            quickSort(array, 0, array.length - 1);
+            System.out.println(Arrays.toString(array));
+        }
     }
 }

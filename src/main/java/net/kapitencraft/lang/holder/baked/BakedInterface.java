@@ -40,7 +40,6 @@ public record BakedInterface(Compiler.ErrorLogger logger, Holder.Generics generi
 
         return new CompileClass(
                 DataMethodContainer.bakeBuilders(methods),
-                List.of(),
                 Map.of(),
                 staticFields(),
                 VarTypeManager.OBJECT,

@@ -37,8 +37,7 @@ public record BakedClass(
         Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
         for (Pair<Token, CompileCallable> method : this.methods()) {
             methods.putIfAbsent(method.left().lexeme(), new DataMethodContainer.Builder(this.name()));
-            DataMethodContainer.Builder builder = methods.get(method.left().lexeme());
-            builder.addMethod(logger, method.right(), method.left());
+            methods.get(method.left().lexeme()).addMethod(logger, method.right(), method.left());
         }
 
         List<Token> finalFields = new ArrayList<>();
@@ -48,14 +47,13 @@ public record BakedClass(
             }
         });
 
-        DataMethodContainer.Builder container = new DataMethodContainer.Builder(this.name());
         for (Pair<Token, CompileCallable> method : this.constructors()) {
-            container.addMethod(logger, method.right(), method.left());
+            methods.putIfAbsent("<init>", new DataMethodContainer.Builder(this.name()));
+            methods.get("<init>").addMethod(logger, method.right(), method.left());
         }
 
         return new CompileClass(
                 DataMethodContainer.bakeBuilders(methods),
-                container,
                 create(this.fields()),
                 this.staticFields(),
                 enclosed,

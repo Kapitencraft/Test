@@ -31,8 +31,6 @@ public final class RuntimeClass implements ScriptedClass {
 
     private final MethodLookup lookup;
 
-    private final ConstructorContainer constructor;
-
     private final Map<String, RuntimeField> allFields;
     private final Map<String, RuntimeField> allStaticFields;
 
@@ -48,13 +46,11 @@ public final class RuntimeClass implements ScriptedClass {
     private final RuntimeAnnotationClassInstance[] annotations;
 
     public RuntimeClass(Map<String, DataMethodContainer> methods,
-                        List<ScriptedCallable> constructorData,
                         Map<String, RuntimeField> fields, Map<String, RuntimeField> staticFields,
                         ClassReference superclass, String name, String packageRepresentation,
                         Map<String, ClassReference> enclosing, ClassReference[] implemented,
                         short modifiers, RuntimeAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
-        this.constructor = ConstructorContainer.fromCache(constructorData, this);
         this.allFields = fields;
         this.allStaticFields = staticFields;
         this.superclass = superclass;
@@ -75,9 +71,6 @@ public final class RuntimeClass implements ScriptedClass {
         if (superclass == null) throw new IllegalArgumentException(String.format("could not find target class for class '%s': '%s'", name, GsonHelper.getAsString(data, "superclass")));
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
 
-        List<ScriptedCallable> constructorData = new ArrayList<>();
-        GsonHelper.getAsJsonArray(data, "constructors").asList().stream().map(JsonElement::getAsJsonObject).map(RuntimeCallable::load).forEach(constructorData::add);
-
         ImmutableMap<String, RuntimeField> fields = RuntimeField.loadFieldMap(data, "fields");
         ImmutableMap<String, RuntimeField> staticFields = RuntimeField.loadFieldMap(data, "staticFields");
 
@@ -88,7 +81,7 @@ public final class RuntimeClass implements ScriptedClass {
         Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));
 
         return new RuntimeClass(
-                methods, constructorData,
+                methods,
                 fields, staticFields,
                 superclass,
                 name, pck,

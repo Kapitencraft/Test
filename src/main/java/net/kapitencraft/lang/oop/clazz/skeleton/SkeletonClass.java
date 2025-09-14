@@ -34,7 +34,6 @@ public class SkeletonClass implements ScriptedClass {
     private final Map<String, ClassReference> enclosed;
 
     private final GeneratedMethodMap methods;
-    private final ConstructorContainer constructor;
 
     private final short modifiers;
     private final ClassReference[] interfaces;
@@ -43,7 +42,7 @@ public class SkeletonClass implements ScriptedClass {
                          String name, String pck, ClassReference superclass,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, ClassReference> enclosed,
-                         Map<String, DataMethodContainer> methods, ConstructorContainer.Builder constructor,
+                         Map<String, DataMethodContainer> methods,
                          short modifiers, ClassReference[] interfaces) {
         this.name = name;
         this.pck = pck;
@@ -53,7 +52,6 @@ public class SkeletonClass implements ScriptedClass {
         this.generics = generics;
         this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
-        this.constructor = constructor.build(this);
         this.modifiers = modifiers;
         this.interfaces = interfaces;
     }
@@ -61,7 +59,7 @@ public class SkeletonClass implements ScriptedClass {
     public SkeletonClass(String name, String pck, ClassReference superclass,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, ClassReference> enclosed,
-                         Map<String, DataMethodContainer> methods, ConstructorContainer constructor,
+                         Map<String, DataMethodContainer> methods,
                          short modifiers, ClassReference[] interfaces) {
         this.generics = null;
         this.name = name;
@@ -71,7 +69,6 @@ public class SkeletonClass implements ScriptedClass {
         this.fields = fields;
         this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
-        this.constructor = constructor;
         this.modifiers = modifiers;
         this.interfaces = interfaces;
     }
@@ -84,13 +81,6 @@ public class SkeletonClass implements ScriptedClass {
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
 
-        ConstructorContainer constructorContainer = new ConstructorContainer(
-                GsonHelper.getAsJsonArray(data, "constructors").asList()
-                        .stream()
-                        .map(JsonElement::getAsJsonObject)
-                        .map(SkeletonMethod::fromJson)
-                        .toArray(SkeletonMethod[]::new)
-        );
         ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
         {
             JsonObject fieldData = GsonHelper.getAsJsonObject(data, "fields");
@@ -114,7 +104,6 @@ public class SkeletonClass implements ScriptedClass {
                 staticFields.build(), fields.build(),
                 Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
                 methods,
-                constructorContainer,
                 modifiers,
                 interfaces);
     }

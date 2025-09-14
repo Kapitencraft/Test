@@ -161,7 +161,7 @@ public class Holder {
                     args = stmtParser.args();
                 }
 
-                ScriptedCallable callable = Util.getClosest(target.get(), "<init>", stmtParser.argTypes(args));
+                //ScriptedCallable callable = Util.getClosest(target.get(), "<init>", stmtParser.argTypes(args));
 
                 //TODO
                 //stmtParser.checkArguments(args, callable, null, decl.name());
@@ -509,13 +509,10 @@ public class Holder {
             }
 
             //constructors
-            ConstructorContainer.Builder constructorBuilder = new ConstructorContainer.Builder(finalFields, this.name(), logger);
             for (Constructor constructor : this.constructors()) {
-                constructorBuilder.addMethod(
-                        logger,
-                        SkeletonMethod.create(constructor, this.target),
-                        constructor.name()
-                );
+                methods.putIfAbsent("<init>", new DataMethodContainer.Builder(this.name()));
+                DataMethodContainer.Builder builder = methods.get("<init>");
+                builder.addMethod(logger, SkeletonMethod.create(constructor, this.target), constructor.name());
             }
 
             return new SkeletonClass(
@@ -526,7 +523,6 @@ public class Holder {
                     fields.build(),
                     enclosed.build(),
                     DataMethodContainer.bakeBuilders(methods),
-                    constructorBuilder,
                     this.modifiers,
                     Arrays.stream(this.interfaces).map(SourceClassReference::getReference).toArray(ClassReference[]::new)
             );
