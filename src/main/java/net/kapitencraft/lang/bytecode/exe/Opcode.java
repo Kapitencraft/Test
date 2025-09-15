@@ -3,7 +3,8 @@ package net.kapitencraft.lang.bytecode.exe;
 public enum Opcode {
     RETURN, THROW,
     NULL, TRUE, FALSE,
-    DUP, DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2,
+    DUP, DUP_X1, DUP_X2, DUP2,
+    DUP2_X1, DUP2_X2,
     POP, POP_2,
     GET, GET_0, GET_1, GET_2,
     ASSIGN, ASSIGN_0, ASSIGN_1, ASSIGN_2,

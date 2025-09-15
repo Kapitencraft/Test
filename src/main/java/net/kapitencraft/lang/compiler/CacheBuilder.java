@@ -204,6 +204,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitSetExpr(Expr.Set expr) {
 
+
         assign(expr.executor(), expr.value(), expr.assignType().type(), Opcode.GET_FIELD, Opcode.PUT_FIELD, b -> b.injectString(expr.name().lexeme()));
         return null;
     }
@@ -217,10 +218,25 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitArraySetExpr(Expr.ArraySet expr) {
+        ClassReference retType = expr.executor();
+        TokenType type = expr.assignType().type();
+        if (type != TokenType.ASSIGN) {
+            cache(expr.value());
+            cache(expr.index());
+            cache(expr.object());
+            builder.addCode(Opcode.DUP2_X1);
+            builder.addCode(getArrayLoad(retType));
+            switch (type) {
+                case ADD_ASSIGN -> builder.addCode(getAdd(retType));
+                case SUB_ASSIGN -> builder.addCode(getSub(retType));
+                case MUL_ASSIGN -> builder.addCode(getMul(retType));
+                case DIV_ASSIGN -> builder.addCode(getDiv(retType));
+                case POW_ASSIGN -> builder.addCode(getPow(retType));
+            }
+        } else {
+            cache(expr);
 
-        ClassReference reference = expr.executor();
-        cache(expr.value());
-        assign(expr.executor(), expr.value(), expr.assignType().type(), getArrayLoad(reference), getArrayStore(reference), builder1 -> {});
+        }
         return null;
     }
 
