@@ -38,9 +38,8 @@ public class Disassembler {
             case INVOKE -> invoke(chunk, offset);
             case JUMP, JUMP_IF_FALSE -> jump(opcode, chunk, offset);
             case SWITCH -> 0;
-            case GET_FIELD -> 0;
+            case GET_FIELD, PUT_FIELD -> fieldOp(opcode, chunk, offset);
             case GET_STATIC -> 0;
-            case PUT_FIELD -> 0;
             case PUT_STATIC -> 0;
         };
     }
@@ -60,6 +59,13 @@ public class Disassembler {
         int id = read2b(chunk.code(), offset + 1);
         String signature = VirtualMachine.constString(chunk.constants(), id);
         System.out.printf("%-16s %4d '%s'\n", "INVOKE", id, signature);
+        return offset + 3;
+    }
+
+    private static int fieldOp(Opcode opcode, Chunk chunk, int offset) {
+        int id = read2b(chunk.code(), offset + 1);
+        String name = VirtualMachine.constString(chunk.constants(), id);
+        System.out.printf("%-16s %4d '%s'\n", opcode, id, name);
         return offset + 3;
     }
 

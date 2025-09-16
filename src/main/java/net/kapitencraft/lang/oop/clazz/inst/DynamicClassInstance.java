@@ -1,16 +1,8 @@
 package net.kapitencraft.lang.oop.clazz.inst;
 
-import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.run.Interpreter;
-import net.kapitencraft.lang.run.algebra.Operand;
-import net.kapitencraft.lang.tool.Math;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class DynamicClassInstance implements ClassInstance {
@@ -35,6 +27,6 @@ public class DynamicClassInstance implements ClassInstance {
 
     @Override
     public String toString() {
-        return (String) this.type.getMethod("toString()").call(new Object[0]);
+        return "Dynamic{" + this.type.absoluteName() + "}";
     }
 }

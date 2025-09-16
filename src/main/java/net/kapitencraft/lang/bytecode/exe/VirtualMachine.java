@@ -103,6 +103,7 @@ public class VirtualMachine {
                 Opcode o = Opcode.byId(readByte());
                 if (DEBUG) System.out.printf("[DEBUG]: Executing %s\n", o);
                 switch (o) {
+                    //region control-flow
                     case POP -> stackIndex--;
                     case POP_2 -> stackIndex -= 2;
                     case DUP -> stack[stackIndex] = stack[stackIndex++ - 1];
@@ -142,6 +143,7 @@ public class VirtualMachine {
                         stack[stackIndex++] = obj;
                         stack[stackIndex++] = obj1;
                     }
+                    //endregion
                     case INVOKE -> {
                         String execute = constString(frame.constants, read2Byte());
                         StringReader reader = new StringReader(execute);
@@ -233,6 +235,16 @@ public class VirtualMachine {
                     case AND -> push((boolean) pop() && (boolean) pop());
                     case XOR -> push((boolean) pop() ^ (boolean) pop());
                     case D2F -> push((float) (double) pop());
+                    case GET_FIELD -> {
+                        ClassInstance instance = (ClassInstance) pop();
+                        String s = constString(frame.constants, read2Byte());
+                        push(instance.getField(s));
+                    }
+                    case PUT_FIELD -> {
+                        ClassInstance instance = (ClassInstance) pop();
+                        String s = constString(frame.constants, read2Byte());
+                        instance.assignField(s, pop());
+                    }
                     default -> throw new IllegalArgumentException("unknown opcode: " + o);
                 }
             }

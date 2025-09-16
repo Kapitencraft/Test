@@ -1,16 +1,12 @@
 package net.kapitencraft.lang.compiler;
 
-import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.method.CompileCallable;
-import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
-import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.tool.Util;
 
