@@ -1,7 +1,6 @@
 package net.kapitencraft.lang.oop.clazz.generated;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.compiler.Modifiers;
@@ -14,11 +13,8 @@ import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.field.RuntimeEnumConstant;
 import net.kapitencraft.lang.oop.field.RuntimeField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
-import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
-import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
@@ -38,8 +34,6 @@ public class RuntimeEnum implements EnumClass {
 
     private final MethodLookup lookup;
 
-    private final ConstructorContainer constructor;
-
     private final Map<String, RuntimeField> allFields;
     private final Map<String, RuntimeEnumConstant> enumConstants;
     private final Map<String, RuntimeField> allStaticFields;
@@ -53,13 +47,11 @@ public class RuntimeEnum implements EnumClass {
     private final RuntimeAnnotationClassInstance[] annotations;
 
     public RuntimeEnum(Map<String, DataMethodContainer> methods,
-                       List<ScriptedCallable> constructorData,
                        Map<String, RuntimeField> allFields,
                        Function<ScriptedClass, Map<String, RuntimeEnumConstant>> enumConstants,
                        Map<String, RuntimeField> allStaticFields,
                        Map<String, ClassReference> enclosing, ClassReference[] implemented, String name, String packageRepresentation, RuntimeAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
-        this.constructor = ConstructorContainer.fromCache(constructorData, this);
         this.allFields = allFields;
         this.enumConstants = enumConstants.apply(this);
         this.allStaticFields = allStaticFields;
@@ -77,9 +69,6 @@ public class RuntimeEnum implements EnumClass {
 
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
 
-        List<ScriptedCallable> constructorData = new ArrayList<>();
-        GsonHelper.getAsJsonArray(data, "constructors").asList().stream().map(JsonElement::getAsJsonObject).map(RuntimeCallable::load).forEach(constructorData::add);
-
         ImmutableMap<String, RuntimeField> fields = RuntimeField.loadFieldMap(data, "fields");
         ImmutableMap<String, RuntimeField> staticFields = RuntimeField.loadFieldMap(data, "staticFields");
         Function<ScriptedClass, Map<String, RuntimeEnumConstant>> enumConstants = RuntimeEnumConstant.loadFieldMap(data, "enumConstants");
@@ -89,7 +78,7 @@ public class RuntimeEnum implements EnumClass {
         RuntimeAnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
 
         return new RuntimeEnum(
-                methods, constructorData,
+                methods,
                 fields,
                 enumConstants,
                 staticFields,

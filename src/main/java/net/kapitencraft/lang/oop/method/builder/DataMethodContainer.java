@@ -16,12 +16,7 @@ import net.kapitencraft.lang.tool.Util;
 
 import java.util.*;
 
-public class DataMethodContainer implements MethodContainer {
-    private final ScriptedCallable[] methods;
-
-    public DataMethodContainer(ScriptedCallable[] methods) {
-        this.methods = methods;
-    }
+public record DataMethodContainer(ScriptedCallable[] methods) implements MethodContainer {
 
     public static DataMethodContainer of(ScriptedCallable... methods) {
         return new DataMethodContainer(methods);
@@ -33,12 +28,6 @@ public class DataMethodContainer implements MethodContainer {
         }
         //just going to make it easier for myself xD
         return methods[0];
-    }
-
-    public static JsonObject saveMethods(Map<String, DataMethodContainer> allMethods, CacheBuilder builder) {
-        JsonObject methods = new JsonObject();
-        allMethods.forEach((name, container) -> methods.add(name, container.cache(builder)));
-        return methods;
     }
 
     public static ImmutableMap<String, DataMethodContainer> load(JsonObject data, String className, String member) {
@@ -105,14 +94,9 @@ public class DataMethodContainer implements MethodContainer {
         }
     }
 
-    public static Map<String, DataMethodContainer> bakeBuilders(Map<String, DataMethodContainer.Builder> builders) {
+    public static Map<String, DataMethodContainer> bakeBuilders(Map<String, Builder> builders) {
         Map<String, DataMethodContainer> map = new HashMap<>();
         builders.forEach((name, builder) -> map.put(name, builder.create()));
         return ImmutableMap.copyOf(map);
-    }
-
-    @Override
-    public ScriptedCallable[] getMethods() {
-        return methods;
     }
 }

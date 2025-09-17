@@ -92,7 +92,7 @@ public class ClassLoader {
                         System.out.println("\n=== Methods ===");
                         Map<String, DataMethodContainer> methods = scriptedClass.getMethods().asMap();
                         methods.forEach((string, dataMethodContainer) -> {
-                            for (ScriptedCallable method : dataMethodContainer.getMethods()) {
+                            for (ScriptedCallable method : dataMethodContainer.methods()) {
                                 String name = string + "(" + VarTypeManager.getArgsSignature(method.argTypes()) + ")" + VarTypeManager.getClassName(method.type().get());
                                 if (method.isNative()) {
                                     System.out.println("== " + name + " ==");

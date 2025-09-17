@@ -7,9 +7,7 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
-import net.kapitencraft.tool.StringReader;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -143,8 +141,8 @@ public class Util {
         if (container == null)
             throw new IllegalStateException("unable to obtain method container for name '" + name + "' on class '" + targetClass.absoluteName() + "'");
         int match = 0;
-            ScriptedCallable matchEntry = container.getMethods()[0];
-        for (ScriptedCallable method : container.getMethods()) {
+            ScriptedCallable matchEntry = container.methods()[0];
+        for (ScriptedCallable method : container.methods()) {
             ClassReference[] argTypes = method.argTypes();
             for (int i = 0; i < argTypes.length; i++) {
                 if (argTypes[i].equals(args[i])) {

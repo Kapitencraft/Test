@@ -1,7 +1,6 @@
 package net.kapitencraft.lang.oop.clazz.skeleton;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -13,7 +12,6 @@ import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
-import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
@@ -37,33 +35,17 @@ public class SkeletonEnum implements EnumClass {
     private final Map<String, ClassReference> enclosed;
 
     private final GeneratedMethodMap methods;
-    private final ConstructorContainer constructor;
 
     public SkeletonEnum(String name, String pck,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
                          Map<String, ClassReference> enclosed,
-                         Map<String, DataMethodContainer> methods, ConstructorContainer.Builder constructor) {
+                         Map<String, DataMethodContainer> methods) {
         this.name = name;
         this.pck = pck;
         this.staticFields = staticFields;
         this.fields = fields;
         this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
-        this.constructor = constructor.build(this);
-    }
-
-    public SkeletonEnum(String name, String pck,
-                         Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
-                         Map<String, ClassReference> enclosed,
-                         Map<String, DataMethodContainer> methods,
-                        ConstructorContainer constructor) {
-        this.name = name;
-        this.pck = pck;
-        this.staticFields = staticFields;
-        this.fields = fields;
-        this.enclosed = enclosed;
-        this.methods = new GeneratedMethodMap(methods);
-        this.constructor = constructor;
     }
 
     public static SkeletonEnum fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
@@ -71,13 +53,6 @@ public class SkeletonEnum implements EnumClass {
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
 
-        ConstructorContainer constructorContainer = new ConstructorContainer(
-                GsonHelper.getAsJsonArray(data, "constructors").asList()
-                        .stream()
-                        .map(JsonElement::getAsJsonObject)
-                        .map(SkeletonMethod::fromJson)
-                        .toArray(SkeletonMethod[]::new)
-        );
         ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
         {
             JsonObject fieldData = GsonHelper.getAsJsonObject(data, "fields");
@@ -98,8 +73,7 @@ public class SkeletonEnum implements EnumClass {
         return new SkeletonEnum(name, pck,
                 staticFields.build(), fields.build(),
                 Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
-                methods,
-                constructorContainer
+                methods
         );
     }
 

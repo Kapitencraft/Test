@@ -4,11 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.exe.Chunk;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
-import net.kapitencraft.lang.compiler.visitor.RetTypeFinder;
-import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
-import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -27,13 +23,14 @@ import java.util.function.Consumer;
 public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public static final int majorVersion = 1, minorVersion = 0;
 
+    //TODO add exception handler list
+    //TODO add line number and local variable table attributes
     private Chunk.Builder builder = new Chunk.Builder();
     private final Stack<Loop> loops = new Stack<>();
 
     public CacheBuilder() {
     }
 
-    //TODO implement
     public void cache(Expr expr) {
         expr.accept(this);
     }
@@ -406,6 +403,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             saveArgs(expr.params());
             builder.addCode(Opcode.INVOKE);
             builder.injectString(expr.signature());
+            //TODO ensure constructor is re-created
         }
 
         return null;
@@ -550,7 +548,18 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitTryStmt(Stmt.Try stmt) {
-        //TODO
+        int handlerStart = builder.currentCodeIndex();
+        cache(stmt.body());
+        int handlerEnd = builder.currentCodeIndex();
+        List<Integer> jumps = new ArrayList<>();
+        jumps.add(builder.addJump());
+        for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches()) {
+            builder.addExceptionHandler(handlerStart, handlerEnd, builder.currentCodeIndex(), builder.injectStringNoArg());
+            cache(aCatch.right());
+        }
+
+        //TODO add https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-2.html#jvms-2.10
+        //also read this: https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.3
         //JsonObject object = new JsonObject();
         //object.addProperty("TYPE", "try");
         //object.add("body", cache(stmt.body));

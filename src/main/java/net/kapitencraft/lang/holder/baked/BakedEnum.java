@@ -10,7 +10,6 @@ import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.CompileEnumConstant;
 import net.kapitencraft.lang.oop.field.CompileField;
 import net.kapitencraft.lang.oop.method.CompileCallable;
-import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;

@@ -13,5 +13,5 @@ public interface MethodContainer {
 
     int getMethodOrdinal(ClassReference[] types);
 
-    ScriptedCallable[] getMethods();
+    ScriptedCallable[] methods();
 }

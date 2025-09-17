@@ -30,7 +30,7 @@ public class MethodLookup {
             for (Pair<ScriptedClass, AbstractMethodMap> lookupElement : lookup) {
                 Map<String, DataMethodContainer> methodMap = lookupElement.right().asMap();
                 if (!methodMap.containsKey(pair.left().lexeme())) continue; //no method with name found, continuing
-                for (ScriptedCallable method : methodMap.get(pair.left().lexeme()).getMethods()) {
+                for (ScriptedCallable method : methodMap.get(pair.left().lexeme()).methods()) {
                     if (!method.isFinal()) continue;
                     if (Util.matchArgs(method.argTypes(), pair.right().argTypes())) {
                         logger.errorF(pair.left(), "method '%s(%s)' can not override final method from class '%s'", pair.left().lexeme(), Util.getDescriptor(pair.right().argTypes()), lookupElement.left().name());
@@ -44,7 +44,7 @@ public class MethodLookup {
         Map<String, List<Pair<ScriptedClass, ScriptedCallable>>> abstracts = new HashMap<>();
         for (Pair<ScriptedClass, AbstractMethodMap> methods : lookup) {
             methods.right().asMap().forEach((s, dataMethodContainer) -> {
-                a: for (ScriptedCallable method : dataMethodContainer.getMethods()) {
+                a: for (ScriptedCallable method : dataMethodContainer.methods()) {
                     List<Pair<ScriptedClass, ScriptedCallable>> classData = abstracts.computeIfAbsent(s, k -> new ArrayList<>());
                     if (method.isAbstract()) {
                         for (Pair<ScriptedClass, ScriptedCallable> pair : classData) {

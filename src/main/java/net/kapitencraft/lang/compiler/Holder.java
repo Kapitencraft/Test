@@ -28,10 +28,8 @@ import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
-import net.kapitencraft.lang.oop.method.builder.ConstructorContainer;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -411,7 +409,7 @@ public class Holder {
             }
 
             //constructors
-            ConstructorContainer.Builder constructorBuilder = new ConstructorContainer.Builder(finalFields, this.name(), logger);
+            DataMethodContainer.Builder constructorBuilder = new DataMethodContainer.Builder(this.name());
             for (Constructor constructor : this.constructors()) {
                 constructorBuilder.addMethod(
                         logger,
@@ -419,14 +417,13 @@ public class Holder {
                         constructor.name()
                 );
             }
-
+            if (this.constructors().length > 0) methods.put("<init>", constructorBuilder);
 
             return new SkeletonEnum(
                     name().lexeme(), pck(),
                     staticFields.build(), fields.build(),
                     enclosed.build(),
-                    DataMethodContainer.bakeBuilders(methods),
-                    constructorBuilder
+                    DataMethodContainer.bakeBuilders(methods)
             );
         }
 

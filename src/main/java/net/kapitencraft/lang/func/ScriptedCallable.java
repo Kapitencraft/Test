@@ -13,7 +13,7 @@ public interface ScriptedCallable {
     static Map<String, ScriptedCallable> parseMethods(Map<String, DataMethodContainer> methods) {
         Map<String, ScriptedCallable> map = new HashMap<>();
         methods.forEach((string, dataMethodContainer) -> {
-            for (ScriptedCallable method : dataMethodContainer.getMethods()) {
+            for (ScriptedCallable method : dataMethodContainer.methods()) {
                 map.put(VarTypeManager.getMethodSignatureNoTarget(string, method.argTypes()), method);
             }
         });

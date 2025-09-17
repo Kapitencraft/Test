@@ -10,7 +10,6 @@ import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
-import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -21,7 +20,6 @@ import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.tool.Util;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -98,7 +96,7 @@ public class ExprParser extends AbstractParser {
         Map<String, ScriptedCallable> annotationMethods = new HashMap<>();
 
         type.getMethods().asMap().forEach((s, dataMethodContainer) ->
-                annotationMethods.put(s, dataMethodContainer.getMethods()[0])
+                annotationMethods.put(s, dataMethodContainer.methods()[0])
         );
 
         List<String> abstracts = new ArrayList<>();
