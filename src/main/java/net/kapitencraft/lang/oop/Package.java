@@ -4,6 +4,7 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,6 +46,7 @@ public class Package {
 
     public void addNullableClass(String name, @Nullable ScriptedClass cl) {
         if (cl == null) return;
+        VarTypeManager.registerFlat(cl);
         addClass(name, cl);
     }
 

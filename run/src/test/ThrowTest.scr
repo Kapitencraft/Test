@@ -11,4 +11,12 @@ class ThrowTest {
     }
 
     static void sink(int in) {}
+
+    static void tryTest() {
+        try {
+            test(10);
+        } catch (ArithmeticException e) {
+            System.print(e.getMessage());
+        }
+    }
 }

@@ -25,7 +25,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     //TODO add exception handler list
     //TODO add line number and local variable table attributes
-    private Chunk.Builder builder = new Chunk.Builder();
+    private final Chunk.Builder builder = new Chunk.Builder();
     private final Stack<Loop> loops = new Stack<>();
 
     public CacheBuilder() {
@@ -554,30 +554,20 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         List<Integer> jumps = new ArrayList<>();
         jumps.add(builder.addJump());
         for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches()) {
-            builder.addExceptionHandler(handlerStart, handlerEnd, builder.currentCodeIndex(), builder.injectStringNoArg());
+            for (ClassReference reference : aCatch.left().left()) {
+                builder.addExceptionHandler(handlerStart, handlerEnd, builder.currentCodeIndex(), builder.injectStringNoArg(VarTypeManager.getClassName(reference.get())));
+            }
             cache(aCatch.right());
+            jumps.add(builder.addJump());
         }
+        if (stmt.finale() != null) {
+            builder.addExceptionHandler(handlerStart, handlerEnd, builder.currentCodeIndex(), 0);
+            cache(stmt.finale());
+        }
+        jumps.forEach(builder::patchJumpCurrent);
 
         //TODO add https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-2.html#jvms-2.10
         //also read this: https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.3
-        //JsonObject object = new JsonObject();
-        //object.addProperty("TYPE", "try");
-        //object.add("body", cache(stmt.body));
-        //JsonArray array = new JsonArray();
-        //for (Pair<Pair<ClassReference[], Token>, Stmt.Block> pair : stmt.catches) {
-        //    JsonObject pairDat = new JsonObject();
-        //    Pair<ClassReference[], Token> pair1 = pair.left();
-        //    JsonObject pair1Dat = new JsonObject();
-        //    JsonArray classes = new JsonArray();
-        //    Arrays.stream(pair1.left()).map(ClassReference::absoluteName).forEach(classes::add);
-        //    pair1Dat.add("classes", classes);
-        //    pair1Dat.addProperty("name", pair1.right().lexeme());
-        //    pairDat.add("initData", pair1Dat);
-        //    pairDat.add("executor", cache(pair.right()));
-        //    array.add(pairDat);
-        //}
-        //object.add("catches", array);
-        //if (stmt.finale != null) object.add("finale", cache(stmt.finale));
         return null;
     }
 

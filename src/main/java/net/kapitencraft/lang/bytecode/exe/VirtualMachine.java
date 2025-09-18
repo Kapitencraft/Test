@@ -29,6 +29,7 @@ public class VirtualMachine {
         private final ScriptedCallable callable;
         private final byte[] code, constants;
         private final int stackBottom;
+        private final Chunk.ExceptionHandler[] handlers;
         private int ip;
 
         private CallFrame(ScriptedCallable callable, int stackBottom) {
@@ -37,6 +38,7 @@ public class VirtualMachine {
             Chunk chunk = callable.getChunk();
             this.code = chunk.code();
             this.constants = chunk.constants(); //TODO ensure always using the implemented method
+            this.handlers = chunk.handlers();
         }
 
         @Override
@@ -146,9 +148,10 @@ public class VirtualMachine {
                     //endregion
                     case INVOKE -> {
                         String execute = constString(frame.constants, read2Byte());
+                        //TODO convert to 2 different strings
                         StringReader reader = new StringReader(execute);
-                        ClassReference type = VarTypeManager.parseType(reader);
-                        ScriptedCallable callable = type.get().getMethod(reader.getRemaining());
+                        ScriptedClass type = VarTypeManager.flatParse(reader);
+                        ScriptedCallable callable = type.getMethod(reader.getRemaining());
 
                         int length = callable.argTypes().length;
                         if (!callable.isStatic()) length++; //remove callee too
@@ -161,10 +164,11 @@ public class VirtualMachine {
                         } else
                             pushCall(new CallFrame(callable, callableStackTop));
                     }
+                    case THROW -> handleException((ClassInstance) pop());
                     case NEW -> {
                         StringReader reader = new StringReader(constString(frame.constants, read2Byte()));
-                        ClassReference reference = VarTypeManager.parseType(reader);
-                        push(new DynamicClassInstance(reference.get()));
+                        ScriptedClass reference = VarTypeManager.flatParse(reader);
+                        push(new DynamicClassInstance(reference));
                     }
                     case RETURN -> {
                         break func;
@@ -235,16 +239,19 @@ public class VirtualMachine {
                     case AND -> push((boolean) pop() && (boolean) pop());
                     case XOR -> push((boolean) pop() ^ (boolean) pop());
                     case D2F -> push((float) (double) pop());
+                    case SWITCH -> {}
                     case GET_FIELD -> {
                         ClassInstance instance = (ClassInstance) pop();
                         String s = constString(frame.constants, read2Byte());
                         push(instance.getField(s));
                     }
+                    case GET_STATIC -> {}
                     case PUT_FIELD -> {
                         ClassInstance instance = (ClassInstance) pop();
                         String s = constString(frame.constants, read2Byte());
                         instance.assignField(s, pop());
                     }
+                    case PUT_STATIC -> {}
                     default -> throw new IllegalArgumentException("unknown opcode: " + o);
                 }
             }
@@ -254,6 +261,41 @@ public class VirtualMachine {
         }
     }
 
+    private static ClassInstance createException(ClassReference type, String message) {
+        DynamicClassInstance instance = new DynamicClassInstance(type.get());
+        instance.assignField("message", message);
+        return instance;
+    }
+
+    private static ClassInstance createClassCast(ScriptedClass reference1, ClassReference reference2) {
+        return createException(VarTypeManager.CLASS_CAST_EXCEPTION, reference1.absoluteName() + " can not be converted to " + reference2.absoluteName());
+    }
+
+    private static void handleException(ClassInstance exception) {
+        ScriptedClass type = exception.getType();
+        if (!type.isChildOf(VarTypeManager.THROWABLE.get())) {
+            handleException(createClassCast(type, VarTypeManager.THROWABLE));
+        }
+
+        while (callStackTop > 0) {
+            int ip = frame.ip;
+            for (Chunk.ExceptionHandler handler : frame.handlers) {
+                if (ip >= handler.startOp() && ip < handler.endOp()) {
+                    if (handler.catchType() != 0) {
+                        ClassReference reference = VarTypeManager.parseType(new StringReader(constString(frame.constants, handler.catchType())));
+                        if (!reference.get().isParentOf(type)) continue;
+                    }
+                    push(exception);
+                    frame.ip = handler.handlerOp();
+                    return;
+                }
+            }
+            popCall(); //pop call when no possible exception handler could be found
+        }
+        //TODO exit thread
+    }
+
+    @SuppressWarnings("unchecked")
     private static <T> void slice() {
         Integer rawInterval = (Integer) pop();
         Integer rawEnd = (Integer) pop();

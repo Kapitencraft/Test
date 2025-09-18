@@ -180,6 +180,7 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers) 
         public void clear() {
             this.code.clear();
             this.constants.clear();
+            this.handlers.clear();
         }
 
         public void addExceptionHandler(int startOp, int endOp, int handlerOp, int catchType) {

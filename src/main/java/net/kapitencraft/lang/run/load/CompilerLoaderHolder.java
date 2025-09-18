@@ -8,6 +8,7 @@ import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.run.VarTypeManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -99,7 +100,8 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
                 lookup.checkFinal(logger, builder.methods());
             }
         }
-        target = builder.build();
+        target = builder.build(); //TODO fix
+        if (target != null) VarTypeManager.registerFlat(target);
     }
 
     public void validate() {

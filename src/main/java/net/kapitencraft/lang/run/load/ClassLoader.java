@@ -114,9 +114,7 @@ public class ClassLoader {
 
     public static void loadClasses() {
         PackageHolder<VMLoaderHolder> pckSkeleton = load(cacheLoc, ".scrc", VMLoaderHolder::new);
-        useClasses(pckSkeleton, (classes, pck) -> classes.forEach((name, vmLoaderHolder) -> {
-            loadHolderReference(pck, vmLoaderHolder);
-        }));
+        useClasses(pckSkeleton, (classes, pck) -> classes.forEach((name, vmLoaderHolder) -> loadHolderReference(pck, vmLoaderHolder)));
         generateSkeletons(pckSkeleton);
         generateClasses(pckSkeleton);
     }

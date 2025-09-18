@@ -10,6 +10,7 @@ import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.clazz.primitive.*;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
+import net.kapitencraft.lang.run.natives.impl.NativeClassImpl;
 import net.kapitencraft.tool.StringReader;
 
 import java.util.*;
@@ -21,6 +22,8 @@ public class VarTypeManager {
     private static final Package LANG_ROOT = getOrCreatePackage("scripted.lang");
     private static final Package ANNOTATION_PCK = LANG_ROOT.getOrCreatePackage("annotations");
 
+    private static final HashMap<String, ScriptedClass> flatMap = new HashMap<>();
+
     public static final PrimitiveClass NUMBER = new NumberClass();
     public static final PrimitiveClass INTEGER = new IntegerClass();
     public static final PrimitiveClass FLOAT = new FloatClass();
@@ -30,7 +33,7 @@ public class VarTypeManager {
     public static final PrimitiveClass VOID = new VoidClass();
 
     static {
-        NativeClassLoader.load();
+        NativeClassLoader.load(); //load natives before actual java project
     }
 
     public static final ClassReference OBJECT = getMainClass("Object");
@@ -46,11 +49,11 @@ public class VarTypeManager {
     public static final ClassReference ARITHMETIC_EXCEPTION = getMainClass("ArithmeticException");
     public static final ClassReference FUNCTION_CALL_ERROR = getMainClass("FunctionCallError");
     public static final ClassReference INDEX_OUT_OF_BOUNDS_EXCEPTION = getMainClass("IndexOutOfBoundsException");
+    public static final ClassReference CLASS_CAST_EXCEPTION = getMainClass("ClassCastException");
 
     public static final ClassReference OVERRIDE = getMainClass("Override");
     public static final ClassReference RETENTION_POLICY = getAnnotationClass("RetentionPolicy");
     public static final ClassReference RETENTION = getAnnotationClass("Retention");
-
 
     public static ClassReference getClassForName(String type) {
         int arrayCount = 0;
@@ -251,9 +254,31 @@ public class VarTypeManager {
             case 'L' -> {
                 String type = reader.readUntil(';');
                 reader.skip();
-                return getClassForName(type.replaceAll("/", "."));
+                return getClassForName(type);
             }
             default -> throw new IllegalArgumentException("unknown type start: '" + reader.peek(-1) + "'");
         }
+    }
+
+    public static ScriptedClass flatParse(StringReader reader) {
+        return switch (reader.read()) {
+            case 'I' -> VarTypeManager.INTEGER;
+            case 'F' -> VarTypeManager.FLOAT;
+            case 'D' -> VarTypeManager.DOUBLE;
+            case 'B' -> VarTypeManager.BOOLEAN;
+            case 'C' -> VarTypeManager.CHAR;
+            case 'V' -> VarTypeManager.VOID;
+            case '[' -> flatParse(reader).array();
+            case 'L' -> {
+                String type = reader.readUntil(';');
+                reader.skip();
+                yield flatMap.get(type);
+            }
+            default -> throw new IllegalArgumentException("unknown type start: '" + reader.peek(-1) + "'");
+        };
+    }
+
+    public static void registerFlat(ScriptedClass target) {
+        flatMap.put(target.absoluteName().replaceAll("\\.", "/"), target);
     }
 }

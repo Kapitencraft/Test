@@ -155,13 +155,15 @@ public class NativeClassLoader {
                 }
             }
 
-            type.setTarget(new NativeClassImpl(className, pck,
+            NativeClassImpl target = new NativeClassImpl(className, pck,
                     staticFields,
                     bakeMethods(methods), fields,
                     getClassOrThrow(clazz.getSuperclass()),
                     extractInterfaces(clazz.getInterfaces()),
                     Modifiers.fromJavaMods(clazz.getModifiers())
-            ));
+            );
+            type.setTarget(target);
+            VarTypeManager.registerFlat(target);
         } catch (Exception e) {
             System.err.println("Failed to load class '" + clazz.getName() + "': " + e.getMessage());
             hadError = true;
