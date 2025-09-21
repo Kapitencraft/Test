@@ -20,20 +20,29 @@ public class Disassembler {
         return switch (opcode) {
             case POP, POP_2, DUP, DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2,
                  RETURN, THROW,
-                 I_NEGATION, I_ADD, I_SUB, I_MUL, I_DIV,
-                 D_NEGATION, D_ADD, D_SUB, D_MUL, D_DIV,
+                 I_NEGATION, I_ADD, I_SUB, I_MUL, I_DIV, I_POW,
+                 D_NEGATION, D_ADD, D_SUB, D_MUL, D_DIV, D_POW,
+                 F_NEGATION, F_ADD, F_SUB, F_MUL, F_DIV, F_POW,
                  ASSIGN_0, ASSIGN_1, ASSIGN_2,
                  GET_0, GET_1, GET_2,
                  NULL, TRUE, FALSE, AND, XOR, OR, NOT, CONCENTRATION,
                  I_M1, I_0, I_1, I_2, I_3, I_4, I_5,
                  D_M1, D_1,
+                 F_M1, F_1,
                  D2F, ARRAY_LENGTH,
-                 EQUAL, NEQUAL, I_LESSER, D_LESSER, I_GREATER, D_GREATER, I_LEQUAL, D_LEQUAL, I_GEQUAL, D_GEQUAL,
-                 I_POW, D_POW, IA_STORE, DA_STORE, CA_STORE, RA_STORE, IA_LOAD, DA_LOAD, CA_LOAD, RA_LOAD, SLICE
+                 EQUAL, NEQUAL,
+                 I_LESSER, D_LESSER, F_LESSER,
+                 I_GREATER, D_GREATER, F_GREATER,
+                 I_LEQUAL, D_LEQUAL, F_LEQUAL,
+                 I_GEQUAL, D_GEQUAL, F_GEQUAL,
+                 IA_STORE, DA_STORE, CA_STORE, FA_STORE, RA_STORE,
+                 IA_LOAD, DA_LOAD, CA_LOAD, FA_LOAD, RA_LOAD,
+                 SLICE
                     -> simpleInstruction(opcode, offset);
             case GET, ASSIGN -> var(opcode, chunk, offset);
             case I_CONST -> intConstInstruction(opcode, chunk, offset);
             case D_CONST -> doubleConstInstruction(opcode, chunk, offset);
+            case F_CONST -> floatConstInstruction(opcode, chunk, offset);
             case NEW, S_CONST -> stringConstInstruction(opcode, chunk, offset);
             case INVOKE -> invoke(chunk, offset);
             case JUMP, JUMP_IF_FALSE -> jump(opcode, chunk, offset);
@@ -75,6 +84,10 @@ public class Disassembler {
 
     private static int doubleConstInstruction(Opcode opcode, Chunk chunk, int offset) {
         return constInstruction(opcode, chunk, offset, VirtualMachine::constDouble);
+    }
+
+    private static int floatConstInstruction(Opcode opcode, Chunk chunk, int offset) {
+        return constInstruction(opcode, chunk, offset, VirtualMachine::constFloat);
     }
 
     private static int intConstInstruction(Opcode opcode, Chunk chunk, int offset) {

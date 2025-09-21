@@ -17,10 +17,9 @@ import net.kapitencraft.lang.tool.Util;
 import java.io.*;
 
 public class Compiler {
-    static boolean hadError = false;
+    static int errorCount = 0;
 
     public static class ErrorLogger {
-        private boolean hadError = false;
         private final String[] lines;
         private final String fileLoc;
         private final LocationFinder finder;
@@ -32,32 +31,28 @@ public class Compiler {
         }
 
         public void error(Token loc, String msg) {
-            hadError = true;
-            Compiler.error(loc, msg, fileLoc, lines[loc.line() - 1]);
+            if (errorCount++ < 100) {
+                Compiler.error(loc, msg, fileLoc, lines[loc.line() - 1]);
+            }
         }
 
         public void errorF(Token loc, String format, Object... args) {
-            hadError = true;
             error(loc, String.format(format, args));
         }
 
         public void error(int lineIndex, int lineStartIndex, String msg) {
-            hadError = true;
-            Compiler.error(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
+            if (errorCount++ < 100) Compiler.error(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
         }
 
         public void error(Stmt loc, String msg) {
-            hadError = true;
             error(finder.find(loc), msg);
         }
 
         public void error(Expr loc, String msg) {
-            hadError = true;
             error(finder.find(loc), msg);
         }
 
         public void logError(String s) {
-            hadError = true;
             System.err.println(s);
         }
 
@@ -75,11 +70,11 @@ public class Compiler {
 
         @Override
         public String toString() {
-            return "ErrorLogger for '" + fileLoc + "' (hadError: " + hadError + ")";
+            return "ErrorLogger for '" + fileLoc + "' (errorCount: " + errorCount + ")";
         }
 
         public boolean hadError() {
-            return hadError;
+            return errorCount > 0;
         }
     }
 
@@ -101,7 +96,12 @@ public class Compiler {
 
         ClassLoader.useHolders(holder, (name, holder1) -> holder1.loadClass());
 
-        if (hadError) System.exit(65);
+        if (errorCount > 0) {
+            if (errorCount > 100) {
+                System.err.println("only showing the first 100 errors out of " + errorCount + " total");
+            } else System.err.println(errorCount + " errors");
+            System.exit(65);
+        }
 
         if (cache.exists()) Util.delete(cache);
 
@@ -112,7 +112,7 @@ public class Compiler {
                 stringClassHolderMap.values().forEach(classHolder -> classHolder.cache(builder))
         );
 
-        if (hadError) System.exit(65);
+        if (errorCount > 0) System.exit(65);
     }
 
     public static void cache(File cacheBase, CacheBuilder builder, String path, CacheableClass target, String name) throws IOException {
@@ -135,7 +135,7 @@ public class Compiler {
     }
 
     public static void error(int lineIndex, int lineStartIndex, String msg, String fileId, String line) {
-        report(System.err, lineIndex, msg, fileId, lineStartIndex, line, true);
+        report(System.err, lineIndex, msg, fileId, lineStartIndex, line);
     }
 
     public static void warn(Token token, String msg, String fileId, String line) {
@@ -144,11 +144,11 @@ public class Compiler {
 
     public static void warn(int lineIndex, int lineStartIndex, String msg, String filedId, String line) {
         System.out.print("\u001B[33m"); //set output color to yellow
-        report(System.out, lineIndex, msg, filedId, lineStartIndex, line, false);
+        report(System.out, lineIndex, msg, filedId, lineStartIndex, line);
         System.out.print("\u001B[0m"); //reset output color
     }
 
-    public static void report(PrintStream target, int lineIndex, String message, String fileId, int startIndex, String line, boolean setHasError) {
+    public static void report(PrintStream target, int lineIndex, String message, String fileId, int startIndex, String line) {
         target.print(fileId);
         target.print(":");
         target.print(lineIndex);
@@ -160,8 +160,6 @@ public class Compiler {
             target.print(" ");
         }
         target.println("^");
-
-        hadError |= setHasError;
     }
 
     public interface ClassBuilder {

@@ -162,16 +162,14 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitInstCallExpr(Expr.InstCall expr) {
         cache(expr.callee());
         saveArgs(expr.args());
-        builder.addCode(Opcode.INVOKE);
-        builder.injectString(expr.id());
+        builder.invoke(expr.id());
         return null;
     }
 
     @Override
     public Void visitStaticCallExpr(Expr.StaticCall expr) {
         saveArgs(expr.args());
-        builder.addCode(Opcode.INVOKE);
-        builder.injectString(expr.id());
+        builder.invoke(expr.id());
         return null;
     }
 
@@ -347,7 +345,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             else if (v == -1d) {
                 builder.addCode(Opcode.D_M1);
             } else
-                builder.addDoubleConstant((double) value);
+                builder.addDoubleConstant(v);
         } else if (scriptedClass == VarTypeManager.INTEGER) {
             int v = (int) value;
             switch (v) {
@@ -360,9 +358,17 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 case 5 -> builder.addCode(Opcode.I_5);
                 default -> builder.addIntConstant(v);
             }
-        }
-        else if (VarTypeManager.STRING.is(scriptedClass))
+        } else if (VarTypeManager.STRING.is(scriptedClass))
             builder.addStringConstant((String) value);
+        else if (VarTypeManager.FLOAT.is(scriptedClass)) {
+            float v = (float) value;
+            if (v == 1f)
+                builder.addCode(Opcode.F_1);
+            else if (v == -1f)
+                builder.addCode(Opcode.F_M1);
+            else
+                builder.addFloatConstant(v);
+        }
         return null;
     }
 
@@ -400,10 +406,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         builder.injectString(VarTypeManager.getClassName(target));
 
         if (expr.signature() != null) {
+            builder.addCode(Opcode.DUP); //duplicate object to enable invoke
             saveArgs(expr.params());
-            builder.addCode(Opcode.INVOKE);
-            builder.injectString(expr.signature());
-            //TODO ensure constructor is re-created
+            builder.invoke(expr.signature());
+            builder.addCode(Opcode.POP); //pop method invoke result
         }
 
         return null;

@@ -100,8 +100,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
                 lookup.checkFinal(logger, builder.methods());
             }
         }
-        target = builder.build(); //TODO fix
-        if (target != null) VarTypeManager.registerFlat(target);
+        target = builder.build();
     }
 
     public void validate() {

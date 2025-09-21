@@ -99,10 +99,19 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers) 
 
         public void addDoubleConstant(double constant) {
             this.addCode(Opcode.D_CONST);
-            this.add2bArg((byte) this.constants.size());
+            this.add2bArg(this.constants.size());
             long l = Double.doubleToLongBits(constant);
             for (int i = 0; i < 8; i++) {
                 this.constants.add((byte) ((l >> (8 * i)) & 255));
+            }
+        }
+
+        public void addFloatConstant(float v) {
+            this.addCode(Opcode.F_CONST);
+            this.add2bArg(this.constants.size());
+            int i = Float.floatToIntBits(v);
+            for (int j = 0; j < 4; j++) {
+                this.constants.add((byte) ((i >> (8 * j)) & 255));
             }
         }
 
@@ -185,6 +194,11 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers) 
 
         public void addExceptionHandler(int startOp, int endOp, int handlerOp, int catchType) {
             this.handlers.add(new ExceptionHandler(startOp, endOp, handlerOp, catchType));
+        }
+
+        public void invoke(String methodSignature) {
+            this.addCode(Opcode.INVOKE);
+            this.injectString(methodSignature);
         }
     }
 

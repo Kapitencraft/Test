@@ -148,7 +148,6 @@ public class VirtualMachine {
                     //endregion
                     case INVOKE -> {
                         String execute = constString(frame.constants, read2Byte());
-                        //TODO convert to 2 different strings
                         StringReader reader = new StringReader(execute);
                         ScriptedClass type = VarTypeManager.flatParse(reader);
                         ScriptedCallable callable = type.getMethod(reader.getRemaining());
@@ -200,40 +199,55 @@ public class VirtualMachine {
                     case I_5 -> push(5);
                     case D_1 -> push(1d);
                     case D_M1 -> push(-1d);
+                    case F_1 -> push(1f);
+                    case F_M1 -> push(-1f);
                     case I_CONST -> push(constInt(frame.constants, read2Byte()));
                     case D_CONST -> push(constDouble(frame.constants, read2Byte()));
+                    case F_CONST -> push(constFloat(frame.constants, read2Byte()));
                     case S_CONST -> push(constString(frame.constants, read2Byte()));
                     case CONCENTRATION -> push((pop() + (String) pop()));
                     case I_NEGATION -> push(-(int) pop());
                     case D_NEGATION -> push(-(double) pop());
+                    case F_NEGATION -> push(-(float) pop());
                     case I_POW -> push((int) Math.pow((int) pop(), (int) pop()));
                     case D_POW -> push(Math.pow((double) pop(), (double) pop()));
+                    case F_POW -> push((float) Math.pow((float) pop(), (float) pop()));
                     case I_ADD -> push((int) pop() + (int) pop());
                     case D_ADD -> push((double) pop() + (double) pop());
+                    case F_ADD -> push((float) pop() + (float) pop());
                     case I_DIV -> push((int) pop() / (int) pop());
                     case D_DIV -> push((double) pop() / (double) pop());
+                    case F_DIV -> push((float) pop() / (float) pop());
                     case I_MUL -> push((int) pop() * (int) pop());
                     case D_MUL -> push((double) pop() * (double) pop());
+                    case F_MUL -> push((float) pop() * (float) pop());
                     case I_SUB -> push((int) pop() - (int) pop());
                     case D_SUB -> push((double) pop() - (double) pop());
+                    case F_SUB -> push((float) pop() - (float) pop());
                     case IA_LOAD -> push(((int[]) pop())[(int) pop()]);
                     case DA_LOAD -> push(((double[]) pop())[(int) pop()]);
                     case CA_LOAD -> push(((char[]) pop())[(int) pop()]);
+                    case FA_LOAD -> push(((float[]) pop())[(int) pop()]);
                     case RA_LOAD -> push(((Object[]) pop())[(int) pop()]);
                     case IA_STORE -> push(((int[]) pop())[(int) pop()] = (int) pop());
                     case DA_STORE -> push(((double[]) pop())[(int) pop()] = (double) pop());
                     case CA_STORE -> push(((char[]) pop())[(int) pop()] = (char) pop());
+                    case FA_STORE -> push(((float[]) pop())[(int) pop()] = (float) pop());
                     case RA_STORE -> push(((Object[]) pop())[(int) pop()] = pop());
                     case EQUAL -> push(pop() == pop());
                     case NEQUAL -> push(pop() != pop());
                     case I_GEQUAL -> push((int) pop() >= (int) pop());
                     case D_GEQUAL -> push((double) pop() >= (double) pop());
+                    case F_GEQUAL -> push((float) pop() >= (float) pop());
                     case I_LEQUAL -> push((int) pop() <= (int) pop());
                     case D_LEQUAL -> push((double) pop() <= (double) pop());
+                    case F_LEQUAL -> push((float) pop() <= (float) pop());
                     case I_GREATER -> push((int) pop() > (int) pop());
                     case D_GREATER -> push((double) pop() > (double) pop());
+                    case F_GREATER -> push((float) pop() > (float) pop());
                     case I_LESSER -> push((int) pop() < (int) pop());
                     case D_LESSER -> push((double) pop() < (double) pop());
+                    case F_LESSER -> push((float) pop() < (float) pop());
                     case NOT -> push(!(boolean) pop());
                     case OR -> push((boolean) pop() || (boolean) pop());
                     case AND -> push((boolean) pop() && (boolean) pop());
@@ -319,12 +333,12 @@ public class VirtualMachine {
 
     private static void get(int i) {
         push(stack[frame.stackBottom + i]);
-        if (DEBUG) System.out.printf("[DEBUG]: GET: %s\n", frame.stackBottom + i);
+        if (DEBUG) System.out.printf("[DEBUG]: GET: %s\n", i);
     }
 
     private static void assign(int i) {
         stack[frame.stackBottom + i] = stack[stackIndex - 1]; //DO NOT MODIFY THE STACK
-        if (DEBUG) System.out.printf("[DEBUG]: ASSIGN: %s\n", frame.stackBottom + i);
+        if (DEBUG) System.out.printf("[DEBUG]: ASSIGN: %s\n", i);
     }
 
     private static void popCall() {
@@ -373,5 +387,9 @@ public class VirtualMachine {
             c += (constants[index + i] & 255) << (8 * i);
         }
         return c;
+    }
+
+    public static float constFloat(byte[] bytes, Integer integer) {
+        return Float.intBitsToFloat(constInt(bytes, integer));
     }
 }

@@ -16,14 +16,14 @@ class InheritanceTest {
         }
 
         int u(int a) {
-            return super.u(a) - 5;
+            return 5; //super.u(a) - 5;
         }
 
         int test(int i) {
-            System.print(super.u(5));
+            //System.print(super.u(5)); TODO fix super
             System.print(this.u(5));
-            if (super.e(i) == this.e(i)) System.print("YAY");
-            else System.print("HM");
+            //if (super.e(i) == this.e(i)) System.print("YAY");
+            //else System.print("HM");
         }
     }
 

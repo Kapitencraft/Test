@@ -326,8 +326,7 @@ public class StmtParser extends ExprParser {
         this.funcRetType = funcRetType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
-        if (targetClass != null) this.varAnalyser.add("this", targetClass, true, true);
-        if (superclass != null) this.varAnalyser.add("super", superclass, true, true);
+        if (targetClass != null) this.varAnalyser.add("this", targetClass, false, true);
         for (Pair<SourceClassReference, String> param : params) {
             varAnalyser.add(param.right(), param.left().getReference(), true, true);
         }

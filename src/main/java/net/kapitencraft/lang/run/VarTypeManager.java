@@ -189,7 +189,9 @@ public class VarTypeManager {
     }
 
     public static String getClassName(ScriptedClass reference) {
-        if (reference == INTEGER)
+        if (reference == NUMBER)
+            return "N";
+        else if (reference == INTEGER)
             return "I";
         else if (reference == FLOAT)
             return "F";
@@ -219,49 +221,28 @@ public class VarTypeManager {
         return Arrays.stream(argTypes).map(ClassReference::get).map(VarTypeManager::getClassName).collect(Collectors.joining());
     }
 
-    public static ClassReference[] parseArgTypes(StringReader reader) {
-        List<ClassReference> references = new ArrayList<>();
-        while (reader.peek() != ')') {
-            references.add(parseType(reader));
-        }
-        reader.skip();
-        return references.toArray(new ClassReference[0]);
-    }
-
     public static ClassReference parseType(StringReader reader) {
-        switch (reader.read()) {
-            case 'I' -> {
-                return VarTypeManager.INTEGER.reference();
-            }
-            case 'F' -> {
-                return VarTypeManager.FLOAT.reference();
-            }
-            case 'D' -> {
-                return VarTypeManager.DOUBLE.reference();
-            }
-            case 'B' -> {
-                return VarTypeManager.BOOLEAN.reference();
-            }
-            case 'C' -> {
-                return VarTypeManager.CHAR.reference();
-            }
-            case 'V' -> {
-                return VarTypeManager.VOID.reference();
-            }
-            case '[' -> {
-                return parseType(reader).array();
-            }
+        return switch (reader.read()) {
+            case 'N' -> VarTypeManager.NUMBER.reference();
+            case 'I' -> VarTypeManager.INTEGER.reference();
+            case 'F' -> VarTypeManager.FLOAT.reference();
+            case 'D' -> VarTypeManager.DOUBLE.reference();
+            case 'B' -> VarTypeManager.BOOLEAN.reference();
+            case 'C' -> VarTypeManager.CHAR.reference();
+            case 'V' -> VarTypeManager.VOID.reference();
+            case '[' -> parseType(reader).array();
             case 'L' -> {
                 String type = reader.readUntil(';');
                 reader.skip();
-                return getClassForName(type);
+                yield getClassForName(type.replaceAll("/", "."));
             }
             default -> throw new IllegalArgumentException("unknown type start: '" + reader.peek(-1) + "'");
-        }
+        };
     }
 
     public static ScriptedClass flatParse(StringReader reader) {
         return switch (reader.read()) {
+            case 'N' -> VarTypeManager.NUMBER;
             case 'I' -> VarTypeManager.INTEGER;
             case 'F' -> VarTypeManager.FLOAT;
             case 'D' -> VarTypeManager.DOUBLE;
