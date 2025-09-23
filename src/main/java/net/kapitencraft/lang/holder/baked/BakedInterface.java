@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.holder.baked;
 
-import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
@@ -17,7 +16,6 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public record BakedInterface(Compiler.ErrorLogger logger, Holder.Generics generics, ClassReference target,

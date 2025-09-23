@@ -24,8 +24,8 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
     private CacheableClass target;
     private final VarTypeParser varTypeParser = new VarTypeParser();
 
-    public CompilerLoaderHolder(File file, List<CompilerLoaderHolder> children) {
-        super(file, children.toArray(CompilerLoaderHolder[]::new));
+    public CompilerLoaderHolder(File file) {
+        super(file);
         try {
             content = new String(Files.readAllBytes(file.toPath()));
         } catch (IOException e) {

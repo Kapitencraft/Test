@@ -17,6 +17,7 @@ import java.io.*;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class ClassLoader {
 
@@ -121,15 +122,9 @@ public class ClassLoader {
 
     private static void loadHolderReference(Package pck, VMLoaderHolder holder) {
         pck.addClass(holder.name, holder.reference);
-        if (holder.children.length > 0) {
-            Package internal = pck.getOrCreatePackage(holder.name);
-            for (VMLoaderHolder child : holder.children) {
-                loadHolderReference(internal, child);
-            }
-        }
     }
 
-    public static <T extends ClassLoaderHolder<T>> PackageHolder<T> load(File fileLoc, String end, BiFunction<File, List<T>, T> constructor) {
+    public static <T extends ClassLoaderHolder<T>> PackageHolder<T> load(File fileLoc, String end, Function<File, T> constructor) {
         PackageHolder<T> root = new PackageHolder<>();
         List<Pair<File, PackageHolder<T>>> pckLoader = new ArrayList<>();
         pckLoader.add(Pair.of(fileLoc, root));
@@ -238,7 +233,6 @@ public class ClassLoader {
 
     private static class EnclosedClassLoader<T extends ClassLoaderHolder<T>> {
         private File file;
-        private final Map<String, EnclosedClassLoader<T>> enclosed = new HashMap<>();
 
         public void applyFile(File file) {
             this.file = file;
@@ -246,21 +240,15 @@ public class ClassLoader {
 
         public EnclosedClassLoader<T> addEnclosed(String name) {
             EnclosedClassLoader<T> loader = new EnclosedClassLoader<>();
-            enclosed.put(name, loader);
             return loader;
         }
 
         public EnclosedClassLoader<T> addOrGetEnclosed(String s) {
-            if (enclosed.containsKey(s)) return enclosed.get(s);
             return addEnclosed(s);
         }
 
-        public T toHolder(BiFunction<File, List<T>, T> constructor) {
-            return constructor.apply(file,
-                    enclosed.values().stream()
-                    .map(enclosedClassLoader -> enclosedClassLoader.toHolder(constructor))
-                    .toList()
-            );
+        public T toHolder(Function<File, T> constructor) {
+            return constructor.apply(file);
         }
     }
 }

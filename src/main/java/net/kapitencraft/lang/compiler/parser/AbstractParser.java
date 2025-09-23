@@ -288,7 +288,7 @@ public class AbstractParser {
         }
 
         Token last = previous();
-        while (match(DOT) && reference != null) {
+        while (match(DOT) && reference != null) { //TODO remove enclosing necessity. it shouldn't exist anyways
             String enclosingName = consumeIdentifier().lexeme();
             if (!reference.get().hasEnclosing(enclosingName)) {
                 return SourceClassReference.from(last, reference);

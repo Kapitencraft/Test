@@ -25,14 +25,14 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
     public final String name;
     final ClassReference reference;
 
-    public VMLoaderHolder(File file, List<VMLoaderHolder> children) {
-        super(file, children.toArray(VMLoaderHolder[]::new));
+    public VMLoaderHolder(File file) {
+        super(file);
         try {
             this.data = Streams.parse(new JsonReader(new FileReader(file))).getAsJsonObject();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-        String fileId = file.getPath().substring(10);
+        String fileId = file.getPath().substring(12);
         String[] packages = fileId.substring(0, fileId.length() - 5).split("[\\\\$]");
         StringBuilder pck = new StringBuilder(packages[0]);
         for (int i = 1; i < packages.length - 2; i++) {
@@ -46,13 +46,8 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
 
     @Override
     public void applySkeleton()  {
-        List<ClassReference> enclosed = Arrays.stream(children).map(classLoaderHolder -> {
-            classLoaderHolder.applySkeleton();
-            return classLoaderHolder.reference;
-        }).toList();
-        ClassReference[] enclosedClasses = enclosed.toArray(new ClassReference[0]);
 
-        ScriptedClass skeleton = switch (type) {
+        ScriptedClass skeleton = switch (type) {k
             case ENUM -> SkeletonEnum.fromCache(data, pck(), enclosedClasses);
             case CLASS -> SkeletonClass.fromCache(data, pck(), enclosedClasses);
             case INTERFACE -> SkeletonInterface.fromCache(data, pck(), enclosedClasses);
@@ -62,12 +57,11 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
     }
 
     public ScriptedClass loadClass()  {
-        List<ClassReference> enclosed = Arrays.stream(children).map(VMLoaderHolder::loadClass).map(ClassReference::of).toList();
         ScriptedClass target;
         try {
             target = switch (type) {
-                case ENUM -> RuntimeEnum.load(data, enclosed, pck());
-                default -> RuntimeClass.load(data, enclosed, pck());
+                case ENUM -> RuntimeEnum.load(data, pck());
+                default -> RuntimeClass.load(data, pck());
             };
             this.reference.setTarget(target);
             return target;

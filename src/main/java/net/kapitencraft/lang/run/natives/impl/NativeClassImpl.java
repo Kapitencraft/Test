@@ -78,16 +78,6 @@ public class NativeClassImpl implements ScriptedClass {
     }
 
     @Override
-    public boolean hasEnclosing(String name) {
-        return false;
-    }
-
-    @Override
-    public ClassReference getEnclosing(String name) {
-        return null;
-    }
-
-    @Override
     public boolean hasMethod(String name) {
         return methods.has(name) || superclass != null && superclass.get().hasMethod(name);
     }
@@ -121,11 +111,6 @@ public class NativeClassImpl implements ScriptedClass {
     public Object assignStaticField(String name, Object val) {
         staticFields.get(name).set(null, NativeClassLoader.extractNative(val));
         return val;
-    }
-
-    @Override
-    public ClassReference[] enclosed() {
-        return new ClassReference[0];
     }
 
     @Override

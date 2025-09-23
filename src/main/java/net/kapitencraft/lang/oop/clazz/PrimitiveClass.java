@@ -103,27 +103,12 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public boolean hasEnclosing(String name) {
-        return false;
-    }
-
-    @Override
-    public ClassReference getEnclosing(String name) {
-        return null;
-    }
-
-    @Override
     public GeneratedMethodMap getMethods() {
         return null;
     }
 
     public Object defaultValue() {
         return defaultValue;
-    }
-
-    @Override
-    public ClassReference[] enclosed() {
-        return new ClassReference[0];
     }
 
     @Override

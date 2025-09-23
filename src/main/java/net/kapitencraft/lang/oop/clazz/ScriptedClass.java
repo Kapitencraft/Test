@@ -76,13 +76,7 @@ public interface ScriptedClass {
         this.staticFields().forEach((s, loxField) -> {
             assignStaticField(s, loxField.initialize(null, null));
         });
-
-        for (ClassReference loxClass : this.enclosed()) {
-            loxClass.get().clInit();
-        }
     }
-
-    ClassReference[] enclosed();
 
     Map<String, ? extends ScriptedField> staticFields();
 
@@ -173,10 +167,6 @@ public interface ScriptedClass {
     AbstractMethodMap getMethods();
 
     //endregion
-
-    boolean hasEnclosing(String name);
-
-    ClassReference getEnclosing(String name);
 
     RuntimeAnnotationClassInstance[] annotations();
 

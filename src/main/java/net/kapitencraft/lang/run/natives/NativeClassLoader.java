@@ -320,11 +320,6 @@ public class NativeClassLoader {
 
     private record NativeWrapper(String name, String pck) implements ScriptedClass {
 
-        @Override
-            public ClassReference[] enclosed() {
-                return new ClassReference[0];
-            }
-
             @Override
             public Map<String, ? extends ScriptedField> staticFields() {
                 return Map.of();
@@ -342,16 +337,6 @@ public class NativeClassLoader {
 
             @Override
             public AbstractMethodMap getMethods() {
-                return null;
-            }
-
-            @Override
-            public boolean hasEnclosing(String name) {
-                return false;
-            }
-
-            @Override
-            public ClassReference getEnclosing(String name) {
                 return null;
             }
 

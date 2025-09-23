@@ -392,14 +392,6 @@ public class Holder {
                 }
             }
 
-            //enclosed classes
-            ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
-            for (Class enclosedDecl : this.enclosed()) {
-                ScriptedClass generated = enclosedDecl.createSkeleton(logger);
-                enclosedDecl.target().setTarget(generated);
-                enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
-            }
-
             //methods
             Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
             for (Method method : this.methods()) {
@@ -422,7 +414,6 @@ public class Holder {
             return new SkeletonEnum(
                     name().lexeme(), pck(),
                     staticFields.build(), fields.build(),
-                    enclosed.build(),
                     DataMethodContainer.bakeBuilders(methods)
             );
         }

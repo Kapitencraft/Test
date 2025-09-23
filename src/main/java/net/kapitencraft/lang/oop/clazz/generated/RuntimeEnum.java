@@ -38,8 +38,6 @@ public class RuntimeEnum implements EnumClass {
     private final Map<String, RuntimeEnumConstant> enumConstants;
     private final Map<String, RuntimeField> allStaticFields;
 
-    private final Map<String, ClassReference> enclosing;
-
     private final ClassReference[] implemented;
     private final String name;
     private final String packageRepresentation;
@@ -50,12 +48,11 @@ public class RuntimeEnum implements EnumClass {
                        Map<String, RuntimeField> allFields,
                        Function<ScriptedClass, Map<String, RuntimeEnumConstant>> enumConstants,
                        Map<String, RuntimeField> allStaticFields,
-                       Map<String, ClassReference> enclosing, ClassReference[] implemented, String name, String packageRepresentation, RuntimeAnnotationClassInstance[] annotations) {
+                       ClassReference[] implemented, String name, String packageRepresentation, RuntimeAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allFields = allFields;
         this.enumConstants = enumConstants.apply(this);
         this.allStaticFields = allStaticFields;
-        this.enclosing = enclosing;
         this.implemented = implemented;
         this.name = name;
         this.packageRepresentation = packageRepresentation;
@@ -63,7 +60,7 @@ public class RuntimeEnum implements EnumClass {
         this.lookup = MethodLookup.createFromClass(this);
     }
 
-    public static RuntimeEnum load(JsonObject data, List<ClassReference> enclosed, String pck) {
+    public static RuntimeEnum load(JsonObject data, String pck) {
         String name = GsonHelper.getAsString(data, "name");
         ClassReference[] implemented = ClassLoader.loadInterfaces(data);
 
@@ -73,8 +70,6 @@ public class RuntimeEnum implements EnumClass {
         ImmutableMap<String, RuntimeField> staticFields = RuntimeField.loadFieldMap(data, "staticFields");
         Function<ScriptedClass, Map<String, RuntimeEnumConstant>> enumConstants = RuntimeEnumConstant.loadFieldMap(data, "enumConstants");
 
-        Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));
-
         RuntimeAnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
 
         return new RuntimeEnum(
@@ -82,14 +77,8 @@ public class RuntimeEnum implements EnumClass {
                 fields,
                 enumConstants,
                 staticFields,
-                enclosedClasses,
                 implemented, name,
                 pck, annotations);
-    }
-
-    @Override
-    public ClassReference[] enclosed() {
-        return new ClassReference[0];
     }
 
     @Override
@@ -131,16 +120,6 @@ public class RuntimeEnum implements EnumClass {
     @Override
     public ClassReference getStaticFieldType(String name) {
         return allStaticFields.get(name).type();
-    }
-
-    @Override
-    public boolean hasEnclosing(String name) {
-        return enclosing.containsKey(name);
-    }
-
-    @Override
-    public ClassReference getEnclosing(String name) {
-        return enclosing.get(name);
     }
 
     @Override

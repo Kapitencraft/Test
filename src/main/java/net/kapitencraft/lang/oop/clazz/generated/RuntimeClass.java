@@ -30,8 +30,6 @@ public final class RuntimeClass implements ScriptedClass {
     private final Map<String, RuntimeField> allFields;
     private final Map<String, RuntimeField> allStaticFields;
 
-    private final Map<String, ClassReference> enclosing;
-
     private final ClassReference superclass;
     private final ClassReference[] implemented;
     private final String name;
@@ -44,14 +42,13 @@ public final class RuntimeClass implements ScriptedClass {
     public RuntimeClass(Map<String, DataMethodContainer> methods,
                         Map<String, RuntimeField> fields, Map<String, RuntimeField> staticFields,
                         ClassReference superclass, String name, String packageRepresentation,
-                        Map<String, ClassReference> enclosing, ClassReference[] implemented,
+                        ClassReference[] implemented,
                         short modifiers, RuntimeAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allFields = fields;
         this.allStaticFields = staticFields;
         this.superclass = superclass;
         this.name = name;
-        this.enclosing = enclosing;
         this.packageRepresentation = packageRepresentation;
         this.implemented = implemented;
         this.modifiers = modifiers;
@@ -59,7 +56,7 @@ public final class RuntimeClass implements ScriptedClass {
         this.lookup = MethodLookup.createFromClass(this);
     }
 
-    public static ScriptedClass load(JsonObject data, List<ClassReference> enclosed, String pck) {
+    public static ScriptedClass load(JsonObject data, String pck) {
         String name = GsonHelper.getAsString(data, "name");
         ClassReference superclass = ClassLoader.loadClassReference(data, "superclass");
         ClassReference[] implemented = ClassLoader.loadInterfaces(data);
@@ -74,14 +71,11 @@ public final class RuntimeClass implements ScriptedClass {
 
         RuntimeAnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
 
-        Map<String, ClassReference> enclosedClasses = enclosed.stream().collect(Collectors.toMap(ClassReference::name, Function.identity()));
-
         return new RuntimeClass(
                 methods,
                 fields, staticFields,
                 superclass,
                 name, pck,
-                enclosedClasses,
                 implemented,
                 modifiers,
                 annotations
@@ -134,16 +128,6 @@ public final class RuntimeClass implements ScriptedClass {
     }
 
     @Override
-    public boolean hasEnclosing(String name) {
-        return false;
-    }
-
-    @Override
-    public ClassReference getEnclosing(String name) {
-        return null;
-    }
-
-    @Override
     public GeneratedMethodMap getMethods() {
         return methods;
     }
@@ -166,10 +150,6 @@ public final class RuntimeClass implements ScriptedClass {
     @Override
     public String pck() {
         return packageRepresentation;
-    }
-
-    public ClassReference[] enclosed() {
-        return enclosing.values().toArray(new ClassReference[0]);
     }
 
     @Override

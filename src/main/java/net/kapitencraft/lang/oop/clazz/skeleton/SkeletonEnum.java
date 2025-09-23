@@ -32,23 +32,19 @@ public class SkeletonEnum implements EnumClass {
     private final Map<String, SkeletonField> fields;
     private final Map<String, SkeletonField> staticFields;
 
-    private final Map<String, ClassReference> enclosed;
-
     private final GeneratedMethodMap methods;
 
     public SkeletonEnum(String name, String pck,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
-                         Map<String, ClassReference> enclosed,
                          Map<String, DataMethodContainer> methods) {
         this.name = name;
         this.pck = pck;
         this.staticFields = staticFields;
         this.fields = fields;
-        this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
     }
 
-    public static SkeletonEnum fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
+    public static SkeletonEnum fromCache(JsonObject data, String pck) {
         String name = GsonHelper.getAsString(data, "name");
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
@@ -72,7 +68,6 @@ public class SkeletonEnum implements EnumClass {
 
         return new SkeletonEnum(name, pck,
                 staticFields.build(), fields.build(),
-                Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
                 methods
         );
     }
@@ -88,18 +83,12 @@ public class SkeletonEnum implements EnumClass {
     }
 
     @Override
-    public ClassReference[] enclosed() {
-        return enclosed.values().toArray(new ClassReference[0]);
-    }
-
-    @Override
     public Map<String, ? extends ScriptedField> enumConstants() {
         return Map.of();
     }
 
     @Override
     public void setConstantValues(Map<String, DynamicClassInstance> constants) {
-
     }
 
     @Override
@@ -150,16 +139,6 @@ public class SkeletonEnum implements EnumClass {
     @Override
     public short getModifiers() {
         return Modifiers.ENUM;
-    }
-
-    @Override
-    public boolean hasEnclosing(String name) {
-        return enclosed.containsKey(name);
-    }
-
-    @Override
-    public ClassReference getEnclosing(String name) {
-        return enclosed.get(name);
     }
 
     @Override
