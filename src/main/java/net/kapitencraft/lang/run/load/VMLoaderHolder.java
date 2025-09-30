@@ -47,11 +47,11 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
     @Override
     public void applySkeleton()  {
 
-        ScriptedClass skeleton = switch (type) {k
-            case ENUM -> SkeletonEnum.fromCache(data, pck(), enclosedClasses);
-            case CLASS -> SkeletonClass.fromCache(data, pck(), enclosedClasses);
-            case INTERFACE -> SkeletonInterface.fromCache(data, pck(), enclosedClasses);
-            case ANNOTATION -> SkeletonAnnotation.fromCache(data, pck(), enclosedClasses);
+        ScriptedClass skeleton = switch (type) {
+            case ENUM -> SkeletonEnum.fromCache(data, pck());
+            case CLASS -> SkeletonClass.fromCache(data, pck());
+            case INTERFACE -> SkeletonInterface.fromCache(data, pck());
+            case ANNOTATION -> SkeletonAnnotation.fromCache(data, pck());
         };
         this.reference.setTarget(skeleton);
     }

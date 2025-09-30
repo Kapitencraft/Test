@@ -29,7 +29,6 @@ public class SkeletonClass implements ScriptedClass {
     private final Map<String, SkeletonField> staticFields;
 
     private final Holder.Generics generics;
-    private final Map<String, ClassReference> enclosed;
 
     private final GeneratedMethodMap methods;
 
@@ -39,7 +38,6 @@ public class SkeletonClass implements ScriptedClass {
     public SkeletonClass(Holder.Generics generics,
                          String name, String pck, ClassReference superclass,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
-                         Map<String, ClassReference> enclosed,
                          Map<String, DataMethodContainer> methods,
                          short modifiers, ClassReference[] interfaces) {
         this.name = name;
@@ -48,7 +46,6 @@ public class SkeletonClass implements ScriptedClass {
         this.staticFields = staticFields;
         this.fields = fields;
         this.generics = generics;
-        this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
         this.modifiers = modifiers;
         this.interfaces = interfaces;
@@ -56,7 +53,6 @@ public class SkeletonClass implements ScriptedClass {
 
     public SkeletonClass(String name, String pck, ClassReference superclass,
                          Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
-                         Map<String, ClassReference> enclosed,
                          Map<String, DataMethodContainer> methods,
                          short modifiers, ClassReference[] interfaces) {
         this.generics = null;
@@ -65,13 +61,12 @@ public class SkeletonClass implements ScriptedClass {
         this.superclass = superclass;
         this.staticFields = staticFields;
         this.fields = fields;
-        this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
         this.modifiers = modifiers;
         this.interfaces = interfaces;
     }
 
-    public static SkeletonClass fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
+    public static SkeletonClass fromCache(JsonObject data, String pck) {
         String name = GsonHelper.getAsString(data, "name");
         ClassReference superclass = ClassLoader.loadClassReference(data, "superclass");
 
@@ -100,7 +95,6 @@ public class SkeletonClass implements ScriptedClass {
 
         return new SkeletonClass(name, pck, superclass,
                 staticFields.build(), fields.build(),
-                Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
                 methods,
                 modifiers,
                 interfaces);
@@ -119,11 +113,6 @@ public class SkeletonClass implements ScriptedClass {
     @Override
     public @Nullable Holder.Generics getGenerics() {
         return generics;
-    }
-
-    @Override
-    public ClassReference[] enclosed() {
-        return enclosed.values().toArray(new ClassReference[0]);
     }
 
     @Override
@@ -174,16 +163,6 @@ public class SkeletonClass implements ScriptedClass {
     @Override
     public boolean hasMethod(String name) {
         return methods.has(name) || ScriptedClass.super.hasMethod(name);
-    }
-
-    @Override
-    public boolean hasEnclosing(String name) {
-        return enclosed.containsKey(name);
-    }
-
-    @Override
-    public ClassReference getEnclosing(String name) {
-        return enclosed.get(name);
     }
 
     @Override

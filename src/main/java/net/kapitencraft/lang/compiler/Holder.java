@@ -458,7 +458,6 @@ public class Holder {
                     this.extractInterfaces(),
                     staticFields.build(),
                     this.generics(),
-                    enclosed.build(),
                     DataMethodContainer.bakeBuilders(methods)
             );
 
@@ -509,7 +508,6 @@ public class Holder {
                     this.pck(), this.parent.getReference(),
                     staticFields.build(),
                     fields.build(),
-                    enclosed.build(),
                     DataMethodContainer.bakeBuilders(methods),
                     this.modifiers,
                     Arrays.stream(this.interfaces).map(SourceClassReference::getReference).toArray(ClassReference[]::new)
@@ -561,7 +559,6 @@ public class Holder {
             return new SkeletonAnnotation(
                     this.name().lexeme(),
                     this.pck(),
-                    enclosed.build(),
                     methods.build()
             );
         }

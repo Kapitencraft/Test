@@ -34,21 +34,19 @@ public class SkeletonInterface implements ScriptedClass {
     private final Map<String, SkeletonField> staticFields;
 
     private final Holder.Generics generics;
-    private final Map<String, ClassReference> enclosed;
 
     private final GeneratedMethodMap methods;
 
-    public SkeletonInterface(String name, String pck, ClassReference[] interfaces, Map<String, SkeletonField> staticFields, Holder.Generics generics, Map<String, ClassReference> enclosed, Map<String, DataMethodContainer> methods) {
+    public SkeletonInterface(String name, String pck, ClassReference[] interfaces, Map<String, SkeletonField> staticFields, Holder.Generics generics, Map<String, DataMethodContainer> methods) {
         this.name = name;
         this.pck = pck;
         this.interfaces = interfaces;
         this.staticFields = staticFields;
         this.generics = generics;
-        this.enclosed = enclosed;
         this.methods = new GeneratedMethodMap(methods);
     }
 
-    public static ScriptedClass fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
+    public static ScriptedClass fromCache(JsonObject data, String pck) {
         String name = GsonHelper.getAsString(data, "name");
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
@@ -70,7 +68,6 @@ public class SkeletonInterface implements ScriptedClass {
                 interfaces,
                 staticFields.build(),
                 null,
-                Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
                 methods
         );
     }
@@ -88,11 +85,6 @@ public class SkeletonInterface implements ScriptedClass {
     @Override
     public @Nullable Holder.Generics getGenerics() {
         return generics;
-    }
-
-    @Override
-    public ClassReference[] enclosed() {
-        return enclosed.values().toArray(new ClassReference[0]);
     }
 
     @Override
@@ -128,16 +120,6 @@ public class SkeletonInterface implements ScriptedClass {
     @Override
     public short getModifiers() {
         return Modifiers.INTERFACE;
-    }
-
-    @Override
-    public boolean hasEnclosing(String name) {
-        return enclosed.containsKey(name);
-    }
-
-    @Override
-    public ClassReference getEnclosing(String name) {
-        return enclosed.get(name);
     }
 
     @Override

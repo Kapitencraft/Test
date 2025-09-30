@@ -26,19 +26,15 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     private final String name;
     private final String pck;
 
-    private final Map<String, ClassReference> enclosed;
-
     private final AnnotationMethodMap methods;
 
-    public SkeletonAnnotation(String name, String pck,
-                              Map<String, ClassReference> enclosed, Map<String, AnnotationCallable> methods) {
+    public SkeletonAnnotation(String name, String pck, Map<String, AnnotationCallable> methods) {
         this.name = name;
         this.pck = pck;
-        this.enclosed = enclosed;
         this.methods = new AnnotationMethodMap(methods);
     }
 
-    public static SkeletonAnnotation fromCache(JsonObject data, String pck, ClassReference[] enclosed) {
+    public static SkeletonAnnotation fromCache(JsonObject data, String pck) {
         String name = GsonHelper.getAsString(data, "name");
 
         JsonObject methodData = GsonHelper.getAsJsonObject(data, "methods");
@@ -48,7 +44,6 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
         methodData.asMap().forEach((string, jsonElement) -> methods.put(string, SkeletonAnnotationMethod.fromJson((JsonObject) jsonElement)));
 
         return new SkeletonAnnotation(name, pck,
-                Arrays.stream(enclosed).collect(Collectors.toMap(ClassReference::name, Function.identity())),
                 methods.build()
         );
     }
@@ -61,11 +56,6 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     @Override
     public Object assignStaticField(String name, Object val) {
         throw new IllegalAccessError("cannot access field from skeleton");
-    }
-
-    @Override
-    public ClassReference[] enclosed() {
-        return enclosed.values().toArray(new ClassReference[0]);
     }
 
     @Override
@@ -116,16 +106,6 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     @Override
     public boolean hasMethod(String name) {
         return false;
-    }
-
-    @Override
-    public boolean hasEnclosing(String name) {
-        return enclosed.containsKey(name);
-    }
-
-    @Override
-    public ClassReference getEnclosing(String name) {
-        return enclosed.get(name);
     }
 
     @Override
