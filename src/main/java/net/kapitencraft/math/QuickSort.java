@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Random;
 
 public class QuickSort {
+    public static int vergleiche = 0;
+    public static int vertausche = 0;
 
     public static void swap(int[] array, int i1, int i2) {
         if (i1 == i2) return;
@@ -11,6 +13,7 @@ public class QuickSort {
         int c = array[i1];
         array[i1] = array[i2];
         array[i2] = c;
+        vertausche++;
     }
 
     public static void quickSort(int[] array, int start, int end) {
@@ -19,6 +22,8 @@ public class QuickSort {
         int r = end; //pointer to the insert point for the next larger element. points to the element being taken next
         int sort = array[l]; //element to be sorted
         while (l < r) {
+            vergleiche++;
+            vertausche++;
             if (sort <= p) {
                 array[l++] = sort;
                 sort = array[l];
@@ -28,6 +33,7 @@ public class QuickSort {
                 sort = c;
             }
         }
+        vergleiche++;
         if (sort <= p) {
             array[l++] = sort;
         } else {
@@ -52,9 +58,10 @@ public class QuickSort {
             for (int i1 = 0; i1 < array.length; i1++) {
                 array[i1] = random.nextInt(100);
             }
-            System.out.println(Arrays.toString(array));
+            vergleiche = 0;
+            vertausche = 0;
             quickSort(array, 0, array.length - 1);
-            System.out.println(Arrays.toString(array));
+            System.out.println("vertausche: " + vertausche + ", vergleiche: " + vergleiche);
         }
     }
 }

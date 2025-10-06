@@ -290,11 +290,11 @@ public class AbstractParser {
         Token last = previous();
         while (match(DOT) && reference != null) { //TODO remove enclosing necessity. it shouldn't exist anyways
             String enclosingName = consumeIdentifier().lexeme();
-            if (!reference.get().hasEnclosing(enclosingName)) {
-                return SourceClassReference.from(last, reference);
-            }
-            last = previous();
-            reference = reference.get().getEnclosing(enclosingName);
+            //if (!reference.get().hasEnclosing(enclosingName)) {
+            //    return SourceClassReference.from(last, reference);
+            //}
+            //last = previous();
+            //reference = reference.get().getEnclosing(enclosingName);
         }
         if (reference == null) {
             error(token, "unknown symbol");
