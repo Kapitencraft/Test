@@ -88,4 +88,9 @@ public class Package {
         classes.put(name, reference);
         return reference;
     }
+
+    @Override
+    public String toString() {
+        return "Pck@" + this.name;
+    }
 }

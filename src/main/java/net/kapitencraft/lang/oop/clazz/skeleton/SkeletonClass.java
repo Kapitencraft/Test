@@ -14,11 +14,10 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class SkeletonClass implements ScriptedClass {
     private final String name;
@@ -26,7 +25,6 @@ public class SkeletonClass implements ScriptedClass {
 
     private final ClassReference superclass;
     private final Map<String, SkeletonField> fields;
-    private final Map<String, SkeletonField> staticFields;
 
     private final Holder.Generics generics;
 
@@ -37,13 +35,12 @@ public class SkeletonClass implements ScriptedClass {
 
     public SkeletonClass(Holder.Generics generics,
                          String name, String pck, ClassReference superclass,
-                         Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
+                         Map<String, SkeletonField> fields,
                          Map<String, DataMethodContainer> methods,
                          short modifiers, ClassReference[] interfaces) {
         this.name = name;
         this.pck = pck;
         this.superclass = superclass;
-        this.staticFields = staticFields;
         this.fields = fields;
         this.generics = generics;
         this.methods = new GeneratedMethodMap(methods);
@@ -52,14 +49,13 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     public SkeletonClass(String name, String pck, ClassReference superclass,
-                         Map<String, SkeletonField> staticFields, Map<String, SkeletonField> fields,
+                         Map<String, SkeletonField> fields,
                          Map<String, DataMethodContainer> methods,
                          short modifiers, ClassReference[] interfaces) {
         this.generics = null;
         this.name = name;
         this.pck = pck;
         this.superclass = superclass;
-        this.staticFields = staticFields;
         this.fields = fields;
         this.methods = new GeneratedMethodMap(methods);
         this.modifiers = modifiers;
@@ -79,22 +75,14 @@ public class SkeletonClass implements ScriptedClass {
             JsonObject fieldData = GsonHelper.getAsJsonObject(data, "fields");
             fieldData.asMap().forEach((s, element) -> {
                 JsonObject object = element.getAsJsonObject();
-                fields.put(s, new SkeletonField(ClassLoader.loadClassReference(object, "type"), object.has("isFinal") && GsonHelper.getAsBoolean(object, "isFinal")));
-            });
-        }
-        ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
-        {
-            JsonObject fieldData = GsonHelper.getAsJsonObject(data, "staticFields");
-            fieldData.asMap().forEach((s, element) -> {
-                JsonObject object = element.getAsJsonObject();
-                staticFields.put(s, new SkeletonField(ClassLoader.loadClassReference(object, "type"), object.has("isFinal") && GsonHelper.getAsBoolean(object, "isFinal")));
+                fields.put(s, new SkeletonField(ClassLoader.loadClassReference(object, "type"), GsonHelper.getAsShort(object, "modifiers")));
             });
         }
 
         short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
 
         return new SkeletonClass(name, pck, superclass,
-                staticFields.build(), fields.build(),
+                fields.build(),
                 methods,
                 modifiers,
                 interfaces);
@@ -106,18 +94,13 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public Object assignStaticField(String name, Object val) {
+    public Object setStaticField(String name, Object val) {
         throw new IllegalAccessError("cannot access field from skeleton");
     }
 
     @Override
     public @Nullable Holder.Generics getGenerics() {
         return generics;
-    }
-
-    @Override
-    public Map<String, ? extends ScriptedField> staticFields() {
-        return staticFields;
     }
 
     @Override
@@ -141,13 +124,13 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public @Nullable ClassReference superclass() {
-        return superclass;
+    public Map<String, SkeletonField> getFields() {
+        return fields;
     }
 
     @Override
-    public ClassReference getStaticFieldType(String name) {
-        return staticFields.get(name).type();
+    public @Nullable ClassReference superclass() {
+        return superclass;
     }
 
     @Override
@@ -178,5 +161,10 @@ public class SkeletonClass implements ScriptedClass {
     @Override
     public ClassReference[] interfaces() {
         return interfaces;
+    }
+
+    @Override
+    public boolean isNative() {
+        return false;
     }
 }

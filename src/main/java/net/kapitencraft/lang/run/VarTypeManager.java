@@ -259,7 +259,37 @@ public class VarTypeManager {
         };
     }
 
+    /**
+     * @param s the location of the class
+     * @return the class at that location or null if the class doesn't exist
+     * @throws IllegalArgumentException if the parameter does not match the location format
+     */
+    public static ScriptedClass directFlatParse(String s) {
+        return switch (s) {
+            case "N" -> VarTypeManager.NUMBER;
+            case "I" -> VarTypeManager.INTEGER;
+            case "F" -> VarTypeManager.FLOAT;
+            case "D" -> VarTypeManager.DOUBLE;
+            case "B" -> VarTypeManager.BOOLEAN;
+            case "C" -> VarTypeManager.CHAR;
+            case "V" -> VarTypeManager.VOID;
+            case "[" -> directFlatParse(s.substring(1)).array();
+            default -> {
+                if (s.startsWith("L")) yield flatMap.get(s);
+                throw new IllegalArgumentException("unknown type: '" + s + "'");
+            }
+        };
+    }
+
     public static void registerFlat(ScriptedClass target) {
         flatMap.put(target.absoluteName().replaceAll("\\.", "/"), target);
+    }
+
+    public static void listFlat() {
+        System.out.println("=== All Classes ===");
+        ArrayList<String> classes = new ArrayList<>(flatMap.keySet());
+        classes.sort(String::compareTo);
+        classes.forEach(System.out::println);
+        System.out.println("=== End Log ===");
     }
 }

@@ -14,8 +14,8 @@ enum EnumTest {
     }
 
     static void main(String[] args) {
-        //for (EnumTest test : EnumTest.values()) {
-        //    System.print(test.id);
-        //}
+        for (EnumTest test : EnumTest.values()) {
+            System.print(test.id);
+        }
     }
 }

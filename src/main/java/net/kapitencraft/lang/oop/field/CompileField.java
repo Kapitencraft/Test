@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.field;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -11,24 +12,13 @@ import net.kapitencraft.lang.run.Interpreter;
 
 public class CompileField implements ScriptedField {
     private final ClassReference type;
-    private final Expr init;
-    private final boolean isFinal;
+    private final short modifiers;
     private final CompileAnnotationClassInstance[] annotations;
 
-    public CompileField(ClassReference type, Expr init, boolean isFinal, CompileAnnotationClassInstance[] annotations) {
+    public CompileField(ClassReference type, short modifiers, CompileAnnotationClassInstance[] annotations) {
         this.type = type;
-        this.init = init;
-        this.isFinal = isFinal;
+        this.modifiers = modifiers;
         this.annotations = annotations;
-    }
-
-    @Override
-    public Object initialize(Environment environment, Interpreter interpreter) {
-        throw new IllegalAccessError("can not initialize Compile Field!");
-    }
-
-    public boolean hasInit() {
-        return init != null;
     }
 
     @Override
@@ -40,13 +30,18 @@ public class CompileField implements ScriptedField {
         JsonObject object = new JsonObject();
         object.addProperty("type", type.absoluteName());
         //if (hasInit()) object.add("init", cacheBuilder.cache(init)); TODO
-        if (isFinal) object.addProperty("isFinal", true);
+        object.addProperty("modifiers", this.modifiers);
         object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
         return object;
     }
 
     @Override
     public boolean isFinal() {
-        return isFinal;
+        return Modifiers.isFinal(this.modifiers);
+    }
+
+    @Override
+    public boolean isStatic() {
+        return Modifiers.isStatic(this.modifiers);
     }
 }

@@ -2,14 +2,12 @@ package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.holder.ast.RuntimeExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
@@ -22,7 +20,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public interface ScriptedClass {
-    Map<String, Object> staticFieldData = new HashMap<>();
 
     default boolean isArray() {
         return false;
@@ -36,8 +33,19 @@ public interface ScriptedClass {
         return ClassReference.of(this);
     }
 
-    default Object getStaticField(String name) {
-        return staticFieldData.get(name);
+    Object getStaticField(String name);
+
+    Object setStaticField(String name, Object val);
+
+    default Object staticSpecialAssign(String name, TokenType assignType) {
+        Object val = getStaticField(name);
+        if (val instanceof Integer) {
+            return this.setStaticField(name, (int)val + (assignType == TokenType.GROW ? 1 : -1));
+        } else if (val instanceof Float) {
+            return this.setStaticField(name, (float) val + (assignType == TokenType.GROW ? 1 : -1));
+        } else {
+            return this.setStaticField(name, (double)val + (assignType == TokenType.GROW ? 1 : -1));
+        }
     }
 
     //TODO move to reference?
@@ -66,31 +74,6 @@ public interface ScriptedClass {
                 operand == Operand.LEFT ? selfS + otherS  : otherS + selfS : null;
     }
 
-    default Object assignStaticField(String name, Object val) {
-        staticFieldData.put(name, val);
-        return getStaticField(name);
-    }
-
-    default void clInit() {
-
-        this.staticFields().forEach((s, loxField) -> {
-            assignStaticField(s, loxField.initialize(null, null));
-        });
-    }
-
-    Map<String, ? extends ScriptedField> staticFields();
-
-    default Object staticSpecialAssign(String name, TokenType assignType) {
-        Object val = getStaticField(name);
-        if (val instanceof Integer) {
-            return this.assignStaticField(name, (int)val + (assignType == TokenType.GROW ? 1 : -1));
-        } else if (val instanceof Float) {
-            return this.assignStaticField(name, (float) val + (assignType == TokenType.GROW ? 1 : -1));
-        } else {
-            return this.assignStaticField(name, (double)val + (assignType == TokenType.GROW ? 1 : -1));
-        }
-    }
-
     @Contract(pure = true)
     String name();
 
@@ -103,7 +86,7 @@ public interface ScriptedClass {
     }
 
     @Contract(pure = true)
-    @Nullable ClassReference superclass();
+    ClassReference superclass();
 
     default ClassReference[] interfaces() {
         return superclass() != null ? superclass().get().interfaces() : new ClassReference[0];
@@ -115,14 +98,6 @@ public interface ScriptedClass {
 
     default boolean hasField(String name) {
         return superclass() != null && superclass().get().hasField(name);
-    }
-
-    default ClassReference getStaticFieldType(String name) {
-        return staticFields().get(name).type();
-    }
-
-    default boolean hasStaticField(String name) {
-        return superclass() != null && superclass().get().hasStaticField(name);
     }
 
     default DynamicClassInstance createNativeInst(Object[] params, int ordinal) {
@@ -194,6 +169,8 @@ public interface ScriptedClass {
     default @Nullable Holder.Generics getGenerics() {
         return null;
     }
+
+    boolean isNative();
 
     //endregion
 }

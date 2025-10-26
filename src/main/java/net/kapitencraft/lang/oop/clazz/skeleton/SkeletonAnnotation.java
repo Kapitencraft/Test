@@ -6,21 +6,19 @@ import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.AnnotationMethodMap;
-import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class SkeletonAnnotation implements AbstractAnnotationClass {
     private final String name;
@@ -54,13 +52,8 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public Object assignStaticField(String name, Object val) {
+    public Object setStaticField(String name, Object val) {
         throw new IllegalAccessError("cannot access field from skeleton");
-    }
-
-    @Override
-    public Map<String, ? extends ScriptedField> staticFields() {
-        return Map.of();
     }
 
     @Override
@@ -89,11 +82,6 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public ClassReference getStaticFieldType(String name) {
-        return VarTypeManager.VOID.reference();
-    }
-
-    @Override
     public ScriptedCallable getMethod(String signature) {
         return methods.getMethod(signature);
     }
@@ -116,5 +104,10 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     @Override
     public RuntimeAnnotationClassInstance[] annotations() {
         return new RuntimeAnnotationClassInstance[0];
+    }
+
+    @Override
+    public boolean isNative() {
+        return false;
     }
 }

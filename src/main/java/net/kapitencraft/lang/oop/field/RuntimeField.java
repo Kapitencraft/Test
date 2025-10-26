@@ -2,6 +2,7 @@ package net.kapitencraft.lang.oop.field;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.ast.RuntimeExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -14,30 +15,13 @@ import net.kapitencraft.tool.GsonHelper;
 
 public class RuntimeField implements ScriptedField {
     private final ClassReference type;
-    private final RuntimeExpr init;
-    private final boolean isFinal;
+    private final short modifiers;
     private final RuntimeAnnotationClassInstance[] annotations;
 
-    public RuntimeField(ClassReference type, RuntimeExpr init, boolean isFinal, RuntimeAnnotationClassInstance[] annotations) {
+    public RuntimeField(ClassReference type, short modifiers, RuntimeAnnotationClassInstance[] annotations) {
         this.type = type;
-        this.init = init;
-        this.isFinal = isFinal;
+        this.modifiers = modifiers;
         this.annotations = annotations;
-    }
-
-    @Override
-    public Object initialize(Environment environment, Interpreter interpreter) {
-        if (!hasInit()) {
-            if (type.get() instanceof PrimitiveClass prim) {
-                return prim.defaultValue();
-            }
-            return null;
-        }
-        return null;
-    }
-
-    public boolean hasInit() {
-        return init != null;
     }
 
     @Override
@@ -47,10 +31,9 @@ public class RuntimeField implements ScriptedField {
 
     public static RuntimeField fromJson(JsonObject object) {
         ClassReference type = ClassLoader.loadClassReference(object, "type");
-        RuntimeExpr init = CacheLoader.readOptionalSubExpr(object, "init");
-        boolean isFinal = object.has("isFinal") && GsonHelper.getAsBoolean(object, "isFinal");
+        short modifiers = GsonHelper.getAsShort(object, "modifiers");
         RuntimeAnnotationClassInstance[] annotations = CacheLoader.readAnnotations(object);
-        return new RuntimeField(type, init, isFinal, annotations);
+        return new RuntimeField(type, modifiers, annotations);
     }
 
     public static ImmutableMap<String, RuntimeField> loadFieldMap(JsonObject data, String member) {
@@ -65,6 +48,11 @@ public class RuntimeField implements ScriptedField {
 
     @Override
     public boolean isFinal() {
-        return isFinal;
+        return Modifiers.isFinal(this.modifiers);
+    }
+
+    @Override
+    public boolean isStatic() {
+        return Modifiers.isStatic(this.modifiers);
     }
 }

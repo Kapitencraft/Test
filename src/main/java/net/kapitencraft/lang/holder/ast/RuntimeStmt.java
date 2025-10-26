@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.holder.ast;
 
-import net.kapitencraft.lang.holder.token.RuntimeToken;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.tool.Pair;

@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.oop.field;
 
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.Interpreter;
@@ -10,12 +11,12 @@ import java.lang.reflect.Field;
 
 public class NativeField implements ScriptedField {
     private final ClassReference type;
-    private final boolean isFinal;
+    private final short modifiers;
     private final Field field;
 
-    public NativeField(ClassReference type, boolean isFinal, Field field) {
+    public NativeField(ClassReference type, short modifiers, Field field) {
         this.type = type;
-        this.isFinal = isFinal;
+        this.modifiers = modifiers;
         this.field = field;
     }
 
@@ -36,17 +37,17 @@ public class NativeField implements ScriptedField {
     }
 
     @Override
-    public Object initialize(Environment environment, Interpreter interpreter) {
-        return null;
-    }
-
-    @Override
     public ClassReference type() {
         return type;
     }
 
     @Override
     public boolean isFinal() {
-        return isFinal;
+        return Modifiers.isFinal(modifiers);
+    }
+
+    @Override
+    public boolean isStatic() {
+        return Modifiers.isStatic(modifiers);
     }
 }

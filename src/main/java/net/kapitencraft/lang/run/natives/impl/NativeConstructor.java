@@ -33,7 +33,7 @@ public class NativeConstructor implements ScriptedCallable {
     @Override
     public Object call(Object[] arguments) {
         try {
-            return constructor.newInstance(NativeClassLoader.extractNatives(arguments));
+            return constructor.newInstance(NativeClassLoader.extractNatives(arguments, false));
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw AbstractScriptedException.createException(VarTypeManager.FUNCTION_CALL_ERROR, e.getMessage());
         }

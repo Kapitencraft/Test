@@ -14,16 +14,13 @@ import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class SkeletonInterface implements ScriptedClass {
     private final String name;
@@ -56,7 +53,7 @@ public class SkeletonInterface implements ScriptedClass {
             JsonObject fieldData = GsonHelper.getAsJsonObject(data, "staticFields");
             fieldData.asMap().forEach((s, element) -> {
                 JsonObject object = element.getAsJsonObject();
-                staticFields.put(s, new SkeletonField(ClassLoader.loadClassReference(object, "type"), object.has("isFinal") && GsonHelper.getAsBoolean(object, "isFinal")));
+                staticFields.put(s, new SkeletonField(ClassLoader.loadClassReference(object, "type"), GsonHelper.getAsShort(object, "modifiers")));
             });
         }
 
@@ -78,18 +75,13 @@ public class SkeletonInterface implements ScriptedClass {
     }
 
     @Override
-    public Object assignStaticField(String name, Object val) {
+    public Object setStaticField(String name, Object val) {
         return null;
     }
 
     @Override
     public @Nullable Holder.Generics getGenerics() {
         return generics;
-    }
-
-    @Override
-    public Map<String, ? extends ScriptedField> staticFields() {
-        return staticFields;
     }
 
     @Override
@@ -105,11 +97,6 @@ public class SkeletonInterface implements ScriptedClass {
     @Override
     public @Nullable ClassReference superclass() {
         return null;
-    }
-
-    @Override
-    public ClassReference getStaticFieldType(String name) {
-        return staticFields.get(name).type();
     }
 
     @Override
@@ -140,5 +127,10 @@ public class SkeletonInterface implements ScriptedClass {
     @Override
     public boolean hasMethod(String name) {
         return methods.has(name);
+    }
+
+    @Override
+    public boolean isNative() {
+        return false;
     }
 }

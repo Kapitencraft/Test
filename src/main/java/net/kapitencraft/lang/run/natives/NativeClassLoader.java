@@ -11,7 +11,6 @@ import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
-import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.run.natives.impl.NativeClassImpl;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -129,7 +128,7 @@ public class NativeClassLoader {
                     if (Modifier.isPublic(declaredField.getModifiers()) && !declaredField.isAnnotationPresent(Excluded.class) && (capturedFields == null || Util.arrayContains(capturedFields, fieldName))) {
                         NativeField impl = new NativeField(
                                 getClassOrThrow(declaredField.getType()),
-                                Modifier.isFinal(declaredField.getModifiers()),
+                                Modifiers.fromJavaMods(declaredField.getModifiers()),
                                 declaredField
                         );
                         if (Modifier.isStatic(declaredField.getModifiers()))
@@ -225,8 +224,16 @@ public class NativeClassLoader {
                 reference instanceof String ||
                 reference == null ||
                 reference instanceof Boolean ||
-                reference instanceof Character
+                reference instanceof Character ||
+                reference instanceof char[] ||
+                reference instanceof int[] ||
+                reference instanceof double[] ||
+                reference instanceof float[] ||
+                reference instanceof boolean[]
         ) return reference;
+        if (reference instanceof Object[] objects) {
+            return Arrays.stream(objects).map(NativeClassLoader::extractNative).toArray(Object[]::new);
+        }
         if (reference instanceof NativeClassInstance NCI) {
             return NCI.getObject();
         }
@@ -243,8 +250,8 @@ public class NativeClassLoader {
         return builder.build();
     }
 
-    public static Object[] extractNatives(Object[] in) {
-        return Arrays.stream(in).map(NativeClassLoader::extractNative).toArray();
+    public static Object[] extractNatives(Object[] in, boolean exclude0) {
+        return (exclude0 ? Arrays.stream(in, 1, in.length) : Arrays.stream(in)).map(NativeClassLoader::extractNative).toArray();
     }
 
     public static Object wrapString(@NotNull String s) {
@@ -321,11 +328,6 @@ public class NativeClassLoader {
     private record NativeWrapper(String name, String pck) implements ScriptedClass {
 
             @Override
-            public Map<String, ? extends ScriptedField> staticFields() {
-                return Map.of();
-            }
-
-            @Override
             public @Nullable ClassReference superclass() {
                 return null;
             }
@@ -349,5 +351,20 @@ public class NativeClassLoader {
             public short getModifiers() {
                 return 0;
             }
+
+        @Override
+        public boolean isNative() {
+            return true;
         }
+
+        @Override
+        public Object getStaticField(String name) {
+            throw new IllegalAccessError("can not get static field from NativeWrapper");
+        }
+
+        @Override
+        public Object setStaticField(String name, Object val) {
+            throw new IllegalAccessError("can not set static field from NativeWrapper");
+        }
+    }
 }

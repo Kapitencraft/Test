@@ -34,7 +34,7 @@ expression  -> switch | when;
 
 switch      -> "switch" "(" expression ")" "{" ( "case" primary "->" expression ";")* ("default" "->" expression ";")? "}"
 
-when        -> cast_check ( "?" expression ":" expression)?
+when        -> cast_check ( "?" expression ":" expression )?
 
 cast_check  -> assignment ( "instanceof" VAR_TYPE IDENTIFIER? )?
 

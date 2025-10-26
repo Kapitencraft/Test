@@ -292,11 +292,15 @@ public class HolderParser extends AbstractParser {
 
     private Holder.Field fieldDecl(SourceClassReference type, Holder.AnnotationObj[] annotations, Token name, short modifiers) {
         Token[] code = null;
+        Token assign = null;
 
-        if (match(ASSIGN)) code = getFieldCode();
+        if (match(ASSIGN)) {
+            assign = previous();
+            code = getFieldCode();
+        }
         else consumeEndOfArg();
 
-        return new Holder.Field(modifiers, annotations, type, name, code);
+        return new Holder.Field(modifiers, annotations, type, name, assign, code);
     }
 
     /**
@@ -469,7 +473,7 @@ public class HolderParser extends AbstractParser {
 
         return new Holder.Class(ClassType.ENUM,
                 target, modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), pckID, name,
-                null,
+                SourceClassReference.from(Token.createNative("Enum"), VarTypeManager.ENUM),
                 interfaces.toArray(new SourceClassReference[0]),
                 constructors.toArray(new Holder.Constructor[0]),
                 methods.toArray(new Holder.Method[0]),

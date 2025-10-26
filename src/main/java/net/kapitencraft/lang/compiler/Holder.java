@@ -3,23 +3,23 @@ package net.kapitencraft.lang.compiler;
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.baked.BakedAnnotation;
 import net.kapitencraft.lang.holder.baked.BakedClass;
-import net.kapitencraft.lang.holder.baked.BakedEnum;
 import net.kapitencraft.lang.holder.baked.BakedInterface;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonAnnotation;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
-import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonEnum;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonInterface;
 import net.kapitencraft.lang.oop.field.CompileField;
 import net.kapitencraft.lang.oop.field.CompileEnumConstant;
@@ -30,6 +30,8 @@ import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.run.algebra.Operand;
+import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -87,28 +89,78 @@ public class Holder {
             }
         }
 
-        public BakedEnum constructEnum(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+        public BakedClass constructEnum(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+
+            List<Stmt> statics = new ArrayList<>();
+
             Map<Token, CompileField> fields = new HashMap<>();
-            Map<String, CompileField> staticFields = new HashMap<>();
+
+            //int enu //TODO array init
+            for (EnumConstant decl : enumConstants()) {
+                Expr[] args;
+                if (decl.arguments.length == 0) {
+                    args = new Expr[0];
+                    stmtParser.apply(new Token[0], parser);
+
+                } else {
+                    stmtParser.apply(decl.arguments, parser);
+                    args = stmtParser.args();
+                }
+
+                ScriptedCallable callable = Util.getClosest(target.get(), "<init>", stmtParser.argTypes(args));
+
+                stmtParser.checkArguments(args, callable, null, decl.name());
+                statics.add(new Stmt.Expression(new Expr.StaticSet(
+                        target, decl.name,
+                        new Expr.Constructor(decl.name, target, args, VarTypeManager.getMethodSignature(target.get(), "<init>", stmtParser.argTypes(args))), //TODO
+                        new Token(TokenType.ASSIGN, "=", LiteralHolder.EMPTY, -1, 0),
+                        target,
+                        Operand.LEFT
+                )));
+            }
+            int length = enumConstants().length;
+            Token values = Token.createNative("$VALUES");
+            fields.put(values, new CompileField(target.array(), Modifiers.pack(true, true, false), new CompileAnnotationClassInstance[0]));
+            Expr[] constants = new Expr[length];
+            for (int i = 0; i < enumConstants.length; i++) {
+                EnumConstant constant = enumConstants[i];
+                constants[i] = new Expr.StaticGet(target, constant.name);
+            }
+            statics.add(new Stmt.Expression(new Expr.StaticSet(
+                    target, values,
+                    new Expr.ArrayConstructor(target, new Expr.Literal(new Token(
+                            TokenType.NUM,
+                            String.valueOf(length),
+                            new LiteralHolder(length, VarTypeManager.INTEGER),
+                            -1,
+                            0
+                            )),
+                            constants
+                    ),
+                    new Token(TokenType.ASSIGN, "=", LiteralHolder.EMPTY, -1, 0),
+                    target,
+                    Operand.LEFT
+            )));
 
             for (Field field : fields()) {
-                Expr initializer = null;
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
-                    initializer = stmtParser.expression();
+                    Expr initializer = stmtParser.expression();
+                    if (Modifiers.isStatic(field.modifiers)) {
+                        statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target, Operand.LEFT)));
+                    }
                 }
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                CompileField fieldDecl = new CompileField(field.type().getReference(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new CompileAnnotationClassInstance[0]));
-                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
-                    else fields.put(field.name, fieldDecl);
+                short mods = Modifiers.fromJavaMods(field.modifiers);
+                CompileField fieldDecl = new CompileField(field.type().getReference(), mods, annotations.toArray(new CompileAnnotationClassInstance[0]));
+                fields.put(field.name, fieldDecl);
             }
 
             List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
-            List<Pair<Token, CompileCallable>> staticMethods = new ArrayList<>();
             for (Method method : this.methods()) {
                 Stmt[] body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
@@ -128,9 +180,35 @@ public class Holder {
                         method.extractParams(),
                         body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0])
                 );
-                if (Modifiers.isStatic(method.modifiers)) staticMethods.add(Pair.of(method.name(), methodDecl));
-                else methods.add(Pair.of(method.name(), methodDecl));
+                methods.add(Pair.of(method.name(), methodDecl));
             }
+
+            methods.add(Pair.of(Token.createNative("<clinit>"),
+                    new CompileCallable(VarTypeManager.VOID.reference(),
+                            List.of(),
+                            statics.toArray(new Stmt[0]),
+                            Modifiers.pack(true, true, false),
+                            new CompileAnnotationClassInstance[0]
+                    )
+            ));
+
+            methods.add(Pair.of(Token.createNative("values"),
+                    new CompileCallable(
+                            target.array(),
+                            List.of(),
+                            new Stmt[]{
+                                    new Stmt.Return(
+                                            Token.createNative("return"),
+                                            new Expr.StaticGet(
+                                                    target,
+                                                    values
+                                            )
+                                    )
+                            },
+                            Modifiers.pack(false, true, false),
+                            new CompileAnnotationClassInstance[0]
+                    )
+            ));
 
             List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
             for (Constructor method : this.constructors()) {
@@ -148,45 +226,26 @@ public class Holder {
                 constructors.add(Pair.of(method.name(), constDecl));
             }
 
-            ImmutableMap.Builder<String, CompileEnumConstant> enumConstants = new ImmutableMap.Builder<>();
-            for (EnumConstant decl : enumConstants()) {
-                Expr[] args;
-                if (decl.arguments.length == 0) {
-                    args = new Expr[0];
-                    stmtParser.apply(new Token[0], parser);
-                } else {
-                    stmtParser.apply(decl.arguments, parser);
-                    args = stmtParser.args();
-                }
-
-                //ScriptedCallable callable = Util.getClosest(target.get(), "<init>", stmtParser.argTypes(args));
-
-                //TODO
-                //stmtParser.checkArguments(args, callable, null, decl.name());
-
-                enumConstants.put(decl.name().lexeme(), new CompileEnumConstant(decl.ordinal(), decl.name().lexeme(), args));
-            }
-
             List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
             for (AnnotationObj obj : this.annotations()) {
                 annotations.add(stmtParser.parseAnnotation(obj, parser));
             }
 
-            return new BakedEnum(
+            return new BakedClass(
                     logger,
+                    new Generics(new Generic[0]),
                     target(),
-                    constructors.toArray(Pair[]::new),
                     methods.toArray(Pair[]::new),
-                    staticMethods.toArray(Pair[]::new),
-                    extractInterfaces(),
-                    enumConstants.build(),
+                    constructors.toArray(Pair[]::new),
                     fields,
-                    staticFields,
+                    VarTypeManager.ENUM,
                     name(),
                     pck(),
+                    extractInterfaces(),
                     Arrays.stream(enclosed)
                             .map(classConstructor -> classConstructor.construct(stmtParser, parser, logger))
                             .toArray(Compiler.ClassBuilder[]::new),
+                    Modifiers.pack(true, true, false),
                     annotations.toArray(new CompileAnnotationClassInstance[0])
             );
 
@@ -194,18 +253,20 @@ public class Holder {
 
         public BakedInterface constructInterface(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
             Map<String, CompileField> staticFields = new HashMap<>();
+            List<Stmt> statics = new ArrayList<>();
             for (Field field : fields()) {
-                Expr initializer = null;
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
-                    initializer = stmtParser.expression();
+                    Expr initializer = stmtParser.expression();
+                    statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target, Operand.LEFT)));
                 }
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                CompileField fieldDecl = new CompileField(field.type().getReference(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new CompileAnnotationClassInstance[0]));
+                short mods = Modifiers.fromJavaMods(field.modifiers);
+                CompileField fieldDecl = new CompileField(field.type().getReference(), mods, annotations.toArray(new CompileAnnotationClassInstance[0]));
                 if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
                 else logger.error(field.name, "fields on interfaces must be static");
             }
@@ -227,6 +288,17 @@ public class Holder {
                 CompileCallable methodDecl = new CompileCallable(method.type().getReference(), method.extractParams(), body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
                 methods.add(Pair.of(method.name(), methodDecl));
             }
+
+            methods.add(Pair.of( //add <clinit> method
+                    Token.createNative("<clinit>"),
+                    new CompileCallable(
+                            VarTypeManager.VOID.reference(),
+                            List.of(),
+                            statics.toArray(new Stmt[0]),
+                            Modifiers.pack(true, true, false),
+                            new CompileAnnotationClassInstance[0]
+                    )
+            ));
 
             List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
             for (AnnotationObj obj : this.annotations()) {
@@ -251,21 +323,21 @@ public class Holder {
 
         public BakedClass constructClass(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
             Map<Token, CompileField> fields = new HashMap<>();
-            Map<String, CompileField> staticFields = new HashMap<>();
+            List<Stmt> statics = new ArrayList<>();
             for (Field field : fields()) {
-                Expr initializer = null;
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
-                    initializer = stmtParser.expression();
+                    Expr initializer = stmtParser.expression();
+                    statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target, Operand.LEFT)));
                 }
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                CompileField fieldDecl = new CompileField(field.type().getReference(), initializer, Modifiers.isFinal(field.modifiers), annotations.toArray(new CompileAnnotationClassInstance[0]));
-                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
-                else fields.put(field.name, fieldDecl);
+                short mods = Modifiers.fromJavaMods(field.modifiers);
+                CompileField fieldDecl = new CompileField(field.type().getReference(), mods, annotations.toArray(new CompileAnnotationClassInstance[0]));
+                fields.put(field.name, fieldDecl);
             }
 
             List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
@@ -289,6 +361,17 @@ public class Holder {
                 methods.add(Pair.of(method.name(), methodDecl));
             }
 
+            methods.add(Pair.of( //add <clinit> method
+                    Token.createNative("<clinit>"),
+                    new CompileCallable(
+                            VarTypeManager.VOID.reference(),
+                            List.of(),
+                            statics.toArray(new Stmt[0]),
+                            Modifiers.pack(true, true, false),
+                            new CompileAnnotationClassInstance[0]
+                    )
+            ));
+
             List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
             for (Constructor constructor : this.constructors()) {
                 stmtParser.apply(constructor.body(), parser);
@@ -310,6 +393,7 @@ public class Holder {
                 annotations.add(stmtParser.parseAnnotation(obj, parser));
             }
 
+
             return new BakedClass(
                     logger,
                     generics,
@@ -317,7 +401,6 @@ public class Holder {
                     methods.toArray(new Pair[0]),
                     constructors.toArray(new Pair[0]),
                     fields,
-                    staticFields,
                     this.parent.getReference(),
                     this.name(),
                     this.pck(),
@@ -371,51 +454,10 @@ public class Holder {
 
         public ScriptedClass createSkeleton(Compiler.ErrorLogger logger) {
             return switch (this.type) {
-                case ENUM -> createEnumSkeleton(logger);
                 case INTERFACE -> createInterfaceSkeleton(logger);
-                case CLASS -> createClassSkeleton(logger);
+                case ENUM, CLASS -> createClassSkeleton(logger);
                 case ANNOTATION -> createAnnotationSkeleton(logger);
             };
-        }
-
-        public ScriptedClass createEnumSkeleton(Compiler.ErrorLogger logger) {
-            ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
-            ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
-            List<Token> finalFields = new ArrayList<>();
-            for (Field field : this.fields()) {
-                SkeletonField skeletonField = new SkeletonField(field.type().getReference(), Modifiers.isFinal(field.modifiers));
-                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name().lexeme(), skeletonField);
-                else {
-                    fields.put(field.name().lexeme(), skeletonField);
-                    if (skeletonField.isFinal() && field.body() == null) //add non-defaulted final fields to extra list to check constructors init
-                        finalFields.add(field.name());
-                }
-            }
-
-            //methods
-            Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
-            for (Method method : this.methods()) {
-                methods.putIfAbsent(method.name().lexeme(), new DataMethodContainer.Builder(this.name()));
-                DataMethodContainer.Builder builder = methods.get(method.name().lexeme());
-                builder.addMethod(logger, SkeletonMethod.create(method), method.name());
-            }
-
-            //constructors
-            DataMethodContainer.Builder constructorBuilder = new DataMethodContainer.Builder(this.name());
-            for (Constructor constructor : this.constructors()) {
-                constructorBuilder.addMethod(
-                        logger,
-                        SkeletonMethod.create(constructor, this.target),
-                        constructor.name()
-                );
-            }
-            if (this.constructors().length > 0) methods.put("<init>", constructorBuilder);
-
-            return new SkeletonEnum(
-                    name().lexeme(), pck(),
-                    staticFields.build(), fields.build(),
-                    DataMethodContainer.bakeBuilders(methods)
-            );
         }
 
         public ScriptedClass createInterfaceSkeleton(Compiler.ErrorLogger logger) {
@@ -423,7 +465,7 @@ public class Holder {
             //fields
             ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
             for (Field field : this.fields()) {
-                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name().lexeme(), new SkeletonField(field.type().getReference(), Modifiers.isFinal(field.modifiers)));
+                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name().lexeme(), new SkeletonField(field.type().getReference(), Modifiers.fromJavaMods(field.modifiers)));
                 else {
                     logger.error(field.name(), "fields inside Interfaces must always be static");
                 }
@@ -467,16 +509,12 @@ public class Holder {
 
             //fields
             ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
-            ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
             List<Token> finalFields = new ArrayList<>();
             for (Field field : this.fields()) {
-                SkeletonField skeletonField = new SkeletonField(field.type().getReference(), Modifiers.isFinal(field.modifiers));
-                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name().lexeme(), skeletonField);
-                else {
-                    fields.put(field.name().lexeme(), skeletonField);
-                    if (skeletonField.isFinal() && field.body() == null) //add non-defaulted final fields to extra list to check constructors init
-                        finalFields.add(field.name());
-                }
+                SkeletonField skeletonField = new SkeletonField(field.type().getReference(), Modifiers.fromJavaMods(field.modifiers));
+                fields.put(field.name().lexeme(), skeletonField);
+                if (skeletonField.isFinal() && field.body() == null) //add non-defaulted final fields to extra list to check constructors init
+                    finalFields.add(field.name());
             }
 
             //enclosed classes
@@ -494,6 +532,8 @@ public class Holder {
                 DataMethodContainer.Builder builder = methods.get(method.name().lexeme());
                 builder.addMethod(logger, SkeletonMethod.create(method), method.name());
             }
+            methods.computeIfAbsent("values", s -> new DataMethodContainer.Builder(this.name()))
+                            .addMethod(logger, new SkeletonMethod(new ClassReference[0], target.array(), Modifiers.pack(false, true, false)), Token.createNative("values"));
 
             //constructors
             for (Constructor constructor : this.constructors()) {
@@ -506,7 +546,6 @@ public class Holder {
                     this.generics,
                     this.name().lexeme(),
                     this.pck(), this.parent.getReference(),
-                    staticFields.build(),
                     fields.build(),
                     DataMethodContainer.bakeBuilders(methods),
                     this.modifiers,
@@ -579,7 +618,7 @@ public class Holder {
     public record EnumConstant(Token name, int ordinal, Token[] arguments) {
     }
 
-    public record Field(short modifiers, AnnotationObj[] annotations, SourceClassReference type, Token name, Token[] body) implements Validateable {
+    public record Field(short modifiers, AnnotationObj[] annotations, SourceClassReference type, Token name, Token assign, Token[] body) implements Validateable {
         @Override
         public void validate(Compiler.ErrorLogger logger) {
             validateNullable(annotations, logger);

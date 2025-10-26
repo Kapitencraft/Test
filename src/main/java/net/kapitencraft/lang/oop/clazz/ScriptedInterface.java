@@ -32,7 +32,7 @@ public interface ScriptedInterface extends ScriptedClass {
     }
 
     @Override
-    default @Nullable ClassReference superclass() {
+    default ClassReference superclass() {
         return ClassReference.of(VarTypeManager.VOID);
     }
 }

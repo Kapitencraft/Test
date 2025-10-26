@@ -9,11 +9,9 @@ import net.kapitencraft.lang.oop.field.NativeField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.oop.method.builder.MethodContainer;
-import net.kapitencraft.lang.run.Interpreter;
-import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -108,18 +106,18 @@ public class NativeClassImpl implements ScriptedClass {
     }
 
     @Override
-    public Object assignStaticField(String name, Object val) {
+    public Object setStaticField(String name, Object val) {
         staticFields.get(name).set(null, NativeClassLoader.extractNative(val));
         return val;
     }
 
     @Override
-    public Map<String, ? extends ScriptedField> staticFields() {
-        return Map.of();
+    public Object staticSpecialAssign(String name, TokenType assignType) {
+        return ScriptedClass.super.staticSpecialAssign(name, assignType);
     }
 
     @Override
-    public Object staticSpecialAssign(String name, TokenType assignType) {
-        return ScriptedClass.super.staticSpecialAssign(name, assignType);
+    public boolean isNative() {
+        return true;
     }
 }

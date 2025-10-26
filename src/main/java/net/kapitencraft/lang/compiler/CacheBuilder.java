@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.exe.Chunk;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
+import net.kapitencraft.lang.bytecode.exe.VirtualMachine;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -162,14 +163,23 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitInstCallExpr(Expr.InstCall expr) {
         cache(expr.callee());
         saveArgs(expr.args());
-        builder.invoke(expr.id());
+        builder.invokeVirtual(expr.id());
         return null;
     }
 
     @Override
     public Void visitStaticCallExpr(Expr.StaticCall expr) {
         saveArgs(expr.args());
-        builder.invoke(expr.id());
+        builder.invokeStatic(expr.id());
+        return null;
+    }
+
+    @Override
+    public Void visitSuperCallExpr(Expr.SuperCall expr) {
+        cache(expr.callee());
+        saveArgs(expr.args());
+        builder.invokeStatic(expr.id());
+
         return null;
     }
 
@@ -183,30 +193,51 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitStaticGetExpr(Expr.StaticGet expr) {
         builder.addCode(Opcode.GET_STATIC);
+        builder.injectString(VarTypeManager.getClassName(expr.target().get()));
         builder.injectString(expr.name().lexeme());
         return null;
     }
 
     @Override
     public Void visitArrayGetExpr(Expr.ArrayGet expr) {
-        cache(expr.object());
         cache(expr.index());
-        //ClassReference reference = typeFinder.findRetType(expr.object());
-        //builder.addCode(getArrayLoad(reference));
+        cache(expr.object());
+        builder.addCode(getArrayLoad(expr.type()));
         return null;
     }
 
     @Override
     public Void visitSetExpr(Expr.Set expr) {
 
-
-        assign(expr.executor(), expr.value(), expr.assignType().type(), Opcode.GET_FIELD, Opcode.PUT_FIELD, b -> b.injectString(expr.name().lexeme()));
+        ClassReference retType = expr.executor();
+        TokenType type = expr.assignType().type();
+        cache(expr.value());
+        cache(expr.object());
+        if (type != TokenType.ASSIGN) {
+            builder.addCode(Opcode.DUP_X1); //duplicate object down so the get field
+            builder.addCode(Opcode.GET_FIELD);
+            builder.injectString(expr.name().lexeme());
+            switch (type) {
+                case ADD_ASSIGN -> builder.addCode(getAdd(retType));
+                case SUB_ASSIGN -> builder.addCode(getSub(retType));
+                case MUL_ASSIGN -> builder.addCode(getMul(retType));
+                case DIV_ASSIGN -> builder.addCode(getDiv(retType));
+                case POW_ASSIGN -> builder.addCode(getPow(retType));
+            }
+        }
+        builder.addCode(Opcode.PUT_FIELD);
+        builder.injectString(expr.name().lexeme());
         return null;
     }
 
     @Override
     public Void visitStaticSetExpr(Expr.StaticSet expr) {
-        assign(expr.executor(), expr.value(), expr.assignType().type(), Opcode.PUT_STATIC, Opcode.GET_STATIC, b -> {});
+
+        cache(expr.value());
+        //assign(expr.executor(), expr.value(), expr.assignType().type(), Opcode.PUT_STATIC, Opcode.GET_STATIC, b -> {});
+        builder.addCode(Opcode.PUT_STATIC);
+        builder.injectString(VarTypeManager.getClassName(expr.target().get()));
+        builder.injectString(expr.name().lexeme());
 
         return null;
     }
@@ -215,10 +246,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitArraySetExpr(Expr.ArraySet expr) {
         ClassReference retType = expr.executor();
         TokenType type = expr.assignType().type();
+        cache(expr.value());
+        builder.addCode(Opcode.DUP); //duplicate to keep the value on the stack as the ARRAY_SET does not actually keep anything on the stack
+        cache(expr.index());
+        cache(expr.object());
         if (type != TokenType.ASSIGN) {
-            cache(expr.value());
-            cache(expr.index());
-            cache(expr.object());
             builder.addCode(Opcode.DUP2_X1);
             builder.addCode(getArrayLoad(retType));
             switch (type) {
@@ -228,10 +260,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 case DIV_ASSIGN -> builder.addCode(getDiv(retType));
                 case POW_ASSIGN -> builder.addCode(getPow(retType));
             }
-        } else {
-            cache(expr);
-
         }
+        builder.addCode(getArrayStore(retType));
         return null;
     }
 
@@ -348,16 +378,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 builder.addDoubleConstant(v);
         } else if (scriptedClass == VarTypeManager.INTEGER) {
             int v = (int) value;
-            switch (v) {
-                case -1 -> builder.addCode(Opcode.I_M1);
-                case 0 -> builder.addCode(Opcode.I_0);
-                case 1 -> builder.addCode(Opcode.I_1);
-                case 2 -> builder.addCode(Opcode.I_2);
-                case 3 -> builder.addCode(Opcode.I_3);
-                case 4 -> builder.addCode(Opcode.I_4);
-                case 5 -> builder.addCode(Opcode.I_5);
-                default -> builder.addIntConstant(v);
-            }
+            builder.addInt(v);
         } else if (VarTypeManager.STRING.is(scriptedClass))
             builder.addStringConstant((String) value);
         else if (VarTypeManager.FLOAT.is(scriptedClass)) {
@@ -368,6 +389,24 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 builder.addCode(Opcode.F_M1);
             else
                 builder.addFloatConstant(v);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitArrayConstructorExpr(Expr.ArrayConstructor expr) {
+        cache(expr.size());
+        builder.addCode(getArrayNew(expr.compoundType()));
+        builder.injectString(VarTypeManager.getClassName(expr.compoundType().get()));
+        Expr[] objects = expr.obj();
+        Opcode store = getArrayStore(expr.compoundType());
+        if (objects != null) {
+            for (int i = 0; i < objects.length; i++) {
+                builder.addCode(Opcode.DUP);
+                builder.addInt(i);
+                cache(objects[i]);
+                builder.addCode(store);
+            }
         }
         return null;
     }
@@ -408,7 +447,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (expr.signature() != null) {
             builder.addCode(Opcode.DUP); //duplicate object to enable invoke
             saveArgs(expr.params());
-            builder.invoke(expr.signature());
+            //TODO
+            builder.invokeVirtual(expr.signature());
             builder.addCode(Opcode.POP); //pop method invoke result
         }
 
@@ -427,7 +467,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
         cache(stmt.expression());
-        builder.addCode(Opcode.POP);
+        builder.addCode(Opcode.POP); //TODO check for array assignment and re-store
         return null;
     }
 
@@ -528,6 +568,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         getVar(baseVarIndex + 1); //load array var
         builder.addCode(getArrayLoad(stmt.type()));  //create entry var by loading array element
         assignVar(baseVarIndex + 2); //store value to entry var
+        builder.addCode(Opcode.POP); //pop assign TODO perhaps inline it with further code analysis
 
         cache(stmt.body()); //cache loop body
 
@@ -620,6 +661,13 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.DA_STORE;
         if (reference.is(VarTypeManager.CHAR)) return Opcode.CA_STORE;
         return Opcode.RA_STORE;
+    }
+
+    private Opcode getArrayNew(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.IA_NEW;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.DA_NEW;
+        if (reference.is(VarTypeManager.CHAR)) return Opcode.CA_NEW;
+        return Opcode.RA_NEW;
     }
 
     private Opcode getDiv(ClassReference reference) {

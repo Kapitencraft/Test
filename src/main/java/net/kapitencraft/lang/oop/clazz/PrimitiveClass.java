@@ -5,10 +5,10 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.PrimitiveClassReference;
 import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
-import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -38,13 +38,8 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public Object assignStaticField(String name, Object val) {
+    public Object setStaticField(String name, Object val) {
         return null;
-    }
-
-    @Override
-    public Map<String, ? extends ScriptedField> staticFields() {
-        return Map.of();
     }
 
     @Override
@@ -69,11 +64,6 @@ public abstract class PrimitiveClass implements ScriptedClass {
 
     @Override
     public ClassReference getFieldType(String name) {
-        return null;
-    }
-
-    @Override
-    public ClassReference getStaticFieldType(String name) {
         return null;
     }
 
@@ -124,5 +114,10 @@ public abstract class PrimitiveClass implements ScriptedClass {
     @Override
     public ClassReference reference() {
         return reference;
+    }
+
+    @Override
+    public boolean isNative() {
+        return true;
     }
 }

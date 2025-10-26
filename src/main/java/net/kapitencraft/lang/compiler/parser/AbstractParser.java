@@ -277,6 +277,7 @@ public class AbstractParser {
         }
         if (reference == null) {
             Package p = VarTypeManager.getPackage(token.lexeme());
+
             while (match(DOT) && p != null) {
                 String id = consumeIdentifier().lexeme();
                 if (p.hasClass(id)) {
@@ -285,20 +286,16 @@ public class AbstractParser {
                 }
                 p = p.getPackage(id);
             }
-        }
+        } //TODO enclosed
 
         Token last = previous();
         while (match(DOT) && reference != null) { //TODO remove enclosing necessity. it shouldn't exist anyways
-            String enclosingName = consumeIdentifier().lexeme();
-            //if (!reference.get().hasEnclosing(enclosingName)) {
-            //    return SourceClassReference.from(last, reference);
-            //}
-            //last = previous();
-            //reference = reference.get().getEnclosing(enclosingName);
+            String enclosingName = consumeIdentifier().lexeme(); //needs to stay here for the mean-time to ensure the compiler doesn't break
         }
+
         if (reference == null) {
             error(token, "unknown symbol");
-            return SourceClassReference.from(token, null); //skip rest
+            return SourceClassReference.from(token, VarTypeManager.VOID.reference()); //skip rest
         }
         Holder.AppliedGenerics declared = appliedGenerics(generics);
         while (match(S_BRACKET_O)) {

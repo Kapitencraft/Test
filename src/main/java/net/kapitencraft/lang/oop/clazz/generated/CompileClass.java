@@ -19,7 +19,6 @@ public final class CompileClass implements CacheableClass {
     private final Map<String, DataMethodContainer> allMethods;
 
     private final Map<String, CompileField> allFields;
-    private final Map<String, CompileField> allStaticFields;
 
     private final CacheableClass[] enclosing;
 
@@ -33,13 +32,12 @@ public final class CompileClass implements CacheableClass {
     private final CompileAnnotationClassInstance[] annotations;
 
     public CompileClass(Map<String, DataMethodContainer> methods,
-                        Map<String, CompileField> fields, Map<String, CompileField> staticFields,
+                        Map<String, CompileField> fields,
                         CacheableClass[] enclosing,
                         ClassReference superclass, ClassReference[] implemented, String name, String packageRepresentation, short modifiers, CompileAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
         this.allFields = fields;
-        this.allStaticFields = staticFields;
         this.superclass = superclass;
         this.implemented = implemented;
         this.name = name;
@@ -50,14 +48,13 @@ public final class CompileClass implements CacheableClass {
     }
 
     public CompileClass(Map<String, DataMethodContainer> methods,
-                        Map<String, CompileField> fields, Map<String, CompileField> staticFields,
+                        Map<String, CompileField> fields,
                         ClassReference superclass, String name, String packageRepresentation,
                         CacheableClass[] enclosing, ClassReference[] implemented,
                         short modifiers, CompileAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
         this.allFields = fields;
-        this.allStaticFields = staticFields;
         this.superclass = superclass;
         this.name = name;
         this.enclosing = enclosing;
@@ -83,11 +80,6 @@ public final class CompileClass implements CacheableClass {
             allFields.forEach((name, field) -> fields.add(name, field.cache(cacheBuilder)));
             object.add("fields", fields);
         }
-        {
-            JsonObject staticFields = new JsonObject();
-            allStaticFields.forEach((name, field) -> staticFields.add(name, field.cache(cacheBuilder)));
-            object.add("staticFields", staticFields);
-        }
 
         object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
 
@@ -105,7 +97,6 @@ public final class CompileClass implements CacheableClass {
         return "GeneratedClass{" + name + "}[" +
                 "methods=" + allMethods + ", " +
                 "fields=" + allFields + ", " +
-                "staticFields=" + allStaticFields + ", " +
                 "superclass=" + superclass + ']';
     }
 

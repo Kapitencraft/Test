@@ -10,6 +10,7 @@ import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -412,12 +413,12 @@ public class ExprParser extends AbstractParser {
     private Expr staticAssign(ClassReference target, Token name) {
         Token type = previous();
         Expr value = expression();
-        Pair<ClassReference, Operand> executor = getExecutor(target.get().getStaticFieldType(name.lexeme()), type, value);
+        Pair<ClassReference, Operand> executor = getExecutor(target.get().getFieldType(name.lexeme()), type, value);
         return new Expr.StaticSet(target, name, value, type, executor.left(), executor.right());
     }
 
     private Expr staticSpecialAssign(ClassReference target, Token name) {
-        return new Expr.StaticSpecial(target, name, previous(), target.get().getStaticFieldType(name.lexeme()));
+        return new Expr.StaticSpecial(target, name, previous(), target.get().getFieldType(name.lexeme()));
     }
 
     public Expr[] args() {
@@ -462,8 +463,9 @@ public class ExprParser extends AbstractParser {
                     continue;
                 }
                 consume(S_BRACKET_C, "']' expected");
-                if (!finder.findRetType(expr).get().isArray()) error(bracketO, "array type expected");
-                expr = new Expr.ArrayGet(expr, index);
+                ScriptedClass scriptedClass = finder.findRetType(expr).get();
+                if (!scriptedClass.isArray()) error(bracketO, "array type expected");
+                expr = new Expr.ArrayGet(expr, index, scriptedClass.getComponentType().reference());
             } else if (match(BRACKET_O)) {
                 if (expr instanceof Expr.Get get)
                     expr = finishCall(get.name(), finder.findRetType(get.object()), get.object());
@@ -584,15 +586,51 @@ public class ExprParser extends AbstractParser {
             return new Expr.Literal(previous());
         }
 
+        if (match(SUPER)) {
+            Token reference = previous(); //'super' reference
+            ClassReference fallback = currentFallback();
+            if (fallback.exists()) {
+                consume(DOT, "expected '.' after 'super'");
+                Token name = consumeIdentifier();
+                ScriptedClass type = fallback.get();
+                ClassReference objType = type.superclass();
+                consumeBracketOpen("super method");
+                if (type.hasMethod(name.lexeme())) {
+                    Expr[] arguments = args();
+
+                    ClassReference[] givenTypes = argTypes(arguments);
+                    ScriptedClass targetClass = objType.get();
+
+                    if (!targetClass.hasMethod(name.lexeme())) {
+                        error(name, "unknown method '" + name.lexeme() + "'");
+                        consumeBracketClose("arguments");
+                        return new Expr.StaticCall(objType, name, arguments, WILDCARD, "?");
+                    }
+                    ScriptedCallable callable = Util.getClosest(targetClass, name.lexeme(), givenTypes);
+                    ClassReference retType = VarTypeManager.VOID.reference();
+                    String signature = null;
+                    if (callable != null) {
+                        retType = checkArguments(arguments, callable, objType, name);
+                        signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), callable.argTypes());
+                    }
+
+                    consumeBracketClose("arguments");
+
+                    return new Expr.SuperCall(new Expr.VarRef(reference, (byte) 0), type.superclass(), name, arguments, retType, signature);
+                }
+            }
+
+        }
+
         if (match(IDENTIFIER)) {
-            Token previous = previous();
-            BytecodeVars.FetchResult result = varAnalyser.get(previous.lexeme());
-            if (result == BytecodeVars.FetchResult.FAIL) {
-                if (currentFallback().exists()) {
+            Token previous = previous(); //the identifier just consumed
+            BytecodeVars.FetchResult result = varAnalyser.get(previous.lexeme()); //fetch variable under that name
+            if (result == BytecodeVars.FetchResult.FAIL) { //check if there exists a variable under that name
+                if (currentFallback().exists()) { //check if the parser has a class fallback available
                     ClassReference fallbackReference = currentFallback();
-                    ScriptedClass fallback = fallbackReference.get();
-                    String name = previous.lexeme();
-                    if (match(BRACKET_O)) {
+                    ScriptedClass fallback = fallbackReference.get(); //get said fallback
+                    String name = previous.lexeme(); //get the literal of the identifier
+                    if (match(BRACKET_O)) { //check if there's an attempt to call a method from the fallback class
                         if (fallback.hasMethod(name)) {
                             return finishCall(previous, fallbackReference, new Expr.VarRef(
                                             Token.createNative("this"),
@@ -602,18 +640,19 @@ public class ExprParser extends AbstractParser {
                         }
                     } else {
                         if (fallback.hasField(name)) {
-                            return  new Expr.Get(new Expr.VarRef(
+                            ScriptedField field = fallback.getFields().get(name);
+                            if (field.isStatic())
+                                return new Expr.StaticGet(fallbackReference, previous);
+                            else
+                                return new Expr.Get(new Expr.VarRef(
                                     Token.createNative("this"),
                                     (byte) 0),
                                     previous
                             );
                         }
-                        if (fallback.hasStaticField(name)) {
-                            return  new Expr.StaticGet(fallbackReference, previous);
-                        }
                     }
                 }
-                current--;
+                current--; //un-consume the identifier for the statics to take over
                 return statics();
             }
             checkVarExistence(previous, true, true);
@@ -623,7 +662,7 @@ public class ExprParser extends AbstractParser {
             );
         }
 
-        if (match(THIS) || match(SUPER)) return new Expr.VarRef(
+        if (match(THIS)) return new Expr.VarRef(
                 previous(),
                 (byte)0
         );

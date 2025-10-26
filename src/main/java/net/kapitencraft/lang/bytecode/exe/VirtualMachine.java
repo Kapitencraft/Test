@@ -8,12 +8,12 @@ import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.run.natives.NativeClassInstance;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
 import net.kapitencraft.tool.StringReader;
 import org.jetbrains.annotations.Contract;
 
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
 
 public class VirtualMachine {
     public static boolean DEBUG;
@@ -37,7 +37,7 @@ public class VirtualMachine {
             this.stackBottom = stackBottom;
             Chunk chunk = callable.getChunk();
             this.code = chunk.code();
-            this.constants = chunk.constants(); //TODO ensure always using the implemented method
+            this.constants = chunk.constants();
             this.handlers = chunk.handlers();
         }
 
@@ -106,27 +106,27 @@ public class VirtualMachine {
                 if (DEBUG) System.out.printf("[DEBUG]: Executing %s\n", o);
                 switch (o) {
                     //region control-flow
-                    case POP -> stackIndex--;
-                    case POP_2 -> stackIndex -= 2;
-                    case DUP -> stack[stackIndex] = stack[stackIndex++ - 1];
-                    case DUP2 -> {
+                    case POP -> stackIndex--; //pops the highest stack element
+                    case POP_2 -> stackIndex -= 2; //pops the 2 highest stack elements
+                    case DUP -> stack[stackIndex] = stack[stackIndex++ - 1]; //duplicates the highest stack element
+                    case DUP2 -> { //duplicates the 2 highest stack element, retaining order (a, b -> a, b, a, b)
                         stack[stackIndex] = stack[stackIndex++ - 2];
                         stack[stackIndex] = stack[stackIndex++ - 2];
                     }
-                    case DUP_X1 -> {
-                        Object obj = stack[stackIndex - 1];
-                        stack[stackIndex - 1] = stack[stackIndex - 2];
-                        stack[stackIndex - 2] = obj;
-                        stack[stackIndex++] = obj;
+                    case DUP_X1 -> { //duplicates the highest stack element one element down (a, b -> b, a, b)
+                        Object obj = stack[stackIndex - 1]; //get stack top
+                        stack[stackIndex - 1] = stack[stackIndex - 2]; //replace stack top with element below
+                        stack[stackIndex - 2] = obj; //replace element below with stack top
+                        stack[stackIndex++] = obj; //add stack top on top
                     }
-                    case DUP_X2 -> {
+                    case DUP_X2 -> { //duplicates the highest stack element 2 elements down (a, b, c -> c, a, b, c)
                         Object obj = stack[stackIndex - 1];
                         stack[stackIndex - 1] = stack[stackIndex - 2];
                         stack[stackIndex - 2] = stack[stackIndex - 3];
                         stack[stackIndex - 3] = obj;
                         stack[stackIndex++] = obj;
                     }
-                    case DUP2_X1 -> {
+                    case DUP2_X1 -> { //duplicates the highest 2 stack elements one element down (a, b, c -> b, c, a, b, c)
                         Object obj = stack[stackIndex - 2];
                         Object obj1 = stack[stackIndex - 1];
                         stack[stackIndex - 1] = stack[stackIndex - 3];
@@ -135,7 +135,7 @@ public class VirtualMachine {
                         stack[stackIndex++] = obj;
                         stack[stackIndex++] = obj1;
                     }
-                    case DUP2_X2 -> {
+                    case DUP2_X2 -> { //duplicates the highest 2 stack elements 2 elements down (a, b, c, d -> c, d, a, b, c, d)
                         Object obj = stack[stackIndex - 2];
                         Object obj1 = stack[stackIndex - 1];
                         stack[stackIndex - 2] = stack[stackIndex - 4];
@@ -146,10 +146,11 @@ public class VirtualMachine {
                         stack[stackIndex++] = obj1;
                     }
                     //endregion
-                    case INVOKE -> {
+                    case INVOKE_STATIC -> {
                         String execute = constString(frame.constants, read2Byte());
                         StringReader reader = new StringReader(execute);
                         ScriptedClass type = VarTypeManager.flatParse(reader);
+                        invokeStaticInitIfNecessary(type);
                         ScriptedCallable callable = type.getMethod(reader.getRemaining());
 
                         int length = callable.argTypes().length;
@@ -159,16 +160,42 @@ public class VirtualMachine {
                         if (callable.isNative()) {
                             Object[] args = new Object[length];
                             System.arraycopy(stack, callableStackTop, args, 0, length);
+                            stackIndex = callableStackTop; //reset stack index
+                            push(callable.call(args));
+                        } else
+                            pushCall(new CallFrame(callable, callableStackTop));
+                    }
+                    case INVOKE_VIRTUAL -> {
+                        String execute = constString(frame.constants, read2Byte());
+                        StringReader reader = new StringReader(execute);
+                        ScriptedClass type = VarTypeManager.flatParse(reader);
+                        invokeStaticInitIfNecessary(type);
+
+                        ScriptedCallable referenceCallable = type.getMethod(reader.getRemaining());
+
+                        int length = referenceCallable.argTypes().length + 1; //reference object
+                        int callableStackTop = stackIndex - length;
+                        ClassInstance instance = (ClassInstance) stack[callableStackTop];
+                        ScriptedCallable callable = instance.getType().getMethod(reader.getRemaining()); //virtual invoke of the method
+
+                        if (callable.isNative()) {
+                            Object[] args = new Object[length];
+                            System.arraycopy(stack, callableStackTop, args, 0, length);
+                            stackIndex = callableStackTop; //reset stack index
                             push(callable.call(args));
                         } else
                             pushCall(new CallFrame(callable, callableStackTop));
                     }
                     case THROW -> handleException((ClassInstance) pop());
                     case NEW -> {
-                        StringReader reader = new StringReader(constString(frame.constants, read2Byte()));
-                        ScriptedClass reference = VarTypeManager.flatParse(reader);
+                        ScriptedClass reference = VarTypeManager.directFlatParse(constString(frame.constants, read2Byte()));
                         push(new DynamicClassInstance(reference));
                     }
+                    case IA_NEW -> push(new int[(int) pop()]);
+                    case DA_NEW -> push(new double[(int) pop()]);
+                    case CA_NEW -> push(new char[(int) pop()]);
+                    case FA_NEW -> push(new float[(int) pop()]);
+                    case RA_NEW ->  push(new Object[(int) pop()]);
                     case RETURN -> {
                         break func;
                     }
@@ -204,8 +231,8 @@ public class VirtualMachine {
                     case I_CONST -> push(constInt(frame.constants, read2Byte()));
                     case D_CONST -> push(constDouble(frame.constants, read2Byte()));
                     case F_CONST -> push(constFloat(frame.constants, read2Byte()));
-                    case S_CONST -> push(constString(frame.constants, read2Byte()));
-                    case CONCENTRATION -> push((pop() + (String) pop()));
+                    case S_CONST -> push(NativeClassLoader.wrapString(constString(frame.constants, read2Byte())));
+                    case CONCENTRATION -> push(NativeClassLoader.wrapString(pop() + (String) ((NativeClassInstance) pop()).getObject()));
                     case I_NEGATION -> push(-(int) pop());
                     case D_NEGATION -> push(-(double) pop());
                     case F_NEGATION -> push(-(float) pop());
@@ -229,11 +256,11 @@ public class VirtualMachine {
                     case CA_LOAD -> push(((char[]) pop())[(int) pop()]);
                     case FA_LOAD -> push(((float[]) pop())[(int) pop()]);
                     case RA_LOAD -> push(((Object[]) pop())[(int) pop()]);
-                    case IA_STORE -> push(((int[]) pop())[(int) pop()] = (int) pop());
-                    case DA_STORE -> push(((double[]) pop())[(int) pop()] = (double) pop());
-                    case CA_STORE -> push(((char[]) pop())[(int) pop()] = (char) pop());
-                    case FA_STORE -> push(((float[]) pop())[(int) pop()] = (float) pop());
-                    case RA_STORE -> push(((Object[]) pop())[(int) pop()] = pop());
+                    case IA_STORE -> ((int[]) pop())[(int) pop()] = (int) pop();
+                    case DA_STORE -> ((double[]) pop())[(int) pop()] = (double) pop();
+                    case CA_STORE -> ((char[]) pop())[(int) pop()] = (char) pop();
+                    case FA_STORE -> ((float[]) pop())[(int) pop()] = (float) pop();
+                    case RA_STORE -> ((Object[]) pop())[(int) pop()] = pop();
                     case EQUAL -> push(pop() == pop());
                     case NEQUAL -> push(pop() != pop());
                     case I_GEQUAL -> push((int) pop() >= (int) pop());
@@ -256,22 +283,47 @@ public class VirtualMachine {
                     case SWITCH -> {}
                     case GET_FIELD -> {
                         ClassInstance instance = (ClassInstance) pop();
+                        invokeStaticInitIfNecessary(instance.getType());
                         String s = constString(frame.constants, read2Byte());
                         push(instance.getField(s));
                     }
-                    case GET_STATIC -> {}
+                    case GET_STATIC -> {
+                        String c = constString(frame.constants, read2Byte());
+                        ScriptedClass scriptedClass = VarTypeManager.directFlatParse(c);
+                        invokeStaticInitIfNecessary(scriptedClass);
+                        String field = constString(frame.constants, read2Byte());
+                        scriptedClass.getStaticField(field);
+                    }
                     case PUT_FIELD -> {
                         ClassInstance instance = (ClassInstance) pop();
+                        invokeStaticInitIfNecessary(instance.getType());
                         String s = constString(frame.constants, read2Byte());
                         instance.assignField(s, pop());
                     }
-                    case PUT_STATIC -> {}
+                    case PUT_STATIC -> {
+                        String c = constString(frame.constants, read2Byte());
+                        ScriptedClass scriptedClass = VarTypeManager.directFlatParse(c);
+                        invokeStaticInitIfNecessary(scriptedClass);
+                        String field = constString(frame.constants, read2Byte());
+                        scriptedClass.setStaticField(field, pop());
+                    }
                     default -> throw new IllegalArgumentException("unknown opcode: " + o);
                 }
             }
             if (--callStackTop > 0) {
                 popCall();
             }
+        }
+    }
+
+    private static final Set<ScriptedClass> initialized = new HashSet<>();
+
+    private static void invokeStaticInitIfNecessary(ScriptedClass scriptedClass) {
+        if (scriptedClass.isNative() || initialized.contains(scriptedClass)) return;
+        initialized.add(scriptedClass); //add it before so it doesn't create a recursion loop when a static call / get is executed from within the <clinit> method
+        ScriptedCallable method = scriptedClass.getMethod("<clinit>()");
+        if (method != null) { //TODO fix frame being damaged when static init is called
+            pushCall(new CallFrame(method, stackIndex));
         }
     }
 
@@ -309,7 +361,6 @@ public class VirtualMachine {
         //TODO exit thread
     }
 
-    @SuppressWarnings("unchecked")
     private static <T> void slice() {
         Integer rawInterval = (Integer) pop();
         Integer rawEnd = (Integer) pop();
@@ -327,8 +378,13 @@ public class VirtualMachine {
         push(out);
     }
 
-    private static <T> int arrayLength(Object o) {
-        return ((T[]) o).length;
+    private static int arrayLength(Object o) {
+        if (o instanceof char[] chars) return chars.length;
+        if (o instanceof int[] ints) return ints.length;
+        if (o instanceof double[] doubles) return doubles.length;
+        if (o instanceof float[] floats) return floats.length;
+        if (o instanceof boolean[] booleans) return booleans.length;
+        return ((Object[]) o).length;
     }
 
     private static void get(int i) {
@@ -342,9 +398,8 @@ public class VirtualMachine {
     }
 
     private static void popCall() {
-        int amount = frame.callable.argTypes().length;
         Object o = pop();
-        stackIndex -= amount;
+        stackIndex = frame.stackBottom;
         push(o);
         frame = callStack[callStackTop - 1];
         if (DEBUG) System.out.printf("[DEBUG]: POP_CALL (@%3d): stackIndex=%3d\n", callStackTop, frame.stackBottom);

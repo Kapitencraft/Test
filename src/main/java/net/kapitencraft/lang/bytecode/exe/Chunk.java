@@ -196,9 +196,27 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers) 
             this.handlers.add(new ExceptionHandler(startOp, endOp, handlerOp, catchType));
         }
 
-        public void invoke(String methodSignature) {
-            this.addCode(Opcode.INVOKE);
+        public void invokeStatic(String methodSignature) {
+            this.addCode(Opcode.INVOKE_STATIC);
             this.injectString(methodSignature);
+        }
+
+        public void invokeVirtual(String methodSignature) {
+            this.addCode(Opcode.INVOKE_VIRTUAL);
+            this.injectString(methodSignature);
+        }
+
+        public void addInt(int v) {
+            switch (v) {
+                case -1 -> addCode(Opcode.I_M1);
+                case 0 -> addCode(Opcode.I_0);
+                case 1 -> addCode(Opcode.I_1);
+                case 2 -> addCode(Opcode.I_2);
+                case 3 -> addCode(Opcode.I_3);
+                case 4 -> addCode(Opcode.I_4);
+                case 5 -> addCode(Opcode.I_5);
+                default -> addIntConstant(v);
+            }
         }
     }
 

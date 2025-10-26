@@ -42,6 +42,14 @@
           "retType": "ClassReference",
           "id": "String"
         },
+        "SuperCall": {
+          "callee": "Expr",
+          "type": "ClassReference",
+          "name": "Token",
+          "args": "Expr[]",
+          "retType": "ClassReference",
+          "id": "String"
+        },
         "Get": {
           "object": "Expr",
           "name": "Token"
@@ -52,7 +60,8 @@
         },
         "ArrayGet": {
           "object": "Expr",
-          "index": "Expr"
+          "index": "Expr",
+          "type": "ClassReference"
         },
         "Set": {
           "object": "Expr",
@@ -132,6 +141,11 @@
         "VarRef": {
           "name": "Token",
           "ordinal": "byte"
+        },
+        "ArrayConstructor": {
+          "compoundType": "ClassReference",
+          "size": "Expr",
+          "obj": "Expr[]"
         },
         "Constructor": {
           "keyword": "Token",

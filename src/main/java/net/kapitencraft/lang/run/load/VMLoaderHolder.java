@@ -6,10 +6,8 @@ import com.google.gson.stream.JsonReader;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.*;
 import net.kapitencraft.lang.oop.clazz.generated.RuntimeClass;
-import net.kapitencraft.lang.oop.clazz.generated.RuntimeEnum;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonAnnotation;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
-import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonEnum;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonInterface;
 import net.kapitencraft.tool.GsonHelper;
 
@@ -35,7 +33,7 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
         String fileId = file.getPath().substring(12);
         String[] packages = fileId.substring(0, fileId.length() - 5).split("[\\\\$]");
         StringBuilder pck = new StringBuilder(packages[0]);
-        for (int i = 1; i < packages.length - 2; i++) {
+        for (int i = 1; i < packages.length - 1; i++) {
             pck.append(".");
             pck.append(packages[i]);
         }
@@ -48,8 +46,7 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
     public void applySkeleton()  {
 
         ScriptedClass skeleton = switch (type) {
-            case ENUM -> SkeletonEnum.fromCache(data, pck());
-            case CLASS -> SkeletonClass.fromCache(data, pck());
+            case ENUM, CLASS -> SkeletonClass.fromCache(data, pck());
             case INTERFACE -> SkeletonInterface.fromCache(data, pck());
             case ANNOTATION -> SkeletonAnnotation.fromCache(data, pck());
         };
@@ -59,10 +56,7 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
     public ScriptedClass loadClass()  {
         ScriptedClass target;
         try {
-            target = switch (type) {
-                case ENUM -> RuntimeEnum.load(data, pck());
-                default -> RuntimeClass.load(data, pck());
-            };
+            target = RuntimeClass.load(data, pck());
             this.reference.setTarget(target);
             return target;
         } catch (Exception e) {

@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.run.load;
 
+import com.google.errorprone.annotations.Var;
 import com.google.gson.*;
 import net.kapitencraft.lang.bytecode.exe.Disassembler;
 import net.kapitencraft.lang.bytecode.exe.VirtualMachine;
@@ -83,28 +84,32 @@ public class ClassLoader {
                     System.out.println("\tlist                        - Lists all methods of the given class and their content");
                 } else if (line.startsWith("list ")) {
                     String classRef = line.substring(5);
-                    ClassReference target = VarTypeManager.getClassForName(classRef);
-                    if (target == null) System.err.println("unable to find class for id '" + classRef + "'");
-                    else {
-                        ScriptedClass scriptedClass = target.get();
-                        System.out.println("==== Info ====");
-                        System.out.println("Name:    " + scriptedClass.name());
-                        System.out.println("Package: " + scriptedClass.pck());
-                        System.out.println("\n=== Methods ===");
-                        Map<String, DataMethodContainer> methods = scriptedClass.getMethods().asMap();
-                        methods.forEach((string, dataMethodContainer) -> {
-                            for (ScriptedCallable method : dataMethodContainer.methods()) {
-                                String name = string + "(" + VarTypeManager.getArgsSignature(method.argTypes()) + ")" + VarTypeManager.getClassName(method.type().get());
-                                if (method.isNative()) {
-                                    System.out.println("== " + name + " ==");
-                                    System.out.println("<Native>");
-                                } else {
-                                    Disassembler.disassemble(method.getChunk(), name);
+                    if ("$all".equals(classRef)) {
+                        VarTypeManager.listFlat();
+                    } else {
+                        ClassReference target = VarTypeManager.getClassForName(classRef);
+                        if (target == null) System.err.println("unable to find class for id '" + classRef + "'");
+                        else {
+                            ScriptedClass scriptedClass = target.get();
+                            System.out.println("==== Info ====");
+                            System.out.println("Name:    " + scriptedClass.name());
+                            System.out.println("Package: " + scriptedClass.pck());
+                            System.out.println("\n=== Methods ===");
+                            Map<String, DataMethodContainer> methods = scriptedClass.getMethods().asMap();
+                            methods.forEach((string, dataMethodContainer) -> {
+                                for (ScriptedCallable method : dataMethodContainer.methods()) {
+                                    String name = string + "(" + VarTypeManager.getArgsSignature(method.argTypes()) + ")" + VarTypeManager.getClassName(method.type().get());
+                                    if (method.isNative()) {
+                                        System.out.println("== " + name + " ==");
+                                        System.out.println("<Native>");
+                                    } else {
+                                        Disassembler.disassemble(method.getChunk(), name);
+                                    }
+                                    System.out.println();
                                 }
-                                System.out.println();
-                            }
-                        });
-                        System.out.println("==== Info End ====");
+                            });
+                            System.out.println("==== Info End ====");
+                        }
                     }
                 }
                 else if (!line.isEmpty()) System.err.println("unknown command: \"" + line + "\"");
@@ -137,7 +142,6 @@ public class ClassLoader {
                 pckLoader.remove(0);
                 continue;
             }
-            Map<String, EnclosedClassLoader<T>> enclosedLoaderMap = new HashMap<>();
             for (File file1 : files) {
                 if (file1.isDirectory()) {
                     PackageHolder<T> child = new PackageHolder<>();
@@ -147,23 +151,16 @@ public class ClassLoader {
                     String name = file1.getName().replace(end, "");
                     String[] enclosedSplit = name.split("\\$");
                     if (enclosedSplit.length > 1) {
-                        if (!enclosedLoaderMap.containsKey(enclosedSplit[0])) {
-                            enclosedLoaderMap.put(enclosedSplit[0], new EnclosedClassLoader<>());
+                        PackageHolder<T> loader = holder;
+                        for (int i = 0; i < enclosedSplit.length - 1; i++) {
+                            loader = loader.packages.computeIfAbsent(enclosedSplit[i], s -> new PackageHolder<>());
                         }
-                        EnclosedClassLoader<T> loader = enclosedLoaderMap.get(enclosedSplit[0]);
-                        for (int i = 1; i < enclosedSplit.length; i++) {
-                            loader = loader.addOrGetEnclosed(enclosedSplit[i]);
-                        }
-                        loader.applyFile(file1);
+                        loader.classes.put(enclosedSplit[enclosedSplit.length - 1], constructor.apply(file1));
                     } else {
-                        if (!enclosedLoaderMap.containsKey(name)) enclosedLoaderMap.put(name, new EnclosedClassLoader<>());
-                        enclosedLoaderMap.get(name).applyFile(file1);
+                        holder.classes.put(enclosedSplit[0], constructor.apply(file1));
                     }
                 }
             }
-            enclosedLoaderMap.forEach((name, enclosedClassLoader) ->
-                    holder.classes.put(name, enclosedClassLoader.toHolder(constructor))
-            );
             pckLoader.remove(0);
         }
         return root;
@@ -225,30 +222,8 @@ public class ClassLoader {
 
     public static String pck(File file) {
         String path = file.getPath().replace(cacheLoc.getPath(), "").replace(".scrc", "");
-        List<String> pckData = new ArrayList<>(List.of(path.split("\\\\")));
+        List<String> pckData = new ArrayList<>(List.of(path.split("[\\\\$]")));
         pckData = pckData.subList(1, pckData.size()-1);
         return String.join(".", pckData);
-    }
-
-
-    private static class EnclosedClassLoader<T extends ClassLoaderHolder<T>> {
-        private File file;
-
-        public void applyFile(File file) {
-            this.file = file;
-        }
-
-        public EnclosedClassLoader<T> addEnclosed(String name) {
-            EnclosedClassLoader<T> loader = new EnclosedClassLoader<>();
-            return loader;
-        }
-
-        public EnclosedClassLoader<T> addOrGetEnclosed(String s) {
-            return addEnclosed(s);
-        }
-
-        public T toHolder(Function<File, T> constructor) {
-            return constructor.apply(file);
-        }
     }
 }

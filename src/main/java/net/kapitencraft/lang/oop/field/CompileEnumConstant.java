@@ -7,22 +7,15 @@ import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.Interpreter;
 
+@Deprecated
 public class CompileEnumConstant implements ScriptedField {
 
     private final int ordinal;
     private final String name;
-    private final Expr[] args;
 
-    public CompileEnumConstant(int ordinal, String name, Expr[] args) {
+    public CompileEnumConstant(int ordinal, String name) {
         this.ordinal = ordinal;
         this.name = name;
-        this.args = args;
-    }
-
-
-    @Override
-    public Object initialize(Environment environment, Interpreter interpreter) {
-        throw new IllegalAccessError("can not initializer compile enum constant");
     }
 
     @Override
@@ -32,7 +25,12 @@ public class CompileEnumConstant implements ScriptedField {
 
     @Override
     public boolean isFinal() {
-        return false;
+        return true;
+    }
+
+    @Override
+    public boolean isStatic() {
+        return true;
     }
 
     public JsonObject cache(CacheBuilder builder) {

@@ -1,13 +1,19 @@
 package net.kapitencraft.lang.oop.field;
 
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.env.core.Environment;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.Interpreter;
 
-public record SkeletonField(ClassReference type, boolean isFinal) implements ScriptedField {
+public record SkeletonField(ClassReference type, short modifiers) implements ScriptedField {
 
     @Override
-    public Object initialize(Environment environment, Interpreter interpreter) {
-        return null;
+    public boolean isFinal() {
+        return Modifiers.isFinal(modifiers);
+    }
+
+    @Override
+    public boolean isStatic() {
+        return Modifiers.isStatic(modifiers);
     }
 }

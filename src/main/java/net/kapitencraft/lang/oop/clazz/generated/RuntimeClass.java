@@ -16,19 +16,19 @@ import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.lang.tool.Util;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public final class RuntimeClass implements ScriptedClass {
+    private final Map<String, Object> staticFields = new HashMap<>();
+
     private final GeneratedMethodMap methods;
 
     private final MethodLookup lookup;
 
     private final Map<String, RuntimeField> allFields;
-    private final Map<String, RuntimeField> allStaticFields;
 
     private final ClassReference superclass;
     private final ClassReference[] implemented;
@@ -40,13 +40,12 @@ public final class RuntimeClass implements ScriptedClass {
     private final RuntimeAnnotationClassInstance[] annotations;
 
     public RuntimeClass(Map<String, DataMethodContainer> methods,
-                        Map<String, RuntimeField> fields, Map<String, RuntimeField> staticFields,
+                        Map<String, RuntimeField> fields,
                         ClassReference superclass, String name, String packageRepresentation,
                         ClassReference[] implemented,
                         short modifiers, RuntimeAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allFields = fields;
-        this.allStaticFields = staticFields;
         this.superclass = superclass;
         this.name = name;
         this.packageRepresentation = packageRepresentation;
@@ -65,7 +64,6 @@ public final class RuntimeClass implements ScriptedClass {
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
 
         ImmutableMap<String, RuntimeField> fields = RuntimeField.loadFieldMap(data, "fields");
-        ImmutableMap<String, RuntimeField> staticFields = RuntimeField.loadFieldMap(data, "staticFields");
 
         short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
 
@@ -73,7 +71,7 @@ public final class RuntimeClass implements ScriptedClass {
 
         return new RuntimeClass(
                 methods,
-                fields, staticFields,
+                fields,
                 superclass,
                 name, pck,
                 implemented,
@@ -85,11 +83,6 @@ public final class RuntimeClass implements ScriptedClass {
     @Override
     public ClassReference getFieldType(String name) {
         return Optional.ofNullable(getFields().get(name)).map(ScriptedField::type).orElse(ScriptedClass.super.getFieldType(name));
-    }
-
-    @Override
-    public ClassReference getStaticFieldType(String name) {
-        return allStaticFields.get(name).type();
     }
 
     @Override
@@ -138,8 +131,13 @@ public final class RuntimeClass implements ScriptedClass {
     }
 
     @Override
-    public Map<String, ? extends ScriptedField> staticFields() {
-        return allStaticFields;
+    public Object getStaticField(String name) {
+        return staticFields.get(name);
+    }
+
+    @Override
+    public Object setStaticField(String name, Object val) {
+        return staticFields.put(name, val);
     }
 
     @Override
@@ -157,7 +155,6 @@ public final class RuntimeClass implements ScriptedClass {
         return "GeneratedClass{" + name + "}[" +
                 "methods=" + methods.asMap() + ", " +
                 "fields=" + allFields + ", " +
-                "staticFields=" + allStaticFields + ", " +
                 "superclass=" + superclass + ']';
     }
 
@@ -174,5 +171,10 @@ public final class RuntimeClass implements ScriptedClass {
     @Override
     public short getModifiers() {
         return modifiers;
+    }
+
+    @Override
+    public boolean isNative() {
+        return false;
     }
 }

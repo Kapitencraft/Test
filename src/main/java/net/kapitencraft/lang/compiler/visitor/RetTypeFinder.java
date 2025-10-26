@@ -59,7 +59,7 @@ public class RetTypeFinder implements Expr.Visitor<ClassReference> {
 
     @Override
     public ClassReference visitStaticGetExpr(Expr.StaticGet expr) {
-        return expr.target() == null ? VarTypeManager.VOID.reference() : expr.target().get().getStaticFieldType(expr.name().lexeme());
+        return expr.target() == null ? VarTypeManager.VOID.reference() : expr.target().get().getFieldType(expr.name().lexeme());
     }
 
     @Override
@@ -74,7 +74,7 @@ public class RetTypeFinder implements Expr.Visitor<ClassReference> {
 
     @Override
     public ClassReference visitStaticSetExpr(Expr.StaticSet expr) {
-        return expr.target().get().getStaticFieldType(expr.name().lexeme());
+        return expr.target().get().getFieldType(expr.name().lexeme());
     }
 
     @Override
@@ -89,7 +89,7 @@ public class RetTypeFinder implements Expr.Visitor<ClassReference> {
 
     @Override
     public ClassReference visitStaticSpecialExpr(Expr.StaticSpecial expr) {
-        return expr.target().get().getStaticFieldType(expr.name().lexeme());
+        return expr.target().get().getFieldType(expr.name().lexeme());
     }
 
     @Override
@@ -123,8 +123,18 @@ public class RetTypeFinder implements Expr.Visitor<ClassReference> {
     }
 
     @Override
+    public ClassReference visitArrayConstructorExpr(Expr.ArrayConstructor expr) {
+        return expr.compoundType().array();
+    }
+
+    @Override
     public ClassReference visitLogicalExpr(Expr.Logical expr) {
         return VarTypeManager.BOOLEAN.reference();
+    }
+
+    @Override
+    public ClassReference visitSuperCallExpr(Expr.SuperCall expr) {
+        return expr.retType();
     }
 
     @Override

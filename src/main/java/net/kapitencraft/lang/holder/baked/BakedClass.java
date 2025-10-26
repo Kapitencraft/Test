@@ -22,7 +22,6 @@ public record BakedClass(
         Pair<Token, CompileCallable>[] methods,
         Pair<Token, CompileCallable>[] constructors,
         Map<Token, CompileField> fields,
-        Map<String, CompileField> staticFields,
         ClassReference superclass, Token name, String pck,
         ClassReference[] interfaces,
         Compiler.ClassBuilder[] enclosed,
@@ -42,9 +41,9 @@ public record BakedClass(
 
         List<Token> finalFields = new ArrayList<>();
         fields.forEach((name, field) -> {
-            if (field.isFinal() && !field.hasInit()) {
-                finalFields.add(name);
-            }
+            //if (field.isFinal() && !field.hasInit()) {
+            //    finalFields.add(name);
+            //}
         });
 
         for (Pair<Token, CompileCallable> method : this.constructors()) {
@@ -55,7 +54,6 @@ public record BakedClass(
         return new CompileClass(
                 DataMethodContainer.bakeBuilders(methods),
                 create(this.fields()),
-                this.staticFields(),
                 enclosed,
                 this.superclass(),
                 this.interfaces(),

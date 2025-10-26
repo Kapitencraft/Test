@@ -6,5 +6,10 @@ class StringTest {
         for (char c : args[0].toCharArray()) {
             System.print(c);
         }
+        System.print(a().toCharArray());
+    }
+
+    static String a() {
+        return "a";
     }
 }

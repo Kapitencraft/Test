@@ -7,10 +7,8 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) throws InterruptedException {
-        for (int i = 0; i < 255; i++) {
-            System.out.println(makeLatin(i));
-        }
 
+        System.out.println(makeLatin(50000));
     }
 
     static final List<Pair<Integer, String>> latins = List.of(
