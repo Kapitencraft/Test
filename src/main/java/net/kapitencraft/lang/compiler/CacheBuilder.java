@@ -300,15 +300,14 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void specialAssign(ClassReference reference, Token token, Opcode get, Opcode set, Consumer<Chunk.Builder> meta) {
+        builder.addCode(get);
+        meta.accept(builder); //TODO fix multiple invokes
         builder.addCode(token.type() == TokenType.GROW ?
                 getPlusOne(reference) : getMinusOne(reference)
         );
         builder.addCode(getAdd(reference));
-        meta.accept(builder); //TODO fix multiple invokes
-        builder.addCode(get);
-        builder.addCode(getAdd(reference));
-        meta.accept(builder);
         builder.addCode(set);
+        meta.accept(builder);
     }
 
     private Opcode getMinusOne(ClassReference reference) {

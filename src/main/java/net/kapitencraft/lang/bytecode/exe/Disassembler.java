@@ -7,6 +7,10 @@ public class Disassembler {
     @SuppressWarnings("StatementWithEmptyBody")
     public static void disassemble(Chunk chunk, String name) {
         System.out.printf("== %s ==\n", name);
+        if (chunk == null) {
+            System.out.println("<abstract>");
+            return;
+        };
 
         byte[] code = chunk.code();
         for (int offset = 0; offset < code.length; offset = disassembleInstruction(chunk, offset)) {

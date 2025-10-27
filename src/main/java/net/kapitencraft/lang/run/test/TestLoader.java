@@ -22,14 +22,14 @@ public class TestLoader {
         public boolean run() {
             ClassReference reference = VarTypeManager.getClassForName(target);
             if (reference == null || !reference.exists()) {
-                System.err.println("unknown class: " + target);
+                System.out.println("\u001B[31munknown class: " + target + "\u001B[0m");
                 return true;
             }
             try {
                 System.out.printf("\u001B[32mRunning: %s\u001B[0m\n", reference.absoluteName());
                 VirtualMachine.runMainMethod(reference.get(), args, false, false);
             } catch (Exception e) {
-                System.err.println("program crashed: " + e.getMessage());
+                System.out.println("\u001B[31mprogram crashed: " + e.getMessage() + "\u001B[0m");
                 return true;
             }
             return false;
@@ -56,9 +56,9 @@ public class TestLoader {
             execution.setup();
             tests.forEach(execution::runTest);
             execution.clear();
-            System.out.println("test complete. " + execution.getSucceeded() + " successful");
+            System.out.printf("test complete. %s / %s successful", execution.getSucceeded(), tests.size());
         } catch (FileNotFoundException e) {
-            System.err.println("file not found: " + e.getMessage());
+            System.out.println("file not found: " + e.getMessage() + "\u001B[0m");
         }
     }
 
@@ -79,11 +79,11 @@ public class TestLoader {
             this.error = false;
             error |= instance.run();
             if (instance.output.length > this.outputIndex) {
-                System.err.printf("Missing outputs. got %s but expected %s\n", this.outputIndex, instance.output.length);
+                System.out.printf("\u001B[31mMissing outputs. got %s but expected %s\u001B[0m\n", this.outputIndex, instance.output.length);
                 error = true;
             }
             if (error) {
-                System.err.println("Error running class '" + instance.target + "'");
+                System.out.println("\u001B[31mError running class '" + instance.target + "'\u001B[0m");
             } else {
                 succeeded++;
                 System.out.println("\u001B[32mSuccessfully tested class '" + instance.target + "'. took " + Interpreter.elapsedMillis() + "ms\u001B[0m");
@@ -96,10 +96,10 @@ public class TestLoader {
 
         private void checkOutput(String output) {
             if (outputIndex >= running.output.length) {
-                System.err.println("Test for '" + running.target + "' failed. more outputs got than expected");
+                System.out.println("\u001B[31mTest for '" + running.target + "' failed. more outputs got than expected: " + output + "\u001B[0m");
                 error = true;
             } else if (!output.equals(running.output[outputIndex])) {
-                System.err.println("Test for '" + running.target + "' failed at index " + outputIndex + ". Expected \"" + running.output[outputIndex] + "\", but got: \"" + output + "\"");
+                System.out.printf("\u001B[31mTest for '%s' failed at index %s. Expected \"%s\", but got: \"%s\"\u001B[0m\n", running.target, outputIndex, running.output[outputIndex], output);
                 error = true;
             }
             outputIndex++;

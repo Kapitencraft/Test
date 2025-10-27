@@ -275,7 +275,7 @@ public class VarTypeManager {
             case "V" -> VarTypeManager.VOID;
             case "[" -> directFlatParse(s.substring(1)).array();
             default -> {
-                if (s.startsWith("L")) yield flatMap.get(s);
+                if (s.startsWith("L")) yield flatMap.get(s.substring(1, s.length() - 1));
                 throw new IllegalArgumentException("unknown type: '" + s + "'");
             }
         };
