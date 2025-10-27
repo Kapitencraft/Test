@@ -26,13 +26,15 @@ public class VirtualMachine {
     private static CallFrame frame;
 
     private static final class CallFrame {
+        private final String signature;
         private final ScriptedCallable callable;
         private final byte[] code, constants;
         private final int stackBottom;
         private final Chunk.ExceptionHandler[] handlers;
         private int ip;
 
-        private CallFrame(ScriptedCallable callable, int stackBottom) {
+        private CallFrame(String signature, ScriptedCallable callable, int stackBottom) {
+            this.signature = signature;
             this.callable = callable;
             this.stackBottom = stackBottom;
             Chunk chunk = callable.getChunk();
@@ -45,7 +47,8 @@ public class VirtualMachine {
         public String toString() {
             return "Frame[" +
                     "callable=" + callable + ", " +
-                    "index=" + stackBottom + ']';
+                    "index=" + stackBottom + ", " +
+                    "signature=" + signature + ']';
         }
     }
 
@@ -74,7 +77,7 @@ public class VirtualMachine {
                         System.err.println("Non-static method can not be referenced from a static context");
                         return;
                     }
-                    pushCall(new CallFrame(method, 0));
+                    pushCall(new CallFrame(VarTypeManager.getClassName(target) + "main", method, 0));
                     try {
                         Interpreter.start();
                         push(Arrays.stream(data.split(" ")).map(NativeClassLoader::wrapString).toArray());
@@ -163,7 +166,7 @@ public class VirtualMachine {
                             stackIndex = callableStackTop; //reset stack index
                             push(callable.call(args));
                         } else
-                            pushCall(new CallFrame(callable, callableStackTop));
+                            pushCall(new CallFrame(execute, callable, callableStackTop));
                     }
                     case INVOKE_VIRTUAL -> {
                         String execute = constString(frame.constants, read2Byte());
@@ -184,7 +187,7 @@ public class VirtualMachine {
                             stackIndex = callableStackTop; //reset stack index
                             push(callable.call(args));
                         } else
-                            pushCall(new CallFrame(callable, callableStackTop));
+                            pushCall(new CallFrame(execute, callable, callableStackTop));
                     }
                     case THROW -> handleException((ClassInstance) pop());
                     case NEW -> {
@@ -323,7 +326,7 @@ public class VirtualMachine {
         initialized.add(scriptedClass); //add it before so it doesn't create a recursion loop when a static call / get is executed from within the <clinit> method
         ScriptedCallable method = scriptedClass.getMethod("<clinit>()");
         if (method != null) { //TODO fix frame being damaged when static init is called
-            pushCall(new CallFrame(method, stackIndex));
+            pushCall(new CallFrame(VarTypeManager.getClassName(scriptedClass) + "<clinit>", method, stackIndex));
         }
     }
 
@@ -343,7 +346,12 @@ public class VirtualMachine {
             handleException(createClassCast(type, VarTypeManager.THROWABLE));
         }
 
-        while (callStackTop > 0) {
+        List<String> stackTrace = new ArrayList<>();
+        for (int i = callStackTop - 1; i > -1; i--) {
+            stackTrace.add(callStack[callStackTop].signature);
+        }
+
+        while (callStackTop >= 0) {
             int ip = frame.ip;
             for (Chunk.ExceptionHandler handler : frame.handlers) {
                 if (ip >= handler.startOp() && ip < handler.endOp()) {
@@ -356,6 +364,7 @@ public class VirtualMachine {
                     return;
                 }
             }
+            callStackTop--;
             popCall(); //pop call when no possible exception handler could be found
         }
         //TODO exit thread
