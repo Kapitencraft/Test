@@ -155,7 +155,7 @@ public class VirtualMachine {
                             String execute = constString(frame.constants, read2Byte());
                             StringReader reader = new StringReader(execute);
                             ScriptedClass type = VarTypeManager.flatParse(reader);
-                            invokeStaticInitIfNecessary(type);
+                            if (invokeStaticInitIfNecessary(type, 3)) continue;
                             ScriptedCallable callable = type.getMethod(reader.getRemaining());
 
                             int length = callable.argTypes().length;
@@ -174,7 +174,7 @@ public class VirtualMachine {
                             String execute = constString(frame.constants, read2Byte());
                             StringReader reader = new StringReader(execute);
                             ScriptedClass type = VarTypeManager.flatParse(reader);
-                            invokeStaticInitIfNecessary(type);
+                            if (invokeStaticInitIfNecessary(type, 3)) continue;
 
                             ScriptedCallable referenceCallable = type.getMethod(reader.getRemaining());
 
@@ -292,27 +292,27 @@ public class VirtualMachine {
                         }
                         case GET_FIELD -> {
                             ClassInstance instance = (ClassInstance) pop();
-                            invokeStaticInitIfNecessary(instance.getType());
+                            if (invokeStaticInitIfNecessary(instance.getType(), 1)) continue;
                             String s = constString(frame.constants, read2Byte());
                             push(instance.getField(s));
                         }
                         case GET_STATIC -> {
                             String c = constString(frame.constants, read2Byte());
                             ScriptedClass scriptedClass = VarTypeManager.directFlatParse(c);
-                            invokeStaticInitIfNecessary(scriptedClass);
+                            if (invokeStaticInitIfNecessary(scriptedClass, 3)) continue;
                             String field = constString(frame.constants, read2Byte());
                             scriptedClass.getStaticField(field);
                         }
                         case PUT_FIELD -> {
                             ClassInstance instance = (ClassInstance) pop();
-                            invokeStaticInitIfNecessary(instance.getType());
+                            if (invokeStaticInitIfNecessary(instance.getType(), 1)) continue;
                             String s = constString(frame.constants, read2Byte());
                             instance.assignField(s, pop());
                         }
                         case PUT_STATIC -> {
                             String c = constString(frame.constants, read2Byte());
                             ScriptedClass scriptedClass = VarTypeManager.directFlatParse(c);
-                            invokeStaticInitIfNecessary(scriptedClass);
+                            if (invokeStaticInitIfNecessary(scriptedClass, 3)) continue;
                             String field = constString(frame.constants, read2Byte());
                             scriptedClass.setStaticField(field, pop());
                         }
@@ -330,13 +330,16 @@ public class VirtualMachine {
 
     private static final Set<ScriptedClass> initialized = new HashSet<>();
 
-    private static void invokeStaticInitIfNecessary(ScriptedClass scriptedClass) {
-        if (scriptedClass.isNative() || initialized.contains(scriptedClass)) return;
+    private static boolean invokeStaticInitIfNecessary(ScriptedClass scriptedClass, int opcodeOffset) {
+        if (scriptedClass.isNative() || initialized.contains(scriptedClass)) return false;
         initialized.add(scriptedClass); //add it before so it doesn't create a recursion loop when a static call / get is executed from within the <clinit> method
         ScriptedCallable method = scriptedClass.getMethod("<clinit>()");
         if (method != null) { //TODO fix frame being damaged when static init is called
+            frame.ip -= opcodeOffset; //reset to the last invoked Opcode, to prevent ip corruption
             pushCall(new CallFrame(VarTypeManager.getClassName(scriptedClass) + "<clinit>", method, stackIndex));
+            return true;
         }
+        return false;
     }
 
     private static ClassInstance createException(ClassReference type, String message) {
