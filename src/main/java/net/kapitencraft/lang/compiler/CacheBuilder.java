@@ -24,7 +24,6 @@ import java.util.function.Consumer;
 public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public static final int majorVersion = 1, minorVersion = 0;
 
-    //TODO add exception handler list
     //TODO add line number and local variable table attributes
     private final Chunk.Builder builder = new Chunk.Builder();
     private final Stack<Loop> loops = new Stack<>();

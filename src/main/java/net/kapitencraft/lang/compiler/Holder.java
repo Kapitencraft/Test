@@ -22,7 +22,6 @@ import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonAnnotation;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
 import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonInterface;
 import net.kapitencraft.lang.oop.field.CompileField;
-import net.kapitencraft.lang.oop.field.CompileEnumConstant;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
@@ -95,7 +94,6 @@ public class Holder {
 
             Map<Token, CompileField> fields = new HashMap<>();
 
-            //int enu //TODO array init
             for (EnumConstant decl : enumConstants()) {
                 Expr[] args;
                 if (decl.arguments.length == 0) {
@@ -112,7 +110,7 @@ public class Holder {
                 stmtParser.checkArguments(args, callable, null, decl.name());
                 statics.add(new Stmt.Expression(new Expr.StaticSet(
                         target, decl.name,
-                        new Expr.Constructor(decl.name, target, args, VarTypeManager.getMethodSignature(target.get(), "<init>", stmtParser.argTypes(args))), //TODO
+                        new Expr.Constructor(decl.name, target, args, VarTypeManager.getMethodSignature(target.get(), "<init>", stmtParser.argTypes(args))),
                         new Token(TokenType.ASSIGN, "=", LiteralHolder.EMPTY, -1, 0),
                         target,
                         Operand.LEFT
@@ -124,7 +122,7 @@ public class Holder {
             Expr[] constants = new Expr[length];
             for (int i = 0; i < enumConstants.length; i++) {
                 EnumConstant constant = enumConstants[i];
-                constants[i] = new Expr.StaticGet(target, constant.name);
+                constants[i] = new Expr.StaticGet(target, constant.name); //getting statics to store into the array
             }
             statics.add(new Stmt.Expression(new Expr.StaticSet(
                     target, values,

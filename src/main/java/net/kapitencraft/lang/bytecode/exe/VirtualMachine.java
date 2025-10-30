@@ -334,7 +334,7 @@ public class VirtualMachine {
         if (scriptedClass.isNative() || initialized.contains(scriptedClass)) return false;
         initialized.add(scriptedClass); //add it before so it doesn't create a recursion loop when a static call / get is executed from within the <clinit> method
         ScriptedCallable method = scriptedClass.getMethod("<clinit>()");
-        if (method != null) { //TODO fix frame being damaged when static init is called
+        if (method != null) {
             frame.ip -= opcodeOffset; //reset to the last invoked Opcode, to prevent ip corruption
             pushCall(new CallFrame(VarTypeManager.getClassName(scriptedClass) + "<clinit>", method, stackIndex));
             return true;
@@ -358,7 +358,7 @@ public class VirtualMachine {
             return handleException(createClassCast(type, VarTypeManager.THROWABLE));
         }
 
-        List<String> stackTrace = new ArrayList<>();
+        List<String> stackTrace = new ArrayList<>(); //TODO line-numbers
         for (int i = callStackTop - 1; i > -1; i--) {
             stackTrace.add(callStack[i].signature);
         }
@@ -382,7 +382,6 @@ public class VirtualMachine {
         System.out.printf("Caused by: %s\n", exception.getField("message"));
         stackTrace.forEach(s -> System.out.println("\tat " + s));
         return false;
-        //TODO exit thread
     }
 
     private static <T> void slice() {
