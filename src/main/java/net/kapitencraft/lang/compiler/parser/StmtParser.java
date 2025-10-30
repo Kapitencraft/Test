@@ -299,11 +299,13 @@ public class StmtParser extends ExprParser {
 
     private Stmt[] block(String name) {
         List<Stmt> statements = new ArrayList<>();
+        this.pushScope();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             statements.add(declaration());
         }
 
+        this.popScope();
         consumeCurlyClose(name);
         return statements.toArray(new Stmt[0]);
     }
@@ -321,7 +323,7 @@ public class StmtParser extends ExprParser {
         return stmts.toArray(Stmt[]::new);
     }
 
-    public void applyMethod(List<? extends Pair<SourceClassReference, String>> params, ClassReference targetClass, ClassReference superclass, ClassReference funcRetType, @Nullable Holder.Generics generics) {
+    public void applyMethod(List<? extends Pair<SourceClassReference, String>> params, ClassReference targetClass, ClassReference funcRetType, @Nullable Holder.Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (generics != null) generics.pushToStack(this.generics);
@@ -338,14 +340,14 @@ public class StmtParser extends ExprParser {
         funcRetType = VarTypeManager.VOID.reference();
     }
 
-    public void applyStaticMethod(List<? extends Pair<? extends ClassReference, String>> params, ClassReference funcRetType, @Nullable Holder.Generics generics) {
+    public void applyStaticMethod(List<? extends Pair<SourceClassReference, String>> params, ClassReference funcRetType, @Nullable Holder.Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
 
-        for (Pair<? extends ClassReference, String> param : params) {
-            varAnalyser.add(param.right(), param.left(), true, true);
+        for (Pair<SourceClassReference, String> param : params) {
+            varAnalyser.add(param.right(), param.left().getReference(), true, true);
         }
     }
 }

@@ -4,11 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
-import net.kapitencraft.lang.run.Interpreter;
 
 public class CompileField implements ScriptedField {
     private final ClassReference type;

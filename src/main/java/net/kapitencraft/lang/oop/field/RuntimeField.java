@@ -3,14 +3,10 @@ package net.kapitencraft.lang.oop.field;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.env.core.Environment;
-import net.kapitencraft.lang.holder.ast.RuntimeExpr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
-import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.tool.GsonHelper;
 
 public class RuntimeField implements ScriptedField {

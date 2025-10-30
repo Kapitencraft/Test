@@ -100,11 +100,6 @@ public interface ScriptedClass {
         return superclass() != null && superclass().get().hasField(name);
     }
 
-    default DynamicClassInstance createNativeInst(Object[] params, int ordinal) {
-        DynamicClassInstance instance = null;// new DynamicClassInstance(this, interpreter);
-        return instance;
-    }
-
     default Map<String, ? extends ScriptedField> getFields() {
         return superclass() != null ? superclass().get().getFields() : Map.of();
     }

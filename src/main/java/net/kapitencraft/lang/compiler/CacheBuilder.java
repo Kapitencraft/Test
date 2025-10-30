@@ -224,6 +224,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 case POW_ASSIGN -> builder.addCode(getPow(retType));
             }
         }
+        builder.addCode(Opcode.DUP);
         builder.addCode(Opcode.PUT_FIELD);
         builder.injectString(expr.name().lexeme());
         return null;
@@ -233,10 +234,27 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitStaticSetExpr(Expr.StaticSet expr) {
 
         cache(expr.value());
-        //assign(expr.executor(), expr.value(), expr.assignType().type(), Opcode.PUT_STATIC, Opcode.GET_STATIC, b -> {});
+        TokenType type = expr.assignType().type();
+        String className = VarTypeManager.getClassName(expr.target().get());
+        String fieldName = expr.name().lexeme();
+        ClassReference retType = expr.executor();
+
+        if (type != TokenType.ASSIGN) {
+            builder.addCode(Opcode.GET_STATIC);
+            builder.injectString(className);
+            builder.injectString(fieldName);
+            switch (type) {
+                case ADD_ASSIGN -> builder.addCode(getAdd(retType));
+                case SUB_ASSIGN -> builder.addCode(getSub(retType));
+                case MUL_ASSIGN -> builder.addCode(getMul(retType));
+                case DIV_ASSIGN -> builder.addCode(getDiv(retType));
+                case POW_ASSIGN -> builder.addCode(getPow(retType));
+            }
+        }
+        builder.addCode(Opcode.DUP);
         builder.addCode(Opcode.PUT_STATIC);
-        builder.injectString(VarTypeManager.getClassName(expr.target().get()));
-        builder.injectString(expr.name().lexeme());
+        builder.injectString(className);
+        builder.injectString(fieldName);
 
         return null;
     }
@@ -246,7 +264,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         ClassReference retType = expr.executor();
         TokenType type = expr.assignType().type();
         cache(expr.value());
-        builder.addCode(Opcode.DUP); //duplicate to keep the value on the stack as the ARRAY_SET does not actually keep anything on the stack
         cache(expr.index());
         cache(expr.object());
         if (type != TokenType.ASSIGN) {
@@ -260,6 +277,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 case POW_ASSIGN -> builder.addCode(getPow(retType));
             }
         }
+        builder.addCode(Opcode.DUP); //duplicate to keep the value on the stack as the ARRAY_SET does not actually keep anything on the stack
         builder.addCode(getArrayStore(retType));
         return null;
     }
@@ -305,6 +323,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 getPlusOne(reference) : getMinusOne(reference)
         );
         builder.addCode(getAdd(reference));
+        builder.addCode(Opcode.DUP); //duplicate value to emit it onto the object stack
         builder.addCode(set);
         meta.accept(builder);
     }

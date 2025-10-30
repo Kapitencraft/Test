@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.run.natives.impl;
 
-import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
+import net.kapitencraft.lang.bytecode.exe.VirtualMachine;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
@@ -35,7 +35,8 @@ public class NativeConstructor implements ScriptedCallable {
         try {
             return constructor.newInstance(NativeClassLoader.extractNatives(arguments, false));
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw AbstractScriptedException.createException(VarTypeManager.FUNCTION_CALL_ERROR, e.getMessage());
+            VirtualMachine.handleException(VirtualMachine.createException(VarTypeManager.FUNCTION_CALL_ERROR, e.getMessage()));
+            return null;
         }
     }
 

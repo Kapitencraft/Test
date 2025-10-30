@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Objects;
 
 public class BytecodeVars {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BytecodeVars.class);
     private final Local[] locals = new Local[256];
     private byte localCount, scopeDepth;
 

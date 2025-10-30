@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.oop.clazz.primitive;
 
-import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
+import net.kapitencraft.lang.bytecode.exe.VirtualMachine;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
@@ -61,15 +61,15 @@ public class DoubleClass extends PrimitiveClass {
         }
         if (type == OperationType.DIVISION) {
             if (other instanceof Float f) {
-                if (f == 0) throw AbstractScriptedException.createException(VarTypeManager.ARITHMETIC_EXCEPTION, "division by 0");
+                if (f == 0) VirtualMachine.handleException(VirtualMachine.createException(VarTypeManager.ARITHMETIC_EXCEPTION, "division by 0"));
                 return val / f;
             }
             if (other instanceof Double d) {
-                if (d == 0) throw AbstractScriptedException.createException(VarTypeManager.ARITHMETIC_EXCEPTION, "division by 0");
+                if (d == 0) VirtualMachine.handleException(VirtualMachine.createException(VarTypeManager.ARITHMETIC_EXCEPTION, "division by 0"));
                 return val / d;
             }
             if (other instanceof Integer i) {
-                if (i == 0) throw AbstractScriptedException.createException(VarTypeManager.ARITHMETIC_EXCEPTION, "division by 0");
+                if (i == 0) VirtualMachine.handleException(VirtualMachine.createException(VarTypeManager.ARITHMETIC_EXCEPTION, "division by 0"));
                 return val / i;
             }
         }

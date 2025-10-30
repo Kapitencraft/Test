@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.bytecode.exe;
 
-import net.kapitencraft.lang.exception.runtime.AbstractScriptedException;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
@@ -16,7 +15,7 @@ import org.jetbrains.annotations.Contract;
 import java.util.*;
 
 public class VirtualMachine {
-    public static boolean DEBUG;
+    public static boolean DEBUG = true;
 
     private static final Object[] stack = new Object[1024];
     private static int stackIndex = 0;
@@ -87,9 +86,6 @@ public class VirtualMachine {
                                 System.out.println("\u001B[32mExecution took " + Interpreter.elapsedMillis() + "ms\u001B[0m");
                             else System.out.println("\u001B[32mExecution finished\u001B[0m");
                         }
-                    } catch (AbstractScriptedException e) {
-                        System.err.println("Caused by: " + e.exceptionType.getType().absoluteName() + ": " + e.exceptionType.getField("message"));
-                        System.exit(65);
                     } catch (Exception e) {
                         System.out.println("current ip: " + frame.ip);
                         Disassembler.disassemble(frame.callable.getChunk(), "Error");
@@ -323,6 +319,7 @@ public class VirtualMachine {
                     popCall();
                 }
             } catch (Throwable t) {
+                Disassembler.disassemble(frame.callable.getChunk(), "Error: " + frame.signature);
                 if (!handleException(createException(VarTypeManager.UNKNOWN_ERROR, t.getMessage()))) return;
             }
         }
@@ -342,7 +339,7 @@ public class VirtualMachine {
         return false;
     }
 
-    private static ClassInstance createException(ClassReference type, String message) {
+    public static ClassInstance createException(ClassReference type, String message) {
         DynamicClassInstance instance = new DynamicClassInstance(type.get());
         instance.assignField("message", message);
         return instance;
@@ -352,7 +349,7 @@ public class VirtualMachine {
         return createException(VarTypeManager.CLASS_CAST_EXCEPTION, reference1.absoluteName() + " can not be converted to " + reference2.absoluteName());
     }
 
-    private static boolean handleException(ClassInstance exception) {
+    public static boolean handleException(ClassInstance exception) {
         ScriptedClass type = exception.getType();
         if (!type.isChildOf(VarTypeManager.THROWABLE.get())) {
             return handleException(createClassCast(type, VarTypeManager.THROWABLE));
@@ -430,12 +427,12 @@ public class VirtualMachine {
 
     private static void pushCall(CallFrame callFrame) {
         frame = callStack[callStackTop++] = callFrame;
-        if (DEBUG) System.out.printf("[DEBUG]: PUSH_CALL (@%3d): stackIndex=%3d\n", callStackTop - 1, callFrame.stackBottom);
+        if (DEBUG) System.out.printf("[DEBUG]: PUSH_CALL (@%3d): stackIndex=%3d, name=%s\n", callStackTop - 1, callFrame.stackBottom, callFrame.signature);
     }
 
     private static void push(Object o) {
         stack[stackIndex++] = o;
-        if (DEBUG) System.out.printf("[DEBUG]: PUSH (@%3d): %s\n", stackIndex - 1, o);
+        if (DEBUG) System.out.printf("[DEBUG]: PUSH (@%3d): %s\n", stackIndex - 1, o); //TODO enable array insight
     }
 
     private static Object pop() {

@@ -163,7 +163,10 @@ public class Holder {
                 Stmt[] body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
-                    stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, method.type().getReference(), method.generics);
+                    if (Modifiers.isStatic(method.modifiers))
+                        stmtParser.applyStaticMethod(method.params, method.type.getReference(), method.generics);
+                    else
+                        stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, method.generics);
                     body = stmtParser.parse();
                     stmtParser.popMethod();
                 }
@@ -211,7 +214,7 @@ public class Holder {
             List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
             for (Constructor method : this.constructors()) {
                 stmtParser.apply(method.body(), parser);
-                stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, ClassReference.of(VarTypeManager.VOID), method.generics);
+                stmtParser.applyMethod(method.params(), target(), ClassReference.of(VarTypeManager.VOID), method.generics);
                 Stmt[] body = stmtParser.parse();
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
@@ -274,7 +277,10 @@ public class Holder {
                 Stmt[] body = null;
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
-                    stmtParser.applyMethod(method.params, target(), null, method.type().getReference(), method.generics);
+                    if (Modifiers.isStatic(method.modifiers))
+                        stmtParser.applyStaticMethod(method.params, method.type.getReference(), method.generics);
+                    else
+                        stmtParser.applyMethod(method.params, target(), method.type().getReference(), method.generics);
                     body = stmtParser.parse();
                     stmtParser.popMethod();
                 }
@@ -344,9 +350,9 @@ public class Holder {
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     if (Modifiers.isStatic(method.modifiers))
-                        stmtParser.applyStaticMethod(method.extractParams(), method.type().getReference(), method.generics);
+                        stmtParser.applyStaticMethod(method.params, method.type().getReference(), method.generics);
                     else
-                        stmtParser.applyMethod(method.params(), target(), parent.getReference(), method.type().getReference(), method.generics);
+                        stmtParser.applyMethod(method.params(), target(), method.type().getReference(), method.generics);
                     body = stmtParser.parse();
                     stmtParser.popMethod();
                 }
@@ -373,7 +379,7 @@ public class Holder {
             List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
             for (Constructor constructor : this.constructors()) {
                 stmtParser.apply(constructor.body(), parser);
-                stmtParser.applyMethod(constructor.params(), target(), parent.getReference(), ClassReference.of(VarTypeManager.VOID), constructor.generics);
+                stmtParser.applyMethod(constructor.params(), target(), ClassReference.of(VarTypeManager.VOID), constructor.generics);
                 Stmt[] body = stmtParser.parse();
 
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
