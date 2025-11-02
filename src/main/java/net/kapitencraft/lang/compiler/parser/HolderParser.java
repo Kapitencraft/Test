@@ -259,9 +259,9 @@ public class HolderParser extends AbstractParser {
 
         Token[] code = getCurlyEnclosedCode();
 
-        consumeCurlyClose("method body");
+        Token endToken = consumeCurlyClose("method body");
 
-        return new Holder.Constructor(annotation, generics, origin, parameters, code);
+        return new Holder.Constructor(annotation, generics, origin, endToken, parameters, code);
     }
 
     private Holder.Method funcDecl(SourceClassReference type, ModifiersParser modifiers, Token name) {
@@ -271,6 +271,7 @@ public class HolderParser extends AbstractParser {
         short mods = modifiers.packModifiers();
 
         Token[] code = null;
+        Token endClose = null;
 
         if (!Modifiers.isAbstract(mods)) { //body only if method isn't abstract
             consumeCurlyOpen("method body");
@@ -285,9 +286,9 @@ public class HolderParser extends AbstractParser {
 
             if (shadowed != null) activeGenerics = shadowed;
 
-            consumeCurlyClose("method body");
+            endClose = consumeCurlyClose("method body");
         } else consumeEndOfArg();
-        return new Holder.Method(modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), type, name, parameters, code);
+        return new Holder.Method(modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), type, name, endClose, parameters, code);
     }
 
     private Holder.Field fieldDecl(SourceClassReference type, Holder.AnnotationObj[] annotations, Token name, short modifiers) {
@@ -535,7 +536,7 @@ public class HolderParser extends AbstractParser {
             defaulted = true;
         }
         else consumeEndOfArg();
-        return new Holder.Method(Modifiers.pack(false, false, !defaulted), annotations, null, type, elementName, List.of(), defaultCode);
+        return new Holder.Method(Modifiers.pack(false, false, !defaulted), annotations, null, type, elementName, null, List.of(), defaultCode);
     }
 
     private Holder.Class interfaceDecl(ModifiersParser mods, String pckID, @Nullable String fileId) {

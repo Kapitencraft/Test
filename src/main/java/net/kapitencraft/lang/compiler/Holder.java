@@ -116,6 +116,8 @@ public class Holder {
                         Operand.LEFT
                 )));
             }
+
+            //region $VALUES
             int length = enumConstants().length;
             Token values = Token.createNative("$VALUES");
             fields.put(values, new CompileField(target.array(), Modifiers.pack(true, true, false), new CompileAnnotationClassInstance[0]));
@@ -139,6 +141,7 @@ public class Holder {
                     target,
                     Operand.LEFT
             )));
+            //endregion
 
             for (Field field : fields()) {
                 if (field.body() != null) {
@@ -168,7 +171,7 @@ public class Holder {
                     else
                         stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, method.generics);
                     body = stmtParser.parse();
-                    stmtParser.popMethod();
+                    stmtParser.popMethod(method.closeBracket);
                 }
 
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
@@ -184,6 +187,7 @@ public class Holder {
                 methods.add(Pair.of(method.name(), methodDecl));
             }
 
+            statics.add(new Stmt.Return(Token.createNative("return"), null));
             methods.add(Pair.of(Token.createNative("<clinit>"),
                     new CompileCallable(VarTypeManager.VOID.reference(),
                             List.of(),
@@ -193,6 +197,7 @@ public class Holder {
                     )
             ));
 
+            //region #values
             methods.add(Pair.of(Token.createNative("values"),
                     new CompileCallable(
                             target.array(),
@@ -210,6 +215,7 @@ public class Holder {
                             new CompileAnnotationClassInstance[0]
                     )
             ));
+            //endregion
 
             List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
             for (Constructor method : this.constructors()) {
@@ -223,7 +229,7 @@ public class Holder {
 
 
                 CompileCallable constDecl = new CompileCallable(target, method.extractParams(), body, (short) 0, annotations.toArray(new CompileAnnotationClassInstance[0]));
-                stmtParser.popMethod();
+                stmtParser.popMethod(method.closeBracket);
                 constructors.add(Pair.of(method.name(), constDecl));
             }
 
@@ -282,7 +288,7 @@ public class Holder {
                     else
                         stmtParser.applyMethod(method.params, target(), method.type().getReference(), method.generics);
                     body = stmtParser.parse();
-                    stmtParser.popMethod();
+                    stmtParser.popMethod(method.closeBracket);
                 }
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
@@ -293,16 +299,19 @@ public class Holder {
                 methods.add(Pair.of(method.name(), methodDecl));
             }
 
-            methods.add(Pair.of( //add <clinit> method
-                    Token.createNative("<clinit>"),
-                    new CompileCallable(
-                            VarTypeManager.VOID.reference(),
-                            List.of(),
-                            statics.toArray(new Stmt[0]),
-                            Modifiers.pack(true, true, false),
-                            new CompileAnnotationClassInstance[0]
-                    )
-            ));
+            if (!statics.isEmpty()) {
+                statics.add(new Stmt.Return(Token.createNative("return"), null));
+                methods.add(Pair.of( //add <clinit> method
+                        Token.createNative("<clinit>"),
+                        new CompileCallable(
+                                VarTypeManager.VOID.reference(),
+                                List.of(),
+                                statics.toArray(new Stmt[0]),
+                                Modifiers.pack(true, true, false),
+                                new CompileAnnotationClassInstance[0]
+                        )
+                ));
+            }
 
             List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
             for (AnnotationObj obj : this.annotations()) {
@@ -354,7 +363,7 @@ public class Holder {
                     else
                         stmtParser.applyMethod(method.params(), target(), method.type().getReference(), method.generics);
                     body = stmtParser.parse();
-                    stmtParser.popMethod();
+                    stmtParser.popMethod(method.closeBracket);
                 }
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
@@ -365,16 +374,19 @@ public class Holder {
                 methods.add(Pair.of(method.name(), methodDecl));
             }
 
-            methods.add(Pair.of( //add <clinit> method
-                    Token.createNative("<clinit>"),
-                    new CompileCallable(
-                            VarTypeManager.VOID.reference(),
-                            List.of(),
-                            statics.toArray(new Stmt[0]),
-                            Modifiers.pack(true, true, false),
-                            new CompileAnnotationClassInstance[0]
-                    )
-            ));
+            if (!statics.isEmpty()) {
+                statics.add(new Stmt.Return(Token.createNative("return"), null));
+                methods.add(Pair.of( //add <clinit> method
+                        Token.createNative("<clinit>"),
+                        new CompileCallable(
+                                VarTypeManager.VOID.reference(),
+                                List.of(),
+                                statics.toArray(new Stmt[0]),
+                                Modifiers.pack(true, true, false),
+                                new CompileAnnotationClassInstance[0]
+                        )
+                ));
+            }
 
             List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
             for (Constructor constructor : this.constructors()) {
@@ -388,7 +400,7 @@ public class Holder {
                 }
 
                 CompileCallable constDecl = new CompileCallable(target, constructor.extractParams(), body, (short) 0, annotations.toArray(new CompileAnnotationClassInstance[0]));
-                stmtParser.popMethod();
+                stmtParser.popMethod(constructor.closeBracket);
                 constructors.add(Pair.of(constructor.name(), constDecl));
             }
 
@@ -607,7 +619,7 @@ public class Holder {
         }
     }
 
-    public record Constructor(AnnotationObj[] annotations, Generics generics, Token name, List<Pair<SourceClassReference, String>> params, Token[] body) implements Validateable {
+    public record Constructor(AnnotationObj[] annotations, Generics generics, Token name, Token closeBracket, List<Pair<SourceClassReference, String>> params, Token[] body) implements Validateable {
         public void validate(Compiler.ErrorLogger logger) {
             validateNullable(annotations, logger);
             if (annotations != null) for (AnnotationObj obj : annotations) obj.validate(logger);
@@ -630,7 +642,7 @@ public class Holder {
         }
     }
 
-    public record Method(short modifiers, AnnotationObj[] annotations, Generics generics, SourceClassReference type, Token name, List<? extends Pair<SourceClassReference, String>> params, Token[] body) {
+    public record Method(short modifiers, AnnotationObj[] annotations, Generics generics, SourceClassReference type, Token name, Token closeBracket, List<? extends Pair<SourceClassReference, String>> params, Token[] body) {
         public void validate(Compiler.ErrorLogger logger) {
             validateNullable(annotations, logger);
             type.validate(logger);

@@ -24,6 +24,7 @@ class InheritanceTest {
             System.print(this.u(5));
             if (super.e(i) == this.e(i)) System.print("YAY");
             else System.print("HM");
+            return 5;
         }
     }
 

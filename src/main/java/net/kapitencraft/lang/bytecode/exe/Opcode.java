@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.bytecode.exe;
 
 public enum Opcode {
-    RETURN, THROW,
+    RETURN, RETURN_ARG, THROW,
     NULL, TRUE, FALSE,
     DUP, DUP_X1, DUP_X2, DUP2,
     DUP2_X1, DUP2_X2,

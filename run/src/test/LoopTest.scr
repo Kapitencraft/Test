@@ -16,7 +16,7 @@ class LoopTest {
 
     static void testWhile() {
         int i = 0;
-        while (i < 100) {
+        while (i < 100) { //TODO fix 100 being print
             System.print(i);
             i++;
         }

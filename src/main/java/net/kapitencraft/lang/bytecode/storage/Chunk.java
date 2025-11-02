@@ -1,8 +1,9 @@
-package net.kapitencraft.lang.bytecode.exe;
+package net.kapitencraft.lang.bytecode.storage;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.tool.GsonHelper;
 
 import java.util.ArrayList;

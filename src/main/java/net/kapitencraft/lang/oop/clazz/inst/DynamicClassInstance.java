@@ -27,6 +27,6 @@ public class DynamicClassInstance implements ClassInstance {
 
     @Override
     public String toString() {
-        return "Dynamic{" + this.type.absoluteName() + "}: {fields=" + this.fields + "}";
+        return "Dynamic{" + this.type.absoluteName() + "}"; //": {fields=" + this.fields + "}";
     }
 }

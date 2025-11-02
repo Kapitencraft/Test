@@ -1,5 +1,7 @@
 package net.kapitencraft.lang.bytecode.exe;
 
+import net.kapitencraft.lang.bytecode.storage.Chunk;
+
 import java.util.function.BiFunction;
 
 public class Disassembler {
@@ -23,7 +25,7 @@ public class Disassembler {
         Opcode opcode = Opcode.byId(chunk.code()[offset]);
         return switch (opcode) {
             case POP, POP_2, DUP, DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2,
-                 RETURN, THROW,
+                 RETURN, RETURN_ARG, THROW,
                  I_NEGATION, I_ADD, I_SUB, I_MUL, I_DIV, I_POW,
                  D_NEGATION, D_ADD, D_SUB, D_MUL, D_DIV, D_POW,
                  F_NEGATION, F_ADD, F_SUB, F_MUL, F_DIV, F_POW,
@@ -41,7 +43,7 @@ public class Disassembler {
                  I_GEQUAL, D_GEQUAL, F_GEQUAL,
                  IA_STORE, DA_STORE, CA_STORE, FA_STORE, RA_STORE,
                  IA_LOAD, DA_LOAD, CA_LOAD, FA_LOAD, RA_LOAD,
-                 SLICE, CA_NEW, DA_NEW, FA_NEW, IA_NEW
+                 SLICE, CA_NEW, DA_NEW, FA_NEW, IA_NEW, RA_NEW
                     -> simpleInstruction(opcode, offset);
             case GET, ASSIGN -> var(opcode, chunk, offset);
             case I_CONST -> intConstInstruction(opcode, chunk, offset);
@@ -53,7 +55,7 @@ public class Disassembler {
             case SWITCH -> 0;
             case GET_FIELD, PUT_FIELD -> fieldOp(opcode, chunk, offset);
             case GET_STATIC, PUT_STATIC -> staticFieldOp(opcode, chunk, offset);
-            case RA_NEW -> newArray(opcode, chunk, offset);
+            //case RA_NEW -> newArray(opcode, chunk, offset);
         };
     }
 
@@ -61,7 +63,7 @@ public class Disassembler {
         int pos = read2b(chunk.code(), offset + 1);
         String string = VirtualMachine.constString(chunk.constants(), pos);
         System.out.printf("%-16s %s\n", opcode, string);
-        return offset + 3;
+        return offset + 1;
     }
 
     private static int jump(Opcode opcode, Chunk chunk, int offset) {

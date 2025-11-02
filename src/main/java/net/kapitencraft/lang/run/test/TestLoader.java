@@ -56,7 +56,7 @@ public class TestLoader {
             execution.setup();
             tests.forEach(execution::runTest);
             execution.clear();
-            System.out.printf("test complete. %s / %s successful", execution.getSucceeded(), tests.size());
+            System.out.printf("test complete. %s / %s successful\n", execution.getSucceeded(), tests.size());
         } catch (FileNotFoundException e) {
             System.out.println("file not found: " + e.getMessage() + "\u001B[0m");
         }

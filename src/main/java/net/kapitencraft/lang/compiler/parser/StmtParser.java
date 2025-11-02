@@ -263,7 +263,10 @@ public class StmtParser extends ExprParser {
         this.expectCondition(condition);
         consumeBracketClose("if condition");
 
-        Stmt thenBranch = statementWithScope();
+        this.pushScope();
+        Stmt thenBranch = statement();
+        boolean branchSeenReturn = seenReturn.peek();
+        this.popScope();
         Stmt elseBranch = null;
         List<Pair<Expr, Stmt>> elifs = new ArrayList<>();
         while (match(ELIF)) {
@@ -271,13 +274,23 @@ public class StmtParser extends ExprParser {
             Expr elifCondition = expression();
             this.expectCondition(elifCondition);
             consumeBracketClose("elif condition");
-            Stmt elifStmt = statementWithScope();
+            this.pushScope();
+            Stmt elifStmt = statement();
+            branchSeenReturn &= seenReturn.peek();
+            this.popScope();
             elifs.add(Pair.of(elifCondition, elifStmt));
         }
 
         if (match(ELSE)) {
-            elseBranch = statementWithScope();
-        }
+            this.pushScope();
+            elseBranch = statement();
+            branchSeenReturn &= seenReturn.peek();
+            this.popScope();
+        } else
+            branchSeenReturn = false;
+
+        if (branchSeenReturn)
+            seenReturn(); //current scope has seen return only if all branches have seen return and there exists a else branch
 
         return new Stmt.If(condition, thenBranch, elseBranch, elifs.toArray(Pair[]::new), statement);
     }
@@ -299,13 +312,11 @@ public class StmtParser extends ExprParser {
 
     private Stmt[] block(String name) {
         List<Stmt> statements = new ArrayList<>();
-        this.pushScope();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             statements.add(declaration());
         }
 
-        this.popScope();
         consumeCurlyClose(name);
         return statements.toArray(new Stmt[0]);
     }
@@ -317,9 +328,10 @@ public class StmtParser extends ExprParser {
     }
 
     public Stmt[] parse() {
-        if (tokens.length == 0) return new Stmt[0];
+        if (tokens.length == 0) return new Stmt[] {new Stmt.Return(Token.createNative("return"), null)};
         List<Stmt> stmts = new ArrayList<>();
         while (!isAtEnd()) stmts.add(declaration());
+        if (!seenReturn.peek()) stmts.add(new Stmt.Return(Token.createNative("return"), null));
         return stmts.toArray(Stmt[]::new);
     }
 
@@ -334,7 +346,9 @@ public class StmtParser extends ExprParser {
         }
     }
 
-    public void popMethod() {
+    public void popMethod(Token methodEnd) {
+        if (!funcRetType.is(VarTypeManager.VOID) && !seenReturn.peek())
+            error(methodEnd, "missing return statement");
         this.popScope();
         this.generics.pop();
         funcRetType = VarTypeManager.VOID.reference();
