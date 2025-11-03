@@ -15,6 +15,7 @@ public interface Stmt {
         R visitBlockStmt(Block stmt);
         R visitTryStmt(Try stmt);
         R visitWhileStmt(While stmt);
+        R visitClearLocalsStmt(ClearLocals stmt);
         R visitIfStmt(If stmt);
         R visitForEachStmt(ForEach stmt);
         R visitLoopInterruptionStmt(LoopInterruption stmt);
@@ -112,6 +113,16 @@ public interface Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitWhileStmt(this);
+        }
+    }
+
+    record ClearLocals(
+        int amount
+    ) implements Stmt {
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitClearLocalsStmt(this);
         }
     }
 

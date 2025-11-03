@@ -1,11 +1,13 @@
 package net.kapitencraft.lang.compiler.analyser;
 
+import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class BytecodeVars {
     private final Local[] locals = new Local[256];
@@ -31,12 +33,15 @@ public class BytecodeVars {
         scopeDepth++;
     }
 
-    public void pop() {
+    public Stmt pop() {
         int i = localCount - 1;
         while (i >= 0 && locals[i].depth >= scopeDepth) {
-            localCount--; i--;
+            i--;
         }
+        Stmt stmt = new Stmt.ClearLocals(localCount - i + 1);
+        localCount = (byte) (i + 1);
         scopeDepth--;
+        return stmt;
     }
 
     public ClassReference getType(String lexeme) {

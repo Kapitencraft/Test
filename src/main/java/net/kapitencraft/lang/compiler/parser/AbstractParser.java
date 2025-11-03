@@ -250,11 +250,12 @@ public class AbstractParser {
         Optional<ClassReference> optional = generics.getValue(peek().lexeme());
         if (optional.isPresent()) return Optional.of(SourceClassReference.from(advance(), optional.get()));
         if (VarTypeManager.hasPackage(peek().lexeme()) && varAnalyser.get(peek().lexeme()) == BytecodeVars.FetchResult.FAIL) {
-            advance();
+            advance(); //TODO fix methods being consumed when named the same as a package
             if (check(DOT)) {
                 current--;
-                return Optional.ofNullable(consumeVarType(generics));
+                return Optional.of(consumeVarType(generics));
             }
+            current--;
         }
         Token t = advance();
         ClassReference reference = parser.getClass(t.lexeme());

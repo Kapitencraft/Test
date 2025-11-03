@@ -9,10 +9,12 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 import static net.kapitencraft.lang.holder.token.TokenType.C_BRACKET_C;
@@ -43,9 +45,9 @@ public class StmtParser extends ExprParser {
         seenReturn.add(false);
     }
 
-    private void popScope() {
-        varAnalyser.pop();
+    private Stmt popScope() {
         seenReturn.pop();
+        return varAnalyser.pop();
     }
 
     private Stmt declaration() {
@@ -103,30 +105,6 @@ public class StmtParser extends ExprParser {
         }
     }
 
-    private Stmt statementWithScope() {
-        try {
-            if (match(C_BRACKET_O)) return new Stmt.Block(block("block"));
-            try {
-                this.pushScope();
-
-                if (match(RETURN)) return returnStatement();
-                if (match(TRY)) return tryStatement();
-                if (match(THROW)) return thrStatement();
-                if (match(CONTINUE, BREAK)) return loopInterruptionStatement();
-                if (match(FOR)) return forStatement();
-                if (match(IF)) return ifStatement();
-                if (match(WHILE)) return whileStatement();
-
-                return expressionStatement();
-            } finally {
-                this.popScope();
-            }
-        } catch (ParseError error) {
-            synchronize();
-            return null;
-        }
-    }
-
     private Stmt tryStatement() {
         consumeCurlyOpen("try statement");
         Stmt.Block tryBlock = new Stmt.Block(block("try statement"));
@@ -145,7 +123,10 @@ public class StmtParser extends ExprParser {
             createVar(name, VarTypeManager.THROWABLE, true, false);
             consumeCurlyOpen("catch statement");
             Stmt.Block block = new Stmt.Block(block("catch statement"));
-            popScope();
+            block = new Stmt.Block(new Stmt[] {
+                    block,
+                    popScope()
+            });
             catches.add(Pair.of(
                     Pair.of(
                             targets.toArray(new ClassReference[0]),
@@ -223,7 +204,12 @@ public class StmtParser extends ExprParser {
                 varAnalyser.add(name.lexeme(), reference, true, true);
                 Stmt stmt = statement();
                 loopIndex--;
-                popScope();
+                stmt = new Stmt.Block(
+                        new Stmt[] {
+                                stmt,
+                                popScope()
+                        }
+                );
                 return new Stmt.ForEach(reference, name, init, stmt, baseVar);
             }
             initializer = varDecl(false, reference, name);
@@ -266,7 +252,12 @@ public class StmtParser extends ExprParser {
         this.pushScope();
         Stmt thenBranch = statement();
         boolean branchSeenReturn = seenReturn.peek();
-        this.popScope();
+        thenBranch = new Stmt.Block(
+                new Stmt[] {
+                        thenBranch,
+                        popScope()
+                }
+        );
         Stmt elseBranch = null;
         List<Pair<Expr, Stmt>> elifs = new ArrayList<>();
         while (match(ELIF)) {
@@ -277,7 +268,10 @@ public class StmtParser extends ExprParser {
             this.pushScope();
             Stmt elifStmt = statement();
             branchSeenReturn &= seenReturn.peek();
-            this.popScope();
+            elifStmt = new Stmt.Block(new Stmt[] {
+                    elifStmt,
+                    popScope()
+            });
             elifs.add(Pair.of(elifCondition, elifStmt));
         }
 
@@ -285,7 +279,12 @@ public class StmtParser extends ExprParser {
             this.pushScope();
             elseBranch = statement();
             branchSeenReturn &= seenReturn.peek();
-            this.popScope();
+            elseBranch = new Stmt.Block(
+                    new Stmt[] {
+                            elseBranch,
+                            popScope()
+                    }
+            );
         } else
             branchSeenReturn = false;
 
@@ -304,7 +303,10 @@ public class StmtParser extends ExprParser {
         this.loopIndex++;
         this.pushScope();
         Stmt body = statement();
-        this.popScope();
+        body = new Stmt.Block(new Stmt[]{
+                body,
+                popScope()
+        });
         this.loopIndex--;
 
         return new Stmt.While(condition, body, keyword);
@@ -349,7 +351,7 @@ public class StmtParser extends ExprParser {
     public void popMethod(Token methodEnd) {
         if (!funcRetType.is(VarTypeManager.VOID) && !seenReturn.peek())
             error(methodEnd, "missing return statement");
-        this.popScope();
+        this.popScope(); //ignore return value; methods that end get their locals removed either way
         this.generics.pop();
         funcRetType = VarTypeManager.VOID.reference();
     }

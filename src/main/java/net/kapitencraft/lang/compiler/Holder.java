@@ -128,7 +128,7 @@ public class Holder {
             }
             statics.add(new Stmt.Expression(new Expr.StaticSet(
                     target, values,
-                    new Expr.ArrayConstructor(target, new Expr.Literal(new Token(
+                    new Expr.ArrayConstructor(Token.createNative("new"), target, new Expr.Literal(new Token(
                             TokenType.NUM,
                             String.valueOf(length),
                             new LiteralHolder(length, VarTypeManager.INTEGER),

@@ -4,18 +4,20 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
+import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.GsonHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers) {
+public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers, LineNumberTable lineNumberTable) {
 
     public JsonObject save() {
         JsonObject object = new JsonObject();
         object.addProperty("code", encode(this.code));
         object.addProperty("constants", encode(this.constants));
         object.add("handlers", saveHandlers());
+        object.add("line_numbers", this.lineNumberTable.save());
         return object;
     }
 
@@ -49,7 +51,8 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers) 
         byte[] constants = decode(GsonHelper.getAsString(object, "constants"));
         JsonArray array = object.getAsJsonArray("handlers");
         ExceptionHandler[] handlers = array.asList().stream().map(JsonElement::getAsJsonObject).map(ExceptionHandler::fromJson).toArray(ExceptionHandler[]::new);
-        return new Chunk(code, constants, handlers);
+        LineNumberTable table = LineNumberTable.read(object.getAsJsonArray("line_numbers"));
+        return new Chunk(code, constants, handlers, table);
     }
 
     /**
@@ -57,12 +60,14 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers) 
      */
     public static class Builder {
         private final List<ExceptionHandler> handlers;
+        private final LineNumberTable.Builder lineNumbers;
         private final ArrayList<Byte> code, constants;
 
         public Builder() {
             this.code = new ArrayList<>();
             this.constants = new ArrayList<>();
             this.handlers = new ArrayList<>();
+            this.lineNumbers = new LineNumberTable.Builder();
         }
 
         public void jumpElse(Runnable ifTrue, Runnable ifFalse) {
@@ -72,6 +77,10 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers) 
             patchJump(truePatch, (short) currentCodeIndex());
             ifFalse.run();
             patchJump(falsePatch, (short) currentCodeIndex());
+        }
+
+        public void changeLine(int lineNumber) {
+            this.lineNumbers.change(this.currentCodeIndex(), lineNumber);
         }
 
         public void patchJump(int index, short destination) {
@@ -147,7 +156,7 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers) 
             for (int i = 0; i < constants.length; i++) {
                 constants[i] = this.constants.get(i);
             }
-            return new Chunk(code, constants, this.handlers.toArray(new ExceptionHandler[0]));
+            return new Chunk(code, constants, this.handlers.toArray(new ExceptionHandler[0]), this.lineNumbers.build());
         }
 
         public void addArg(byte b) {
@@ -191,6 +200,7 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers) 
             this.code.clear();
             this.constants.clear();
             this.handlers.clear();
+            this.lineNumbers.clear();
         }
 
         public void addExceptionHandler(int startOp, int endOp, int handlerOp, int catchType) {
@@ -218,6 +228,10 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers) 
                 case 5 -> addCode(Opcode.I_5);
                 default -> addIntConstant(v);
             }
+        }
+
+        public void changeLineIfNecessary(Token type) {
+            this.lineNumbers.changeIfNecessary(type.line(), this.currentCodeIndex());
         }
     }
 

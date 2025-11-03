@@ -143,6 +143,7 @@
           "ordinal": "byte"
         },
         "ArrayConstructor": {
+          "origin": "Token",
           "compoundType": "ClassReference",
           "size": "Expr",
           "obj": "Expr[]"
@@ -215,6 +216,9 @@
           "body": "Block",
           "catches": "Pair<Pair<ClassReference[],Token>,Block>[]",
           "finale": "Block"
+        },
+        "ClearLocals": {
+          "amount": "int"
         }
       },
       "imports": [

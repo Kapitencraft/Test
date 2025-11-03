@@ -181,6 +181,11 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
     }
 
     @Override
+    public Token visitClearLocalsStmt(Stmt.ClearLocals stmt) {
+        return null; //don't return anything
+    }
+
+    @Override
     public Token visitForStmt(Stmt.For stmt) {
         return stmt.keyword();
     }

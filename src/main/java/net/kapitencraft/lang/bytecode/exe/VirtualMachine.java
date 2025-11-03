@@ -386,9 +386,11 @@ public class VirtualMachine {
             return handleException(createClassCast(type, VarTypeManager.THROWABLE));
         }
 
-        List<String> stackTrace = new ArrayList<>(); //TODO line-numbers
+        List<String> stackTrace = new ArrayList<>(); //TODO format
         for (int i = callStackTop - 1; i > -1; i--) {
-            stackTrace.add(callStack[i].signature);
+            CallFrame callFrame = callStack[i];
+            int lineAt = callFrame.callable.getChunk().lineNumberTable().getLineAt(callFrame.ip);
+            stackTrace.add(callFrame.signature + " " + lineAt);
         }
 
         while (callStackTop > 0) {
@@ -448,6 +450,7 @@ public class VirtualMachine {
         if (DEBUG) System.out.printf("[DEBUG]:%s ASSIGN: %s\n", visualStackSize(), i);
     }
 
+    //region flow-control
     private static void popCall() {
         Object o = pop();
         stackIndex = frame.stackBottom;
@@ -472,15 +475,13 @@ public class VirtualMachine {
         if (DEBUG) System.out.printf("[DEBUG]:%s PUSH (@%3d): %s\n", visualStackSize(), stackIndex - 1, o); //TODO enable array insight
     }
 
-    private static String visualStackSize() {
-        return "\t".repeat(callStackTop - 1);
-    }
-
     private static Object pop() {
         if (DEBUG) System.out.printf("[DEBUG]:%s POP  (@%3d): %s\n", visualStackSize(), stackIndex - 1, stack[stackIndex - 1]);
         return stack[--stackIndex];
     }
+    //endregion
 
+    //region constants
     public static String constString(byte[] constants, int index) {
         int length = constants[index];
         byte[] s = new byte[length];
@@ -507,5 +508,10 @@ public class VirtualMachine {
 
     public static float constFloat(byte[] bytes, Integer integer) {
         return Float.intBitsToFloat(constInt(bytes, integer));
+    }
+    //endregion
+
+    private static String visualStackSize() {
+        return "\t".repeat(callStackTop - 1);
     }
 }
