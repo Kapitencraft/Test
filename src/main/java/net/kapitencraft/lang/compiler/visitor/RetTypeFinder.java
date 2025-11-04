@@ -54,7 +54,8 @@ public class RetTypeFinder implements Expr.Visitor<ClassReference> {
 
     @Override
     public ClassReference visitGetExpr(Expr.Get expr) {
-        return findRetType(expr.object()).get().getFieldType(expr.name().lexeme());
+        if (expr.type().get().isArray()) return VarTypeManager.INTEGER.reference();
+        return expr.type().get().getFieldType(expr.name().lexeme());
     }
 
     @Override

@@ -52,7 +52,8 @@
         },
         "Get": {
           "object": "Expr",
-          "name": "Token"
+          "name": "Token",
+          "type": "ClassReference"
         },
         "StaticGet": {
           "target": "ClassReference",
@@ -143,7 +144,7 @@
           "ordinal": "byte"
         },
         "ArrayConstructor": {
-          "origin": "Token",
+          "keyword": "Token",
           "compoundType": "ClassReference",
           "size": "Expr",
           "obj": "Expr[]"
@@ -173,7 +174,7 @@
           "condition": "Expr",
           "thenBranch": "Stmt",
           "elseBranch": "Stmt",
-          "elifs": "Pair<Expr,Stmt>[]",
+          "elifs": "ElifBranch[]",
           "keyword": "Token"
         },
         "Return": {
@@ -188,7 +189,8 @@
           "name": "Token",
           "type": "ClassReference",
           "initializer": "Expr",
-          "isFinal": "boolean"
+          "isFinal": "boolean",
+          "localId": "int"
         },
         "While": {
           "condition": "Expr",
@@ -219,6 +221,10 @@
         },
         "ClearLocals": {
           "amount": "int"
+        },
+        "DebugTrace": {
+          "keyword": "Token",
+          "locals": "byte[]"
         }
       },
       "imports": [

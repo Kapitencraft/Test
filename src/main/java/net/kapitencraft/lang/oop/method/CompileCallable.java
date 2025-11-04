@@ -39,6 +39,10 @@ public class CompileCallable implements ScriptedCallable {
         }
         if (!Modifiers.isAbstract(modifiers)) {
             Chunk.Builder chunk = builder.setup();
+            for (int i = 0; i < this.params.size(); i++) {
+                Pair<? extends ClassReference, String> param = this.params.get(i);
+                chunk.addLocal(0, i, param.left(), param.right());
+            }
             for (Stmt compileStmt : body) {
                 builder.cache(compileStmt);
             }

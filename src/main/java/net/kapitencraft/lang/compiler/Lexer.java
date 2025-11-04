@@ -149,17 +149,20 @@ public class Lexer {
                 else if (match('='))
                     addToken(AND_ASSIGN);
                 else error("unexpected token");
+                break;
             case '|':
                 if (match('|'))
                     addToken(OR);
                 else if (match('='))
                     addToken(OR_ASSIGN);
                 else addToken(SINGLE_OR);
+                break;
             case '^':
                 if (match('='))
                     addToken(XOR_ASSIGN);
                 else
                     addToken(XOR);
+                break;
             case ' ':
             case '\t':
                 //addToken(IN_LINE);

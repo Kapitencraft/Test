@@ -6,6 +6,8 @@ import net.kapitencraft.lang.run.VarTypeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -52,6 +54,22 @@ public class BytecodeVars {
 
     public void setHasValue(byte ordinal) {
         locals[ordinal & 255].assigned = true;
+    }
+
+    public List<String> dumpNames() {
+        List<String> names = new ArrayList<>();
+        for (int i = 0; i < localCount; i++) {
+            names.add(locals[i].name);
+        }
+        return names;
+    }
+
+    public byte[] gatherLocalIndexes(List<String> locals) {
+        byte[] indexes = new byte[locals.size()];
+        for (int i = 0; i < locals.size(); i++) {
+            indexes[i] = this.get(locals.get(i)).ordinal;
+        }
+        return indexes;
     }
 
     private static final class Local {

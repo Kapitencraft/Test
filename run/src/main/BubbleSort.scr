@@ -1,0 +1,25 @@
+package main;
+
+class BubbleSort {
+
+    static void sort(int[] array) {
+        for (int i = 0; i < array.length - 1; i++) {
+            int p = i;
+            while (p >= 0 && array[p] < array[p + 1]) {
+                swap(array, p);
+                p--;
+                trace[p, i];
+            }
+        }
+    }
+
+    static void swap(int[] numbers, int p) {
+        int c = numbers[p];
+        numbers[p] = numbers[p + 1];
+        numbers[p + 1] = c;
+    }
+
+    static void main(String[] args) {
+        sort(new int[] {5, 4, 2, 6, 1, 8, 3, 9, 7, 0});
+    }
+}

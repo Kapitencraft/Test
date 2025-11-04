@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.bytecode.exe;
 
 import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.bytecode.storage.LocalVariableTable;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
@@ -59,6 +60,39 @@ public class VirtualMachine {
         builder.addCode(Opcode.D_DIV);
         Chunk chunk = builder.build();
         Disassembler.disassemble(chunk, "test");
+    }
+
+    private static Map<Integer, TraceTable> tableData = new HashMap<>();
+
+    private static class TraceTable {
+        private final byte[] localIndexes;
+        private final List<Object[]> entries = new ArrayList<>();
+
+        private TraceTable(byte[] localIndexes) {
+            this.localIndexes = localIndexes;
+        }
+
+        public void print(int pc, LocalVariableTable table) {
+            List<String>[] values = new List[localIndexes.length];
+            for (int i = 0; i < localIndexes.length; i++) {
+                List<String> v = values[i] = new ArrayList<>();
+                v.add(table.get(pc, localIndexes[i]).toString());
+            }
+            for (Object[] entry : entries) {
+                for (int i = 0; i < localIndexes.length; i++) {
+                    values[i].add(entry[i].toString());
+                }
+            }
+
+        }
+
+        public void lookup(int localBottom) {
+            Object[] elements = new Object[localIndexes.length];
+            for (int i = 0; i < localIndexes.length; i++) {
+                elements[i] = stack[localBottom + localIndexes[i]];
+            }
+            this.entries.add(elements);
+        }
     }
 
     private static int readByte() {
@@ -143,6 +177,16 @@ public class VirtualMachine {
                         stack[stackIndex++] = obj1;
                     }
                     //endregion
+                    case TRACE -> {
+                        TraceTable table;
+                        if (tableData.containsKey(frame.ip)) {
+                            table = tableData.get(frame.ip);
+                            frame.ip += 2;
+                        } else {
+                            table = new TraceTable(readLocals(read2Byte()));
+                        }
+                        table.lookup(frame.stackBottom);
+                    }
                     case INVOKE_STATIC -> {
                         String execute = constString(frame.constants, read2Byte());
                         StringReader reader = new StringReader(execute);
@@ -350,6 +394,15 @@ public class VirtualMachine {
                     return;
             }
         }
+    }
+
+    private static byte[] readLocals(int pos) {
+        byte localSize = frame.constants[pos];
+        byte[] locals = new byte[localSize];
+        for (int i = 0; i < localSize; i++) {
+            locals[i] = frame.constants[pos + i + 1];
+        }
+        return locals;
     }
 
     private static final Set<ScriptedClass> initialized = new HashSet<>();

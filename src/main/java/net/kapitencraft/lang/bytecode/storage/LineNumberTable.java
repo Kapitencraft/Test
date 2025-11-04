@@ -25,17 +25,7 @@ public record LineNumberTable(Pair<Integer, Integer>[] lines) {
             object.addProperty("pc", p.left());
             object.addProperty("line", p.right());
             return object;
-        }).collect(toJsonArray());
-    }
-
-    /**
-     * @return a collector to collect the JsonElements into a JsonArray
-     */
-    static Collector<? super JsonElement, JsonArray, JsonArray> toJsonArray() {
-        return Collector.of(JsonArray::new, JsonArray::add, (array, array2) -> {
-            array.addAll(array2);
-            return array;
-        });
+        }).collect(GsonHelper.toJsonArray());
     }
 
     public int getLineAt(int ip) {

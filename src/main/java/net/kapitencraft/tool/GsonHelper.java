@@ -24,12 +24,25 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collector;
 import javax.annotation.Nullable;
 import org.jetbrains.annotations.Contract;
 
 public class GsonHelper {
 
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+
+
+    /**
+     * @return a collector to collect the JsonElements into a JsonArray
+     */
+    public static Collector<? super JsonElement, JsonArray, JsonArray> toJsonArray() {
+        return Collector.of(JsonArray::new, JsonArray::add, (array, array2) -> {
+            array.addAll(array2);
+            return array;
+        });
+    }
 
     /**
      * Does the given JsonObject contain a string field with the given name?

@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.holder.LiteralHolder;
+import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -27,7 +28,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private boolean retainExprResult = false;
     //marks whether the expr result has already been ignored and therefore no POP must be emitted
     private boolean ignoredExprResult = false;
-    //TODO add line number and local variable table attributes
+    //TODO add local variable table attributes
     private final Chunk.Builder builder = new Chunk.Builder();
     private final Stack<Loop> loops = new Stack<>();
 
@@ -235,8 +236,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(expr.object());
         if (hadRetain) {
             builder.changeLineIfNecessary(expr.name());
-            builder.addCode(Opcode.GET_FIELD);
-            builder.injectString(expr.name().lexeme());
+            if (expr.type().get().isArray()) { //only `.length` exists on arrays, so we can be sure
+                builder.addCode(Opcode.ARRAY_LENGTH);
+            } else {
+                builder.addCode(Opcode.GET_FIELD);
+                builder.injectString(expr.name().lexeme());
+            }
         } else {
             builder.addCode(Opcode.POP);
             ignoredExprResult = true;
@@ -579,7 +584,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 ignoredExprResult = true;
             }
             saveArgs(expr.params());
-            //TODO
             builder.invokeVirtual(expr.signature());
         }
 
@@ -615,16 +619,17 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = false;
         cache(stmt.thenBranch());
         if (stmt.elifs().length > 0 || stmt.elseBranch() != null) {
-            int[] branches = new int[stmt.elifs().length + 1];
-            branches[0] = builder.addJump(); //jump from branch past the IF
+            List<Integer> branches = new ArrayList<>();
+            branches.add(builder.addJump()); //jump from branch past the IF
             for (int i = 0; i < stmt.elifs().length; i++) {
                 builder.patchJumpCurrent(jumpPatch);
-                Pair<Expr, Stmt> pair = stmt.elifs()[i];
-                cache(pair.left());
+                ElifBranch branch = stmt.elifs()[i];
+                cache(branch.condition());
                 jumpPatch = builder.addJumpIfFalse();
                 retainExprResult = false;
-                cache(pair.right());
-                branches[i + 1] = builder.addJump(); //TODO check for return in the branch to ignore jumps
+                cache(branch.body());
+                if (!branch.seenReturn())
+                    branches.add(builder.addJump());
             }
             if (stmt.elseBranch() != null) {
                 builder.patchJumpCurrent(jumpPatch);
@@ -664,6 +669,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = true;
         builder.changeLineIfNecessary(stmt.name());
         cacheOrNull(stmt.initializer()); //adding a value to the stack without removing it automatically adds it as a local variable
+        builder.addLocal(builder.currentCodeIndex(), stmt.localId(), stmt.type(), stmt.name().lexeme());
         return null;
     }
 
@@ -724,6 +730,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitForEachStmt(Stmt.ForEach stmt) {
+        builder.addLocal(builder.currentCodeIndex(), stmt.baseVar() + 1, stmt.type(), stmt.name().lexeme());
         builder.addCode(Opcode.I_0); //create iteration variable
         retainExprResult = true;
         builder.changeLineIfNecessary(stmt.name());
@@ -761,6 +768,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         loops.pop().patchBreaks();
         builder.patchJumpCurrent(result);
         builder.patchJump(returnIndex, (short) curIndex);
+        return null;
+    }
+
+    @Override
+    public Void visitDebugTraceStmt(Stmt.DebugTrace stmt) {
+        builder.addTraceDebug(stmt.locals());
         return null;
     }
 

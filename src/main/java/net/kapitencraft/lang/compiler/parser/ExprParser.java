@@ -209,8 +209,9 @@ public class ExprParser extends AbstractParser {
                 else executor = Pair.of(WILDCARD, Operand.LEFT);
                 return new Expr.Set(get.object(), get.name(), value, assign, executor.left(), executor.right());
             } else if (expr instanceof Expr.ArrayGet get) {
-
-                Pair<ClassReference, Operand> executor = getExecutor(get, assign, value);
+                Pair<ClassReference, Operand> executor;
+                if (assign.type() != ASSIGN) executor = getExecutor(get, assign, value);
+                else executor = Pair.of(WILDCARD, Operand.LEFT);
                 return new Expr.ArraySet(get.object(), get.index(), value, assign, executor.left(), executor.right());
             }
 
@@ -473,11 +474,15 @@ public class ExprParser extends AbstractParser {
             } else if (match(DOT)) {
                 if (expr instanceof Expr.Literal && !check(IDENTIFIER)) continue;
                 Token name = consume(IDENTIFIER, "Expect property name after '.'");
-                ScriptedClass targetType = finder.findRetType(expr).get();
+                ClassReference type = finder.findRetType(expr);
+                ScriptedClass targetType = type.get();
                 if (!check(BRACKET_O)) { //ensure not to check for field if it's a method
-                    if (!targetType.hasField(name.lexeme())) error(name, "unknown symbol");
+                    if (
+                            !targetType.isArray() &&
+                            name.lexeme().equals("length") && //ensure array length can be used
+                            !targetType.hasField(name.lexeme())) error(name, "unknown symbol");
                 }
-                expr = new Expr.Get(expr, name);
+                expr = new Expr.Get(expr, name, type);
             } else {
                 break;
             }
@@ -647,7 +652,7 @@ public class ExprParser extends AbstractParser {
                                 return new Expr.Get(new Expr.VarRef(
                                     Token.createNative("this"),
                                     (byte) 0),
-                                    previous
+                                    previous, fallbackReference
                             );
                         }
                     }

@@ -1,8 +1,13 @@
 package net.kapitencraft.lang.bytecode.exe;
 
 import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.tool.Pair;
 
+import java.util.Arrays;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 public class Disassembler {
 
@@ -24,6 +29,7 @@ public class Disassembler {
 
         Opcode opcode = Opcode.byId(chunk.code()[offset]);
         return switch (opcode) {
+            case TRACE -> debugTrace(chunk, offset);
             case POP, POP_2, DUP, DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2,
                  RETURN, RETURN_ARG, THROW,
                  I_NEGATION, I_ADD, I_SUB, I_MUL, I_DIV, I_POW,
@@ -57,6 +63,24 @@ public class Disassembler {
             case GET_STATIC, PUT_STATIC -> staticFieldOp(opcode, chunk, offset);
             //case RA_NEW -> newArray(opcode, chunk, offset);
         };
+    }
+
+    private static int debugTrace(Chunk chunk, int offset) {
+        int pos = read2b(chunk.code(), offset + 1);
+        int[] ordinalIds = new int[(chunk.constants()[pos])];
+        for (int i = 0; i < ordinalIds.length; i++) {
+            ordinalIds[i] = chunk.constants()[pos + i + 1];
+        }
+        String log = Arrays.stream(ordinalIds).mapToObj(i -> {
+            Pair<String, ClassReference> local = local(chunk, offset, i);
+            return local.left() + ": " + VarTypeManager.getClassName(local.right().get());
+        }).collect(Collectors.joining(", ", "[", "]"));
+        System.out.printf("%-16s %s\n", "DEBUG_TRACE", log);
+        return offset + 3;
+    }
+
+    private static Pair<String, ClassReference> local(Chunk chunk, int pc, int i) {
+        return chunk.localVariableTable().get(pc, i);
     }
 
     private static int newArray(Opcode opcode, Chunk chunk, int offset) {

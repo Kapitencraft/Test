@@ -4,6 +4,7 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.algebra.Operand;
 import java.util.Map;
+import net.kapitencraft.lang.holder.LiteralHolder;
 
 public interface Expr {
 
@@ -153,7 +154,7 @@ public interface Expr {
     }
 
     record ArrayConstructor(
-        Token keyword,
+        Token keyword, 
         ClassReference compoundType, 
         Expr size, 
         Expr[] obj
@@ -320,7 +321,8 @@ public interface Expr {
 
     record Get(
         Expr object, 
-        Token name
+        Token name, 
+        ClassReference type
     ) implements Expr {
 
         @Override

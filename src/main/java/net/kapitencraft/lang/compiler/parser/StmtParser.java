@@ -3,6 +3,8 @@ package net.kapitencraft.lang.compiler.parser;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.VarTypeParser;
+import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
+import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -72,14 +74,14 @@ public class StmtParser extends ExprParser {
             initializer = expression();
         }
 
-        createVar(name, type, initializer != null, isFinal);
+        byte index = createVar(name, type, initializer != null, isFinal);
 
         if (initializer != null) {
             checkVarType(name, initializer);
         }
 
         consumeEndOfArg();
-        return new Stmt.VarDecl(name, type, initializer, isFinal);
+        return new Stmt.VarDecl(name, type, initializer, isFinal, index);
     }
 
     private Stmt varDeclaration(boolean isFinal, ClassReference type) {
@@ -97,12 +99,33 @@ public class StmtParser extends ExprParser {
             if (match(FOR)) return forStatement();
             if (match(IF)) return ifStatement();
             if (match(WHILE)) return whileStatement();
+            if (match(TRACE)) return debugTrace();
 
             return expressionStatement();
         } catch (ParseError error) {
             synchronize();
             return null;
         }
+    }
+
+    private Stmt debugTrace() {
+        Token keyword = previous();
+        List<String> locals = new ArrayList<>();
+        if (match(S_BRACKET_O)) {
+            do {
+                Token token = consumeIdentifier();
+                if (this.varAnalyser.get(token.lexeme()) == BytecodeVars.FetchResult.FAIL) {
+                    error(token, "no local variable named '" + token.lexeme() + "'");
+                }
+                locals.add(token.lexeme());
+            } while (match(COMMA));
+            consume(S_BRACKET_C, "expected ']' after trace debug");
+        } else {
+            locals = this.varAnalyser.dumpNames();
+        }
+        consumeEndOfArg();
+        byte[] localIndexes = this.varAnalyser.gatherLocalIndexes(locals);
+        return new Stmt.DebugTrace(keyword, localIndexes);
     }
 
     private Stmt tryStatement() {
@@ -259,7 +282,7 @@ public class StmtParser extends ExprParser {
                 }
         );
         Stmt elseBranch = null;
-        List<Pair<Expr, Stmt>> elifs = new ArrayList<>();
+        List<ElifBranch> elifs = new ArrayList<>();
         while (match(ELIF)) {
             consumeBracketOpen("elif");
             Expr elifCondition = expression();
@@ -267,12 +290,13 @@ public class StmtParser extends ExprParser {
             consumeBracketClose("elif condition");
             this.pushScope();
             Stmt elifStmt = statement();
-            branchSeenReturn &= seenReturn.peek();
+            boolean seenReturn = this.seenReturn.peek();
+            branchSeenReturn &= seenReturn;
             elifStmt = new Stmt.Block(new Stmt[] {
                     elifStmt,
                     popScope()
             });
-            elifs.add(Pair.of(elifCondition, elifStmt));
+            elifs.add(new ElifBranch(elifCondition, elifStmt, seenReturn));
         }
 
         if (match(ELSE)) {
@@ -291,7 +315,7 @@ public class StmtParser extends ExprParser {
         if (branchSeenReturn)
             seenReturn(); //current scope has seen return only if all branches have seen return and there exists a else branch
 
-        return new Stmt.If(condition, thenBranch, elseBranch, elifs.toArray(Pair[]::new), statement);
+        return new Stmt.If(condition, thenBranch, elseBranch, elifs.toArray(ElifBranch[]::new), statement);
     }
 
     private Stmt whileStatement() {

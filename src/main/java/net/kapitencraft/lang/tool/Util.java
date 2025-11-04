@@ -155,4 +155,15 @@ public class Util {
         }
         return matchEntry;
     }
+
+    public static int getLargets(List<String> entries) {
+        if (entries.isEmpty()) return 0;
+        int width = entries.get(0).length();
+        for (int i = 1; i < entries.size(); i++) {
+            if (width < entries.get(i).length()) {
+                width = entries.get(i).length();
+            }
+        }
+        return width;
+    }
 }
