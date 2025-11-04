@@ -63,7 +63,7 @@ public class VirtualMachine {
         Disassembler.disassemble(chunk, "test");
     }
 
-    private static Map<Integer, TraceTable> tableData = new HashMap<>();
+    private static final Map<Integer, TraceTable> tableData = new HashMap<>();
 
     private static class TraceTable {
         private final byte[] localIndexes;
@@ -227,6 +227,7 @@ public class VirtualMachine {
                             frame.ip += 2;
                         } else {
                             table = new TraceTable(readLocals(read2Byte()), frame.ip, frame.callable.getChunk().localVariableTable());
+                            tableData.put(frame.ip, table);
                         }
                         table.lookup(frame.stackBottom);
                     }

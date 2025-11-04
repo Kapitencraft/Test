@@ -507,7 +507,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitArrayConstructorExpr(Expr.ArrayConstructor expr) {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
-        cache(expr.size());
+        if (expr.size() != null) {
+            cache(expr.size());
+        } else {
+            builder.addIntConstant(expr.obj().length);
+        }
         builder.changeLineIfNecessary(expr.keyword());
         builder.addCode(getArrayNew(expr.compoundType()));
         //builder.injectString(VarTypeManager.getClassName(expr.compoundType().get()));

@@ -117,7 +117,7 @@ public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> 
 
     @Override
     public Token visitArrayConstructorExpr(Expr.ArrayConstructor expr) {
-        return find(expr.size());
+        return expr.keyword();
     }
 
     @Override

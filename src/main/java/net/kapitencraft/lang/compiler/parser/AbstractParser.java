@@ -270,10 +270,25 @@ public class AbstractParser {
 
     @NotNull
     protected SourceClassReference consumeVarType(GenericStack generics) {
+        SourceClassReference sourceClassReference = consumeVarTypeNoArray(generics);
+        ClassReference reference = sourceClassReference.getReference();
+        Token last = sourceClassReference.getToken();
+        while (match(S_BRACKET_O)) {
+            consume(S_BRACKET_C, "']' expected");
+            reference = reference.array();
+            last = previous();
+        }
+        if (last != sourceClassReference.getToken()) {
+            return SourceClassReference.from(last, reference);
+        }
+        return sourceClassReference;
+    }
+
+    protected SourceClassReference consumeVarTypeNoArray(GenericStack stack) {
         Token token = consumeIdentifier();
         ClassReference reference = parser.getClass(token.lexeme());
         if (reference == null) {
-            Optional<ClassReference> optional = generics.getValue(token.lexeme());
+            Optional<ClassReference> optional = stack.getValue(token.lexeme());
             if (optional.isPresent()) return SourceClassReference.from(token, optional.get());
         }
         if (reference == null) {
@@ -298,12 +313,7 @@ public class AbstractParser {
             error(token, "unknown symbol");
             return SourceClassReference.from(token, VarTypeManager.VOID.reference()); //skip rest
         }
-        Holder.AppliedGenerics declared = appliedGenerics(generics);
-        while (match(S_BRACKET_O)) {
-            consume(S_BRACKET_C, "']' expected");
-            reference = reference.array();
-            last = previous();
-        }
+        Holder.AppliedGenerics declared = appliedGenerics(stack);
         if (declared != null) return SourceClassReference.from(last, new AppliedGenericsReference(reference, declared));
         return SourceClassReference.from(last, reference);
     }

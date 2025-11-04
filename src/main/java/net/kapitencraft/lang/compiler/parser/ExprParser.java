@@ -543,8 +543,23 @@ public class ExprParser extends AbstractParser {
 
     private Expr primary() {
         if (match(NEW)) {
-            ClassReference loxClass = consumeVarType(generics).getReference();
+            ClassReference loxClass = consumeVarTypeNoArray(generics).getReference();
             Token loc = previous();
+            if (match(S_BRACKET_O)) {
+                Expr size = null;
+                //array creation
+                if (!check(S_BRACKET_C)) {
+                    size = expression();
+                }
+                consume(S_BRACKET_C, "expected ']' after array constructor");
+                Expr[] values = null;
+                if (size == null) {
+                    consumeCurlyOpen("array initialization");
+                    values = args();
+                    consumeCurlyClose("array initialization");
+                }
+                return new Expr.ArrayConstructor(loc, loxClass, size, values);
+            }
             consumeBracketOpen("constructors");
             Expr[] args = args();
             consumeBracketClose("constructors");
