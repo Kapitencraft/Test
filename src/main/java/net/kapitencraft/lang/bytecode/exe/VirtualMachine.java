@@ -11,6 +11,7 @@ import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.natives.NativeClassInstance;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
+import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.StringReader;
 import org.jetbrains.annotations.Contract;
 
@@ -67,12 +68,16 @@ public class VirtualMachine {
     private static class TraceTable {
         private final byte[] localIndexes;
         private final List<Object[]> entries = new ArrayList<>();
+        private final int pc;
+        private final LocalVariableTable table;
 
-        private TraceTable(byte[] localIndexes) {
+        private TraceTable(byte[] localIndexes, int pc, LocalVariableTable table) {
             this.localIndexes = localIndexes;
+            this.pc = pc;
+            this.table = table;
         }
 
-        public void print(int pc, LocalVariableTable table) {
+        public void print() {
             List<String>[] values = new List[localIndexes.length];
             for (int i = 0; i < localIndexes.length; i++) {
                 List<String> v = values[i] = new ArrayList<>();
@@ -84,6 +89,38 @@ public class VirtualMachine {
                 }
             }
 
+            record TableRow(int width, List<String> elements) {
+                private void appendHeader(StringBuilder builder) {
+                    builder.append(String.format("%-" + TableRow.this.width + "s", elements().get(0)));
+                }
+
+                void appendElement(StringBuilder sink, int index) {
+                    sink.append(String.format("%-" + TableRow.this.width + "s", elements().get(index + 1)));
+                }
+            }
+
+            TableRow[] rows = new TableRow[localIndexes.length];
+            StringBuilder header = new StringBuilder();
+            int totalWidth = 0;
+            for (int i = 0; i < rows.length; i++) {
+                TableRow row = rows[i] = new TableRow(Util.getLargets(values[i]), values[i]);
+                row.appendHeader(header);
+                totalWidth += row.width;
+                if (i < rows.length - 1) {
+                    header.append('|');
+                    totalWidth++;
+                }
+            }
+            System.out.println(header);
+            System.out.println("-".repeat(totalWidth));
+            for (int i = 0; i < entries.size(); i++) {
+                StringBuilder line = new StringBuilder();
+                for (int j = 0; j < rows.length; j++) {
+                    rows[j].appendElement(line, i);
+                    if (i < rows.length - 1)
+                        header.append('|');
+                }
+            }
         }
 
         public void lookup(int localBottom) {
@@ -116,6 +153,12 @@ public class VirtualMachine {
                         Interpreter.start();
                         push(Arrays.stream(data.split(" ")).map(NativeClassLoader::wrapString).toArray());
                         run();
+                        if (!tableData.isEmpty()) {
+
+                            for (TraceTable table : tableData.values()) {
+                                table.print();
+                            }
+                        }
                         if (output) {
                             if (profiling)
                                 System.out.println("\u001B[32mExecution took " + Interpreter.elapsedMillis() + "ms\u001B[0m");
@@ -183,7 +226,7 @@ public class VirtualMachine {
                             table = tableData.get(frame.ip);
                             frame.ip += 2;
                         } else {
-                            table = new TraceTable(readLocals(read2Byte()));
+                            table = new TraceTable(readLocals(read2Byte()), frame.ip, frame.callable.getChunk().localVariableTable());
                         }
                         table.lookup(frame.stackBottom);
                     }
