@@ -81,7 +81,7 @@ public class VirtualMachine {
             List<String>[] values = new List[localIndexes.length];
             for (int i = 0; i < localIndexes.length; i++) {
                 List<String> v = values[i] = new ArrayList<>();
-                v.add(table.get(pc, localIndexes[i]).toString());
+                v.add(table.get(pc, localIndexes[i]).left());
             }
             for (Object[] entry : entries) {
                 for (int i = 0; i < localIndexes.length; i++) {
@@ -117,9 +117,10 @@ public class VirtualMachine {
                 StringBuilder line = new StringBuilder();
                 for (int j = 0; j < rows.length; j++) {
                     rows[j].appendElement(line, i);
-                    if (i < rows.length - 1)
-                        header.append('|');
+                    if (j < rows.length - 1)
+                        line.append('|');
                 }
+                System.out.println(line);
             }
         }
 
@@ -222,9 +223,9 @@ public class VirtualMachine {
                     //endregion
                     case TRACE -> {
                         TraceTable table;
-                        if (tableData.containsKey(frame.ip)) {
-                            table = tableData.get(frame.ip);
+                        if (tableData.containsKey(frame.ip + 2)) {
                             frame.ip += 2;
+                            table = tableData.get(frame.ip);
                         } else {
                             table = new TraceTable(readLocals(read2Byte()), frame.ip, frame.callable.getChunk().localVariableTable());
                             tableData.put(frame.ip, table);

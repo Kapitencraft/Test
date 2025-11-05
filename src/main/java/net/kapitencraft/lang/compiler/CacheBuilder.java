@@ -709,11 +709,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitForStmt(Stmt.For stmt) {
-        retainExprResult = false;
         builder.changeLineIfNecessary(stmt.keyword());
         cache(stmt.init());
         int result = builder.currentCodeIndex();
         retainExprResult = true;
+        ignoredExprResult = false;
         cache(stmt.condition());
         int jump1 = builder.addJumpIfFalse();
         loops.add(new Loop((short) result));

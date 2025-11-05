@@ -8,8 +8,8 @@ class BubbleSort {
             while (p >= 0 && array[p] < array[p + 1]) {
                 swap(array, p);
                 p--;
-                trace[p, i];
             }
+            trace;
         }
     }
 
