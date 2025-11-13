@@ -166,4 +166,30 @@ public class Util {
         }
         return width;
     }
+
+    public static String objToString(Object o) {
+        Class<?> eClass = o.getClass();
+        if (eClass.isArray()) {
+            if (eClass == byte[].class)
+                return Arrays.toString((byte[]) o);
+            else if (eClass == short[].class)
+                return Arrays.toString((short[]) o);
+            else if (eClass == int[].class)
+                return Arrays.toString((int[]) o);
+            else if (eClass == long[].class)
+                return Arrays.toString((long[]) o);
+            else if (eClass == char[].class)
+                return Arrays.toString((char[]) o);
+            else if (eClass == float[].class)
+                return Arrays.toString((float[]) o);
+            else if (eClass == double[].class)
+                return Arrays.toString((double[]) o);
+            else if (eClass == boolean[].class)
+                return Arrays.toString((boolean[]) o);
+            else { // element is an array of object references
+                return Arrays.deepToString((Object[]) o);
+            }
+        }
+        return o.toString();
+    }
 }

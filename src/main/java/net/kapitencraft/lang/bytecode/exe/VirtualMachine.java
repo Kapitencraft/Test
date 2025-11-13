@@ -85,7 +85,7 @@ public class VirtualMachine {
             }
             for (Object[] entry : entries) {
                 for (int i = 0; i < localIndexes.length; i++) {
-                    values[i].add(entry[i].toString());
+                    values[i].add(Util.objToString(entry[i]));
                 }
             }
 
@@ -570,7 +570,7 @@ public class VirtualMachine {
 
     private static void push(Object o) {
         stack[stackIndex++] = o;
-        if (DEBUG) System.out.printf("[DEBUG]:%s PUSH (@%3d): %s\n", visualStackSize(), stackIndex - 1, o); //TODO enable array insight
+        if (DEBUG) System.out.printf("[DEBUG]:%s PUSH (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(o)); //TODO enable array insight
     }
 
     private static Object pop() {
