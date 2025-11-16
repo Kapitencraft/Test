@@ -261,7 +261,6 @@ public class AbstractParser {
             if (peek().type() == increase) i++;
             else if (peek().type() == decrease) i--;
         } while (i > 0 && !isAtEnd());
-        current--;
         tokens.remove(tokens.size() - 1); //remove last
         return tokens.toArray(Token[]::new);
     }

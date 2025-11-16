@@ -343,7 +343,10 @@ public class HolderParser extends AbstractParser {
 
         activePackages.push(pckID + "." + name.lexeme());
 
-        return parseClass(target, mods, stack, classGenerics, pckID, name, superClass, implemented);
+        Holder.Class h = parseClass(target, mods, stack, classGenerics, pckID, name, superClass, implemented);
+        consumeCurlyClose("class");
+        activePackages.pop();
+        return h;
     }
 
     public Holder.Class parseClass(ClassReference target, @Nullable ModifiersParser mods, @Nullable GenericStack stack, @Nullable Holder.Generics classGenerics, String pckID, Token name, SourceClassReference superClass, List<SourceClassReference> implemented) {
@@ -356,10 +359,7 @@ public class HolderParser extends AbstractParser {
 
         parseClassProperties(Modifiers.isAbstract(modifiers) ? ModifierScope.Group.ABSTRACT_CLASS : ModifierScope.Group.CLASS, methods, constructors, fields, target, pckID, name);
 
-        consumeCurlyClose("class");
-
         if (stack != null) activeGenerics = stack;
-        activePackages.pop();
         return new Holder.Class(ClassType.CLASS,
                 target,
                 modifiers,
