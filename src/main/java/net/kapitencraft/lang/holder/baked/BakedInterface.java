@@ -21,13 +21,12 @@ import java.util.Map;
 public record BakedInterface(Compiler.ErrorLogger logger, Holder.Generics generics, ClassReference target,
                              Pair<Token, CompileCallable>[] methods,
                              Map<String, CompileField> staticFields, ClassReference[] interfaces,
-                             Token name, String pck, Compiler.ClassBuilder[] enclosed,
+                             Token name, String pck,
                              CompileAnnotationClassInstance[] annotations
 ) implements Compiler.ClassBuilder {
 
     @Override
     public CacheableClass build() {
-        CacheableClass[] enclosed = Arrays.stream(enclosed()).map(Compiler.ClassBuilder::build).toArray(CacheableClass[]::new);
 
         Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
         for (Pair<Token, CompileCallable> method : this.methods()) {
@@ -42,7 +41,6 @@ public record BakedInterface(Compiler.ErrorLogger logger, Holder.Generics generi
                 VarTypeManager.OBJECT,
                 name().lexeme(),
                 pck(),
-                enclosed,
                 interfaces(),
                 Modifiers.INTERFACE,
                 annotations()

@@ -1,9 +1,6 @@
 package net.kapitencraft.lang.run.load;
 
-import net.kapitencraft.lang.oop.clazz.*;
-
 import java.io.File;
-import java.util.Arrays;
 import java.util.Objects;
 
 public abstract class ClassLoaderHolder<T extends ClassLoaderHolder<T>> {

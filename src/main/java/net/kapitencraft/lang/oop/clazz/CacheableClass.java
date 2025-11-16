@@ -9,8 +9,6 @@ public interface CacheableClass {
 
     JsonObject save(CacheBuilder cacheBuilder);
 
-    CacheableClass[] enclosed();
-
     default ClassReference reference() {
         return VarTypeManager.getOrCreateClass(name(), pck());
     }

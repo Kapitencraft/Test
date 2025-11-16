@@ -3,6 +3,7 @@ package net.kapitencraft.lang.compiler.parser;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
+import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
@@ -33,6 +34,7 @@ import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
 public class ExprParser extends AbstractParser {
     private final List<ClassReference> fallback;
     protected GenericStack generics = new GenericStack();
+    private int anonymousCounter = 0; //counts how many anonymous classes have been created inside the class, to give each a unique name
 
     public ExprParser(Compiler.ErrorLogger errorLogger) {
         super(errorLogger);
@@ -543,8 +545,7 @@ public class ExprParser extends AbstractParser {
 
     private Expr primary() {
         if (match(NEW)) {
-            ClassReference loxClass = consumeVarTypeNoArray(generics).getReference();
-            Token loc = previous();
+            SourceClassReference type = consumeVarTypeNoArray(generics);
             if (match(S_BRACKET_O)) {
                 Expr size = null;
                 //array creation
@@ -558,29 +559,54 @@ public class ExprParser extends AbstractParser {
                     values = args();
                     consumeCurlyClose("array initialization");
                 }
-                return new Expr.ArrayConstructor(loc, loxClass, size, values);
+                return new Expr.ArrayConstructor(type.getToken(), type.getReference(), size, values);
             }
             consumeBracketOpen("constructors");
             Expr[] args = args();
             consumeBracketClose("constructors");
 
             if (match(C_BRACKET_O)) {
-
+                HolderParser hParser = new HolderParser(this.errorLogger);
+                if (type.get().isFinal()) {
+                    error(previous(), "can not extend final class");
+                }
                 //TODO parse anonymous
+                hParser.apply(getCurlyEnclosedCode(), this.parser);
+                String nameLiteral = String.valueOf(this.anonymousCounter++);
+                String pck = this.currentFallback().absoluteName();
+                ClassReference typeTarget = VarTypeManager.getOrCreateClass(nameLiteral, pck);
+                Token name = new Token(IDENTIFIER, nameLiteral, LiteralHolder.EMPTY, type.getToken().line(), type.getToken().lineStartIndex());
+                if (type.get().isInterface()) {
+                    Compiler.queueRegister(
+                            hParser.parseInterface(typeTarget, pck, name, null, null, null, List.of(type)),
+                            this.errorLogger,
+                            this.parser
+                    );
+                } else {
+                    Compiler.queueRegister(
+                            hParser.parseClass(typeTarget, null, null, null, pck, name, type, List.of()),
+                            this.errorLogger,
+                            this.parser
+                    );
+                }
+
                 consumeCurlyClose("anonymous class");
+            } else if (type.get().isAbstract()) {
+                error(type.getToken(), "can not instantiate abstract class " + type.absoluteName());
             }
 
             String signature = null;
             ScriptedCallable callable = null;
-            if (args.length != 0 || !loxClass.get().hasMethod("<init>")) {
-                callable = Util.getClosest(loxClass.get(), "<init>", argTypes(args));
+            if (args.length != 0 || type.get().hasMethod("<init>")) {
+                callable = Util.getClosest(type.get(), "<init>", argTypes(args));
             }
 
+            ClassReference typeRef = type.getReference();
             if (callable != null) {
-                signature = VarTypeManager.getMethodSignature(loxClass.get(), "<init>", callable.argTypes());
-                checkArguments(args, callable, null, loc);
+                signature = VarTypeManager.getMethodSignature(type.get(), "<init>", callable.argTypes());
+                checkArguments(args, callable, null, type.getToken());
 
-                Holder.Generics classGenerics = loxClass.get().getGenerics();
+                Holder.Generics classGenerics = type.get().getGenerics();
                 if (classGenerics != null) {
                     Map<String, ClassReference> types = new HashMap<>();
                     for (int i = 0; i < callable.argTypes().length; i++) {
@@ -595,11 +621,11 @@ public class ExprParser extends AbstractParser {
                     for (int i = 0; i < classGenerics.variables().length; i++) {
                         ordered.add(types.get(classGenerics.variables()[i].name().lexeme()));
                     }
-                    loxClass = new AppliedGenericsReference(loxClass, new Holder.AppliedGenerics(loc, ordered.toArray(new ClassReference[0])));
+                    typeRef = new AppliedGenericsReference(type.getReference(), new Holder.AppliedGenerics(type.getToken(), ordered.toArray(new ClassReference[0])));
                 }
             }
 
-            return new Expr.Constructor(loc, loxClass, args, signature);
+            return new Expr.Constructor(type.getToken(), typeRef, args, signature);
         }
 
         if (match(PRIMITIVE)) {

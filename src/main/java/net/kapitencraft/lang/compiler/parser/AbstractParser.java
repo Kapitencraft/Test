@@ -223,7 +223,7 @@ public class AbstractParser {
     }
 
     protected boolean isAtEnd() {
-        return current >= tokens.length - 1;
+        return current >= tokens.length;
     }
 
     protected Token advance() {
@@ -244,6 +244,26 @@ public class AbstractParser {
         if (check(type)) return advance();
 
         throw error(peek(), message);
+    }
+
+    protected Token[] getCurlyEnclosedCode() {
+        return getScopedCode(C_BRACKET_O, C_BRACKET_C);
+    }
+
+    protected Token[] getScopedCode(TokenType increase, TokenType decrease) {
+        if (peek().type() == decrease) return new Token[0];
+        List<Token> tokens = new ArrayList<>();
+        int i = 1;
+        tokens.add(peek());
+        do {
+            advance();
+            tokens.add(peek());
+            if (peek().type() == increase) i++;
+            else if (peek().type() == decrease) i--;
+        } while (i > 0 && !isAtEnd());
+        current--;
+        tokens.remove(tokens.size() - 1); //remove last
+        return tokens.toArray(Token[]::new);
     }
 
     protected Optional<SourceClassReference> tryConsumeVarType(GenericStack generics) {
@@ -355,7 +375,6 @@ public class AbstractParser {
 
 
     protected void synchronize() {
-
         while (!isAtEnd()) {
             switch (peek().type()) {
                 case EOF:

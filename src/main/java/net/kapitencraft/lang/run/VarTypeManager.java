@@ -209,6 +209,11 @@ public class VarTypeManager {
             return "L" + reference.absoluteName().replaceAll("\\.", "/") + ";";
     }
 
+    public static String getClassName(ClassReference reference) {
+        if (reference.exists()) return getClassName(reference.get());
+        else return "L" + reference.absoluteName().replaceAll("\\.", "/") + ";";
+    }
+
     public static String getMethodSignature(ScriptedClass target, String name, ClassReference[] argTypes) {
         return getClassName(target) + getMethodSignatureNoTarget(name, argTypes);
     }
@@ -218,7 +223,7 @@ public class VarTypeManager {
     }
 
     public static String getArgsSignature(ClassReference[] argTypes) {
-        return Arrays.stream(argTypes).map(ClassReference::get).map(VarTypeManager::getClassName).collect(Collectors.joining());
+        return Arrays.stream(argTypes).map(VarTypeManager::getClassName).collect(Collectors.joining());
     }
 
     public static ClassReference parseType(StringReader reader) {

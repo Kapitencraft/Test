@@ -24,13 +24,11 @@ public record BakedAnnotation(
         ClassReference target,
         Token name, String pck,
         Map<String, Holder.Class.MethodWrapper> methodWrappers,
-        Compiler.ClassBuilder[] enclosed,
         CompileAnnotationClassInstance[] annotations
 ) implements Compiler.ClassBuilder {
 
     @Override
     public CompileClass build() {
-        CacheableClass[] enclosed = Arrays.stream(enclosed()).map(Compiler.ClassBuilder::build).toArray(CacheableClass[]::new);
 
         ImmutableMap.Builder<String, DataMethodContainer> builder = new ImmutableMap.Builder<>();
         methodWrappers.forEach((string, wrapper) -> builder.put(string, new DataMethodContainer(new ScriptedCallable[]{new CompileAnnotationCallable(wrapper.type(), wrapper.val(), wrapper.annotations())})));
@@ -38,7 +36,7 @@ public record BakedAnnotation(
         return new CompileClass(
                 builder.build(), Map.of(), VarTypeManager.OBJECT,
                 this.name().lexeme(),
-                this.pck(), enclosed, new ClassReference[0], Modifiers.ANNOTATION, this.annotations());
+                this.pck(), new ClassReference[0], Modifiers.ANNOTATION, this.annotations());
     }
 
     @Override

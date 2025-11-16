@@ -57,8 +57,7 @@ public class Holder {
                         Constructor[] constructors,
                         Method[] methods,
                         Field[] fields,
-                        EnumConstant[] enumConstants,
-                        Class[] enclosed
+                        EnumConstant[] enumConstants
     ) implements Validateable {
         public void validate(Compiler.ErrorLogger logger) {
             validateNullable(annotations, logger);
@@ -67,7 +66,6 @@ public class Holder {
             validateNullable(constructors, logger);
             for (Method method : methods) method.validate(logger);
             validateNullable(fields, logger);
-            validateNullable(enclosed, logger);
         }
 
         public ClassReference[] extractInterfaces() {
@@ -249,9 +247,6 @@ public class Holder {
                     name(),
                     pck(),
                     extractInterfaces(),
-                    Arrays.stream(enclosed)
-                            .map(classConstructor -> classConstructor.construct(stmtParser, parser, logger))
-                            .toArray(Compiler.ClassBuilder[]::new),
                     Modifiers.pack(true, true, false),
                     annotations.toArray(new CompileAnnotationClassInstance[0])
             );
@@ -326,9 +321,6 @@ public class Holder {
                     extractInterfaces(),
                     name,
                     pck,
-                    Arrays.stream(enclosed)
-                            .map(classConstructor -> classConstructor.construct(stmtParser, parser, logger))
-                            .toArray(Compiler.ClassBuilder[]::new),
                     annotations.toArray(new CompileAnnotationClassInstance[0])
             );
 
@@ -421,9 +413,6 @@ public class Holder {
                     this.name(),
                     this.pck(),
                     this.extractInterfaces(),
-                    Arrays.stream(enclosed)
-                            .map(classConstructor -> classConstructor.construct(stmtParser, parser, logger))
-                            .toArray(Compiler.ClassBuilder[]::new),
                     this.modifiers,
                     annotations.toArray(new CompileAnnotationClassInstance[0])
             );
@@ -455,9 +444,6 @@ public class Holder {
                     this.name(),
                     this.pck(),
                     methods.build(),
-                    Arrays.stream(enclosed)
-                            .map(classConstructor -> classConstructor.construct(stmtParser, parser, logger))
-                            .toArray(Compiler.ClassBuilder[]::new),
                     annotations.toArray(new CompileAnnotationClassInstance[0])
             );
 
@@ -485,14 +471,6 @@ public class Holder {
                 else {
                     logger.error(field.name(), "fields inside Interfaces must always be static");
                 }
-            }
-
-            //enclosed classes
-            ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
-            for (Class enclosedDecl : this.enclosed()) {
-                ScriptedClass generated = enclosedDecl.createSkeleton(logger);
-                enclosedDecl.target().setTarget(generated);
-                enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
             }
 
             //methods
@@ -531,14 +509,6 @@ public class Holder {
                 fields.put(field.name().lexeme(), skeletonField);
                 if (skeletonField.isFinal() && field.body() == null) //add non-defaulted final fields to extra list to check constructors init
                     finalFields.add(field.name());
-            }
-
-            //enclosed classes
-            ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
-            for (Class enclosedDecl : this.enclosed()) {
-                ScriptedClass generated = enclosedDecl.createSkeleton(logger);
-                enclosedDecl.target().setTarget(generated);
-                enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
             }
 
             //methods
@@ -598,13 +568,6 @@ public class Holder {
         }
 
         public ScriptedClass createAnnotationSkeleton(Compiler.ErrorLogger logger) {
-            //enclosed classes
-            ImmutableMap.Builder<String, ClassReference> enclosed = new ImmutableMap.Builder<>();
-            for (Class enclosedDecl : this.enclosed()) {
-                ScriptedClass generated = enclosedDecl.createSkeleton(logger);
-                enclosedDecl.target().setTarget(generated);
-                enclosed.put(enclosedDecl.name().lexeme(), enclosedDecl.target());
-            }
 
             ImmutableMap.Builder<String, AnnotationCallable> methods = new ImmutableMap.Builder<>();
             for (Method method : methods()) {

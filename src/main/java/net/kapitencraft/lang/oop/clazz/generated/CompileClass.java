@@ -20,8 +20,6 @@ public final class CompileClass implements CacheableClass {
 
     private final Map<String, CompileField> allFields;
 
-    private final CacheableClass[] enclosing;
-
     private final ClassReference superclass;
     private final ClassReference[] implemented;
     private final String name;
@@ -41,7 +39,6 @@ public final class CompileClass implements CacheableClass {
         this.superclass = superclass;
         this.implemented = implemented;
         this.name = name;
-        this.enclosing = enclosing;
         this.packageRepresentation = packageRepresentation;
         this.modifiers = modifiers;
         this.annotations = annotations;
@@ -50,14 +47,13 @@ public final class CompileClass implements CacheableClass {
     public CompileClass(Map<String, DataMethodContainer> methods,
                         Map<String, CompileField> fields,
                         ClassReference superclass, String name, String packageRepresentation,
-                        CacheableClass[] enclosing, ClassReference[] implemented,
+                        ClassReference[] implemented,
                         short modifiers, CompileAnnotationClassInstance[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
         this.allFields = fields;
         this.superclass = superclass;
         this.name = name;
-        this.enclosing = enclosing;
         this.packageRepresentation = packageRepresentation;
         this.implemented = implemented;
         this.modifiers = modifiers;
@@ -86,10 +82,6 @@ public final class CompileClass implements CacheableClass {
         if (this.modifiers != 0) object.addProperty("modifiers", modifiers);
 
         return object;
-    }
-
-    public CacheableClass[] enclosed() {
-        return enclosing;
     }
 
     @Override

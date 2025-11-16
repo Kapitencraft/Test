@@ -15,9 +15,93 @@ import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.tool.Util;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 public class Compiler {
     static int errorCount = 0;
+    private static ClassLoader.PackageHolder<CompilerLoaderHolder> compileData;
+    private static final List<ClassRegister> registers = new ArrayList<>();
+    private static Stage activeStage;
+
+    public static void register(Holder.Class obj, ErrorLogger logger, VarTypeParser parser) {
+        CompilerLoaderHolder holder = new CompilerLoaderHolder(obj, logger, parser);
+        compileData.addAndDispatch(obj.pck(), obj.name().lexeme(), holder);
+        for (int i = 1; i < activeStage.ordinal(); i++) {
+            Stage.values()[i].action.accept(holder);
+        }
+    }
+
+    public static void queueRegister(Holder.Class aClass, ErrorLogger errorLogger, VarTypeParser parser) {
+        registers.add(new ClassRegister(aClass, errorLogger, parser));
+    }
+
+    private record ClassRegister(Holder.Class obj, ErrorLogger logger, VarTypeParser parser) {
+        private void register() {
+            Compiler.register(obj, logger, parser);
+        }
+    }
+
+    public static void main(String[] args) {
+        File root = new File("./run/src");
+        File cache = ClassLoader.cacheLoc;
+
+        System.out.println("Compiling...");
+
+        compileData = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
+
+        for (Stage stage : Stage.values()) {
+            registers.forEach(ClassRegister::register);
+            registers.clear();
+            activeStage = stage;
+            System.out.printf("executing step %s\n", stage);
+            ClassLoader.useHolders(compileData, (name, classHolder) -> stage.action.accept(classHolder));
+
+            if (errorCount > 0) {
+                if (errorCount > 100) {
+                    System.err.println("only showing the first 100 errors out of " + errorCount + " total");
+                } else System.err.println(errorCount + " errors");
+                System.exit(65);
+            }
+        }
+
+        if (cache.exists()) Util.delete(cache);
+
+        System.out.println("Caching...");
+
+        CacheBuilder builder = new CacheBuilder();
+        ClassLoader.useClasses(compileData, (stringClassHolderMap, aPackage) ->
+                stringClassHolderMap.values().forEach(classHolder -> classHolder.cache(builder))
+        );
+
+        if (errorCount > 0) System.exit(65);
+    }
+
+    public interface ClassBuilder {
+
+        CacheableClass build();
+
+        ClassReference superclass();
+
+        Token name();
+
+        Pair<Token, CompileCallable>[] methods();
+
+        ClassReference[] interfaces();
+    }
+
+    public static void cache(File cacheBase, CacheBuilder builder, String path, CacheableClass target, String name) throws IOException {
+        JsonObject object = builder.cacheClass(target);
+        File cacheTarget = new File(cacheBase, path + "/" + name + ".scrc");
+        if (!cacheTarget.exists()) {
+            cacheTarget.getParentFile().mkdirs();
+            cacheTarget.createNewFile();
+        }
+        FileWriter writer = new FileWriter(cacheTarget);
+        writer.write(GsonHelper.GSON.toJson(object));
+        writer.close();
+    }
 
     public static class ErrorLogger {
         private final String[] lines;
@@ -77,59 +161,6 @@ public class Compiler {
             return errorCount > 0;
         }
     }
-
-    public static void main(String[] args) {
-        File root = new File("./run/src");
-        File cache = ClassLoader.cacheLoc;
-
-        System.out.println("Compiling...");
-
-        ClassLoader.PackageHolder<CompilerLoaderHolder> holder = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
-
-        ClassLoader.useHolders(holder, (s, classHolder) -> classHolder.applyConstructor());
-
-        ClassLoader.generateSkeletons(holder);
-
-        ClassLoader.useHolders(holder, (s, compilerLoaderHolder) -> compilerLoaderHolder.validate());
-
-        ClassLoader.useHolders(holder, (s, classHolder) -> classHolder.construct());
-
-        ClassLoader.useHolders(holder, (name, holder1) -> holder1.loadClass());
-
-        if (errorCount > 0) {
-            if (errorCount > 100) {
-                System.err.println("only showing the first 100 errors out of " + errorCount + " total");
-            } else System.err.println(errorCount + " errors");
-            System.exit(65);
-        }
-
-        if (cache.exists()) Util.delete(cache);
-
-        System.out.println("Caching...");
-
-        CacheBuilder builder = new CacheBuilder();
-        ClassLoader.useClasses(holder, (stringClassHolderMap, aPackage) ->
-                stringClassHolderMap.values().forEach(classHolder -> classHolder.cache(builder))
-        );
-
-        if (errorCount > 0) System.exit(65);
-    }
-
-    public static void cache(File cacheBase, CacheBuilder builder, String path, CacheableClass target, String name) throws IOException {
-        JsonObject object = builder.cacheClass(target);
-        File cacheTarget = new File(cacheBase, path + "/" + name + ".scrc");
-        if (!cacheTarget.exists()) {
-            cacheTarget.getParentFile().mkdirs();
-            cacheTarget.createNewFile();
-        }
-        FileWriter writer = new FileWriter(cacheTarget);
-        writer.write(GsonHelper.GSON.toJson(object));
-        writer.close();
-        for (CacheableClass loxClass : target.enclosed()) {
-            cache(cacheBase, builder, path, loxClass, name + "$" + loxClass.name());
-        }
-    }
-
     public static void error(Token token, String message, String fileId, String line) {
         error(token.line(), token.lineStartIndex(), message, fileId, line);
     }
@@ -162,16 +193,17 @@ public class Compiler {
         target.println("^");
     }
 
-    public interface ClassBuilder {
+    public enum Stage {
+        PARSE_SOURCE(CompilerLoaderHolder::parseSource),
+        CREATE_SKELETON(CompilerLoaderHolder::applySkeleton),
+        VALIDATE(CompilerLoaderHolder::validate),
+        CONSTRUCT(CompilerLoaderHolder::construct),
+        LOAD(CompilerLoaderHolder::loadClass);
 
-        CacheableClass build();
+        private final Consumer<CompilerLoaderHolder> action;
 
-        ClassReference superclass();
-
-        Token name();
-
-        Pair<Token, CompileCallable>[] methods();
-
-        ClassReference[] interfaces();
+        Stage(Consumer<CompilerLoaderHolder> action) {
+            this.action = action;
+        }
     }
 }

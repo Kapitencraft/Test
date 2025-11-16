@@ -35,6 +35,7 @@ public class StmtParser extends ExprParser {
     @Override
     public void apply(Token[] toParse, VarTypeParser targetAnalyser) {
         super.apply(toParse, targetAnalyser);
+        seenReturn.clear(); //reset entire return stack
         seenReturn.add(false);
     }
 

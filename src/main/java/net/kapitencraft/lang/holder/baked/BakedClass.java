@@ -24,15 +24,12 @@ public record BakedClass(
         Map<Token, CompileField> fields,
         ClassReference superclass, Token name, String pck,
         ClassReference[] interfaces,
-        Compiler.ClassBuilder[] enclosed,
         short modifiers,
         CompileAnnotationClassInstance[] annotations
 ) implements Compiler.ClassBuilder {
 
     @Override
     public CompileClass build() {
-        CacheableClass[] enclosed = Arrays.stream(enclosed()).map(Compiler.ClassBuilder::build).toArray(CacheableClass[]::new);
-
         Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
         for (Pair<Token, CompileCallable> method : this.methods()) {
             methods.putIfAbsent(method.left().lexeme(), new DataMethodContainer.Builder(this.name()));
@@ -54,10 +51,10 @@ public record BakedClass(
         return new CompileClass(
                 DataMethodContainer.bakeBuilders(methods),
                 create(this.fields()),
-                enclosed,
                 this.superclass(),
+                this.pck(),
+                this.name().lexeme(),
                 this.interfaces(),
-                this.name().lexeme(), this.pck(),
                 this.modifiers(),
                 this.annotations()
         );

@@ -1,0 +1,14 @@
+package util;
+
+class Vec3 {
+    final int x, y, z;
+
+    Vec3 add(Vec3 other) {
+    }
+
+    static void main(String[] args) {
+        Vec3 v = new Vec3();
+        Vec3 v1 = new Vec3();
+        System.print(v + v1);
+    }
+}

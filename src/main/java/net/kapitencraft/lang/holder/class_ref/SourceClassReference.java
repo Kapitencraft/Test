@@ -21,6 +21,10 @@ public class SourceClassReference implements Holder.Validateable {
         return reference.get(generics);
     }
 
+    public ScriptedClass get() {
+        return reference.get();
+    }
+
     public void setTarget(ScriptedClass target) {
         reference.setTarget(target);
     }

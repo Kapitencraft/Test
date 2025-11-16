@@ -1,0 +1,12 @@
+package test;
+
+class AnonymousTest {
+
+    void test() {
+        new Object() {
+            void start() {
+                System.print("hey");
+            }
+        }.start()
+    }
+}

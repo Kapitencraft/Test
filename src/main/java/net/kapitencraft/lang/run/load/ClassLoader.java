@@ -4,6 +4,8 @@ import com.google.errorprone.annotations.Var;
 import com.google.gson.*;
 import net.kapitencraft.lang.bytecode.exe.Disassembler;
 import net.kapitencraft.lang.bytecode.exe.VirtualMachine;
+import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.Package;
@@ -130,7 +132,7 @@ public class ClassLoader {
     }
 
     public static <T extends ClassLoaderHolder<T>> PackageHolder<T> load(File fileLoc, String end, Function<File, T> constructor) {
-        PackageHolder<T> root = new PackageHolder<>();
+        PackageHolder<T> root = new PackageHolder<>(); //TODO fix not parsing all classes for whatever fucking reason
         List<Pair<File, PackageHolder<T>>> pckLoader = new ArrayList<>();
         pckLoader.add(Pair.of(fileLoc, root));
         while (!pckLoader.isEmpty()) {
@@ -218,6 +220,18 @@ public class ClassLoader {
         private final Map<String, PackageHolder<T>> packages = new HashMap<>();
         private final Map<String, T> classes = new HashMap<>();
 
+        public void addAndDispatch(String pck, String name, T val) {
+            String[] packages = pck.split("\\.");
+            PackageHolder<T> holder = this.packages.get(packages[0]);
+            for (int i = 1; i < packages.length; i++) {
+                holder = holder.getOrCreate(packages[i]);
+            }
+            holder.classes.put(name, val);
+        }
+
+        public PackageHolder<T> getOrCreate(String name) {
+            return packages.computeIfAbsent(name, n -> new PackageHolder<>());
+        }
     }
 
     public static String pck(File file) {

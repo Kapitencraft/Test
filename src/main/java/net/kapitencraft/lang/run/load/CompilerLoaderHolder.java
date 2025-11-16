@@ -7,8 +7,6 @@ import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
-import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.run.VarTypeManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +20,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
     private Holder.Class holder;
     private Compiler.ClassBuilder builder;
     private CacheableClass target;
-    private final VarTypeParser varTypeParser = new VarTypeParser();
+    private final VarTypeParser varTypeParser;
 
     public CompilerLoaderHolder(File file) {
         super(file);
@@ -35,9 +33,19 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
                 content.split("\n", Integer.MAX_VALUE), //second param required to not skip empty lines
                 file.getAbsolutePath().replace(".\\", "") //remove '\.\'
         );
+        this.varTypeParser = new VarTypeParser();
     }
 
-    public void applyConstructor() {
+    public CompilerLoaderHolder(Holder.Class holder, Compiler.ErrorLogger logger, VarTypeParser parser) {
+        super(null);
+        this.content = null; //not necessary with the holder already present
+        this.logger = logger;
+        this.holder = holder;
+        this.varTypeParser = parser;
+    }
+
+    public void parseSource() {
+        if (this.holder != null) return; //only parse source if holder wasn't created
         Lexer lexer = new Lexer(content, logger);
         List<Token> tokens = lexer.scanTokens();
         String fileName = file.getName().replace(".scr", "");
