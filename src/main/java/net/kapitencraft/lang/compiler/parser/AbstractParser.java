@@ -243,7 +243,7 @@ public class AbstractParser {
     protected Token consume(TokenType type, String message) {
         if (check(type)) return advance();
 
-        throw error(peek(), message);
+        throw error(peek(), message); //TODO fix IOOR
     }
 
     protected Token[] getCurlyEnclosedCode() {

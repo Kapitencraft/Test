@@ -597,7 +597,7 @@ public class ExprParser extends AbstractParser {
             }
 
             String signature = null;
-            ScriptedCallable callable = tryGetConstructorMethod(args, type.get());
+            ScriptedCallable callable = tryGetConstructorMethod(args, type.getReference(), type.get(), type.getToken());
 
             ClassReference typeRef = type.getReference();
             if (callable != null) {
@@ -663,7 +663,6 @@ public class ExprParser extends AbstractParser {
                     return new Expr.SuperCall(new Expr.VarRef(reference, (byte) 0), type.superclass(), name, arguments, retType, signature);
                 }
             }
-
         }
 
         if (match(IDENTIFIER)) {
@@ -720,12 +719,22 @@ public class ExprParser extends AbstractParser {
         throw error(peek(), "Illegal start of expression");
     }
 
-    private ScriptedCallable tryGetConstructorMethod(Expr[] args, ScriptedClass scriptedClass) {
+    private ScriptedCallable tryGetConstructorMethod(Expr[] args, ClassReference type, ScriptedClass scriptedClass, Token loc) {
         DataMethodContainer container = scriptedClass.getMethods().get("<init>");
         if (container == null) {
-            if (args != null)
+            if (args.length > 0) {
+                errorLogger.errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
+
+                errorLogger.logError("required: ");
+                errorLogger.logError("found:    " + Util.getDescriptor(this.argTypes(args)));
+                errorLogger.logError("reason: actual and formal argument lists differ in length");
+            }
+            return null;
         }
-        return method;
+        ScriptedCallable closest = Util.getClosest(scriptedClass, "<init>", this.argTypes(args));
+        checkArguments(args, closest, type, loc);
+
+        return closest;
     }
 
     private Expr statics() {
