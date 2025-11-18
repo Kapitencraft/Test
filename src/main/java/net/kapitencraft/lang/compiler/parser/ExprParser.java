@@ -12,6 +12,7 @@ import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
+import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -596,10 +597,7 @@ public class ExprParser extends AbstractParser {
             }
 
             String signature = null;
-            ScriptedCallable callable = null;
-            if (args.length != 0 || type.get().hasMethod("<init>")) {
-                callable = Util.getClosest(type.get(), "<init>", argTypes(args));
-            }
+            ScriptedCallable callable = tryGetConstructorMethod(args, type.get());
 
             ClassReference typeRef = type.getReference();
             if (callable != null) {
@@ -720,6 +718,14 @@ public class ExprParser extends AbstractParser {
         }
 
         throw error(peek(), "Illegal start of expression");
+    }
+
+    private ScriptedCallable tryGetConstructorMethod(Expr[] args, ScriptedClass scriptedClass) {
+        DataMethodContainer container = scriptedClass.getMethods().get("<init>");
+        if (container == null) {
+            if (args != null)
+        }
+        return method;
     }
 
     private Expr statics() {

@@ -31,16 +31,6 @@ public class GeneratedMethodMap implements AbstractMethodMap {
         return methods;
     }
 
-    public int getMethodOrdinal(String name, ClassReference[] args) {
-        return methods.containsKey(name) ? methods.get(name).getMethodOrdinal(args) : -1;
-    }
-
-    @Nullable
-    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        DataMethodContainer container = methods.get(name);
-        return container == null ? null : container.getMethodByOrdinal(ordinal);
-    }
-
     @Override
     public ScriptedCallable getMethod(String signature) {
         return plainMap.get(signature);

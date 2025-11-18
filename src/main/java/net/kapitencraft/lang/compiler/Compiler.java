@@ -187,10 +187,7 @@ public class Compiler {
         target.println(message);
 
         target.println(line);
-        for (int i = 0; i < startIndex; i++) {
-            target.print(" ");
-        }
-        target.println("^");
+        target.println(" ".repeat(startIndex) + "^");
     }
 
     public enum Stage {

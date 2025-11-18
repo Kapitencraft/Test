@@ -10,12 +10,6 @@ import java.util.Map;
 
 public interface AbstractMethodMap {
 
-    @Deprecated
-    int getMethodOrdinal(String name, ClassReference[] args);
-
-    @Deprecated
-    ScriptedCallable getMethodByOrdinal(String name, int ordinal);
-
     ScriptedCallable getMethod(String signature);
 
     boolean has(String name);

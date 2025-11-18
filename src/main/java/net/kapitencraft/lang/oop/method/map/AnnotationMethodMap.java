@@ -30,16 +30,6 @@ public class AnnotationMethodMap implements AbstractMethodMap {
     }
 
     @Override
-    public int getMethodOrdinal(String name, ClassReference[] args) {
-        return args.length == 0 && methods.containsKey(name) ? 0 : -1;
-    }
-
-    @Override
-    public ScriptedCallable getMethodByOrdinal(String name, int ordinal) {
-        return ordinal == 0 ? methods.get(name) : null;
-    }
-
-    @Override
     public ScriptedCallable getMethod(String signature) {
         return methods.get(signature.substring(0, signature.length() - 2));
     }
