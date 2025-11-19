@@ -1,11 +1,10 @@
-package net.kapitencraft.lang.compiler.visitor;
+package net.kapitencraft.lang.compiler.analyser;
 
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
-import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.token.Token;
 
-public class LocationFinder implements Stmt.Visitor<Token>, Expr.Visitor<Token> {
+public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token> {
 
     public Token find(Stmt stmt) {
         return stmt.accept(this);

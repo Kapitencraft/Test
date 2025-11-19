@@ -152,7 +152,7 @@
         "Constructor": {
           "keyword": "Token",
           "target": "ClassReference",
-          "params": "Expr[]",
+          "args": "Expr[]",
           "signature": "String"
         }
       },

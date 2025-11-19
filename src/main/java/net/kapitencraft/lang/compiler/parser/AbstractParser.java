@@ -13,8 +13,8 @@ import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.VarTypeParser;
-import net.kapitencraft.lang.compiler.visitor.LocationFinder;
-import net.kapitencraft.lang.compiler.visitor.RetTypeFinder;
+import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
+import net.kapitencraft.lang.compiler.analyser.RetTypeAnalyser;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
@@ -42,8 +42,8 @@ public class AbstractParser {
     protected int current;
     protected Token[] tokens;
     protected VarTypeParser parser;
-    protected RetTypeFinder finder;
-    protected final LocationFinder locFinder = new LocationFinder();
+    protected RetTypeAnalyser finder;
+    protected final LocationAnalyser locFinder = new LocationAnalyser();
     protected final Deque<List<ClassReference>> args = new ArrayDeque<>(); //TODO either use or remove
     protected final Compiler.ErrorLogger errorLogger;
     protected BytecodeVars varAnalyser;
@@ -154,7 +154,7 @@ public class AbstractParser {
         this.tokens = toParse;
         this.parser = targetAnalyser;
         this.varAnalyser = new BytecodeVars();
-        this.finder = new RetTypeFinder(varAnalyser);
+        this.finder = new RetTypeAnalyser(varAnalyser);
     }
 
     protected @Nullable Holder.AppliedGenerics appliedGenerics(GenericStack stack) {

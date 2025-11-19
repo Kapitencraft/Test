@@ -144,7 +144,7 @@ public class Util {
             ScriptedCallable matchEntry = container.methods()[0];
         for (ScriptedCallable method : container.methods()) {
             ClassReference[] argTypes = method.argTypes();
-            for (int i = 0; i < argTypes.length; i++) {
+            for (int i = 0; i < argTypes.length && i < args.length; i++) {
                 if (argTypes[i].equals(args[i])) {
                     if (i + 1 > match) {
                         match = i;

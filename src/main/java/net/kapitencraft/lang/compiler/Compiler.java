@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.compiler;
 
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.visitor.LocationFinder;
+import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -13,6 +13,7 @@ import net.kapitencraft.lang.run.load.CompilerLoaderHolder;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.tool.Util;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -25,21 +26,33 @@ public class Compiler {
     private static final List<ClassRegister> registers = new ArrayList<>();
     private static Stage activeStage;
 
-    public static void register(Holder.Class obj, ErrorLogger logger, VarTypeParser parser) {
-        CompilerLoaderHolder holder = new CompilerLoaderHolder(obj, logger, parser);
-        compileData.addAndDispatch(obj.pck(), obj.name().lexeme(), holder);
+    public static void register(CompilerLoaderHolder holder, String pck, @Nullable String name) {
+        compileData.add(pck, name, holder);
+    }
+
+    public static void dispatch(CompilerLoaderHolder holder) {
         for (int i = 1; i < activeStage.ordinal(); i++) {
             Stage.values()[i].action.accept(holder);
         }
+
     }
 
-    public static void queueRegister(Holder.Class aClass, ErrorLogger errorLogger, VarTypeParser parser) {
-        registers.add(new ClassRegister(aClass, errorLogger, parser));
+    public static void queueRegister(Holder.Class aClass, ErrorLogger errorLogger, VarTypeParser parser, @Nullable String namePrefix) {
+        String name;
+        if (namePrefix != null) name = namePrefix + "$" + aClass.name().lexeme();
+        else name = aClass.name().lexeme();
+        ClassRegister e = ClassRegister.create(aClass, errorLogger, parser, name);
+        registers.add(e);
+        Compiler.dispatch(e.holder);
     }
 
-    private record ClassRegister(Holder.Class obj, ErrorLogger logger, VarTypeParser parser) {
+    private record ClassRegister(CompilerLoaderHolder holder, String pck, @Nullable String name) {
+        public static ClassRegister create(Holder.Class entry, ErrorLogger logger, VarTypeParser parser, @Nullable String name) {
+            return new ClassRegister(new CompilerLoaderHolder(entry, logger, parser), entry.pck(), name);
+        }
+
         private void register() {
-            Compiler.register(obj, logger, parser);
+            Compiler.register(holder, pck, name);
         }
     }
 
@@ -106,12 +119,12 @@ public class Compiler {
     public static class ErrorLogger {
         private final String[] lines;
         private final String fileLoc;
-        private final LocationFinder finder;
+        private final LocationAnalyser finder;
 
         public ErrorLogger(String[] lines, String fileLoc) {
             this.lines = lines;
             this.fileLoc = fileLoc;
-            finder = new LocationFinder();
+            finder = new LocationAnalyser();
         }
 
         public void error(Token loc, String msg) {

@@ -575,20 +575,24 @@ public class ExprParser extends AbstractParser {
                 hParser.apply(getCurlyEnclosedCode(), this.parser);
                 String nameLiteral = String.valueOf(this.anonymousCounter++);
                 String pck = this.currentFallback().pck();
-                ClassReference typeTarget = VarTypeManager.getOrCreateClass(this.currentFallback().name() + "$" + nameLiteral, pck);
+                String outName = this.currentFallback().name();
+                ClassReference typeTarget = VarTypeManager.getOrCreateClass(outName + "$" + nameLiteral, pck);
                 Token name = new Token(IDENTIFIER, nameLiteral, LiteralHolder.EMPTY, type.getToken().line(), type.getToken().lineStartIndex());
+                ScriptedClass original = type.get();
                 type = SourceClassReference.from(name, typeTarget);
-                if (type.get().isInterface()) {
+                if (original.isInterface()) {
                     Compiler.queueRegister(
                             hParser.parseInterface(typeTarget, pck, name, null, null, null, List.of(type)),
                             this.errorLogger,
-                            this.parser
+                            this.parser,
+                            outName
                     );
                 } else {
                     Compiler.queueRegister(
                             hParser.parseClass(typeTarget, null, null, null, pck, name, type, List.of()),
                             this.errorLogger,
-                            this.parser
+                            this.parser,
+                            outName
                     );
                 }
 
@@ -732,10 +736,8 @@ public class ExprParser extends AbstractParser {
             }
             return null;
         }
-        ScriptedCallable closest = Util.getClosest(scriptedClass, "<init>", this.argTypes(args));
-        checkArguments(args, closest, type, loc);
 
-        return closest;
+        return Util.getClosest(scriptedClass, "<init>", this.argTypes(args));
     }
 
     private Expr statics() {

@@ -1,11 +1,8 @@
 package net.kapitencraft.lang.run.load;
 
-import com.google.errorprone.annotations.Var;
 import com.google.gson.*;
 import net.kapitencraft.lang.bytecode.exe.Disassembler;
 import net.kapitencraft.lang.bytecode.exe.VirtualMachine;
-import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.Package;
@@ -19,7 +16,6 @@ import net.kapitencraft.tool.Pair;
 import java.io.*;
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class ClassLoader {
@@ -220,7 +216,7 @@ public class ClassLoader {
         private final Map<String, PackageHolder<T>> packages = new HashMap<>();
         private final Map<String, T> classes = new HashMap<>();
 
-        public void addAndDispatch(String pck, String name, T val) {
+        public void add(String pck, String name, T val) {
             String[] packages = pck.split("\\.");
             PackageHolder<T> holder = this.packages.get(packages[0]);
             for (int i = 1; i < packages.length; i++) {

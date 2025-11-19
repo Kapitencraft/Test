@@ -13,6 +13,7 @@ import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -294,16 +295,16 @@ public class HolderParser extends AbstractParser {
     private boolean readClass(String pckID, String name, ModifiersParser modifiers) {
         if (match(CLASS)) {
             ModifierScope.CLASS.check(this, modifiers);
-            Compiler.queueRegister(classDecl(modifiers, name, pckID, null), this.errorLogger, this.parser);
+            Compiler.queueRegister(classDecl(modifiers, name, pckID, null), this.errorLogger, this.parser, name);
         } else if (match(INTERFACE)) {
             ModifierScope.INTERFACE.check(this, modifiers);
-            Compiler.queueRegister(interfaceDecl(modifiers, name, pckID, null), this.errorLogger, this.parser);
+            Compiler.queueRegister(interfaceDecl(modifiers, name, pckID, null), this.errorLogger, this.parser, name);
         } else if (match(ENUM)) {
             ModifierScope.ENUM.check(this, modifiers);
-            Compiler.queueRegister(enumDecl(modifiers, name, pckID, null), this.errorLogger, this.parser);
+            Compiler.queueRegister(enumDecl(modifiers, name, pckID, null), this.errorLogger, this.parser, name);
         } else if (match(ANNOTATION)) {
             ModifierScope.ANNOTATION.check(this, modifiers);
-            Compiler.queueRegister(annotationDecl(modifiers, name, pckID, null), this.errorLogger, this.parser);
+            Compiler.queueRegister(annotationDecl(modifiers, name, pckID, null), this.errorLogger, this.parser, name);
         } else return true;
         return false;
     }
@@ -415,7 +416,6 @@ public class HolderParser extends AbstractParser {
 
         return new Holder.Generic(name, lowerBound, upperBound);
     }
-
 
     private Holder.Class enumDecl(ModifiersParser modifiers, String namePrefix, String pckID, String fileId) {
 
@@ -548,7 +548,6 @@ public class HolderParser extends AbstractParser {
             target = getOrCreate(namePrefix + "$" + name.lexeme(), pckID);
         else
             target = getOrCreate(name.lexeme(), pckID);
-
 
         parser.addClass(SourceClassReference.from(name, target), name.lexeme());
 

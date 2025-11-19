@@ -32,6 +32,7 @@ import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -141,6 +142,7 @@ public class Holder {
             )));
             //endregion
 
+            List<String> finalFields = new ArrayList<>();
             for (Field field : fields()) {
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
@@ -148,7 +150,7 @@ public class Holder {
                     if (Modifiers.isStatic(field.modifiers)) {
                         statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target, Operand.LEFT)));
                     }
-                }
+                } else if (Modifiers.isFinal(field.modifiers)) finalFields.add(field.name().lexeme());
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
@@ -220,6 +222,7 @@ public class Holder {
                 stmtParser.apply(method.body(), parser);
                 stmtParser.applyMethod(method.params(), target(), ClassReference.of(VarTypeManager.VOID), method.generics);
                 Stmt[] body = stmtParser.parse();
+                this.checkFinalsPopulated(body, finalFields);
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
@@ -253,76 +256,7 @@ public class Holder {
 
         }
 
-        public BakedInterface constructInterface(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
-            Map<String, CompileField> staticFields = new HashMap<>();
-            List<Stmt> statics = new ArrayList<>();
-            for (Field field : fields()) {
-                if (field.body() != null) {
-                    stmtParser.apply(field.body(), parser);
-                    Expr initializer = stmtParser.expression();
-                    statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target, Operand.LEFT)));
-                }
-                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
-                for (AnnotationObj obj : field.annotations()) {
-                    annotations.add(stmtParser.parseAnnotation(obj, parser));
-                }
-
-                short mods = Modifiers.fromJavaMods(field.modifiers);
-                CompileField fieldDecl = new CompileField(field.type().getReference(), mods, annotations.toArray(new CompileAnnotationClassInstance[0]));
-                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
-                else logger.error(field.name, "fields on interfaces must be static");
-            }
-
-            List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
-            for (Method method : this.methods()) {
-                Stmt[] body = null;
-                if (!Modifiers.isAbstract(method.modifiers)) {
-                    stmtParser.apply(method.body(), parser);
-                    if (Modifiers.isStatic(method.modifiers))
-                        stmtParser.applyStaticMethod(method.params, method.type.getReference(), method.generics);
-                    else
-                        stmtParser.applyMethod(method.params, target(), method.type().getReference(), method.generics);
-                    body = stmtParser.parse();
-                    stmtParser.popMethod(method.closeBracket);
-                }
-                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
-                for (AnnotationObj obj : method.annotations()) {
-                    annotations.add(stmtParser.parseAnnotation(obj, parser));
-                }
-
-                CompileCallable methodDecl = new CompileCallable(method.type().getReference(), method.extractParams(), body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
-                methods.add(Pair.of(method.name(), methodDecl));
-            }
-
-            if (!statics.isEmpty()) {
-                statics.add(new Stmt.Return(Token.createNative("return"), null));
-                methods.add(Pair.of( //add <clinit> method
-                        Token.createNative("<clinit>"),
-                        new CompileCallable(
-                                VarTypeManager.VOID.reference(),
-                                List.of(),
-                                statics.toArray(new Stmt[0]),
-                                Modifiers.pack(true, true, false),
-                                new CompileAnnotationClassInstance[0]
-                        )
-                ));
-            }
-
-            List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
-            for (AnnotationObj obj : this.annotations()) {
-                annotations.add(stmtParser.parseAnnotation(obj, parser));
-            }
-
-
-            return new BakedInterface(
-                    logger, generics, target,
-                    methods.toArray(new Pair[0]),
-                    staticFields,
-                    extractInterfaces(),
-                    name,
-                    pck,
-                    annotations.toArray(new CompileAnnotationClassInstance[0])
-            );
+        private void checkFinalsPopulated(Stmt[] body, List<String> finalFields) {
 
         }
 
@@ -416,6 +350,87 @@ public class Holder {
                     this.modifiers,
                     annotations.toArray(new CompileAnnotationClassInstance[0])
             );
+        }
+
+        private static @NotNull List<String> getFinalFields(List<Holder.Field> fields) {
+            List<String> finalFields = new ArrayList<>();
+            for (Holder.Field field : fields) {
+                if (Modifiers.isFinal(field.modifiers()) && field.body() == null) finalFields.add(field.name().lexeme());
+            }
+            return finalFields;
+        }
+
+        public BakedInterface constructInterface(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+            Map<String, CompileField> staticFields = new HashMap<>();
+            List<Stmt> statics = new ArrayList<>();
+            for (Field field : fields()) {
+                if (field.body() != null) {
+                    stmtParser.apply(field.body(), parser);
+                    Expr initializer = stmtParser.expression();
+                    statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target, Operand.LEFT)));
+                }
+                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
+                for (AnnotationObj obj : field.annotations()) {
+                    annotations.add(stmtParser.parseAnnotation(obj, parser));
+                }
+
+                short mods = Modifiers.fromJavaMods(field.modifiers);
+                CompileField fieldDecl = new CompileField(field.type().getReference(), mods, annotations.toArray(new CompileAnnotationClassInstance[0]));
+                if (Modifiers.isStatic(field.modifiers)) staticFields.put(field.name.lexeme(), fieldDecl);
+                else logger.error(field.name, "fields on interfaces must be static");
+            }
+
+            List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
+            for (Method method : this.methods()) {
+                Stmt[] body = null;
+                if (!Modifiers.isAbstract(method.modifiers)) {
+                    stmtParser.apply(method.body(), parser);
+                    if (Modifiers.isStatic(method.modifiers))
+                        stmtParser.applyStaticMethod(method.params, method.type.getReference(), method.generics);
+                    else
+                        stmtParser.applyMethod(method.params, target(), method.type().getReference(), method.generics);
+                    body = stmtParser.parse();
+                    stmtParser.popMethod(method.closeBracket);
+                }
+                List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
+                for (AnnotationObj obj : method.annotations()) {
+                    annotations.add(stmtParser.parseAnnotation(obj, parser));
+                }
+
+                CompileCallable methodDecl = new CompileCallable(method.type().getReference(), method.extractParams(), body, method.modifiers, annotations.toArray(new CompileAnnotationClassInstance[0]));
+                methods.add(Pair.of(method.name(), methodDecl));
+            }
+
+            if (!statics.isEmpty()) {
+                statics.add(new Stmt.Return(Token.createNative("return"), null));
+                methods.add(Pair.of( //add <clinit> method
+                        Token.createNative("<clinit>"),
+                        new CompileCallable(
+                                VarTypeManager.VOID.reference(),
+                                List.of(),
+                                statics.toArray(new Stmt[0]),
+                                Modifiers.pack(true, true, false),
+                                new CompileAnnotationClassInstance[0]
+                        )
+                ));
+            }
+
+            List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
+            for (AnnotationObj obj : this.annotations()) {
+                annotations.add(stmtParser.parseAnnotation(obj, parser));
+            }
+
+
+            return new BakedInterface(
+                    logger, generics, target,
+                    methods.toArray(new Pair[0]),
+                    staticFields,
+                    extractInterfaces(),
+                    name,
+                    pck,
+                    annotations.toArray(new CompileAnnotationClassInstance[0])
+            );
+
         }
 
         public BakedAnnotation constructAnnotation(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {

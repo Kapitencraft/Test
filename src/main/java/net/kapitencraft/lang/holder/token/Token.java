@@ -3,10 +3,11 @@ package net.kapitencraft.lang.holder.token;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.tool.GsonHelper;
+import org.jetbrains.annotations.NotNull;
 
 public record Token(TokenType type, String lexeme, LiteralHolder literal, int line, int lineStartIndex) {
 
-    public String toString() {
+    public @NotNull String toString() {
         return String.format("Token{type=%s, lexeme=\"%s\", literal=%s}@line%s", type, lexeme, literal, line);
     }
 
