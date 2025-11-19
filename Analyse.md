@@ -10,13 +10,17 @@ Abschließen //generateClass
 Speichern //cache
 
 # Changes
+Change:
+<br>`else if` branches now check if they are cancelled (either via `throw` or `return`) and will not emit a jump if that's the case.
+<br>Affected Expressions: 
+<br>**If**
 
 Change:
-    `else if` branches now check if they are cancelled (either via `throw` or `return`) and will not emit a jump if that's the case
-Affected Expressions: 
-1. If
+<br>added LineNumberTable and LocalVariableTable
+<br>Affected Expressions:
+<br>**All**
 
 Change:
-    added LNT and LVT
-Affected Expressions:
-**All**
+<br>reworked backed to support anonymous classes
+<br>Affected Expressions:
+<br>**Constructor**
