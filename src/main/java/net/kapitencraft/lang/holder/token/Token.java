@@ -10,17 +10,6 @@ public record Token(TokenType type, String lexeme, LiteralHolder literal, int li
         return String.format("Token{type=%s, lexeme=\"%s\", literal=%s}@line%s", type, lexeme, literal, line);
     }
 
-    public JsonObject toJson() {
-        JsonObject object = new JsonObject();
-        //only save string and line
-        //object.addProperty("type", type.name());
-        object.addProperty("lexeme", lexeme);
-        //object.add("literal", literal.toJson());
-        object.addProperty("line", line);
-        //object.addProperty("lineStartIndex", lineStartIndex);
-        return object;
-    }
-
     public static Token readFromSubObject(JsonObject object, String name) {
         return fromJson(GsonHelper.getAsJsonObject(object, name));
     }
@@ -36,5 +25,9 @@ public record Token(TokenType type, String lexeme, LiteralHolder literal, int li
 
     public static Token createNative(String lexeme) {
         return new Token(TokenType.IDENTIFIER, lexeme, LiteralHolder.EMPTY, -1, -1);
+    }
+
+    public Token after() {
+        return new Token(this.type, this.lexeme, this.literal, this.line, this.lineStartIndex + this.lexeme.length());
     }
 }

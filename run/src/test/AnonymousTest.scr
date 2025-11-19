@@ -7,6 +7,6 @@ class AnonymousTest {
             void start() {
                 System.print("hey");
             }
-        }.start()
+        }.start();
     }
 }
