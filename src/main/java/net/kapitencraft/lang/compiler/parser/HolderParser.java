@@ -162,10 +162,10 @@ public class HolderParser extends AbstractParser {
 
         try {
             return switch (advance().type()) {
-                case CLASS -> classDecl(parser, pckId, fileName);
-                case ENUM -> enumDecl(parser, pckId, fileName);
-                case ANNOTATION -> annotationDecl(parser, pckId, fileName);
-                case INTERFACE -> interfaceDecl(parser, pckId, fileName);
+                case CLASS -> classDecl(parser, null, pckId, fileName);
+                case ENUM -> enumDecl(parser, null, pckId, fileName);
+                case ANNOTATION -> annotationDecl(parser, null, pckId, fileName);
+                case INTERFACE -> interfaceDecl(parser, null, pckId, fileName);
                 default -> throw error(peek(), "'interface', 'class', 'enum' or 'annotation' expected");
             };
         } catch (ParseError error) {
@@ -183,7 +183,7 @@ public class HolderParser extends AbstractParser {
             ModifiersParser modifiers = MODIFIERS;
             modifiers.parse();
             Holder.AnnotationObj[] annotations = modifiers.getAnnotations();
-            if (readClass(pckId + "." + name.lexeme(), modifiers)) {
+            if (readClass(pckId, name.lexeme(), modifiers)) {
                 modifiers.generics.pushToStack(activeGenerics);
                 if (Objects.equals(advance().lexeme(), name.lexeme()) && !check(IDENTIFIER) && constructors != null) { //TODO ensure methods with same return type are possible
                     Token constName = previous(); //TODO allow classes to access themselves by getting their name
@@ -291,32 +291,36 @@ public class HolderParser extends AbstractParser {
     /**
      * @return true if it didn't read a class, false otherwise
      */
-    private boolean readClass(String pckID, ModifiersParser modifiers) {
+    private boolean readClass(String pckID, String name, ModifiersParser modifiers) {
         if (match(CLASS)) {
             ModifierScope.CLASS.check(this, modifiers);
-            Compiler.queueRegister(classDecl(modifiers, pckID, null), this.errorLogger, this.parser);
+            Compiler.queueRegister(classDecl(modifiers, name, pckID, null), this.errorLogger, this.parser);
         } else if (match(INTERFACE)) {
             ModifierScope.INTERFACE.check(this, modifiers);
-            Compiler.queueRegister(interfaceDecl(modifiers, pckID, null), this.errorLogger, this.parser);
+            Compiler.queueRegister(interfaceDecl(modifiers, name, pckID, null), this.errorLogger, this.parser);
         } else if (match(ENUM)) {
             ModifierScope.ENUM.check(this, modifiers);
-            Compiler.queueRegister(enumDecl(modifiers, pckID, null), this.errorLogger, this.parser);
+            Compiler.queueRegister(enumDecl(modifiers, name, pckID, null), this.errorLogger, this.parser);
         } else if (match(ANNOTATION)) {
             ModifierScope.ANNOTATION.check(this, modifiers);
-            Compiler.queueRegister(annotationDecl(modifiers, pckID, null), this.errorLogger, this.parser);
+            Compiler.queueRegister(annotationDecl(modifiers, name, pckID, null), this.errorLogger, this.parser);
         } else return true;
         return false;
     }
 
-    private Holder.Class classDecl(ModifiersParser mods, String pckID, @Nullable String fileId) {
+    private Holder.Class classDecl(ModifiersParser mods, @Nullable String namePrefix, String pckID, @Nullable String fileId) {
 
         Token name = consumeIdentifier();
 
         checkFileName(name, fileId);
 
-        ClassReference target = getOrCreate(name.lexeme(), pckID);
+        ClassReference target;
+        if (namePrefix != null)
+            target = getOrCreate(namePrefix + "$" + name.lexeme(), pckID);
+        else
+            target = getOrCreate(name.lexeme(), pckID);
 
-        parser.addClass(SourceClassReference.from(name, target), null);
+        parser.addClass(SourceClassReference.from(name, target), name.lexeme());
         SourceClassReference superClass = SourceClassReference.from(null, VarTypeManager.OBJECT);
         Holder.Generics classGenerics = generics();
 
@@ -413,15 +417,20 @@ public class HolderParser extends AbstractParser {
     }
 
 
-    private Holder.Class enumDecl(ModifiersParser modifiers, String pckID, String fileId) {
+    private Holder.Class enumDecl(ModifiersParser modifiers, String namePrefix, String pckID, String fileId) {
 
         Token name = consumeIdentifier();
 
         checkFileName(name, fileId);
 
-        ClassReference target = getOrCreate(name.lexeme(), pckID);
+        ClassReference target;
+        if (namePrefix != null)
+            target = getOrCreate(namePrefix + "$" + name.lexeme(), pckID);
+        else
+            target = getOrCreate(name.lexeme(), pckID);
 
-        parser.addClass(SourceClassReference.from(name, target), null);
+
+        parser.addClass(SourceClassReference.from(name, target), name.lexeme());
 
         List<SourceClassReference> interfaces = new ArrayList<>();
 
@@ -471,15 +480,20 @@ public class HolderParser extends AbstractParser {
         );
     }
 
-    private Holder.Class annotationDecl(ModifiersParser mods, String pckId, String fileId) {
+    private Holder.Class annotationDecl(ModifiersParser mods, String namePrefix, String pckId, String fileId) {
 
         Token name = consumeIdentifier();
 
         checkFileName(name, fileId);
 
-        ClassReference target = getOrCreate(name.lexeme(), pckId);
+        ClassReference target;
+        if (namePrefix != null)
+            target = getOrCreate(namePrefix + "$" + name.lexeme(), pckId);
+        else
+            target = getOrCreate(name.lexeme(), pckId);
 
-        parser.addClass(SourceClassReference.from(name, target), null);
+
+        parser.addClass(SourceClassReference.from(name, target), name.lexeme());
 
         consumeCurlyOpen("annotation");
         activePackages.push(pckId + "." + name.lexeme());
@@ -490,8 +504,7 @@ public class HolderParser extends AbstractParser {
             ModifiersParser modifiers = MODIFIERS;
             modifiers.parse();
             Holder.AnnotationObj[] annotations = modifiers.getAnnotations();
-            String enclosedId = pckId + (fileId == null ? "$" : ".") + name.lexeme();
-            if (readClass(enclosedId, modifiers)) {
+            if (readClass(pckId, name.lexeme(), modifiers)) {
                 ModifierScope.ANNOTATION.check(this, modifiers);
                 SourceClassReference type = consumeVarType();
                 Token elementName = consumeIdentifier();
@@ -524,15 +537,20 @@ public class HolderParser extends AbstractParser {
         return new Holder.Method(Modifiers.pack(false, false, !defaulted), annotations, null, type, elementName, null, List.of(), defaultCode);
     }
 
-    private Holder.Class interfaceDecl(ModifiersParser mods, String pckID, @Nullable String fileId) {
+    private Holder.Class interfaceDecl(ModifiersParser mods, @Nullable String namePrefix, String pckID, @Nullable String fileId) {
 
         Token name = consumeIdentifier();
 
         checkFileName(name, fileId);
 
-        ClassReference target = getOrCreate(name.lexeme(), pckID);
+        ClassReference target;
+        if (namePrefix != null)
+            target = getOrCreate(namePrefix + "$" + name.lexeme(), pckID);
+        else
+            target = getOrCreate(name.lexeme(), pckID);
 
-        parser.addClass(SourceClassReference.from(name, target), null);
+
+        parser.addClass(SourceClassReference.from(name, target), name.lexeme());
 
         Holder.Generics classGenerics = generics();
 

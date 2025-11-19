@@ -574,9 +574,10 @@ public class ExprParser extends AbstractParser {
                 //TODO parse anonymous
                 hParser.apply(getCurlyEnclosedCode(), this.parser);
                 String nameLiteral = String.valueOf(this.anonymousCounter++);
-                String pck = this.currentFallback().absoluteName();
-                ClassReference typeTarget = VarTypeManager.getOrCreateClass(nameLiteral, pck);
+                String pck = this.currentFallback().pck();
+                ClassReference typeTarget = VarTypeManager.getOrCreateClass(this.currentFallback().name() + "$" + nameLiteral, pck);
                 Token name = new Token(IDENTIFIER, nameLiteral, LiteralHolder.EMPTY, type.getToken().line(), type.getToken().lineStartIndex());
+                type = SourceClassReference.from(name, typeTarget);
                 if (type.get().isInterface()) {
                     Compiler.queueRegister(
                             hParser.parseInterface(typeTarget, pck, name, null, null, null, List.of(type)),

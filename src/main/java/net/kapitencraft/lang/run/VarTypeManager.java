@@ -164,10 +164,17 @@ public class VarTypeManager {
     }
 
     public static ClassReference getOrCreateClass(String name, String pck) {
-        String[] packages = pck.split("\\.");
+        String[] packages = pck.split("[.$]");
         Package pg = rootPackage();
         for (String aPackage : packages) {
             pg = pg.getOrCreatePackage(aPackage);
+        }
+        if (name.contains("$")) {
+            packages = name.split("\\$");
+            for (int i = 0; i < packages.length - 1; i++) {
+                pg = pg.getOrCreatePackage(packages[i]);
+            }
+            return pg.getOrCreateClass(packages[packages.length - 1]);
         }
         return pg.getOrCreateClass(name);
     }
