@@ -246,7 +246,7 @@ public class AbstractParser {
         if (isAtEnd()) {
             throw error(previous().after(), message);
         } else
-            throw error(peek(), message); //TODO fix IOOR
+            throw error(peek(), message);
     }
 
     protected Token[] getCurlyEnclosedCode() {
@@ -272,7 +272,7 @@ public class AbstractParser {
         Optional<ClassReference> optional = generics.getValue(peek().lexeme());
         if (optional.isPresent()) return Optional.of(SourceClassReference.from(advance(), optional.get()));
         if (VarTypeManager.hasPackage(peek().lexeme()) && varAnalyser.get(peek().lexeme()) == BytecodeVars.FetchResult.FAIL) {
-            advance(); //TODO fix methods being consumed when named the same as a package
+            advance();
             if (check(DOT)) {
                 current--;
                 return Optional.of(consumeVarType(generics));
@@ -324,7 +324,7 @@ public class AbstractParser {
                 }
                 p = p.getPackage(id);
             }
-        } //TODO enclosed
+        }
 
         Token last = previous();
         while (match(DOT) && reference != null) { //TODO remove enclosing necessity. it shouldn't exist anyways

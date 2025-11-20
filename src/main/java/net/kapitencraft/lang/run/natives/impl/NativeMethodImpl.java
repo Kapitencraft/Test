@@ -19,7 +19,7 @@ public abstract class NativeMethodImpl implements ScriptedCallable {
     }
 
     @Override
-    public ClassReference type() {
+    public ClassReference retType() {
         return retType;
     }
 

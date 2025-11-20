@@ -3,28 +3,38 @@ package net.kapitencraft.lang.run.algebra;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 public enum OperationType {
-    ADDITION(TokenType.ADD, TokenType.ADD_ASSIGN),
-    SUBTRACTION(TokenType.SUB, TokenType.SUB_ASSIGN),
-    MULTIPLICATION(TokenType.MUL, TokenType.MUL_ASSIGN),
-    DIVISION(TokenType.DIV, TokenType.DIV_ASSIGN),
-    MODULUS(TokenType.MOD, TokenType.MOD_ASSIGN),
-    POTENCY(TokenType.POW, TokenType.POW_ASSIGN),
-    LEQUAL(TokenType.LEQUAL),
-    NEQUAL(TokenType.NEQUAL),
-    GEQUAL(TokenType.GEQUAL),
-    LESS(TokenType.LESSER), // =
-    MORE(TokenType.GREATER),
-    EQUAL(TokenType.EQUAL);
+    ADDITION("add", TokenType.ADD, TokenType.ADD_ASSIGN),
+    SUBTRACTION("sub", TokenType.SUB, TokenType.SUB_ASSIGN),
+    MULTIPLICATION("mul", TokenType.MUL, TokenType.MUL_ASSIGN),
+    DIVISION("div", TokenType.DIV, TokenType.DIV_ASSIGN),
+    MODULUS("mod", TokenType.MOD, TokenType.MOD_ASSIGN),
+    POTENCY("pow", TokenType.POW, TokenType.POW_ASSIGN),
+    LEQUAL(null, TokenType.LEQUAL),
+    NEQUAL(null, TokenType.NEQUAL),
+    GEQUAL(null, TokenType.GEQUAL),
+    LESS(null, TokenType.LESSER), // =
+    MORE(null, TokenType.GREATER),
+    EQUAL(null, TokenType.EQUAL);
 
+    private final @Nullable String methodName;
     private final List<TokenType> type;
 
 
-    OperationType(TokenType... type) {
+    OperationType(@Nullable String methodName, TokenType... type) {
+        this.methodName = methodName;
         this.type = List.of(type);
+    }
+
+    /**
+     * @return the name of the methods associated with this operation
+     */
+    public @Nullable String getMethodName() {
+        return methodName;
     }
 
     public List<TokenType> getType() {

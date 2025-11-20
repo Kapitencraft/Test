@@ -14,7 +14,7 @@ public class AnnotationCallable implements ScriptedCallable {
     }
 
     @Override
-    public ClassReference type() {
+    public ClassReference retType() {
         return type;
     }
 

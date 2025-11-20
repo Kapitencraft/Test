@@ -28,7 +28,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private boolean retainExprResult = false;
     //marks whether the expr result has already been ignored and therefore no POP must be emitted
     private boolean ignoredExprResult = false;
-    //TODO add local variable table attributes
     private final Chunk.Builder builder = new Chunk.Builder();
     private final Stack<Loop> loops = new Stack<>();
 
@@ -136,7 +135,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = true;
         cache(expr.right());
         cache(expr.left());
-        if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
+        if (!hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
             final ClassReference executor = expr.executor();
             this.builder.changeLineIfNecessary(expr.operator());
             switch (expr.operator().type()) {
@@ -587,7 +586,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             } else {
                 ignoredExprResult = true;
             }
-            saveArgs(expr.params());
+            saveArgs(expr.args());
             builder.invokeVirtual(expr.signature());
         }
 

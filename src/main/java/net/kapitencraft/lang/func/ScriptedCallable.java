@@ -20,7 +20,7 @@ public interface ScriptedCallable {
         return map;
     }
 
-    ClassReference type();
+    ClassReference retType();
 
     ClassReference[] argTypes();
 

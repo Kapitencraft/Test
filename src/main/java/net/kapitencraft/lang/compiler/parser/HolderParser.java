@@ -186,7 +186,7 @@ public class HolderParser extends AbstractParser {
             Holder.AnnotationObj[] annotations = modifiers.getAnnotations();
             if (readClass(pckId, name.lexeme(), modifiers)) {
                 modifiers.generics.pushToStack(activeGenerics);
-                if (Objects.equals(advance().lexeme(), name.lexeme()) && !check(IDENTIFIER) && constructors != null) { //TODO ensure methods with same return type are possible
+                if (Objects.equals(advance().lexeme(), name.lexeme()) && !check(IDENTIFIER) && constructors != null) {
                     Token constName = previous(); //TODO allow classes to access themselves by getting their name
                     consumeBracketOpen("constructors");
                     Holder.Constructor decl = constDecl(annotations, modifiers.getGenerics(), constName);

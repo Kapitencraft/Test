@@ -58,6 +58,7 @@ public interface ScriptedClass {
      * @return the resulting type or {@link VarTypeManager#VOID}, if this operation is not possible (must return {@link VarTypeManager#BOOLEAN} or {@link VarTypeManager#VOID} for comparators)
      * <br><br>API note: it's recommended to call {@code super.checkOperation(...)} due to the given equality check
      */
+    @Deprecated
     default ScriptedClass checkOperation(OperationType type, Operand operand, ClassReference other) {
         return type == OperationType.ADDITION && "scripted.lang.String".equals(this.absoluteName()) ?
                 VarTypeManager.STRING.get() :

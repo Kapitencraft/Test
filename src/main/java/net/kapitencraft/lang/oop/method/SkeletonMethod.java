@@ -63,7 +63,7 @@ public class SkeletonMethod implements ScriptedCallable {
     }
 
     @Override
-    public ClassReference type() {
+    public ClassReference retType() {
         return retType;
     }
 

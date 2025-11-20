@@ -10,6 +10,7 @@ import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
+import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -23,6 +24,7 @@ import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.tool.Util;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -196,26 +198,27 @@ public class ExprParser extends AbstractParser {
                 checkVarExistence(name, assign.type() != TokenType.ASSIGN,
                         false);
                 checkVarType(name, value);
-                Pair<ClassReference, Operand> executor;
+                Executor executor;
                 if (assign.type() == TokenType.ASSIGN) {
                     varAnalyser.setHasValue(variable.ordinal());
-                    executor = Pair.of(WILDCARD, Operand.LEFT);
-                } else executor = getExecutor(varAnalyser.getType(name.lexeme()), assign, value);
+                    executor = Executor.UNKNOWN;
+                } else
+                    executor = getExecutor(varAnalyser.getType(name.lexeme()), assign, value);
 
-                return new Expr.Assign(name, value, assign, variable.ordinal(), executor.left(), executor.right());
+                return new Expr.Assign(name, value, assign, variable.ordinal(), executor.executor);
             } else if (expr instanceof Expr.Get get) {
                 ClassReference target = finder.findRetType(get.object());
                 expectType(get.name(), target.get().getFieldType(get.name().lexeme()), finder.findRetType(value));
 
-                Pair<ClassReference, Operand> executor;
+                Executor executor;
                 if (assign.type() != ASSIGN) executor = getExecutor(target, assign, value);
-                else executor = Pair.of(WILDCARD, Operand.LEFT);
-                return new Expr.Set(get.object(), get.name(), value, assign, executor.left(), executor.right());
+                else executor = Executor.UNKNOWN;
+                return new Expr.Set(get.object(), get.name(), value, assign, executor.executor);
             } else if (expr instanceof Expr.ArrayGet get) {
-                Pair<ClassReference, Operand> executor;
+                Executor executor;
                 if (assign.type() != ASSIGN) executor = getExecutor(get, assign, value);
-                else executor = Pair.of(WILDCARD, Operand.LEFT);
-                return new Expr.ArraySet(get.object(), get.index(), value, assign, executor.left(), executor.right());
+                else executor = Executor.UNKNOWN;
+                return new Expr.ArraySet(get.object(), get.index(), value, assign, executor.executor);
             }
 
             error(assign, "Invalid assignment target.");
@@ -283,30 +286,43 @@ public class ExprParser extends AbstractParser {
         return expr;
     }
 
-    private Pair<ClassReference, Operand> getExecutor(ClassReference left, Token operator, ClassReference right) {
+    private Executor getExecutor(ClassReference left, Token operator, ClassReference right) {
+        OperationType operation = OperationType.of(operator.type());
+        assert operation != null;
+        ScriptedClass result = VarTypeManager.VOID;
         Operand operand = Operand.LEFT;
-        ClassReference executor = left;
-        OperationType type = OperationType.of(operator.type());
-        assert type != null;
-        ScriptedClass result = left.get().checkOperation(type, operand, right);
-        if (result == VarTypeManager.VOID) {
-            operand = Operand.RIGHT;
-            result = right.get().checkOperation(type, operand, left);
-            executor = right;
+        if (left.get() instanceof PrimitiveClass || left.is(VarTypeManager.STRING.get()) || right.is(VarTypeManager.STRING.get())) {
+            result = left.get().checkOperation(operation, Operand.LEFT, right);
+            if (result == VarTypeManager.VOID) {
+                result = right.get().checkOperation(operation, Operand.RIGHT, left);
+                operand = Operand.RIGHT;
+            }
+        }
+        if (result == VarTypeManager.VOID && operation.getMethodName() != null) {
+            String signature = operation.getMethodName() + "(" + VarTypeManager.getClassName(right) + ")";
+            ScriptedCallable method = left.get().getMethod(signature);
+            if (method != null) return new Executor(left, Operand.LEFT, method.retType(), signature);
+            String signatureRight = operation.getMethodName() + "(" + VarTypeManager.getClassName(left) + ")";
+            method = right.get().getMethod(signatureRight);
+            if (method != null) return new Executor(right, Operand.RIGHT, method.retType(), signatureRight);
         }
         if (result == VarTypeManager.VOID) {
             errorLogger.errorF(operator, "operator '%s' not possible for argument types %s and %s", operator.lexeme(), left.absoluteName(), right.absoluteName());
-            return Pair.of(WILDCARD, Operand.LEFT);
+            return Executor.UNKNOWN;
         }
-        return Pair.of(executor, operand);
+        return new Executor(left, operand, result.reference(), null);
     }
 
-    private Pair<ClassReference, Operand> getExecutor(Expr leftArg, Token operator, Expr rightArg) {
+    private Executor getExecutor(Expr leftArg, Token operator, Expr rightArg) {
         return getExecutor(finder.findRetType(leftArg), operator, finder.findRetType(rightArg));
     }
 
-    private Pair<ClassReference, Operand> getExecutor(ClassReference left, Token operator, Expr rightArg) {
+    private Executor getExecutor(ClassReference left, Token operator, Expr rightArg) {
         return getExecutor(left, operator, finder.findRetType(rightArg));
+    }
+
+    private record Executor(ClassReference executor, Operand operand, ClassReference result, @Nullable String methodSignature) {
+        private static final Executor UNKNOWN = new Executor(WILDCARD, Operand.LEFT, VarTypeManager.VOID.reference(), null);
     }
 
     private Expr equality() {
@@ -315,8 +331,7 @@ public class ExprParser extends AbstractParser {
         while (match(EQUALITY)) {
             Token operator = previous();
             Expr right = comparison();
-            Pair<ClassReference, Operand> executorInfo = getExecutor(expr, operator, right);
-            expr = new Expr.Binary(expr, right, operator, executorInfo.left(), executorInfo.right());
+            expr = parseBinaryExpr(expr, operator, right);
         }
 
         return expr;
@@ -328,8 +343,7 @@ public class ExprParser extends AbstractParser {
         while (match(COMPARATORS)) {
             Token operator = previous();
             Expr right = term();
-            Pair<ClassReference, Operand> executorInfo = getExecutor(expr, operator, right);
-            expr = new Expr.Binary(expr, right, operator, executorInfo.left(), executorInfo.right());
+            expr = parseBinaryExpr(expr, operator, right);
         }
 
         return expr;
@@ -342,10 +356,18 @@ public class ExprParser extends AbstractParser {
             Token operator = previous();
             Expr right = factor();
 
-            Pair<ClassReference, Operand> executorInfo = getExecutor(expr, operator, right);
-            expr = new Expr.Binary(expr, right, operator, executorInfo.left(), executorInfo.right());
+            expr = parseBinaryExpr(expr, operator, right);
         }
 
+        return expr;
+    }
+
+    private @NotNull Expr parseBinaryExpr(Expr expr, Token operator, Expr right) {
+        Executor executorInfo = getExecutor(expr, operator, right);
+        if (executorInfo.operand == Operand.RIGHT)
+            expr = new Expr.Binary(right, expr, operator, executorInfo.executor, executorInfo.result, executorInfo.operand);
+        else
+            expr = new Expr.Binary(expr, right, operator, executorInfo.executor, executorInfo.result, executorInfo.operand);
         return expr;
     }
 
@@ -355,8 +377,8 @@ public class ExprParser extends AbstractParser {
         while (match(DIV, MUL, MOD, POW)) {
             Token operator = previous();
             Expr right = unary();
-            Pair<ClassReference, Operand> executorInfo = getExecutor(expr, operator, right);
-            expr = new Expr.Binary(expr, right, operator, executorInfo.left(), executorInfo.right());
+
+            expr = parseBinaryExpr(expr, operator, right);
         }
 
         return expr;
@@ -417,8 +439,8 @@ public class ExprParser extends AbstractParser {
     private Expr staticAssign(ClassReference target, Token name) {
         Token type = previous();
         Expr value = expression();
-        Pair<ClassReference, Operand> executor = getExecutor(target.get().getFieldType(name.lexeme()), type, value);
-        return new Expr.StaticSet(target, name, value, type, executor.left(), executor.right());
+        Executor executor = getExecutor(target.get().getFieldType(name.lexeme()), type, value);
+        return new Expr.StaticSet(target, name, value, type, executor.executor);
     }
 
     private Expr staticSpecialAssign(ClassReference target, Token name) {
@@ -509,7 +531,7 @@ public class ExprParser extends AbstractParser {
             }
         }
 
-        ClassReference type = target.type();
+        ClassReference type = target.retType();
         //TODO figure out how to extract gotten generics
         if (type instanceof GenericClassReference genericClassReference) {
             GenericStack genericStack = new GenericStack();
@@ -571,25 +593,24 @@ public class ExprParser extends AbstractParser {
                 if (type.get().isFinal()) {
                     error(previous(), "can not extend final class");
                 }
-                //TODO parse anonymous
                 hParser.apply(getCurlyEnclosedCode(), this.parser);
                 String nameLiteral = String.valueOf(this.anonymousCounter++);
                 String pck = this.currentFallback().pck();
                 String outName = this.currentFallback().name();
                 ClassReference typeTarget = VarTypeManager.getOrCreateClass(outName + "$" + nameLiteral, pck);
                 Token name = new Token(IDENTIFIER, nameLiteral, LiteralHolder.EMPTY, type.getToken().line(), type.getToken().lineStartIndex());
-                ScriptedClass original = type.get();
+                SourceClassReference original = type;
                 type = SourceClassReference.from(name, typeTarget);
-                if (original.isInterface()) {
+                if (original.get().isInterface()) {
                     Compiler.queueRegister(
-                            hParser.parseInterface(typeTarget, pck, name, null, null, null, List.of(type)),
+                            hParser.parseInterface(typeTarget, pck, name, null, null, null, List.of(original)),
                             this.errorLogger,
                             this.parser,
                             outName
                     );
                 } else {
                     Compiler.queueRegister(
-                            hParser.parseClass(typeTarget, null, null, null, pck, name, type, List.of()),
+                            hParser.parseClass(typeTarget, null, null, null, pck, name, original, List.of()),
                             this.errorLogger,
                             this.parser,
                             outName

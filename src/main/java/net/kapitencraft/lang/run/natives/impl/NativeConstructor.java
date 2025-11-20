@@ -21,7 +21,7 @@ public class NativeConstructor implements ScriptedCallable {
     }
 
     @Override
-    public ClassReference type() {
+    public ClassReference retType() {
         return type;
     }
 

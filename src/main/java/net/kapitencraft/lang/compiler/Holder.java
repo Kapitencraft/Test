@@ -111,8 +111,7 @@ public class Holder {
                         target, decl.name,
                         new Expr.Constructor(decl.name, target, args, VarTypeManager.getMethodSignature(target.get(), "<init>", stmtParser.argTypes(args))),
                         new Token(TokenType.ASSIGN, "=", LiteralHolder.EMPTY, -1, 0),
-                        target,
-                        Operand.LEFT
+                        target
                 )));
             }
 
@@ -137,8 +136,7 @@ public class Holder {
                             constants
                     ),
                     new Token(TokenType.ASSIGN, "=", LiteralHolder.EMPTY, -1, 0),
-                    target,
-                    Operand.LEFT
+                    target
             )));
             //endregion
 
@@ -148,7 +146,7 @@ public class Holder {
                     stmtParser.apply(field.body(), parser);
                     Expr initializer = stmtParser.expression();
                     if (Modifiers.isStatic(field.modifiers)) {
-                        statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target, Operand.LEFT)));
+                        statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target)));
                     }
                 } else if (Modifiers.isFinal(field.modifiers)) finalFields.add(field.name().lexeme());
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
@@ -267,7 +265,7 @@ public class Holder {
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
                     Expr initializer = stmtParser.expression();
-                    statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target, Operand.LEFT)));
+                    statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target)));
                 }
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
@@ -367,7 +365,7 @@ public class Holder {
                 if (field.body() != null) {
                     stmtParser.apply(field.body(), parser);
                     Expr initializer = stmtParser.expression();
-                    statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target, Operand.LEFT)));
+                    statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target)));
                 }
                 List<CompileAnnotationClassInstance> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
@@ -554,7 +552,7 @@ public class Holder {
             );
         }
 
-        public record MethodWrapper(@Nullable Expr val, ClassReference type, CompileAnnotationClassInstance[] annotations, short modifiers) implements ScriptedCallable {
+        public record MethodWrapper(@Nullable Expr val, ClassReference retType, CompileAnnotationClassInstance[] annotations, short modifiers) implements ScriptedCallable {
 
             @Override
             public ClassReference[] argTypes() {

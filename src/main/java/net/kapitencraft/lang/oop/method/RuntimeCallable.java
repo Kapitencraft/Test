@@ -79,7 +79,7 @@ public class RuntimeCallable implements ScriptedCallable {
     }
 
     @Override
-    public ClassReference type() {
+    public ClassReference retType() {
         return retType;
     }
 

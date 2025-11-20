@@ -75,7 +75,7 @@ public class CompileCallable implements ScriptedCallable {
     }
 
     @Override
-    public ClassReference type() {
+    public ClassReference retType() {
         return retType;
     }
 

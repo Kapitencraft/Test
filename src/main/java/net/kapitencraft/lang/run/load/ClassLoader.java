@@ -96,7 +96,7 @@ public class ClassLoader {
                             Map<String, DataMethodContainer> methods = scriptedClass.getMethods().asMap();
                             methods.forEach((string, dataMethodContainer) -> {
                                 for (ScriptedCallable method : dataMethodContainer.methods()) {
-                                    String name = string + "(" + VarTypeManager.getArgsSignature(method.argTypes()) + ")" + VarTypeManager.getClassName(method.type().get());
+                                    String name = string + "(" + VarTypeManager.getArgsSignature(method.argTypes()) + ")" + VarTypeManager.getClassName(method.retType().get());
                                     if (method.isNative()) {
                                         System.out.println("== " + name + " ==");
                                         System.out.println("<Native>");
@@ -128,7 +128,7 @@ public class ClassLoader {
     }
 
     public static <T extends ClassLoaderHolder<T>> PackageHolder<T> load(File fileLoc, String end, Function<File, T> constructor) {
-        PackageHolder<T> root = new PackageHolder<>(); //TODO fix not parsing all classes for whatever fucking reason
+        PackageHolder<T> root = new PackageHolder<>();
         List<Pair<File, PackageHolder<T>>> pckLoader = new ArrayList<>();
         pckLoader.add(Pair.of(fileLoc, root));
         while (!pckLoader.isEmpty()) {

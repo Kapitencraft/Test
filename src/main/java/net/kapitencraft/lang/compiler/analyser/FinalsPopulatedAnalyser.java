@@ -130,7 +130,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitConstructorExpr(Expr.Constructor expr) {
-        for (Expr arg : expr.params()) {
+        for (Expr arg : expr.args()) {
             analyse(arg);
         }
         return null;

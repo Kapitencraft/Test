@@ -7,7 +7,6 @@ import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.CompileCallable;
@@ -16,8 +15,6 @@ import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 public record BakedAnnotation(
@@ -31,7 +28,7 @@ public record BakedAnnotation(
     public CompileClass build() {
 
         ImmutableMap.Builder<String, DataMethodContainer> builder = new ImmutableMap.Builder<>();
-        methodWrappers.forEach((string, wrapper) -> builder.put(string, new DataMethodContainer(new ScriptedCallable[]{new CompileAnnotationCallable(wrapper.type(), wrapper.val(), wrapper.annotations())})));
+        methodWrappers.forEach((string, wrapper) -> builder.put(string, new DataMethodContainer(new ScriptedCallable[]{new CompileAnnotationCallable(wrapper.retType(), wrapper.val(), wrapper.annotations())})));
 
         return new CompileClass(
                 builder.build(), Map.of(), VarTypeManager.OBJECT,

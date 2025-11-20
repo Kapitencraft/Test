@@ -31,7 +31,7 @@ public class Compiler {
     }
 
     public static void dispatch(CompilerLoaderHolder holder) {
-        for (int i = 1; i < activeStage.ordinal(); i++) {
+        for (int i = 1; i <= activeStage.ordinal(); i++) {
             Stage.values()[i].action.accept(holder);
         }
 
@@ -81,7 +81,7 @@ public class Compiler {
 
         if (cache.exists()) Util.delete(cache);
 
-        System.out.println("Caching...");
+        System.out.println("executing step CACHING");
 
         CacheBuilder builder = new CacheBuilder();
         ClassLoader.useClasses(compileData, (stringClassHolderMap, aPackage) ->

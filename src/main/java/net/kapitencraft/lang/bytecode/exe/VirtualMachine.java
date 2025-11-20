@@ -248,7 +248,7 @@ public class VirtualMachine {
                             System.arraycopy(stack, callableStackTop, args, 0, length);
                             stackIndex = callableStackTop; //reset stack index
                             Object object = callable.call(args);
-                            if (callable.type().is(VarTypeManager.VOID)) break;
+                            if (callable.retType().is(VarTypeManager.VOID)) break;
                             push(object);
                         } else
                             pushCall(new CallFrame(execute, callable, callableStackTop));
@@ -271,7 +271,7 @@ public class VirtualMachine {
                             System.arraycopy(stack, callableStackTop, args, 0, length);
                             stackIndex = callableStackTop; //reset stack index
                             Object object = callable.call(args);
-                            if (callable.type().is(VarTypeManager.VOID)) break;
+                            if (callable.retType().is(VarTypeManager.VOID)) break;
                             push(object);
                         } else
                             pushCall(new CallFrame(execute, callable, callableStackTop));
@@ -570,7 +570,7 @@ public class VirtualMachine {
 
     private static void push(Object o) {
         stack[stackIndex++] = o;
-        if (DEBUG) System.out.printf("[DEBUG]:%s PUSH (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(o)); //TODO enable array insight
+        if (DEBUG) System.out.printf("[DEBUG]:%s PUSH (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(o));
     }
 
     private static Object pop() {
