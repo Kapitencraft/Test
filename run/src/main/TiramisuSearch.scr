@@ -1,0 +1,20 @@
+package main;
+
+class TiramisuSearch {
+    static String[] rezepte;
+
+    static void main(String[] args) {
+        rezepte = args;
+    }
+
+
+    static boolean suche(String word, int position) {
+        if (position < rezepte.length) {
+            if (word.equals(rezepte[position])) {
+                return true;
+            }
+            return suche(word, position + 1);
+        }
+        return false;
+    }
+}
