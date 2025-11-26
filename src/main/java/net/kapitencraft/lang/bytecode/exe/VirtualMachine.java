@@ -574,7 +574,7 @@ public class VirtualMachine {
     }
 
     private static Object pop() {
-        if (DEBUG) System.out.printf("[DEBUG]:%s POP  (@%3d): %s\n", visualStackSize(), stackIndex - 1, stack[stackIndex - 1]);
+        if (DEBUG) System.out.printf("[DEBUG]:%s POP  (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(stack[stackIndex - 1]));
         return stack[--stackIndex];
     }
     //endregion

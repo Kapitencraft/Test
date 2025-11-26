@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.tool.GsonHelper;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public record Token(TokenType type, String lexeme, LiteralHolder literal, int line, int lineStartIndex) {
 
@@ -30,5 +31,9 @@ public record Token(TokenType type, String lexeme, LiteralHolder literal, int li
 
     public Token after() {
         return new Token(this.type, this.lexeme, this.literal, this.line, this.lineStartIndex + this.lexeme.length());
+    }
+
+    public Token withPrefix(@Nullable String namePrefix) {
+        return new Token(this.type, namePrefix + this.lexeme, this.literal, this.line, this.lineStartIndex);
     }
 }

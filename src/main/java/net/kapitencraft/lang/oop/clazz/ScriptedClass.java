@@ -1,10 +1,10 @@
 package net.kapitencraft.lang.oop.clazz;
 
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
-import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -85,7 +85,9 @@ public interface ScriptedClass {
         return pck() + "." + name();
     }
 
+    //TODO branch from runtime class implementations and compile class implementations
     @Contract(pure = true)
+    @Nullable
     ClassReference superclass();
 
     default ClassReference[] interfaces() {
@@ -118,7 +120,7 @@ public interface ScriptedClass {
 
     default boolean isChildOf(ScriptedClass suspectedParent) {
         return suspectedParent.isInterface() ?
-                Arrays.stream(this.interfaces()).map(ClassReference::get).anyMatch(scriptedClass -> scriptedClass.isParentOf(suspectedParent)) :
+                Arrays.stream(this.interfaces()).anyMatch(reference -> reference.get().isParentOf(suspectedParent)) :
                 suspectedParent.isParentOf(this);
     }
 
@@ -137,9 +139,20 @@ public interface ScriptedClass {
     AbstractMethodMap getMethods();
 
     //endregion
+    //region annotations
 
-    RuntimeAnnotationClassInstance[] annotations();
+    Annotation[] annotations();
 
+    default Annotation getAnnotation(ClassReference retention) {
+        for (Annotation annotation : annotations()) {
+            if (retention.is(VarTypeManager.directFlatParse(annotation.getType()))) {
+                return annotation;
+            }
+        }
+        return null;
+    }
+
+    //endregion
     //region MODIFIERS
 
     @Contract(pure = true)

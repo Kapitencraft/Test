@@ -2,17 +2,17 @@ package net.kapitencraft.lang.oop.field;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 
 public class CompileField implements ScriptedField {
     private final ClassReference type;
     private final short modifiers;
-    private final CompileAnnotationClassInstance[] annotations;
+    private final Annotation[] annotations;
 
-    public CompileField(ClassReference type, short modifiers, CompileAnnotationClassInstance[] annotations) {
+    public CompileField(ClassReference type, short modifiers, Annotation[] annotations) {
         this.type = type;
         this.modifiers = modifiers;
         this.annotations = annotations;

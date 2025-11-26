@@ -180,13 +180,14 @@ public class HolderParser extends AbstractParser {
     }
 
     public void parseClassProperties(ModifierScope.Group scope, List<Holder.Method> methods, @Nullable List<Holder.Constructor> constructors, List<Holder.Field> fields, ClassReference target, String pckId, Token name) {
+        String constructorName = constructors != null ? name.lexeme().contains("$") ? name.lexeme().substring(name.lexeme().lastIndexOf('$') + 1) : name.lexeme() : null;
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             ModifiersParser modifiers = MODIFIERS;
             modifiers.parse();
             Holder.AnnotationObj[] annotations = modifiers.getAnnotations();
             if (readClass(pckId, name.lexeme(), modifiers)) {
                 modifiers.generics.pushToStack(activeGenerics);
-                if (Objects.equals(advance().lexeme(), name.lexeme()) && !check(IDENTIFIER) && constructors != null) {
+                if (Objects.equals(advance().lexeme(), constructorName) && !check(IDENTIFIER)) {
                     Token constName = previous(); //TODO allow classes to access themselves by getting their name
                     consumeBracketOpen("constructors");
                     Holder.Constructor decl = constDecl(annotations, modifiers.getGenerics(), constName);
@@ -312,16 +313,14 @@ public class HolderParser extends AbstractParser {
     private Holder.Class classDecl(ModifiersParser mods, @Nullable String namePrefix, String pckID, @Nullable String fileId) {
 
         Token name = consumeIdentifier();
+        String originalName = name.lexeme();
+        if (namePrefix != null) name = name.withPrefix(namePrefix + "$");
 
         checkFileName(name, fileId);
 
-        ClassReference target;
-        if (namePrefix != null)
-            target = getOrCreate(namePrefix + "$" + name.lexeme(), pckID);
-        else
-            target = getOrCreate(name.lexeme(), pckID);
+        ClassReference target = getOrCreate(name.lexeme(), pckID);
 
-        parser.addClass(SourceClassReference.from(name, target), name.lexeme());
+        parser.addClass(SourceClassReference.from(name, target), originalName);
         SourceClassReference superClass = SourceClassReference.from(null, VarTypeManager.OBJECT);
         Holder.Generics classGenerics = generics();
 
@@ -420,17 +419,15 @@ public class HolderParser extends AbstractParser {
     private Holder.Class enumDecl(ModifiersParser modifiers, String namePrefix, String pckID, String fileId) {
 
         Token name = consumeIdentifier();
+        String originalName = name.lexeme();
+        if (namePrefix != null) name = name.withPrefix(namePrefix + "$");
 
         checkFileName(name, fileId);
 
-        ClassReference target;
-        if (namePrefix != null)
-            target = getOrCreate(namePrefix + "$" + name.lexeme(), pckID);
-        else
-            target = getOrCreate(name.lexeme(), pckID);
+        ClassReference target = getOrCreate(name.lexeme(), pckID);
 
 
-        parser.addClass(SourceClassReference.from(name, target), name.lexeme());
+        parser.addClass(SourceClassReference.from(name, target), originalName);
 
         List<SourceClassReference> interfaces = new ArrayList<>();
 
@@ -483,17 +480,14 @@ public class HolderParser extends AbstractParser {
     private Holder.Class annotationDecl(ModifiersParser mods, String namePrefix, String pckId, String fileId) {
 
         Token name = consumeIdentifier();
+        String originalName = name.lexeme();
+        if (namePrefix != null) name = name.withPrefix(namePrefix + "$");
 
         checkFileName(name, fileId);
 
-        ClassReference target;
-        if (namePrefix != null)
-            target = getOrCreate(namePrefix + "$" + name.lexeme(), pckId);
-        else
-            target = getOrCreate(name.lexeme(), pckId);
+        ClassReference target = getOrCreate(name.lexeme(), pckId);
 
-
-        parser.addClass(SourceClassReference.from(name, target), name.lexeme());
+        parser.addClass(SourceClassReference.from(name, target), originalName);
 
         consumeCurlyOpen("annotation");
         activePackages.push(pckId + "." + name.lexeme());
@@ -540,16 +534,14 @@ public class HolderParser extends AbstractParser {
     private Holder.Class interfaceDecl(ModifiersParser mods, @Nullable String namePrefix, String pckID, @Nullable String fileId) {
 
         Token name = consumeIdentifier();
+        String originalName = name.lexeme();
+        if (namePrefix != null) name = name.withPrefix(namePrefix + "$");
 
         checkFileName(name, fileId);
 
-        ClassReference target;
-        if (namePrefix != null)
-            target = getOrCreate(namePrefix + "$" + name.lexeme(), pckID);
-        else
-            target = getOrCreate(name.lexeme(), pckID);
+        ClassReference target = getOrCreate(name.lexeme(), pckID);
 
-        parser.addClass(SourceClassReference.from(name, target), name.lexeme());
+        parser.addClass(SourceClassReference.from(name, target), originalName);
 
         Holder.Generics classGenerics = generics();
 

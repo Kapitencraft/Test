@@ -1,16 +1,16 @@
 package net.kapitencraft.lang.oop.method.annotation;
 
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 
 public class CompileAnnotationCallable extends AnnotationCallable {
     private final Expr expr;
-    private final CompileAnnotationClassInstance[] annotations;
+    private final Annotation[] annotations;
 
-    public CompileAnnotationCallable(ClassReference type, Expr expr, CompileAnnotationClassInstance[] annotations) {
+    public CompileAnnotationCallable(ClassReference type, Expr expr, Annotation[] annotations) {
         super(type, null);
         this.expr = expr;
         this.annotations = annotations;

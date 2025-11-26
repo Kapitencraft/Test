@@ -37,11 +37,6 @@ public class RetTypeAnalyser implements Expr.Visitor<ClassReference> {
     }
 
     @Override
-    public ClassReference visitArraySpecialCallExpr(Expr.ArraySpecialCall expr) {
-        return findRetType(expr.object()).get().getComponentType().reference();
-    }
-
-    @Override
     public ClassReference visitWhenExpr(Expr.When expr) {
         return findRetType(expr.ifTrue());
     }
@@ -73,11 +68,6 @@ public class RetTypeAnalyser implements Expr.Visitor<ClassReference> {
     }
 
     @Override
-    public ClassReference visitSpecialSetCallExpr(Expr.SpecialSetCall expr) {
-        return expr.retType();
-    }
-
-    @Override
     public ClassReference visitSetExpr(Expr.Set expr) {
         return findRetType(expr.object()).get().getFieldType(expr.name().lexeme());
     }
@@ -88,28 +78,13 @@ public class RetTypeAnalyser implements Expr.Visitor<ClassReference> {
     }
 
     @Override
-    public ClassReference visitStaticSpecialCallExpr(Expr.StaticSpecialCall expr) {
-        return expr.target().get().getFieldType(expr.name().lexeme());
-    }
-
-    @Override
     public ClassReference visitArraySetExpr(Expr.ArraySet expr) {
-        return findRetType(expr.object()).get().getComponentType().reference();
-    }
-
-    @Override
-    public ClassReference visitArraySetCallExpr(Expr.ArraySetCall expr) {
         return findRetType(expr.object()).get().getComponentType().reference();
     }
 
     @Override
     public ClassReference visitSpecialSetExpr(Expr.SpecialSet expr) {
         return findRetType(expr.callee()).get().getFieldType(expr.name().lexeme());
-    }
-
-    @Override
-    public ClassReference visitStaticSetCallExpr(Expr.StaticSetCall expr) {
-        return expr.target().get().getFieldType(expr.name().lexeme());
     }
 
     @Override
@@ -163,11 +138,6 @@ public class RetTypeAnalyser implements Expr.Visitor<ClassReference> {
     }
 
     @Override
-    public ClassReference visitBinaryCallExpr(Expr.BinaryCall expr) {
-        return expr.retType();
-    }
-
-    @Override
     public ClassReference visitUnaryExpr(Expr.Unary expr) {
         return findRetType(expr.right());
     }
@@ -175,11 +145,6 @@ public class RetTypeAnalyser implements Expr.Visitor<ClassReference> {
     @Override
     public ClassReference visitVarRefExpr(Expr.VarRef expr) {
         return varAnalyser.getType(expr.name().lexeme());
-    }
-
-    @Override
-    public ClassReference visitSetCallExpr(Expr.SetCall expr) {
-        return findRetType(expr.object()).get().getFieldType(expr.name().lexeme());
     }
 
     @Override

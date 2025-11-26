@@ -168,6 +168,7 @@ public class Util {
     }
 
     public static String objToString(Object o) {
+        if (o == null) return "null";
         Class<?> eClass = o.getClass();
         if (eClass.isArray()) {
             if (eClass == byte[].class)

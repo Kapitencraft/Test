@@ -3,9 +3,9 @@ package test;
 class AnonymousClassTest {
     static void main(String[] args) {
         new Object() {
-            //void test() {
-            //    System.print(5);
-            //}
-        };//.test();
+            void test() {
+                System.print(5);
+            }
+        }.test();
     }
 }

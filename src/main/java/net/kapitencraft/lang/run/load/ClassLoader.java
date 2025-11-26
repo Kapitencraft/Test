@@ -208,8 +208,8 @@ public class ClassLoader {
         return VarTypeManager.getClassOrError(GsonHelper.getAsString(object, elementName));
     }
 
-    public static ClassReference[] loadInterfaces(JsonObject data) {
-        return GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassOrError).toArray(ClassReference[]::new);
+    public static String[] loadInterfaces(JsonObject data) {
+        return GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).toArray(String[]::new);
     }
 
     public static class PackageHolder<T extends ClassLoaderHolder<T>> {

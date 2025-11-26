@@ -38,9 +38,7 @@ public class Compiler {
     }
 
     public static void queueRegister(Holder.Class aClass, ErrorLogger errorLogger, VarTypeParser parser, @Nullable String namePrefix) {
-        String name;
-        if (namePrefix != null) name = namePrefix + "$" + aClass.name().lexeme();
-        else name = aClass.name().lexeme();
+        String name = aClass.name().lexeme();
         ClassRegister e = ClassRegister.create(aClass, errorLogger, parser, name);
         registers.add(e);
         Compiler.dispatch(e.holder);

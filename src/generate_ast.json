@@ -22,13 +22,6 @@
           "executor": "ClassReference",
           "retType": "ClassReference"
         },
-        "BinaryCall": {
-          "left": "Expr",
-          "right": "Expr",
-          "operator": "Token",
-          "retType": "ClassReference",
-          "signature": "String"
-        },
         "When": {
           "condition": "Expr",
           "ifTrue": "Expr",
@@ -77,25 +70,11 @@
           "assignType": "Token",
           "executor": "ClassReference"
         },
-        "SetCall": {
-          "object": "Expr",
-          "name": "Token",
-          "value": "Expr",
-          "assignType": "Token",
-          "signature": "String"
-        },
         "SpecialSet": {
           "callee": "Expr",
           "name": "Token",
           "assignType": "Token",
           "retType": "ClassReference"
-        },
-        "SpecialSetCall": {
-          "callee": "Expr",
-          "name": "Token",
-          "assignType": "Token",
-          "retType": "ClassReference",
-          "signature": "String"
         },
         "StaticSet": {
           "target": "ClassReference",
@@ -104,24 +83,11 @@
           "assignType": "Token",
           "executor": "ClassReference"
         },
-        "StaticSetCall": {
-          "target": "ClassReference",
-          "name": "Token",
-          "value": "Expr",
-          "assignType": "Token",
-          "signature": "String"
-        },
         "StaticSpecial": {
           "target": "ClassReference",
           "name": "Token",
           "assignType": "Token",
           "executor": "ClassReference"
-        },
-        "StaticSpecialCall": {
-          "target": "ClassReference",
-          "name": "Token",
-          "assignType": "Token",
-          "signature": "String"
         },
         "ArraySet": {
           "object": "Expr",
@@ -130,24 +96,11 @@
           "assignType": "Token",
           "executor": "ClassReference"
         },
-        "ArraySetCall": {
-          "object": "Expr",
-          "index": "Expr",
-          "value": "Expr",
-          "assignType": "Token",
-          "signature": "String"
-        },
         "ArraySpecial": {
           "object": "Expr",
           "index": "Expr",
           "assignType": "Token",
           "executor": "ClassReference"
-        },
-        "ArraySpecialCall": {
-          "object": "Expr",
-          "index": "Expr",
-          "assignType": "Token",
-          "signature": "String"
         },
         "Slice": {
           "object": "Expr",

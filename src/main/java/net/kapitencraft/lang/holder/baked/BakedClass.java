@@ -1,13 +1,12 @@
 package net.kapitencraft.lang.holder.baked;
 
 import com.google.common.collect.ImmutableMap;
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
-import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.CompileField;
 import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -25,7 +24,7 @@ public record BakedClass(
         ClassReference superclass, Token name, String pck,
         ClassReference[] interfaces,
         short modifiers,
-        CompileAnnotationClassInstance[] annotations
+        Annotation[] annotations
 ) implements Compiler.ClassBuilder {
 
     @Override
@@ -52,8 +51,8 @@ public record BakedClass(
                 DataMethodContainer.bakeBuilders(methods),
                 create(this.fields()),
                 this.superclass(),
-                this.pck(),
                 this.name().lexeme(),
+                this.pck(),
                 this.interfaces(),
                 this.modifiers(),
                 this.annotations()

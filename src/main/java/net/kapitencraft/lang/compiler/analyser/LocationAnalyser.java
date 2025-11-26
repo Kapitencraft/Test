@@ -30,11 +30,6 @@ public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token
     }
 
     @Override
-    public Token visitArraySpecialCallExpr(Expr.ArraySpecialCall expr) {
-        return expr.assignType();
-    }
-
-    @Override
     public Token visitWhenExpr(Expr.When expr) {
         return find(expr.condition());
     }
@@ -65,11 +60,6 @@ public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token
     }
 
     @Override
-    public Token visitSpecialSetCallExpr(Expr.SpecialSetCall expr) {
-        return expr.name();
-    }
-
-    @Override
     public Token visitSetExpr(Expr.Set expr) {
         return expr.name();
     }
@@ -80,27 +70,12 @@ public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token
     }
 
     @Override
-    public Token visitStaticSpecialCallExpr(Expr.StaticSpecialCall expr) {
-        return expr.name();
-    }
-
-    @Override
     public Token visitArraySetExpr(Expr.ArraySet expr) {
         return expr.assignType();
     }
 
     @Override
-    public Token visitArraySetCallExpr(Expr.ArraySetCall expr) {
-        return expr.assignType();
-    }
-
-    @Override
     public Token visitSpecialSetExpr(Expr.SpecialSet expr) {
-        return expr.name();
-    }
-
-    @Override
-    public Token visitStaticSetCallExpr(Expr.StaticSetCall expr) {
         return expr.name();
     }
 
@@ -155,22 +130,12 @@ public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token
     }
 
     @Override
-    public Token visitBinaryCallExpr(Expr.BinaryCall expr) {
-        return expr.operator();
-    }
-
-    @Override
     public Token visitUnaryExpr(Expr.Unary expr) {
         return expr.operator();
     }
 
     @Override
     public Token visitVarRefExpr(Expr.VarRef expr) {
-        return expr.name();
-    }
-
-    @Override
-    public Token visitSetCallExpr(Expr.SetCall expr) {
         return expr.name();
     }
 

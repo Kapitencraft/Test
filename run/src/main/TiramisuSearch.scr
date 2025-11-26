@@ -7,8 +7,7 @@ class TiramisuSearch {
         rezepte = args;
     }
 
-
-    static boolean suche(String word, int position) {
+    static bool suche(String word, int position) {
         if (position < rezepte.length) {
             if (word.equals(rezepte[position])) {
                 return true;

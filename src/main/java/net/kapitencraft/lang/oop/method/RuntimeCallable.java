@@ -4,13 +4,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
-import net.kapitencraft.lang.bytecode.storage.LineNumberTable;
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.StringReader;
 
@@ -21,9 +19,9 @@ public class RuntimeCallable implements ScriptedCallable {
     private final ClassReference[] params;
     private final Chunk body;
     private final short modifiers;
-    private final RuntimeAnnotationClassInstance[] annotations;
+    private final Annotation[] annotations;
 
-    public RuntimeCallable(ClassReference retType, List<ClassReference> params, Chunk body, short modifiers, RuntimeAnnotationClassInstance[] annotations) {
+    public RuntimeCallable(ClassReference retType, List<ClassReference> params, Chunk body, short modifiers, Annotation[] annotations) {
         this.retType = retType;
         this.params = params.toArray(ClassReference[]::new);
         this.body = body;
@@ -43,7 +41,7 @@ public class RuntimeCallable implements ScriptedCallable {
         if (Modifiers.isAbstract(modifiers)) b = null;
         else b  = Chunk.load(GsonHelper.getAsJsonObject(data, "body"));
 
-        RuntimeAnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
+        Annotation[] annotations = Annotation.readAnnotations(data);
 
         return new RuntimeCallable(retType, params, b, modifiers, annotations);
     }

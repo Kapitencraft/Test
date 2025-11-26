@@ -2,20 +2,18 @@ package net.kapitencraft.lang.oop.clazz.skeleton;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
-import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.AnnotationMethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -102,8 +100,8 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public RuntimeAnnotationClassInstance[] annotations() {
-        return new RuntimeAnnotationClassInstance[0];
+    public Annotation[] annotations() {
+        return new Annotation[0];
     }
 
     @Override

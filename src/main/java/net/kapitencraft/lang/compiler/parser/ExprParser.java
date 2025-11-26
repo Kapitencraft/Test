@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.compiler.parser;
 
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
@@ -11,7 +12,6 @@ import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
-import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -22,8 +22,8 @@ import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
-import net.kapitencraft.tool.Pair;
 import net.kapitencraft.lang.tool.Util;
+import net.kapitencraft.tool.StringReader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -87,12 +87,12 @@ public class ExprParser extends AbstractParser {
         return new Expr.StaticGet(target, name);
     }
 
-    public CompileAnnotationClassInstance parseAnnotation(Holder.AnnotationObj obj, VarTypeParser varTypeParser) {
+    public Annotation parseAnnotation(Holder.AnnotationObj obj, VarTypeParser varTypeParser) {
         this.apply(obj.properties(), varTypeParser);
         return parseAnnotationProperties(obj.type(), obj.type().getToken());
     }
 
-    public CompileAnnotationClassInstance parseAnnotationProperties(SourceClassReference typeRef, Token errorPoint) {
+    public Annotation parseAnnotationProperties(SourceClassReference typeRef, Token errorPoint) {
         ScriptedClass type = typeRef.getReference().get();
 
         if (!type.isAnnotation()) {
@@ -114,7 +114,7 @@ public class ExprParser extends AbstractParser {
             if (!abstracts.isEmpty()) {
                 errorMissingProperties(errorPoint, abstracts);
             }
-            return CompileAnnotationClassInstance.noAbstract(type);
+            return Annotation.empty(type);
         }
         Expr singleProperty;
         if (!check(IDENTIFIER)) {
@@ -134,7 +134,7 @@ public class ExprParser extends AbstractParser {
                 List<String> requiredProperties = new ArrayList<>(abstracts);
                 requiredProperties.removeAll(properties.keySet());
                 if (!requiredProperties.isEmpty()) errorMissingProperties(errorPoint, requiredProperties);
-                return CompileAnnotationClassInstance.fromPropertyMap(type, properties);
+                return Annotation.fromPropertyMap(type, properties);
             } else {
                 current--;
                 singleProperty = literalOrReference();
@@ -147,7 +147,7 @@ public class ExprParser extends AbstractParser {
         } else if (!abstracts.contains("value")) {
             error(previous(), "can not find annotation method 'value'");
         }
-        return CompileAnnotationClassInstance.fromSingleProperty(type, singleProperty);
+        return Annotation.fromSingleProperty(type, singleProperty);
     }
 
     private void errorMissingProperties(Token errorPoint, List<String> propertyNames) {
@@ -301,10 +301,16 @@ public class ExprParser extends AbstractParser {
         if (result == VarTypeManager.VOID && operation.getMethodName() != null) {
             String signature = operation.getMethodName() + "(" + VarTypeManager.getClassName(right) + ")";
             ScriptedCallable method = left.get().getMethod(signature);
-            if (method != null) return new Executor(left, Operand.LEFT, method.retType(), signature);
+            if (method != null) {
+                signature = VarTypeManager.getClassName(left) + signature;
+                return new Executor(left, Operand.LEFT, method.retType(), signature);
+            }
             String signatureRight = operation.getMethodName() + "(" + VarTypeManager.getClassName(left) + ")";
             method = right.get().getMethod(signatureRight);
-            if (method != null) return new Executor(right, Operand.RIGHT, method.retType(), signatureRight);
+            if (method != null) {
+                signatureRight = VarTypeManager.getClassName(right) + signatureRight;
+                return new Executor(right, Operand.RIGHT, method.retType(), signatureRight);
+            }
         }
         if (result == VarTypeManager.VOID) {
             errorLogger.errorF(operator, "operator '%s' not possible for argument types %s and %s", operator.lexeme(), left.absoluteName(), right.absoluteName());
@@ -364,10 +370,16 @@ public class ExprParser extends AbstractParser {
 
     private @NotNull Expr parseBinaryExpr(Expr expr, Token operator, Expr right) {
         Executor executorInfo = getExecutor(expr, operator, right);
+        if (executorInfo.methodSignature != null) {
+            if (executorInfo.operand == Operand.RIGHT) {
+                return new Expr.InstCall(right, operator, new Expr[] {expr}, executorInfo.result, executorInfo.methodSignature);
+            }
+            return new Expr.InstCall(expr, operator, new Expr[] {right}, executorInfo.result, executorInfo.methodSignature);
+        }
         if (executorInfo.operand == Operand.RIGHT)
-            expr = new Expr.Binary(right, expr, operator, executorInfo.executor, executorInfo.result, executorInfo.operand);
+            expr = new Expr.Binary(right, expr, operator, executorInfo.executor, executorInfo.result);
         else
-            expr = new Expr.Binary(expr, right, operator, executorInfo.executor, executorInfo.result, executorInfo.operand);
+            expr = new Expr.Binary(expr, right, operator, executorInfo.executor, executorInfo.result);
         return expr;
     }
 
@@ -512,7 +524,6 @@ public class ExprParser extends AbstractParser {
                 break;
             }
         }
-
         return expr;
     }
 
@@ -596,9 +607,9 @@ public class ExprParser extends AbstractParser {
                 hParser.apply(getCurlyEnclosedCode(), this.parser);
                 String nameLiteral = String.valueOf(this.anonymousCounter++);
                 String pck = this.currentFallback().pck();
-                String outName = this.currentFallback().name();
-                ClassReference typeTarget = VarTypeManager.getOrCreateClass(outName + "$" + nameLiteral, pck);
-                Token name = new Token(IDENTIFIER, nameLiteral, LiteralHolder.EMPTY, type.getToken().line(), type.getToken().lineStartIndex());
+                String outName = this.currentFallback().name() + "$" + nameLiteral;
+                ClassReference typeTarget = VarTypeManager.getOrCreateClass(outName, pck);
+                Token name = new Token(IDENTIFIER, outName, LiteralHolder.EMPTY, type.getToken().line(), type.getToken().lineStartIndex());
                 SourceClassReference original = type;
                 type = SourceClassReference.from(name, typeTarget);
                 if (original.get().isInterface()) {
@@ -665,12 +676,12 @@ public class ExprParser extends AbstractParser {
                 ScriptedClass type = fallback.get();
                 ClassReference objType = type.superclass();
                 consumeBracketOpen("super method");
-                if (type.hasMethod(name.lexeme())) {
+                if (objType == null) {
+                    error(name, "can not access super class");
+                } else if (type.hasMethod(name.lexeme())) {
                     Expr[] arguments = args();
-
                     ClassReference[] givenTypes = argTypes(arguments);
                     ScriptedClass targetClass = objType.get();
-
                     if (!targetClass.hasMethod(name.lexeme())) {
                         error(name, "unknown method '" + name.lexeme() + "'");
                         consumeBracketClose("arguments");
@@ -686,7 +697,7 @@ public class ExprParser extends AbstractParser {
 
                     consumeBracketClose("arguments");
 
-                    return new Expr.SuperCall(new Expr.VarRef(reference, (byte) 0), type.superclass(), name, arguments, retType, signature);
+                    return new Expr.SuperCall(new Expr.VarRef(reference, (byte) 0), objType, name, arguments, retType, signature);
                 }
             }
         }

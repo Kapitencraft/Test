@@ -2,21 +2,18 @@ package net.kapitencraft.lang.oop.clazz.skeleton;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
-import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
-import net.kapitencraft.lang.run.algebra.Operand;
-import net.kapitencraft.lang.run.algebra.OperationType;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -25,7 +22,7 @@ public class SkeletonClass implements ScriptedClass {
     private final String name;
     private final String pck;
 
-    private final ClassReference superclass;
+    private final String superclass;
     private final Map<String, SkeletonField> fields;
 
     private final Holder.Generics generics;
@@ -33,13 +30,13 @@ public class SkeletonClass implements ScriptedClass {
     private final GeneratedMethodMap methods;
 
     private final short modifiers;
-    private final ClassReference[] interfaces;
+    private final String[] interfaces;
 
     public SkeletonClass(Holder.Generics generics,
-                         String name, String pck, ClassReference superclass,
+                         String name, String pck, String superclass,
                          Map<String, SkeletonField> fields,
                          Map<String, DataMethodContainer> methods,
-                         short modifiers, ClassReference[] interfaces) {
+                         short modifiers, String[] interfaces) {
         this.name = name;
         this.pck = pck;
         this.superclass = superclass;
@@ -50,10 +47,10 @@ public class SkeletonClass implements ScriptedClass {
         this.interfaces = interfaces;
     }
 
-    public SkeletonClass(String name, String pck, ClassReference superclass,
+    public SkeletonClass(String name, String pck, String superclass,
                          Map<String, SkeletonField> fields,
                          Map<String, DataMethodContainer> methods,
-                         short modifiers, ClassReference[] interfaces) {
+                         short modifiers, String[] interfaces) {
         this.generics = null;
         this.name = name;
         this.pck = pck;
@@ -66,9 +63,9 @@ public class SkeletonClass implements ScriptedClass {
 
     public static SkeletonClass fromCache(JsonObject data, String pck) {
         String name = GsonHelper.getAsString(data, "name");
-        ClassReference superclass = ClassLoader.loadClassReference(data, "superclass");
+        String superclass = GsonHelper.getAsString(data, "superclass");
 
-        ClassReference[] interfaces = ClassLoader.loadInterfaces(data);
+        String[] interfaces = ClassLoader.loadInterfaces(data);
 
         ImmutableMap<String, DataMethodContainer> methods = SkeletonMethod.readFromCache(data, "methods");
 
@@ -87,7 +84,8 @@ public class SkeletonClass implements ScriptedClass {
                 fields.build(),
                 methods,
                 modifiers,
-                interfaces);
+                interfaces
+        );
     }
 
     @Override
@@ -122,7 +120,7 @@ public class SkeletonClass implements ScriptedClass {
 
     @Override
     public ClassReference getFieldType(String name) {
-        return Optional.ofNullable(this.fields.get(name)).map(SkeletonField::type).orElseGet(() -> superclass.get().getFieldType(name));
+        return Optional.ofNullable(this.fields.get(name)).map(SkeletonField::type).orElseGet(() -> superclass().get().getFieldType(name));
     }
 
     @Override
@@ -132,7 +130,7 @@ public class SkeletonClass implements ScriptedClass {
 
     @Override
     public @Nullable ClassReference superclass() {
-        return superclass;
+        return VarTypeManager.directParseType(superclass);
     }
 
     @Override
@@ -156,13 +154,13 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public RuntimeAnnotationClassInstance[] annotations() {
-        return new RuntimeAnnotationClassInstance[0];
+    public Annotation[] annotations() {
+        return new Annotation[0];
     }
 
     @Override
     public ClassReference[] interfaces() {
-        return interfaces;
+        return Arrays.stream(interfaces).map(VarTypeManager::directParseType).toArray(ClassReference[]::new);
     }
 
     @Override

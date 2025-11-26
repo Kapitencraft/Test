@@ -246,9 +246,29 @@ public class VarTypeManager {
             case 'L' -> {
                 String type = reader.readUntil(';');
                 reader.skip();
-                yield getClassForName(type.replaceAll("/", "."));
+                yield getClassForName(type.replaceAll("[/$]", "."));
             }
             default -> throw new IllegalArgumentException("unknown type start: '" + reader.peek(-1) + "'");
+        };
+    }
+
+    public static ClassReference directParseType(String name) {
+        return switch (name) {
+            case "N" -> VarTypeManager.NUMBER.reference();
+            case "I" -> VarTypeManager.INTEGER.reference();
+            case "F" -> VarTypeManager.FLOAT.reference();
+            case "D" -> VarTypeManager.DOUBLE.reference();
+            case "B" -> VarTypeManager.BOOLEAN.reference();
+            case "C" -> VarTypeManager.CHAR.reference();
+            case "V" -> VarTypeManager.VOID.reference();
+            default -> {
+                if (name.startsWith("[")) {
+                    yield directParseType(name.substring(1));
+                } else if (name.startsWith("L")) {
+                    yield getClassForName(name.substring(1, name.length() - 1).replaceAll("[/$]", "."));
+                }
+                throw new IllegalArgumentException("unknown type pattern: '" + name + "'");
+            }
         };
     }
 

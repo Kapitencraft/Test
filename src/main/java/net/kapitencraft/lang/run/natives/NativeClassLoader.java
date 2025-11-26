@@ -3,14 +3,13 @@ package net.kapitencraft.lang.run.natives;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.NativeField;
-import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.run.natives.impl.NativeClassImpl;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -343,8 +342,8 @@ public class NativeClassLoader {
             }
 
             @Override
-            public RuntimeAnnotationClassInstance[] annotations() {
-                return new RuntimeAnnotationClassInstance[0];
+            public Annotation[] annotations() {
+                return new Annotation[0];
             }
 
             @Override

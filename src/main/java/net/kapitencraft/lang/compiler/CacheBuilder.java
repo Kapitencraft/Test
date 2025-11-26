@@ -1,9 +1,11 @@
 package net.kapitencraft.lang.compiler;
 
+import com.google.errorprone.annotations.Var;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -13,11 +15,11 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.CompileAnnotationClassInstance;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.annotation.RetentionPolicy;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -60,20 +62,17 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         return loxClass.save(this); //TODO convert to entirely bytecode later
     }
 
-    public JsonArray cacheAnnotations(CompileAnnotationClassInstance[] annotations) {
+    public JsonArray cacheAnnotations(Annotation[] annotations) {
         JsonArray array = new JsonArray();
-        for (CompileAnnotationClassInstance instance : annotations) {
-            CompileAnnotationClassInstance retention;
-            //if (retention = instance.getType().getAnnotation(VarTypeManager.RETENTION) != null) {
-            //    if (retention.getProperty("value"))
-            //    //TODO create annotation processor and implement retention
-            //}
-            JsonObject data = new JsonObject();
-            data.addProperty("type", instance.getType().absoluteName());
-            JsonObject properties = new JsonObject();
-            //instance.properties.forEach((string, expr) -> properties.add(string, cache(expr)));
-            data.add("properties", properties);
-            array.add(data);
+        for (Annotation instance : annotations) {
+            Annotation retention;
+            if ((retention = VarTypeManager.directParseType(instance.getType()).get().getAnnotation(VarTypeManager.RETENTION)) != null) {
+                if (retention.getProperty("value") == RetentionPolicy.SOURCE) {
+                    continue;
+                }
+                //TODO create annotation processor
+            }
+            array.add(instance.toJson());
         }
         return array;
     }
@@ -96,8 +95,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 assign = Opcode.ASSIGN_2;
             }
         }
-        this.builder.changeLineIfNecessary(expr.type());
-        assign(expr.executor(), expr.value(), expr.type().type(), get, assign, b -> {
+        assign(expr.executor(), expr.value(), expr.type(), get, assign, b -> {
             if (expr.ordinal() > 2) b.addArg(expr.ordinal());
         });
         return null;
@@ -122,7 +120,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             }
         }
 
-        this.builder.changeLineIfNecessary(expr.assignType());
         specialAssign(expr.executor(), expr.assignType(), get, assign, b -> {
             if (expr.ordinal() > 2) b.addArg(expr.ordinal());
         });
@@ -316,8 +313,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitStaticSetExpr(Expr.StaticSet expr) {
         String className = VarTypeManager.getClassName(expr.target().get());
         String fieldName = expr.name().lexeme();
-        //TODO line numbers
-        assign(expr.executor(), expr.value(), expr.assignType().type(), Opcode.GET_STATIC, Opcode.PUT_STATIC, b -> {
+        assign(expr.executor(), expr.value(), expr.assignType(), Opcode.GET_STATIC, Opcode.PUT_STATIC, b -> {
             b.injectString(className);
             b.injectString(fieldName);
         });
@@ -361,7 +357,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = true;
         cache(expr.callee());
         retainExprResult = hadRetain;
-        //TODO line numbers
         specialAssign(expr.retType(), expr.assignType(), Opcode.GET_FIELD, Opcode.PUT_FIELD, b -> b.injectString(expr.name().lexeme()));
         return null;
     }
@@ -397,6 +392,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private void specialAssign(ClassReference reference, Token token, Opcode get, Opcode set, Consumer<Chunk.Builder> meta) {
         builder.addCode(get);
         meta.accept(builder);
+        builder.changeLineIfNecessary(token);
         builder.addCode(token.type() == TokenType.GROW ?
                 getPlusOne(reference) : getMinusOne(reference)
         );
@@ -907,14 +903,15 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         throw new IllegalStateException("could not create 'negation' for: " + reference);
     }
 
-    private void assign(ClassReference retType, Expr value, TokenType type, Opcode get, Opcode assign, Consumer<Chunk.Builder> meta) {
+    private void assign(ClassReference retType, Expr value, Token type, Opcode get, Opcode assign, Consumer<Chunk.Builder> meta) {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
         cache(value);
-        if (type != TokenType.ASSIGN) {
+        builder.changeLineIfNecessary(type);
+        if (type.type() != TokenType.ASSIGN) {
             builder.addCode(get);
             meta.accept(builder);
-            switch (type) {
+            switch (type.type()) {
                 case ADD_ASSIGN -> builder.addCode(getAdd(retType));
                 case SUB_ASSIGN -> builder.addCode(getSub(retType));
                 case MUL_ASSIGN -> builder.addCode(getMul(retType));

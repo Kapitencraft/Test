@@ -1,15 +1,13 @@
 package net.kapitencraft.lang.oop.clazz.skeleton;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
-import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.field.SkeletonField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.SkeletonMethod;
@@ -17,16 +15,16 @@ import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Map;
 
 public class SkeletonInterface implements ScriptedClass {
     private final String name;
     private final String pck;
 
-    private final ClassReference[] interfaces;
+    private final String[] interfaces;
 
     private final Map<String, SkeletonField> staticFields;
 
@@ -34,7 +32,7 @@ public class SkeletonInterface implements ScriptedClass {
 
     private final GeneratedMethodMap methods;
 
-    public SkeletonInterface(String name, String pck, ClassReference[] interfaces, Map<String, SkeletonField> staticFields, Holder.Generics generics, Map<String, DataMethodContainer> methods) {
+    public SkeletonInterface(String name, String pck, String[] interfaces, Map<String, SkeletonField> staticFields, Holder.Generics generics, Map<String, DataMethodContainer> methods) {
         this.name = name;
         this.pck = pck;
         this.interfaces = interfaces;
@@ -57,7 +55,7 @@ public class SkeletonInterface implements ScriptedClass {
             });
         }
 
-        ClassReference[] interfaces = GsonHelper.getAsJsonArray(data, "interfaces").asList().stream().map(JsonElement::getAsString).map(VarTypeManager::getClassForName).toArray(ClassReference[]::new);
+        String[] interfaces = ClassLoader.loadInterfaces(data);
 
         return new SkeletonInterface(
                 name,
@@ -116,12 +114,12 @@ public class SkeletonInterface implements ScriptedClass {
 
     @Override
     public ClassReference[] interfaces() {
-        return interfaces;
+        return Arrays.stream(interfaces).map(VarTypeManager::directParseType).toArray(ClassReference[]::new);
     }
 
     @Override
-    public RuntimeAnnotationClassInstance[] annotations() {
-        return new RuntimeAnnotationClassInstance[0];
+    public Annotation[] annotations() {
+        return new Annotation[0];
     }
 
     @Override

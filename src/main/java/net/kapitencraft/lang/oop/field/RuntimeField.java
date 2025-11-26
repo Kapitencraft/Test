@@ -2,22 +2,19 @@ package net.kapitencraft.lang.oop.field;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
-import net.kapitencraft.lang.run.load.CacheLoader;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 
 public class RuntimeField implements ScriptedField {
     private final ClassReference type;
     private final short modifiers;
-    private final RuntimeAnnotationClassInstance[] annotations;
 
-    public RuntimeField(ClassReference type, short modifiers, RuntimeAnnotationClassInstance[] annotations) {
+    public RuntimeField(ClassReference type, short modifiers) {
         this.type = type;
         this.modifiers = modifiers;
-        this.annotations = annotations;
     }
 
     @Override
@@ -28,8 +25,8 @@ public class RuntimeField implements ScriptedField {
     public static RuntimeField fromJson(JsonObject object) {
         ClassReference type = ClassLoader.loadClassReference(object, "type");
         short modifiers = GsonHelper.getAsShort(object, "modifiers");
-        RuntimeAnnotationClassInstance[] annotations = CacheLoader.readAnnotations(object);
-        return new RuntimeField(type, modifiers, annotations);
+        Annotation[] annotations = Annotation.readAnnotations(object);
+        return new RuntimeField(type, modifiers);
     }
 
     public static ImmutableMap<String, RuntimeField> loadFieldMap(JsonObject data, String member) {

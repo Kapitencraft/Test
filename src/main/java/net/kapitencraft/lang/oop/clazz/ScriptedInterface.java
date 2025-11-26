@@ -33,6 +33,6 @@ public interface ScriptedInterface extends ScriptedClass {
 
     @Override
     default ClassReference superclass() {
-        return ClassReference.of(VarTypeManager.VOID);
+        return VarTypeManager.VOID.reference();
     }
 }

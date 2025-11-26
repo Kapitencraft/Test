@@ -2,17 +2,17 @@ package net.kapitencraft.lang.oop.clazz.generated;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.field.RuntimeField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
-import net.kapitencraft.lang.run.load.CacheLoader;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.lang.tool.Util;
@@ -29,20 +29,19 @@ public final class RuntimeClass implements ScriptedClass {
 
     private final Map<String, RuntimeField> allFields;
 
-    private final ClassReference superclass;
-    private final ClassReference[] implemented;
+    private final String superclass;
+    private final String[] implemented;
     private final String name;
     private final String packageRepresentation;
+    private final Annotation[] annotations;
 
     private final short modifiers;
 
-    private final RuntimeAnnotationClassInstance[] annotations;
-
     public RuntimeClass(Map<String, DataMethodContainer> methods,
                         Map<String, RuntimeField> fields,
-                        ClassReference superclass, String name, String packageRepresentation,
-                        ClassReference[] implemented,
-                        short modifiers, RuntimeAnnotationClassInstance[] annotations) {
+                        String superclass, String name, String packageRepresentation,
+                        String[] implemented,
+                        short modifiers, Annotation[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allFields = fields;
         this.superclass = superclass;
@@ -50,23 +49,22 @@ public final class RuntimeClass implements ScriptedClass {
         this.packageRepresentation = packageRepresentation;
         this.implemented = implemented;
         this.modifiers = modifiers;
-        this.annotations = annotations;
         this.lookup = MethodLookup.createFromClass(this);
+        this.annotations = annotations;
     }
 
     public static ScriptedClass load(JsonObject data, String pck) {
         String name = GsonHelper.getAsString(data, "name");
-        ClassReference superclass = ClassLoader.loadClassReference(data, "superclass");
-        ClassReference[] implemented = ClassLoader.loadInterfaces(data);
+        String superclass = GsonHelper.getAsString(data, "superclass");
+        String[] implemented = ClassLoader.loadInterfaces(data);
 
-        if (superclass == null) throw new IllegalArgumentException(String.format("could not find target class for class '%s': '%s'", name, GsonHelper.getAsString(data, "superclass")));
         ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
 
         ImmutableMap<String, RuntimeField> fields = RuntimeField.loadFieldMap(data, "fields");
 
         short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
 
-        RuntimeAnnotationClassInstance[] annotations = CacheLoader.readAnnotations(data);
+        Annotation[] annotations = Annotation.readAnnotations(data);
 
         return new RuntimeClass(
                 methods,
@@ -126,7 +124,7 @@ public final class RuntimeClass implements ScriptedClass {
 
     @Override
     public @Nullable ClassReference superclass() {
-        return superclass;
+        return VarTypeManager.directParseType(superclass);
     }
 
     @Override
@@ -159,11 +157,11 @@ public final class RuntimeClass implements ScriptedClass {
 
     @Override
     public ClassReference[] interfaces() {
-        return implemented;
+        return Arrays.stream(implemented).map(VarTypeManager::directParseType).toArray(ClassReference[]::new);
     }
 
     @Override
-    public RuntimeAnnotationClassInstance[] annotations() {
+    public Annotation[] annotations() {
         return annotations;
     }
 

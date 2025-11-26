@@ -1,19 +1,18 @@
 package net.kapitencraft.lang.run.natives.impl;
 
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.field.NativeField;
-import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.natives.NativeClassLoader;
 import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Map;
 
 @ApiStatus.Internal
@@ -91,8 +90,8 @@ public class NativeClassImpl implements ScriptedClass {
     }
 
     @Override
-    public RuntimeAnnotationClassInstance[] annotations() {
-        return new RuntimeAnnotationClassInstance[0];
+    public Annotation[] annotations() {
+        return new Annotation[0];
     }
 
     @Override

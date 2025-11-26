@@ -1,14 +1,13 @@
 package net.kapitencraft.lang.oop.clazz;
 
+import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.PrimitiveClassReference;
-import net.kapitencraft.lang.oop.clazz.inst.RuntimeAnnotationClassInstance;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -16,13 +15,13 @@ import java.util.Map;
 @ApiStatus.Internal
 public abstract class PrimitiveClass implements ScriptedClass {
     private final String name;
-    private final ScriptedClass superclass;
+    private final ClassReference superclass;
     private final Object defaultValue;
     private final PrimitiveClassReference reference;
 
     public PrimitiveClass(ScriptedClass superclass, String name, Object defaultValue) {
         this.name = name;
-        this.superclass = superclass;
+        this.superclass = superclass != null ? superclass.reference() : null;
         this.defaultValue = defaultValue;
         VarTypeManager.getOrCreatePackage("scripted.lang").addClass(name, this);
         this.reference = new PrimitiveClassReference(this.name, this);
@@ -59,7 +58,7 @@ public abstract class PrimitiveClass implements ScriptedClass {
 
     @Override
     public @Nullable ClassReference superclass() {
-        return superclass == null ? null : superclass.reference();
+        return superclass;
     }
 
     @Override
@@ -107,11 +106,6 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public RuntimeAnnotationClassInstance[] annotations() {
-        return new RuntimeAnnotationClassInstance[0];
-    }
-
-    @Override
     public ClassReference reference() {
         return reference;
     }
@@ -119,5 +113,10 @@ public abstract class PrimitiveClass implements ScriptedClass {
     @Override
     public boolean isNative() {
         return true;
+    }
+
+    @Override
+    public Annotation[] annotations() {
+        return new Annotation[0];
     }
 }
