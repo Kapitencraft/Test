@@ -5,8 +5,8 @@ public interface Modifiers {
             FINAL = 2,
             INTERFACE = 4,
             ABSTRACT = 8,
-            ANNOTATION = 1 << 4,
-            ENUM = 1 << 5;
+            ANNOTATION = 16,
+            ENUM = 32;
     //no access modifiers to worry about. yay!
     //short has 16 bits. should be sufficient
 

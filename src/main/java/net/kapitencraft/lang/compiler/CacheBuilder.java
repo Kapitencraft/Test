@@ -17,6 +17,7 @@ import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.RetentionPolicy;
@@ -79,33 +80,20 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitAssignExpr(Expr.Assign expr) {
-        Opcode get = Opcode.GET;
-        Opcode assign = Opcode.ASSIGN;
-        switch (expr.ordinal()) {
-            case 0 -> {
-                get = Opcode.GET_0;
-                assign = Opcode.ASSIGN_0;
-            }
-            case 1 -> {
-                get = Opcode.GET_1;
-                assign = Opcode.ASSIGN_1;
-            }
-            case 2 -> {
-                get = Opcode.GET_2;
-                assign = Opcode.ASSIGN_2;
-            }
-        }
-        assign(expr.executor(), expr.value(), expr.type(), get, assign, b -> {
+        AssignOperators result = getAssignOperators(expr.ordinal());
+        assign(expr.executor(), expr.value(), expr.type(), result.get(), result.assign(), b -> {
             if (expr.ordinal() > 2) b.addArg(expr.ordinal());
         });
         return null;
     }
 
-    @Override
-    public Void visitSpecialAssignExpr(Expr.SpecialAssign expr) {
+    private record AssignOperators(Opcode get, Opcode assign) {
+    }
+
+    private static @NotNull AssignOperators getAssignOperators(int ordinal) {
         Opcode get = Opcode.GET;
         Opcode assign = Opcode.ASSIGN;
-        switch (expr.ordinal()) {
+        switch (ordinal) {
             case 0 -> {
                 get = Opcode.GET_0;
                 assign = Opcode.ASSIGN_0;
@@ -119,8 +107,15 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 assign = Opcode.ASSIGN_2;
             }
         }
+        return new AssignOperators(get, assign);
+    }
 
-        specialAssign(expr.executor(), expr.assignType(), get, assign, b -> {
+
+    //TODO enable DUP if `Assign` / `VarDecl` is directly followed by a `Get`
+    @Override
+    public Void visitSpecialAssignExpr(Expr.SpecialAssign expr) {
+        AssignOperators operators = getAssignOperators(expr.ordinal());
+        specialAssign(expr.executor(), expr.assignType(), operators.get(), operators.assign(), b -> {
             if (expr.ordinal() > 2) b.addArg(expr.ordinal());
         });
         return null;
@@ -739,17 +734,17 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         int curIndex = builder.currentCodeIndex(); //link to jump back when loop is completed
 
         //region condition
-        getVar(baseVarIndex + 1); //get array var
+        getVar(baseVarIndex); //get array var
         builder.addCode(Opcode.ARRAY_LENGTH); //get length of array
-        getVar(baseVarIndex); //get iteration var
+        getVar(baseVarIndex + 1); //get iteration var
         builder.addCode(Opcode.I_LESSER); //check if iteration var is less than the length of the array
         int result = builder.addJumpIfFalse(); //create jump out of the loop if check fails
         //endregion
         loops.add(new Loop((short) result)); //push loop
 
         //region load iteration object
-        getVar(baseVarIndex); //load iteration var
-        getVar(baseVarIndex + 1); //load array var
+        getVar(baseVarIndex + 1); //load iteration var
+        getVar(baseVarIndex); //load array var
         builder.addCode(getArrayLoad(stmt.type()));  //create entry var by loading array element
         assignVar(baseVarIndex + 2); //store value to entry var
         //endregion
@@ -759,9 +754,9 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
         //region increase iteration var
         builder.addCode(Opcode.I_1); //load 1
-        getVar(baseVarIndex); //get iteration var
+        getVar(baseVarIndex + 1); //get iteration var
         builder.addCode(Opcode.I_ADD); //add 1 to the iteration var
-        assignVar(baseVarIndex);
+        assignVar(baseVarIndex + 1);
         //endregion
         int returnIndex = builder.addJump();
         loops.pop().patchBreaks();

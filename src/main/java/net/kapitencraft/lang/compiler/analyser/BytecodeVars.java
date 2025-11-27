@@ -40,7 +40,7 @@ public class BytecodeVars {
         while (i >= 0 && locals[i].depth >= scopeDepth) {
             i--;
         }
-        Stmt stmt = new Stmt.ClearLocals(localCount - i + 1);
+        Stmt stmt = new Stmt.ClearLocals(localCount - (i + 1));
         localCount = (byte) (i + 1);
         scopeDepth--;
         return stmt;

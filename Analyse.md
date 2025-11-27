@@ -10,7 +10,26 @@ Abschließen //generateClass
 Speichern //cache
 
 # Überblick
-Scripted ist als Minecraft Mod entstanden, in der Hoffnung, den Spielern die Möglichkeit zu geben, im Spiel dynamisch Funktionen zu schreiben die Einfluss auf das Spiel nehmen können. Aus der Abstract Syntax Tree Compilierten und Interpretierten Implementierung aus dem letzten Jahr ist nun eine Bytecode Compilierte und Interpretierte Implementierung geworden.
+Scripted ist als Minecraft-Mod entstanden, 
+    in der Hoffnung,
+    den Spielern die Möglichkeit zu geben, 
+    eigene Skripte zu schreiben und so Einfluss auf das Spiel zu nehmen. 
+Hierbei erforsche ich,
+    wie Compiler effizienten Bytecode erstellen können. 
+Aus dem Abstract-Syntax-Tree-Programm, 
+    welches im letzten Jahr eingereicht wurde,
+    ist nun ein Bytecode-Programm geworden.
+Computer laden aus dem RAM immer auch einen kleinen Teil aus der Umgebung der benötigten Daten in den CPU-Cache, 
+    was die Ladezeit jener Daten erheblich erhöht. 
+Werden dann diese Daten vom CPU benötigt, 
+    läuft das Programm um einiges schneller, 
+    was datendichte Programme .
+Das führt dazu, 
+    dass Bytecode,
+        der,
+            im Vergleich zum Abstract-Syntax-Tree Programm, 
+        generell eine sehr viel höhere Datendichte hat, 
+    deutlich schneller läuft.
 
 # Changes
 Change:
@@ -24,17 +43,27 @@ Change:
 <br>**All**
 
 Change:
-<br>reworked backed to support anonymous classes
+<br>reworked backend to support anonymous classes
 <br>Affected Expressions:
 <br>**Constructor**
 
 Change:
 <br>added Call expr to each binary expr
 <br>Affected Expressions:
-<br>**Binary (BinaryCall)**
-<br>**Set (SetCall)**
-<br>**SpecialSet (SpecialSetCall)**
-<br>**StaticSet (StaticSetCall)**
-<br>**StaticSpecial (StaticSpecialCall)**
-<br>**ArraySet (ArraySetCall)**
-<br>**ArraySpecial (ArraySpecialCall)**
+<br>**Binary**
+<br>**Set**
+<br>**SpecialSet**
+<br>**StaticSet**
+<br>**StaticSpecial**
+<br>**ArraySet**
+<br>**ArraySpecial**
+
+Change:
+<br>added an exception to slice to ensure errors are readable and fixable
+<br>Affected Expressions:
+<br>**Slice**
+
+Change:
+<br>ensured the array in for-each statements are not poped each iteration, decreasing its runtime as it is no longer necessary to re-load the value
+<br>Affected Expressions:
+<br>**ForEach**

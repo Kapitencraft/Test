@@ -206,8 +206,6 @@ public class StmtParser extends ExprParser {
         Token keyword = previous();
 
         consumeBracketOpen("for");
-        pushScope();
-        loopIndex++;
 
         Optional<SourceClassReference> type = tryConsumeVarType(generics);
 
@@ -223,9 +221,12 @@ public class StmtParser extends ExprParser {
                 expectType(init, arrayType);
                 consumeBracketClose("for");
                 //add 2 synthetic vars
-                int baseVar = varAnalyser.add("?", VarTypeManager.INTEGER.reference(), false, true);
-                varAnalyser.add("??", VarTypeManager.INTEGER.reference(), false, true);
-                varAnalyser.add(name.lexeme(), reference, true, true);
+                int baseVar = varAnalyser.add("??", VarTypeManager.INTEGER.reference(), false, true); //array variable
+                pushScope();
+                loopIndex++;
+
+                varAnalyser.add("?", VarTypeManager.INTEGER.reference(), false, true); //iteration variable
+                varAnalyser.add(name.lexeme(), reference, true, true); //named variable from sourcecode
                 Stmt stmt = statement();
                 loopIndex--;
                 stmt = new Stmt.Block(
@@ -236,12 +237,20 @@ public class StmtParser extends ExprParser {
                 );
                 return new Stmt.ForEach(reference, name, init, stmt, baseVar);
             }
+            pushScope();
+            loopIndex++;
             initializer = varDecl(false, reference, name);
         } else if (match(EOA)) {
+            pushScope();
+            loopIndex++;
             initializer = null;
         } else if (match(IDENTIFIER) && parser.hasClass(previous().lexeme())) {
+            pushScope();
+            loopIndex++;
             initializer = varDeclaration(false, parser.getClass(previous().lexeme()));
         } else {
+            pushScope();
+            loopIndex++;
             initializer = expressionStatement();
         }
 

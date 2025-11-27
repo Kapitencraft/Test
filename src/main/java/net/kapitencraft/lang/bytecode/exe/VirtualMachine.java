@@ -520,6 +520,11 @@ public class VirtualMachine {
         int interval = rawInterval != null ? rawInterval : 1;
         int min = rawStart != null ? rawStart : interval < 0 ? array.length : 0;
         int max = rawEnd != null ? rawEnd : interval < 0 ? 0 : array.length;
+        if (min > max) {
+            if (!handleException(createException(VarTypeManager.ARITHMETIC_EXCEPTION, "slice min must be less than max"))) {
+                return;
+            }
+        }
         T[] out = (T[]) new Object[(max - min) / interval];
         int index = 0;
         for (int i = min; i < max; i+=interval) {

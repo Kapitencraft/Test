@@ -327,7 +327,7 @@ public class AbstractParser {
         }
 
         Token last = previous();
-        while (match(DOT) && reference != null) { //TODO remove enclosing necessity. it shouldn't exist anyways
+        while (match(DOT) && reference != null) { //TODO fix token corruption due to consumption
             String enclosingName = consumeIdentifier().lexeme(); //needs to stay here for the mean-time to ensure the compiler doesn't break
         }
 
