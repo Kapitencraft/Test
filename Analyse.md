@@ -9,11 +9,22 @@ generate method contents //construct
 Abschließen //generateClass
 Speichern //cache
 
+# Titel
+Scripted: Entwicklung einer Programmiersprache als Werkzeug für Minecraft
+
 # Überblick
 Scripted ist als Minecraft-Mod entstanden, 
     in der Hoffnung,
     den Spielern die Möglichkeit zu geben, 
     eigene Skripte zu schreiben und so Einfluss auf das Spiel zu nehmen. 
+Dazu habe ich die Sprache erst definiert, 
+    einen Compiler, 
+        der Quellcode in Bytecode übertragen kann
+    und eine VirtualMachine geschrieben,
+        die den übertragenen Bytecode ausführen kann.
+In der Zukunft sollen auch ein Editor und ein Debugger hinzukommen, 
+    um es Benutzern einfacher zu machen, 
+        den Code zu schreiben und Fehler zu vermeiden.
 Hierbei erforsche ich,
     wie Compiler effizienten Bytecode erstellen können. 
 Aus dem Abstract-Syntax-Tree-Programm, 
@@ -21,9 +32,8 @@ Aus dem Abstract-Syntax-Tree-Programm,
     ist nun ein Bytecode-Programm geworden.
 Computer laden aus dem RAM immer auch einen kleinen Teil aus der Umgebung der benötigten Daten in den CPU-Cache, 
     was die Ladezeit jener Daten erheblich erhöht. 
-Werden dann diese Daten vom CPU benötigt, 
-    läuft das Programm um einiges schneller, 
-    was datendichte Programme .
+Werden dann diese Daten von dem CPU benötigt, 
+    läuft das Programm um einiges schneller.
 Das führt dazu, 
     dass Bytecode,
         der,
