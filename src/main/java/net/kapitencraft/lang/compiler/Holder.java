@@ -452,17 +452,12 @@ public class Holder {
                 methods.put(method.name().lexeme(), new MethodWrapper(val, method.type.getReference(), annotations.toArray(Annotation[]::new), method.modifiers()));
             }
 
-            List<Annotation> annotations = new ArrayList<>();
-            for (AnnotationObj obj : this.annotations()) {
-                annotations.add(stmtParser.parseAnnotation(obj, parser));
-            }
-
             return new BakedAnnotation(
                     this.target(),
                     this.name(),
                     this.pck(),
                     methods.build(),
-                    annotations.toArray(Annotation[]::new)
+                    parseAnnotations(stmtParser, parser)
             );
 
         }

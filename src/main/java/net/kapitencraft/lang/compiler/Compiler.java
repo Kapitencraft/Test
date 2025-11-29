@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class Compiler {
@@ -67,6 +68,7 @@ public class Compiler {
             registers.clear();
             activeStage = stage;
             System.out.printf("executing step %s\n", stage);
+
             ClassLoader.useHolders(compileData, (name, classHolder) -> stage.action.accept(classHolder));
 
             if (errorCount > 0) {
@@ -81,10 +83,11 @@ public class Compiler {
 
         System.out.println("executing step CACHING");
 
-        CacheBuilder builder = new CacheBuilder();
+        List<CompletableFuture<?>> futures = new ArrayList<>();
         ClassLoader.useClasses(compileData, (stringClassHolderMap, aPackage) ->
-                stringClassHolderMap.values().forEach(classHolder -> classHolder.cache(builder))
+                stringClassHolderMap.values().forEach(classHolder -> futures.add(CompletableFuture.runAsync(() -> classHolder.cache(new CacheBuilder()))))
         );
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
 
         if (errorCount > 0) System.exit(65);
     }

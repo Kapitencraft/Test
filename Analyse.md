@@ -1,7 +1,3 @@
-Scripted:
-Eine java-ähnliche Programmiersprache und gleichzeitig eine Forge Mod für Minecraft
-
-
 Preview (Existenz check)
 File -> Decl //applyConstructor
 Create Skeletons (method signature, field types...) //generateSkeletons
@@ -22,24 +18,21 @@ Dazu habe ich die Sprache erst definiert,
         der Quellcode in Bytecode übertragen kann
     und eine VirtualMachine geschrieben,
         die den übertragenen Bytecode ausführen kann.
-In der Zukunft sollen auch ein Editor und ein Debugger hinzukommen, 
-    um es Benutzern einfacher zu machen, 
-        den Code zu schreiben und Fehler zu vermeiden.
-Hierbei erforsche ich,
-    wie Compiler effizienten Bytecode erstellen können. 
 Aus dem Abstract-Syntax-Tree-Programm, 
-    welches im letzten Jahr eingereicht wurde,
+    welches Schwerpunkt meiner letzten Arbeit war,
     ist nun ein Bytecode-Programm geworden.
-Computer laden aus dem RAM immer auch einen kleinen Teil aus der Umgebung der benötigten Daten in den CPU-Cache, 
-    was die Ladezeit jener Daten erheblich erhöht. 
-Werden dann diese Daten von dem CPU benötigt, 
+Computer laden aus dem RAM immer auch einen kleinen Teil aus der Umgebung der benötigten Daten in den CPU-Cache. 
+Werden dann diese Daten von der CPU benötigt, 
     läuft das Programm um einiges schneller.
-Das führt dazu, 
-    dass Bytecode,
+Für Scripted untersuche ich, ob
+    der Bytecode,
         der,
             im Vergleich zum Abstract-Syntax-Tree Programm, 
         generell eine sehr viel höhere Datendichte hat, 
-    deutlich schneller läuft.
+    erwartungsgemäß deutlich schneller läuft und wie ich es noch weiter verbessern kann.
+In der Zukunft sollen auch ein Editor und ein Debugger hinzukommen,
+    um es Benutzern einfacher zu machen,
+        den Code zu schreiben und Fehler zu vermeiden.
 
 # Changes
 Change:
