@@ -4,16 +4,20 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.CompileField;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public final class CompileClass implements CacheableClass {
+public final class CompileClass implements CacheableClass, ScriptedClass {
     private final GeneratedMethodMap methods;
     private final Map<String, DataMethodContainer> allMethods;
 
@@ -69,6 +73,11 @@ public final class CompileClass implements CacheableClass {
     }
 
     @Override
+    public ClassReference reference() {
+        return CacheableClass.super.reference();
+    }
+
+    @Override
     public String toString() { //jesus
         return "GeneratedClass{" + name + "}[" +
                 "methods=" + allMethods + ", " +
@@ -77,12 +86,57 @@ public final class CompileClass implements CacheableClass {
     }
 
     @Override
+    public Object getStaticField(String name) {
+        return null;
+    }
+
+    @Override
+    public Object setStaticField(String name, Object val) {
+        return null;
+    }
+
+    @Override
     public String name() {
         return this.name;
     }
 
     @Override
+    public String absoluteName() {
+        return CacheableClass.super.absoluteName();
+    }
+
+    @Override
     public String pck() {
         return this.packageRepresentation;
+    }
+
+    @Override
+    public @Nullable ClassReference superclass() {
+        return this.superclass;
+    }
+
+    @Override
+    public ScriptedCallable getMethod(String signature) {
+        return null;
+    }
+
+    @Override
+    public AbstractMethodMap getMethods() {
+        return methods;
+    }
+
+    @Override
+    public Annotation[] annotations() {
+        return this.annotations;
+    }
+
+    @Override
+    public short getModifiers() {
+        return 0;
+    }
+
+    @Override
+    public boolean isNative() {
+        return false;
     }
 }

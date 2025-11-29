@@ -110,6 +110,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
             }
         }
         target = builder.build();
+        this.holder.target().setTarget((ScriptedClass) target);
     }
 
     public void validate() {

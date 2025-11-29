@@ -9,25 +9,21 @@ Speichern //cache
 Scripted: Entwicklung einer Programmiersprache als Werkzeug für Minecraft
 
 # Überblick
-Scripted ist als Minecraft-Mod entstanden, 
+Scripted entstand als Minecraft-Mod, 
     in der Hoffnung,
-    den Spielern die Möglichkeit zu geben, 
-    eigene Skripte zu schreiben und so Einfluss auf das Spiel zu nehmen. 
-Dazu habe ich die Sprache erst definiert, 
-    einen Compiler, 
-        der Quellcode in Bytecode übertragen kann
-    und eine VirtualMachine geschrieben,
+        den Spielern die Möglichkeit zu geben, 
+    eigene Skripte zu schreiben und so Einfluss auf das Spiel zu nehmen.
+Aus dem Programm, 
+    welches Schwerpunkt meiner letzten Arbeit war und einen Graphen zur Speicherung verwendete,
+        ist nun ein Bytecode-Programm geworden.
+Dazu habe ich die Sprache erst definiert,
+    einen Compiler, der Quellcode in Anweisungen übertragen kann, geschrieben und anschließend
+    ein Programm geschrieben,
         die den übertragenen Bytecode ausführen kann.
-Aus dem Abstract-Syntax-Tree-Programm, 
-    welches Schwerpunkt meiner letzten Arbeit war,
-    ist nun ein Bytecode-Programm geworden.
-Computer laden aus dem RAM immer auch einen kleinen Teil aus der Umgebung der benötigten Daten in den CPU-Cache. 
-Werden dann diese Daten von der CPU benötigt, 
-    läuft das Programm um einiges schneller.
 Für Scripted untersuche ich, ob
-    der Bytecode,
+    der Programmcode,
         der,
-            im Vergleich zum Abstract-Syntax-Tree Programm, 
+            im Vergleich zum Graphen-Programm, 
         generell eine sehr viel höhere Datendichte hat, 
     erwartungsgemäß deutlich schneller läuft und wie ich es noch weiter verbessern kann.
 In der Zukunft sollen auch ein Editor und ein Debugger hinzukommen,

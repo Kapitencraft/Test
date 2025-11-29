@@ -16,6 +16,7 @@ import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.run.natives.NativeClassInstance;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -68,7 +69,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         for (Annotation instance : annotations) {
             Annotation retention;
             if ((retention = VarTypeManager.directParseType(instance.getType()).get().getAnnotation(VarTypeManager.RETENTION)) != null) {
-                if (retention.getProperty("value") == RetentionPolicy.SOURCE) {
+                if (((NativeClassInstance) retention.getProperty("value")).getObject() == RetentionPolicy.SOURCE) {
                     continue;
                 }
                 //TODO create annotation processor
@@ -371,7 +372,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitArraySpecialExpr(Expr.ArraySpecial expr) {
-        //TODO
         ClassReference reference = expr.executor();
         builder.changeLineIfNecessary(expr.assignType());
         builder.addCode(expr.assignType().type() == TokenType.GROW ?
@@ -416,7 +416,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitSliceExpr(Expr.Slice expr) {
-        //TODO
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
         cache(expr.object());
