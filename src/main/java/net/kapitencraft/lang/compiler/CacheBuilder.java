@@ -429,6 +429,9 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitSwitchExpr(Expr.Switch expr) {
+        builder.addCode(Opcode.SWITCH);
+        int defaultPatch = builder.addSwitchJump();
+
         //JsonObject object = new JsonObject(); TODO fix
         //cache(expr.provider);
         //this.builder.addCode(Opcode.SWITCH);

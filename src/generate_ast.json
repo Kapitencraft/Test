@@ -110,7 +110,7 @@
         },
         "Switch": {
           "provider": "Expr",
-          "params": "Map<Object,Expr>",
+          "params": "Map<Integer,Expr>",
           "defaulted": "Expr",
           "keyword": "Token"
         },

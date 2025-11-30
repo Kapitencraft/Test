@@ -204,6 +204,10 @@ public class AbstractParser {
         return Arrays.stream(types).anyMatch(this::check);
     }
 
+    protected boolean check(TokenTypeCategory category) {
+        return check(categoryLookup.get(category));
+    }
+
     protected boolean match(TokenTypeCategory category) {
         return match(categoryLookup.get(category));
     }

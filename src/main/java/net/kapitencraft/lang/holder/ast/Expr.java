@@ -292,7 +292,7 @@ public interface Expr {
 
     record Switch(
         Expr provider, 
-        Map<Object,Expr> params, 
+        Map<Integer,Expr> params,
         Expr defaulted, 
         Token keyword
     ) implements Expr {

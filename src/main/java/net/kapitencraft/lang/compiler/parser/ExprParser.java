@@ -420,15 +420,17 @@ public class ExprParser extends AbstractParser {
         Expr provider = expression();
         popExpectation();
 
+        ClassReference type = finder.findRetType(provider);
+
         consumeBracketClose("switch");
 
         consumeCurlyOpen("switch body");
-        Map<Object, Expr> params = new HashMap<>();
+        Map<Integer, Expr> params = new HashMap<>();
         Expr def = null;
 
         while (!check(C_BRACKET_C)) {
             if (match(CASE)) {
-                Object key = literal();
+                int key = literalOrEnum(type);
                 if (params.containsKey(key)) errorLogger.errorF(previous(), "Duplicate case key '%s'", previous().lexeme());
                 consume(LAMBDA, "not a statement");
                 Expr expr = expression();
@@ -446,6 +448,20 @@ public class ExprParser extends AbstractParser {
 
         consumeCurlyClose("switch body");
         return new Expr.Switch(provider, params, def, keyword);
+    }
+
+    private int literalOrEnum(ClassReference type) {
+        if (check(PRIMITIVE)) {
+            return (int) literal();
+        } else {
+            if (type.get().isChildOf(VarTypeManager.ENUM.get())) {
+                Token identifier = consumeIdentifier();
+                ScriptedField field = type.get().getFields().get(identifier.lexeme());
+                field.
+            }
+            error(peek(), "unknown symbol");
+        }
+        return -1;
     }
 
     private Expr staticAssign(ClassReference target, Token name) {
