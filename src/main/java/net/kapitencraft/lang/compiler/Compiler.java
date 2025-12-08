@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 public class Compiler {
@@ -64,7 +65,7 @@ public class Compiler {
 
         compileData = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
 
-        Executor executor = //TODO
+        Executor executor = Executors.newFixedThreadPool(10);
         for (Stage stage : Stage.values()) {
             registers.forEach(ClassRegister::register);
             registers.clear();

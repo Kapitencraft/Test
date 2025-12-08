@@ -110,7 +110,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         return new AssignOperators(get, assign);
     }
 
-
     //TODO enable DUP if `Assign` / `VarDecl` is directly followed by a `Get`
     @Override
     public Void visitSpecialAssignExpr(Expr.SpecialAssign expr) {
