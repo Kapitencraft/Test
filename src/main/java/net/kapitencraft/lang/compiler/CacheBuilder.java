@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.compiler;
 
-import com.google.errorprone.annotations.Var;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
@@ -727,10 +726,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitForEachStmt(Stmt.ForEach stmt) {
         builder.addLocal(builder.currentCodeIndex(), stmt.baseVar() + 1, stmt.type(), stmt.name().lexeme());
-        builder.addCode(Opcode.I_0); //create iteration variable
         retainExprResult = true;
         builder.changeLineIfNecessary(stmt.name());
         cache(stmt.initializer()); //create array variable
+        builder.addCode(Opcode.I_0); //create iteration variable
         int baseVarIndex = stmt.baseVar();
 
         int curIndex = builder.currentCodeIndex(); //link to jump back when loop is completed

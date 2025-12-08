@@ -76,11 +76,11 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         builder = holder.construct(stmtParser, this.varTypeParser, this.logger);
     }
 
-    public void cache(CacheBuilder builder) {
+    public void cache() {
         try {
             Compiler.cache(
                     ClassLoader.cacheLoc,
-                    builder,
+                    new CacheBuilder(),
                     target.pck().replace(".", "/"),
                     target,
                     target.name()

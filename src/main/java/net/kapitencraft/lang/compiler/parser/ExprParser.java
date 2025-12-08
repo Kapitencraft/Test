@@ -457,7 +457,7 @@ public class ExprParser extends AbstractParser {
             if (type.get().isChildOf(VarTypeManager.ENUM.get())) {
                 Token identifier = consumeIdentifier();
                 ScriptedField field = type.get().getFields().get(identifier.lexeme());
-                field.
+                //TODO
             }
             error(peek(), "unknown symbol");
         }

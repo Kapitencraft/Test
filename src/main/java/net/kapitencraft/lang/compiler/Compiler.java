@@ -19,6 +19,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 public class Compiler {
@@ -63,13 +64,14 @@ public class Compiler {
 
         compileData = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
 
+        Executor executor = //TODO
         for (Stage stage : Stage.values()) {
             registers.forEach(ClassRegister::register);
             registers.clear();
             activeStage = stage;
             System.out.printf("executing step %s\n", stage);
 
-            ClassLoader.useHolders(compileData, (name, classHolder) -> stage.action.accept(classHolder));
+            ClassLoader.useHolders(compileData, (name, classHolder) -> stage.action.accept(classHolder), executor);
 
             if (errorCount > 0) {
                 if (errorCount > 100) {
@@ -85,7 +87,7 @@ public class Compiler {
 
         List<CompletableFuture<?>> futures = new ArrayList<>();
         ClassLoader.useClasses(compileData, (stringClassHolderMap, aPackage) ->
-                stringClassHolderMap.values().forEach(classHolder -> futures.add(CompletableFuture.runAsync(() -> classHolder.cache(new CacheBuilder()))))
+                stringClassHolderMap.values().forEach(classHolder -> futures.add(CompletableFuture.runAsync(classHolder::cache)))
         );
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
 
