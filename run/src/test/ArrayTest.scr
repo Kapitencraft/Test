@@ -6,5 +6,7 @@ class ArrayTest {
         for (String s : args[2::]) {
             System.print(s);
         }
+        args[0] = "Element A";
+        System.print(args[1]);
     }
 }

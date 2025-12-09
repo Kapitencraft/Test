@@ -3,7 +3,8 @@
     "target": "test.ArrayTest",
     "args": "a b c d e f g h i j k",
     "output": [
-      "c", "d", "e", "f", "g", "h", "i", "j", "k"
+      "c", "d", "e", "f", "g", "h", "i", "j", "k",
+      "b"
     ]
   },
   {

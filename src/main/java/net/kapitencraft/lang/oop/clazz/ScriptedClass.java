@@ -120,7 +120,7 @@ public interface ScriptedClass {
 
     default boolean isChildOf(ScriptedClass suspectedParent) {
         return suspectedParent.isInterface() ?
-                Arrays.stream(this.interfaces()).anyMatch(reference -> reference.get().isParentOf(suspectedParent)) :
+                Arrays.stream(this.interfaces()).anyMatch(reference -> reference.get().isParentOf(suspectedParent)) || this.superclass().get().isChildOf(suspectedParent)  :
                 suspectedParent.isParentOf(this);
     }
 
