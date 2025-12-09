@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class ClassLoader {
@@ -191,8 +192,8 @@ public class ClassLoader {
         }
     }
 
-    public static <T extends ClassLoaderHolder<T>> void useHolders(PackageHolder<T> root, BiConsumer<String, T> consumer, Executor executor) {
-        //List<CompletableFuture<?>> futures = new ArrayList<>();
+    public static <T extends ClassLoaderHolder<T>> void useHolders(PackageHolder<T> root, Consumer<T> consumer, Executor executor) {
+        List<CompletableFuture<?>> futures = new ArrayList<>();
         List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         while (!packageData.isEmpty()) {
@@ -200,15 +201,14 @@ public class ClassLoader {
             PackageHolder<T> holder = data.left();
             Package pck = data.right();
             holder.classes.forEach((n, o) ->
-                    consumer.accept(n, o)
-                    //futures.add(CompletableFuture.runAsync(() -> consumer.accept(n, o), executor))
+                    futures.add(CompletableFuture.runAsync(() -> consumer.accept(o), executor))
             );
             holder.packages.forEach((name, holder1) ->
                     packageData.add(Pair.of(holder1, pck.getOrCreatePackage(name))) //adding all packages back to the queue
             );
             packageData.remove(0);
         }
-        //CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
     }
 
     public static ClassReference loadClassReference(JsonObject object, String elementName) {

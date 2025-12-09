@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
@@ -65,14 +66,17 @@ public class Compiler {
 
         compileData = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
 
-        Executor executor = Executors.newFixedThreadPool(10);
+        ExecutorService executor = Executors.newFixedThreadPool(10);
         for (Stage stage : Stage.values()) {
             registers.forEach(ClassRegister::register);
             registers.clear();
             activeStage = stage;
             System.out.printf("executing step %s\n", stage);
 
-            ClassLoader.useHolders(compileData, (name, classHolder) -> stage.action.accept(classHolder), executor);
+            if (stage == Stage.CACHING && cache.exists())
+                Util.delete(cache);
+
+            ClassLoader.useHolders(compileData, stage.action, executor);
 
             if (errorCount > 0) {
                 if (errorCount > 100) {
@@ -81,18 +85,7 @@ public class Compiler {
                 System.exit(65);
             }
         }
-
-        if (cache.exists()) Util.delete(cache);
-
-        System.out.println("executing step CACHING");
-
-        List<CompletableFuture<?>> futures = new ArrayList<>();
-        ClassLoader.useClasses(compileData, (stringClassHolderMap, aPackage) ->
-                stringClassHolderMap.values().forEach(classHolder -> futures.add(CompletableFuture.runAsync(classHolder::cache)))
-        );
-        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
-
-        if (errorCount > 0) System.exit(65);
+        executor.shutdownNow();
     }
 
     public interface ClassBuilder {
@@ -212,7 +205,8 @@ public class Compiler {
         CREATE_SKELETON(CompilerLoaderHolder::applySkeleton),
         VALIDATE(CompilerLoaderHolder::validate),
         CONSTRUCT(CompilerLoaderHolder::construct),
-        LOAD(CompilerLoaderHolder::loadClass);
+        LOAD(CompilerLoaderHolder::loadClass),
+        CACHING(CompilerLoaderHolder::cache);
 
         private final Consumer<CompilerLoaderHolder> action;
 

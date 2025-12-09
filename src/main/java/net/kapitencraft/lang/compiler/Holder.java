@@ -547,7 +547,7 @@ public class Holder {
                     fields.build(),
                     DataMethodContainer.bakeBuilders(methods),
                     this.modifiers,
-                    Arrays.stream(this.interfaces).map(SourceClassReference::getReference).map(ClassReference::get).map(VarTypeManager::getClassName).toArray(String[]::new)
+                    Arrays.stream(this.interfaces).map(SourceClassReference::getReference).map(VarTypeManager::getClassName).toArray(String[]::new)
             );
         }
 
