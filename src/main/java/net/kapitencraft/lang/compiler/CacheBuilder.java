@@ -126,7 +126,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = true;
         cache(expr.right());
         cache(expr.left());
-        if (!hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
+        if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
             final ClassReference executor = expr.executor();
             this.builder.changeLineIfNecessary(expr.operator());
             switch (expr.operator().type()) {
@@ -429,6 +429,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitSwitchExpr(Expr.Switch expr) {
         builder.addCode(Opcode.SWITCH);
         int defaultPatch = builder.addSwitchJump();
+
 
         //JsonObject object = new JsonObject(); TODO fix
         //cache(expr.provider);
@@ -746,7 +747,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         getVar(baseVarIndex + 1); //load iteration var
         getVar(baseVarIndex); //load array var
         builder.addCode(getArrayLoad(stmt.type()));  //create entry var by loading array element
-        assignVar(baseVarIndex + 2); //store value to entry var
         //endregion
 
         retainExprResult = false;

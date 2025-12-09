@@ -65,7 +65,7 @@
     ]
   },
   {
-    "target": "AnonymousClassTest",
+    "target": "test.AnonymousClassTest",
     "output": ["5"]
   }
 ]

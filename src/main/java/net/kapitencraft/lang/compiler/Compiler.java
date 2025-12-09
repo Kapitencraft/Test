@@ -37,7 +37,6 @@ public class Compiler {
         for (int i = 1; i <= activeStage.ordinal(); i++) {
             Stage.values()[i].action.accept(holder);
         }
-
     }
 
     public static void queueRegister(Holder.Class aClass, ErrorLogger errorLogger, VarTypeParser parser, @Nullable String namePrefix) {
@@ -72,7 +71,7 @@ public class Compiler {
             activeStage = stage;
             System.out.printf("executing step %s\n", stage);
 
-            ClassLoader.useHolders(compileData, (name, classHolder) -> stage.action.accept(classHolder), executor);
+            ClassLoader.useHolders(compileData, stage.action, executor);
 
             if (errorCount > 0) {
                 if (errorCount > 100) {

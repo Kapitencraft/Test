@@ -265,7 +265,7 @@ public class VarTypeManager {
                 if (name.startsWith("[")) {
                     yield directParseType(name.substring(1));
                 } else if (name.startsWith("L")) {
-                    yield getClassForName(name.substring(1, name.length() - 1).replaceAll("[/$]", "."));
+                    yield getClassForName(name.substring(1, name.length() - 1).replaceAll("/", "."));
                 }
                 throw new IllegalArgumentException("unknown type pattern: '" + name + "'");
             }

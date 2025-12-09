@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class ClassLoader {
@@ -149,16 +150,7 @@ public class ClassLoader {
                     pckLoader.add(Pair.of(file1, child));
                 } else {
                     String name = file1.getName().replace(end, "");
-                    String[] enclosedSplit = name.split("\\$");
-                    if (enclosedSplit.length > 1) {
-                        PackageHolder<T> loader = holder;
-                        for (int i = 0; i < enclosedSplit.length - 1; i++) {
-                            loader = loader.packages.computeIfAbsent(enclosedSplit[i], s -> new PackageHolder<>());
-                        }
-                        loader.classes.put(enclosedSplit[enclosedSplit.length - 1], constructor.apply(file1));
-                    } else {
-                        holder.classes.put(enclosedSplit[0], constructor.apply(file1));
-                    }
+                    holder.classes.put(name, constructor.apply(file1));
                 }
             }
             pckLoader.remove(0);
@@ -191,7 +183,7 @@ public class ClassLoader {
         }
     }
 
-    public static <T extends ClassLoaderHolder<T>> void useHolders(PackageHolder<T> root, BiConsumer<String, T> consumer, Executor executor) {
+    public static <T extends ClassLoaderHolder<T>> void useHolders(PackageHolder<T> root, Consumer<T> consumer, Executor executor) {
         //List<CompletableFuture<?>> futures = new ArrayList<>();
         List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
@@ -200,8 +192,8 @@ public class ClassLoader {
             PackageHolder<T> holder = data.left();
             Package pck = data.right();
             holder.classes.forEach((n, o) ->
-                    consumer.accept(n, o)
-                    //futures.add(CompletableFuture.runAsync(() -> consumer.accept(n, o), executor))
+                    consumer.accept(o)
+                    //futures.add(CompletableFuture.runAsync(() -> consumer.accept(o), executor))
             );
             holder.packages.forEach((name, holder1) ->
                     packageData.add(Pair.of(holder1, pck.getOrCreatePackage(name))) //adding all packages back to the queue
@@ -239,7 +231,7 @@ public class ClassLoader {
 
     public static String pck(File file) {
         String path = file.getPath().replace(cacheLoc.getPath(), "").replace(".scrc", "");
-        List<String> pckData = new ArrayList<>(List.of(path.split("[\\\\$]")));
+        List<String> pckData = new ArrayList<>(List.of(path.split("\\\\")));
         pckData = pckData.subList(1, pckData.size()-1);
         return String.join(".", pckData);
     }
