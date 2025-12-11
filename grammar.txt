@@ -3,8 +3,8 @@ program     -> pck import* clDecl
 pck         -> "package" VAR_TYPE ";"
 import      -> "import" VAR_TYPE ("as" IDENTIFIER)? ";"
 
-clDec       -> interfaceDecl | classDecl | enumDecl | annotationDecl
-interfaceDecl -> "interface" IDENTIFIER ( "extends" VAR_TYPE ( "," VAR_TYPE )* )?
+clDecl      -> interfaceDecl | classDecl | enumDecl | annotationDecl
+interfaceDecl -> "interface" IDENTIFIER ( "extends" VAR_TYPE ( "," VAR_TYPE )* )? "{" (funcDecl | varDecl)* "}"
 classDecl   -> "class" IDENTIFIER ( "extends" VAR_TYPE )? ( "implements" VAR_TYPE ( "," VAR_TYPE)* )? "{" (funcDecl | varDecl)* "}"
 enumDecl    -> "enum" IDENTIFIER ( "implements" VAR_TYPE ( "," VAR_TYPE )* )
 annotationDecl -> "annotation" IDENTIFIER "{" annotationFuncDecl* "}"
