@@ -133,6 +133,11 @@ public class Util {
         return false;
     }
 
+    public static ScriptedCallable getConstructor(ScriptedClass targetClass, ClassReference[] args) {
+
+
+    }
+
     public static ScriptedCallable getClosest(ScriptedClass targetClass, String name, ClassReference[] args) {
         if (!targetClass.hasMethod(name)) {
             return null;

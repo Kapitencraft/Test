@@ -107,7 +107,7 @@ public class Holder {
                     args = stmtParser.args();
                 }
 
-                ScriptedCallable callable = Util.getClosest(target.get(), "<init>", stmtParser.argTypes(args));
+                ScriptedCallable callable = Util.getConstructor(target.get(), stmtParser.argTypes(args));
 
                 stmtParser.checkArguments(args, callable, null, decl.name());
                 statics.add(new Stmt.Expression(new Expr.StaticSet(

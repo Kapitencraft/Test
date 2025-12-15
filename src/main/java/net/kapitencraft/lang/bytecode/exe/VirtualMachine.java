@@ -403,6 +403,7 @@ public class VirtualMachine {
                     case XOR -> push((boolean) pop() ^ (boolean) pop());
                     case D2F -> push((float) (double) pop());
                     case SWITCH -> {
+
                     }
                     case GET_FIELD -> {
                         ClassInstance instance = (ClassInstance) pop();

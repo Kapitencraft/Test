@@ -543,8 +543,8 @@ public class ExprParser extends AbstractParser {
         return expr;
     }
 
-    public ClassReference checkArguments(Expr[] args, ScriptedCallable target, @Nullable ClassReference obj, Token loc) {
-        ClassReference[] expectedTypes = target.argTypes();
+    public ClassReference checkArguments(Expr[] args, @Nullable ScriptedCallable target, @Nullable ClassReference obj, Token loc) {
+        ClassReference[] expectedTypes = target == null ? new ClassReference[0] : target.argTypes();
         ClassReference[] givenTypes = argTypes(args);
         if (expectedTypes.length != givenTypes.length) {
             errorLogger.errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
@@ -558,7 +558,7 @@ public class ExprParser extends AbstractParser {
             }
         }
 
-        ClassReference type = target.retType();
+        ClassReference type = target == null ? VarTypeManager.VOID.reference() : target.retType();
         //TODO figure out how to extract gotten generics
         if (type instanceof GenericClassReference genericClassReference) {
             GenericStack genericStack = new GenericStack();
@@ -785,7 +785,7 @@ public class ExprParser extends AbstractParser {
             return null;
         }
 
-        return Util.getClosest(scriptedClass, "<init>", this.argTypes(args));
+        return Util.getConstructor(scriptedClass, this.argTypes(args));
     }
 
     private Expr statics() {
