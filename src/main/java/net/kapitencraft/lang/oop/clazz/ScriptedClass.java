@@ -180,5 +180,9 @@ public interface ScriptedClass {
 
     boolean isNative();
 
+    default Holder.EnumConstant getEnumConstant(String lexeme) {
+        return null;
+    }
+
     //endregion
 }

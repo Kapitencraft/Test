@@ -107,7 +107,7 @@ public class Holder {
                     args = stmtParser.args();
                 }
 
-                ScriptedCallable callable = Util.getConstructor(target.get(), stmtParser.argTypes(args));
+                ScriptedCallable callable = Util.getVirtualMethod(target.get(), "<init>", stmtParser.argTypes(args));
 
                 stmtParser.checkArguments(args, callable, null, decl.name());
                 statics.add(new Stmt.Expression(new Expr.StaticSet(
@@ -545,6 +545,7 @@ public class Holder {
                     this.name().lexeme(),
                     this.pck(), VarTypeManager.getClassName(this.parent.getReference()),
                     fields.build(),
+                    this.enumConstants,
                     DataMethodContainer.bakeBuilders(methods),
                     this.modifiers,
                     Arrays.stream(this.interfaces).map(SourceClassReference::getReference).map(ClassReference::get).map(VarTypeManager::getClassName).toArray(String[]::new)

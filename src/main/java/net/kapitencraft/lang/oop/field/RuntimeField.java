@@ -48,4 +48,9 @@ public class RuntimeField implements ScriptedField {
     public boolean isStatic() {
         return Modifiers.isStatic(this.modifiers);
     }
+
+    @Override
+    public short modifiers() {
+        return modifiers;
+    }
 }

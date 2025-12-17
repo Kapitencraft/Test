@@ -428,9 +428,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitSwitchExpr(Expr.Switch expr) {
         builder.addCode(Opcode.SWITCH);
-        int defaultPatch = builder.addSwitchJump();
-
-
+        int defaultPatch = builder.addJump();
+        builder.add2bArg(expr.params().size()); //length of pairs
         //JsonObject object = new JsonObject(); TODO fix
         //cache(expr.provider);
         //this.builder.addCode(Opcode.SWITCH);
@@ -444,6 +443,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         //        this::cache)
         //);
         //return object;
+        //https://docs.oracle.com/javase/specs/jvms/se25/html/jvms-6.html#jvms-6.5.lookupswitch
         return null;
     }
 

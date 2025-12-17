@@ -48,4 +48,9 @@ public class NativeField implements ScriptedField {
     public boolean isStatic() {
         return Modifiers.isStatic(modifiers);
     }
+
+    @Override
+    public short modifiers() {
+        return modifiers;
+    }
 }

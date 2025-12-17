@@ -64,7 +64,7 @@ public class VarTypeManager {
         for (int i = 0; i < packages.length; i++) {
             String name = packages[i];
             if (i == packages.length - 1) {
-                ClassReference reference = pg.getClass(name.replace("[]", ""));
+                ClassReference reference = pg.getClass(name);
                 if (reference == null) return null;
                 for (; arrayCount > 0; arrayCount--) {
                     reference = reference.array();
@@ -265,7 +265,7 @@ public class VarTypeManager {
                 if (name.startsWith("[")) {
                     yield directParseType(name.substring(1));
                 } else if (name.startsWith("L")) {
-                    yield getClassForName(name.substring(1, name.length() - 1).replaceAll("/", "."));
+                    yield getClassForName(name.substring(1, name.length() - 1).replaceAll("[$/]", "."));
                 }
                 throw new IllegalArgumentException("unknown type pattern: '" + name + "'");
             }

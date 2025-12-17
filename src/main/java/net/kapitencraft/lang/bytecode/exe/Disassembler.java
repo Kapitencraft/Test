@@ -58,11 +58,15 @@ public class Disassembler {
             case NEW, S_CONST -> stringConstInstruction(opcode, chunk, offset);
             case INVOKE_STATIC, INVOKE_VIRTUAL -> invoke(opcode, chunk, offset);
             case JUMP, JUMP_IF_FALSE -> jump(opcode, chunk, offset);
-            case SWITCH -> 0;
+            case SWITCH -> switchInstruction(opcode, chunk, offset);
             case GET_FIELD, PUT_FIELD -> fieldOp(opcode, chunk, offset);
             case GET_STATIC, PUT_STATIC -> staticFieldOp(opcode, chunk, offset);
             //case RA_NEW -> newArray(opcode, chunk, offset);
         };
+    }
+
+    private static int switchInstruction(Opcode opcode, Chunk chunk, int offset) {
+        return 0;
     }
 
     private static int debugTrace(Chunk chunk, int offset) {

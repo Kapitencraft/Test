@@ -12,14 +12,14 @@ enum SwitchTest {
     static void main(String[] args) {
         for (SwitchTest st : SwitchTest.values()) {
             switch (st) {
-                case A -> System.print("aaaa")
-                case B -> System.print("bbbb")
-                case C -> System.print("cccc")
-                case D -> System.print("ddddd")
-                case E -> System.print("EA Sports")
-                case F -> System.print("F in den Chat")
-                case G -> System.print("GG")
-            }
+                case A -> System.print("aaaa");
+                case B -> System.print("bbbb");
+                case C -> System.print("cccc");
+                case D -> System.print("ddddd");
+                case E -> System.print("EA Sports");
+                case F -> System.print("F in den Chat");
+                case G -> System.print("GG");
+            };
         }
     }
 }

@@ -390,6 +390,7 @@ public class AbstractParser {
                 case FOR:
                 case IF:
                 case WHILE:
+                case SWITCH:
                 case RETURN:
                     return;
             }

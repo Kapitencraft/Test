@@ -6,6 +6,8 @@ public interface ScriptedField {
 
     ClassReference type();
 
+    short modifiers();
+
     boolean isFinal();
 
     boolean isStatic();

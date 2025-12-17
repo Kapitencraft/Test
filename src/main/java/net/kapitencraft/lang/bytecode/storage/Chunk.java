@@ -255,15 +255,6 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers, 
                 this.constants.add(i);
             }
         }
-
-        public int addSwitchJump() {
-            int c = currentCodeIndex();
-            this.addArg(0);
-            this.addArg(0);
-            this.addArg(0);
-            this.addArg(0);
-            return c;
-        }
     }
 
     /**

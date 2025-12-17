@@ -23,7 +23,6 @@ import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 import net.kapitencraft.lang.tool.Util;
-import net.kapitencraft.tool.StringReader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -425,7 +424,7 @@ public class ExprParser extends AbstractParser {
         consumeBracketClose("switch");
 
         consumeCurlyOpen("switch body");
-        Map<Integer, Expr> params = new HashMap<>();
+        Map<Integer, Expr> params = new LinkedHashMap<>();
         Expr def = null;
 
         while (!check(C_BRACKET_C)) {
@@ -456,7 +455,11 @@ public class ExprParser extends AbstractParser {
         } else {
             if (type.get().isChildOf(VarTypeManager.ENUM.get())) {
                 Token identifier = consumeIdentifier();
-                ScriptedField field = type.get().getFields().get(identifier.lexeme());
+                Holder.EnumConstant constant = type.get().getEnumConstant(identifier.lexeme());
+                if (constant != null) {
+                    return constant.ordinal();
+                }
+                return identifier.lexeme().hashCode(); //return hashcode to ensure objects are not equal
                 //TODO
             }
             error(peek(), "unknown symbol");
@@ -703,7 +706,7 @@ public class ExprParser extends AbstractParser {
                         consumeBracketClose("arguments");
                         return new Expr.StaticCall(objType, name, arguments, WILDCARD, "?");
                     }
-                    ScriptedCallable callable = Util.getClosest(targetClass, name.lexeme(), givenTypes);
+                    ScriptedCallable callable = Util.getStaticMethod(targetClass, name.lexeme(), givenTypes);
                     ClassReference retType = VarTypeManager.VOID.reference();
                     String signature = null;
                     if (callable != null) {
@@ -785,7 +788,7 @@ public class ExprParser extends AbstractParser {
             return null;
         }
 
-        return Util.getConstructor(scriptedClass, this.argTypes(args));
+        return Util.getVirtualMethod(scriptedClass, "<init>", this.argTypes(args));
     }
 
     private Expr statics() {
@@ -808,7 +811,7 @@ public class ExprParser extends AbstractParser {
             consumeBracketClose("arguments");
             return new Expr.StaticCall(objType, name, arguments, WILDCARD, "?");
         }
-        ScriptedCallable callable = Util.getClosest(targetClass, name.lexeme(), givenTypes);
+        ScriptedCallable callable = Util.getVirtualMethod(targetClass, name.lexeme(), givenTypes);
         ClassReference retType = VarTypeManager.VOID.reference();
         String signature = null;
         if (callable != null) {

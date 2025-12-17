@@ -24,6 +24,7 @@ public class SkeletonClass implements ScriptedClass {
 
     private final String superclass;
     private final Map<String, SkeletonField> fields;
+    private final Holder.EnumConstant[] constants;
 
     private final Holder.Generics generics;
 
@@ -34,7 +35,7 @@ public class SkeletonClass implements ScriptedClass {
 
     public SkeletonClass(Holder.Generics generics,
                          String name, String pck, String superclass,
-                         Map<String, SkeletonField> fields,
+                         Map<String, SkeletonField> fields, Holder.EnumConstant[] constants,
                          Map<String, DataMethodContainer> methods,
                          short modifiers, String[] interfaces) {
         this.name = name;
@@ -42,6 +43,7 @@ public class SkeletonClass implements ScriptedClass {
         this.superclass = superclass;
         this.fields = fields;
         this.generics = generics;
+        this.constants = constants;
         this.methods = new GeneratedMethodMap(methods);
         this.modifiers = modifiers;
         this.interfaces = interfaces;
@@ -51,6 +53,7 @@ public class SkeletonClass implements ScriptedClass {
                          Map<String, SkeletonField> fields,
                          Map<String, DataMethodContainer> methods,
                          short modifiers, String[] interfaces) {
+        this.constants = null;
         this.generics = null;
         this.name = name;
         this.pck = pck;
@@ -166,5 +169,16 @@ public class SkeletonClass implements ScriptedClass {
     @Override
     public boolean isNative() {
         return false;
+    }
+
+    @Override
+    public Holder.EnumConstant getEnumConstant(String lexeme) {
+        if (this.constants != null) {
+            for (Holder.EnumConstant constant : this.constants) {
+                if (constant.name().lexeme().equals(lexeme))
+                    return constant;
+            }
+        }
+        return null;
     }
 }
