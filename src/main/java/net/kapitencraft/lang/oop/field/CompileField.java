@@ -6,6 +6,7 @@ import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.run.VarTypeManager;
 
 public class CompileField implements ScriptedField {
     private final ClassReference type;
@@ -25,7 +26,7 @@ public class CompileField implements ScriptedField {
 
     public JsonElement cache(CacheBuilder cacheBuilder) {
         JsonObject object = new JsonObject();
-        object.addProperty("type", type.absoluteName());
+        object.addProperty("type", VarTypeManager.getClassName(type));
         //if (hasInit()) object.add("init", cacheBuilder.cache(init)); TODO
         object.addProperty("modifiers", this.modifiers);
         object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));

@@ -77,7 +77,7 @@ public class SkeletonClass implements ScriptedClass {
             JsonObject fieldData = GsonHelper.getAsJsonObject(data, "fields");
             fieldData.asMap().forEach((s, element) -> {
                 JsonObject object = element.getAsJsonObject();
-                fields.put(s, new SkeletonField(ClassLoader.loadClassReference(object, "type"), GsonHelper.getAsShort(object, "modifiers")));
+                fields.put(s, new SkeletonField(VarTypeManager.directParseType(GsonHelper.getAsString(object, "type")), GsonHelper.getAsShort(object, "modifiers")));
             });
         }
 

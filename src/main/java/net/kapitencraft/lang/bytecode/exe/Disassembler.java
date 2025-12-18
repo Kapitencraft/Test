@@ -66,7 +66,16 @@ public class Disassembler {
     }
 
     private static int switchInstruction(Opcode opcode, Chunk chunk, int offset) {
-        return 0;
+        int defaulted = read2b(chunk.code(), offset + 1);
+        int size = read2b(chunk.code(), offset + 3);
+        System.out.printf("%-16s size=%4d, default=%4d\n", opcode, size, defaulted);
+        for (int i = 0; i < size; i++) {
+            System.out.printf("\t%4d -> %4d\n",
+                    read4b(chunk.code(), offset + 5 + i * 6),
+                    read2b(chunk.code(), offset + 9 + i * 6)
+            );
+        }
+        return offset + 9 + size * 6;
     }
 
     private static int debugTrace(Chunk chunk, int offset) {
@@ -157,5 +166,9 @@ public class Disassembler {
 
     private static int read2b(byte[] code, int index) {
         return ((code[index++] & 255) << 8) | (code[index] & 255);
+    }
+
+    private static int read4b(byte[] code, int index) {
+        return ((((code[index++] & 255) << 8) | (code[index++] & 255) << 8) | (code[index++] & 255) << 8) | (code[index] & 255);
     }
 }

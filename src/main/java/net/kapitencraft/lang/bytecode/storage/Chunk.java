@@ -179,9 +179,16 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers, 
             this.addArg((byte) (i & 255));
         }
 
-        public void add2bArg(int size) {
-            this.addArg((size >> 8) & 255);
-            this.addArg(size & 255);
+        public void add2bArg(int arg) {
+            this.addArg((arg >> 8));
+            this.addArg(arg);
+        }
+
+        public void add4bArg(int arg) {
+            this.addArg((arg >> 24));
+            this.addArg((arg >> 16));
+            this.addArg((arg >> 8));
+            this.addArg(arg);
         }
 
         public void addCode(Opcode opcode) {

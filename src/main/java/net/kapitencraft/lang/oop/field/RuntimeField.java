@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 
@@ -23,7 +24,7 @@ public class RuntimeField implements ScriptedField {
     }
 
     public static RuntimeField fromJson(JsonObject object) {
-        ClassReference type = ClassLoader.loadClassReference(object, "type");
+        ClassReference type = VarTypeManager.directParseType(GsonHelper.getAsString(object, "type"));
         short modifiers = GsonHelper.getAsShort(object, "modifiers");
         Annotation[] annotations = Annotation.readAnnotations(object);
         return new RuntimeField(type, modifiers);

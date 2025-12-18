@@ -428,21 +428,38 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitSwitchExpr(Expr.Switch expr) {
         builder.addCode(Opcode.SWITCH);
-        int defaultPatch = builder.addJump();
+        int defaultPatch = builder.currentCodeIndex();
+        builder.addArg(0);
+        builder.addArg(0);
         builder.add2bArg(expr.params().size()); //length of pairs
-        //JsonObject object = new JsonObject(); TODO fix
-        //cache(expr.provider);
-        //this.builder.addCode(Opcode.SWITCH);
-//
-        //object.addProperty("TYPE", "switch");
-        //object.add("defaulted", cache(expr.defaulted));
-        //object.add("keyword", expr.keyword.toJson());
-        //object.add("elements", Util.writeMap(
-        //        expr.params,
-        //        o -> o instanceof Number n ? new JsonPrimitive(n) : o instanceof Boolean b ? new JsonPrimitive(b) : o instanceof String s ? new JsonPrimitive(s) : new JsonPrimitive((char) o),
-        //        this::cache)
-        //);
-        //return object;
+
+        //compile entries to add sorted
+        List<Integer> keys = new ArrayList<>(expr.params().keySet());
+        keys.sort(Integer::compareTo);
+        record SwitchEntry(int key, int opcode, Expr entry) {}
+
+        List<SwitchEntry> entries = new ArrayList<>();
+        for (Integer key : keys) {
+            Expr expr1 = expr.params().get(key);
+            builder.add4bArg(key);
+            entries.add(new SwitchEntry(key, builder.currentCodeIndex(), expr1));
+            builder.addArg(0);
+            builder.addArg(0);
+        }
+        List<Integer> continueJumps = new ArrayList<>();
+
+        //cache entries
+        for (SwitchEntry entry : entries) {
+            builder.patchJumpCurrent(entry.opcode);
+            cache(entry.entry);
+            continueJumps.add(builder.addJump()); //TODO remove jump if default does not exist
+        }
+        builder.patchJumpCurrent(defaultPatch);
+        if (expr.defaulted() != null) {
+            cache(expr.defaulted());
+        }
+
+        continueJumps.forEach(builder::patchJumpCurrent);
         //https://docs.oracle.com/javase/specs/jvms/se25/html/jvms-6.html#jvms-6.5.lookupswitch
         return null;
     }
