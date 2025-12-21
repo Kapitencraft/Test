@@ -421,6 +421,11 @@ public class ExprParser extends AbstractParser {
 
         ClassReference type = finder.findRetType(provider);
 
+        if (type.get().isChildOf(VarTypeManager.ENUM.get())) {
+            //is enum, wrap in ordinal access
+            provider = new Expr.InstCall(provider, Token.createNative("ordinal"), new Expr[0], VarTypeManager.INTEGER.reference(), "Lscripted/lang/Enum;ordinal()I");
+        }
+
         consumeBracketClose("switch");
 
         consumeCurlyOpen("switch body");
@@ -451,6 +456,9 @@ public class ExprParser extends AbstractParser {
 
     private int literalOrEnum(ClassReference type) {
         if (check(PRIMITIVE)) {
+            if (type.get().isChildOf(VarTypeManager.ENUM.get())) {
+                //error wrong type
+            }
             return (int) literal();
         } else {
             if (type.get().isChildOf(VarTypeManager.ENUM.get())) {

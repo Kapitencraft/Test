@@ -141,6 +141,18 @@ public class VirtualMachine {
         return (readByte() << 8) | readByte();
     }
 
+    private static int read4b() {
+        return (read2Byte() << 16) | read2Byte();
+    }
+
+    private static int read4bWithOffset(int i) {
+        return ((((((frame.code[frame.ip + i] & 255) << 8) | (frame.code[frame.ip + i + 1] & 255)) << 8) | (frame.code[frame.ip + i + 2] & 255)) << 8) | (frame.code[frame.ip + i + 3] & 255);
+    }
+
+    private static int read2ByteWithOffset(int i) {
+        return ((((frame.code[frame.ip + i] & 255) << 8) | (frame.code[frame.ip + i + 1] & 255)) << 8);
+    }
+
     public static void runMainMethod(ScriptedClass target, String data, boolean profiling, boolean output) {
         if (!target.hasMethod("main")) return;
         Optional.ofNullable(target.getMethod("main([Lscripted/lang/String;)"))
@@ -403,7 +415,28 @@ public class VirtualMachine {
                     case XOR -> push((boolean) pop() ^ (boolean) pop());
                     case D2F -> push((float) (double) pop());
                     case SWITCH -> {
-
+                        int entry = (int) pop();
+                        int defaultPos = read2Byte();
+                        int size = read2Byte();
+                        //6 bytes per entry
+                        int lLoc = 0;
+                        int uLoc = size;
+                        int idx = size / 2;
+                        while (lLoc < uLoc) {
+                            int obj = read4bWithOffset(idx * 6);
+                            if (obj == entry) {
+                                frame.ip = read2ByteWithOffset(idx * 6 + 4);
+                                break;
+                            }
+                            if (obj < entry)
+                                lLoc = idx;
+                            else
+                                uLoc = idx;
+                            idx = (uLoc - lLoc) / 2;
+                        }
+                        if (lLoc >= uLoc) {
+                            frame.ip = defaultPos;
+                        }
                     }
                     case GET_FIELD -> {
                         ClassInstance instance = (ClassInstance) pop();

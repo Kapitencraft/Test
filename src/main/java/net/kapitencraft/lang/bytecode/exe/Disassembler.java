@@ -75,7 +75,7 @@ public class Disassembler {
                     read2b(chunk.code(), offset + 9 + i * 6)
             );
         }
-        return offset + 9 + size * 6;
+        return offset + 5 + size * 6;
     }
 
     private static int debugTrace(Chunk chunk, int offset) {

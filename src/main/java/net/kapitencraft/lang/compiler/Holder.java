@@ -109,10 +109,16 @@ public class Holder {
 
                 ScriptedCallable callable = Util.getVirtualMethod(target.get(), "<init>", stmtParser.argTypes(args));
 
-                stmtParser.checkArguments(args, callable, null, decl.name());
+                String signature;
+                if (args.length == 0 && callable.isNative())
+                    signature = null;
+                else {
+                    signature = VarTypeManager.getMethodSignature(target.get(), "<init>", stmtParser.argTypes(args));
+                    stmtParser.checkArguments(args, callable, null, decl.name());
+                }
                 statics.add(new Stmt.Expression(new Expr.StaticSet(
                         target, decl.name,
-                        new Expr.Constructor(decl.name, target, args, VarTypeManager.getMethodSignature(target.get(), "<init>", stmtParser.argTypes(args))),
+                        new Expr.Constructor(decl.name, target, args, signature),
                         new Token(TokenType.ASSIGN, "=", LiteralHolder.EMPTY, -1, 0),
                         target
                 )));

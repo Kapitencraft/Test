@@ -67,7 +67,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         JsonArray array = new JsonArray();
         for (Annotation instance : annotations) {
             Annotation retention;
-            if ((retention = VarTypeManager.directParseType(instance.getType()).get().getAnnotation(VarTypeManager.RETENTION)) != null) {
+            if ((retention = VarTypeManager.directParseTypeCompiler(instance.getType()).get().getAnnotation(VarTypeManager.RETENTION)) != null) {
                 if (((NativeClassInstance) retention.getProperty("value")).getObject() == RetentionPolicy.SOURCE) {
                     continue;
                 }
