@@ -210,7 +210,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitSuperCallExpr(Expr.SuperCall expr) {
-        cache(expr.callee());
+        getVar(0);
         builder.changeLineIfNecessary(expr.name());
         saveArgs(expr.args());
         builder.invokeStatic(expr.id());
@@ -317,14 +317,15 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitArraySetExpr(Expr.ArraySet expr) {
+        //order: arr, index, val -> val
         ClassReference retType = expr.executor();
         TokenType type = expr.assignType().type();
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
-        cache(expr.value());
-        cache(expr.object());
-        cache(expr.index());
         if (type != TokenType.ASSIGN) {
+            cache(expr.value());
+            cache(expr.object());
+            cache(expr.index());
             builder.addCode(Opcode.DUP2_X1);
             builder.addCode(getArrayLoad(retType));
             builder.changeLineIfNecessary(expr.assignType());
@@ -335,6 +336,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 case DIV_ASSIGN -> builder.addCode(getDiv(retType));
                 case POW_ASSIGN -> builder.addCode(getPow(retType));
             }
+        } else {
+            cache(expr.object());
+            cache(expr.index());
+            cache(expr.value());
         }
         if (hadRetain)
             builder.addCode(Opcode.DUP); //duplicate to keep the value on the stack as the ARRAY_SET does not actually keep anything on the stack
@@ -427,6 +432,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitSwitchExpr(Expr.Switch expr) {
+        cache(expr.provider());
         builder.addCode(Opcode.SWITCH);
         int defaultPatch = builder.currentCodeIndex();
         builder.addArg(0);
@@ -857,6 +863,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         return this.builder;
     }
 
+    //order: idx, arr -> val
     private Opcode getArrayLoad(ClassReference reference) {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.IA_LOAD;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.DA_LOAD;

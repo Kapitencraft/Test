@@ -42,7 +42,6 @@
           "id": "String"
         },
         "SuperCall": {
-          "callee": "Expr",
           "type": "ClassReference",
           "name": "Token",
           "args": "Expr[]",

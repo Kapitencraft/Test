@@ -5,15 +5,21 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.run.VarTypeManager;
 
 public class CompileField implements ScriptedField {
+    private final Token name;
+    private final Expr init;
     private final ClassReference type;
     private final short modifiers;
     private final Annotation[] annotations;
 
-    public CompileField(ClassReference type, short modifiers, Annotation[] annotations) {
+    public CompileField(Token name, Expr init, ClassReference type, short modifiers, Annotation[] annotations) {
+        this.name = name;
+        this.init = init;
         this.type = type;
         this.modifiers = modifiers;
         this.annotations = annotations;
@@ -27,7 +33,6 @@ public class CompileField implements ScriptedField {
     public JsonElement cache(CacheBuilder cacheBuilder) {
         JsonObject object = new JsonObject();
         object.addProperty("type", VarTypeManager.getClassName(type));
-        //if (hasInit()) object.add("init", cacheBuilder.cache(init)); TODO
         object.addProperty("modifiers", this.modifiers);
         object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
         return object;
@@ -46,5 +51,17 @@ public class CompileField implements ScriptedField {
     @Override
     public short modifiers() {
         return modifiers;
+    }
+
+    public ClassReference getType() {
+        return type;
+    }
+
+    public Token getName() {
+        return name;
+    }
+
+    public Expr getInit() {
+        return init;
     }
 }

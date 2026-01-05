@@ -256,6 +256,7 @@ public class VirtualMachine {
                         int callableStackTop = stackIndex - length;
 
                         if (callable.isNative()) {
+                            if (DEBUG) System.out.printf("[DEBUG]: calling native: %s\n", execute);
                             Object[] args = new Object[length];
                             System.arraycopy(stack, callableStackTop, args, 0, length);
                             stackIndex = callableStackTop; //reset stack index
@@ -279,6 +280,7 @@ public class VirtualMachine {
                         ScriptedCallable callable = instance.getType().getMethod(reader.getRemaining()); //virtual invoke of the method
 
                         if (callable.isNative()) {
+                            if (DEBUG) System.out.printf("[DEBUG]: calling native: %s\n", execute);
                             Object[] args = new Object[length];
                             System.arraycopy(stack, callableStackTop, args, 0, length);
                             stackIndex = callableStackTop; //reset stack index
@@ -518,11 +520,12 @@ public class VirtualMachine {
             return handleException(createClassCast(type, VarTypeManager.THROWABLE));
         }
 
-        List<String> stackTrace = new ArrayList<>(); //TODO format
+        List<String> stackTrace = new ArrayList<>();
         for (int i = callStackTop - 1; i > -1; i--) {
             CallFrame callFrame = callStack[i];
             int lineAt = callFrame.callable.getChunk().lineNumberTable().getLineAt(callFrame.ip);
-            stackTrace.add(callFrame.signature + " " + lineAt);
+            String readableSignature = callFrame.signature.substring(1, callFrame.signature.indexOf('(') == -1 ? callFrame.signature.length() : callFrame.signature.indexOf('(')).replaceAll("[;/]", ".");
+            stackTrace.add(String.format("\tat %s(%s.scr:%s)", readableSignature, VarTypeManager.flatParse(new StringReader(callFrame.signature)).name(), lineAt));
         }
 
         while (callStackTop > 0) {
@@ -542,7 +545,7 @@ public class VirtualMachine {
             callStackTop--;
         }
         System.out.printf("Caused by: %s\n", exception.getField("message"));
-        stackTrace.forEach(s -> System.out.println("\tat " + s));
+        stackTrace.forEach(System.out::println);
         return false;
     }
 

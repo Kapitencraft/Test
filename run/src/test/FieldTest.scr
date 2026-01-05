@@ -1,0 +1,18 @@
+package test;
+
+class FieldTest {
+    final String a;
+    final String b = "b";
+    String c = "c";
+
+    FieldTest(String a) {
+        this.a = a;
+    }
+
+    FieldTest() {
+    }
+
+    void appendC(String cTarget) {
+        c += cTarget;
+    }
+}

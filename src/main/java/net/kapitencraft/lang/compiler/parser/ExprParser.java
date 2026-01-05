@@ -210,7 +210,7 @@ public class ExprParser extends AbstractParser {
                 expectType(get.name(), target.get().getFieldType(get.name().lexeme()), finder.findRetType(value));
 
                 Executor executor;
-                if (assign.type() != ASSIGN) executor = getExecutor(target, assign, value);
+                if (assign.type() != ASSIGN) executor = getExecutor(target.get().getFieldType(get.name().lexeme()), assign, value);
                 else executor = Executor.UNKNOWN;
                 return new Expr.Set(get.object(), get.name(), value, assign, executor.executor);
             } else if (expr instanceof Expr.ArrayGet get) {
@@ -468,7 +468,6 @@ public class ExprParser extends AbstractParser {
                     return constant.ordinal();
                 }
                 return identifier.lexeme().hashCode(); //return hashcode to ensure objects are not equal
-                //TODO
             }
             error(peek(), "unknown symbol");
         }
@@ -701,30 +700,30 @@ public class ExprParser extends AbstractParser {
                 consume(DOT, "expected '.' after 'super'");
                 Token name = consumeIdentifier();
                 ScriptedClass type = fallback.get();
-                ClassReference objType = type.superclass();
+                ClassReference superclass = type.superclass();
                 consumeBracketOpen("super method");
-                if (objType == null) {
+                if (superclass == null) {
                     error(name, "can not access super class");
                 } else if (type.hasMethod(name.lexeme())) {
                     Expr[] arguments = args();
                     ClassReference[] givenTypes = argTypes(arguments);
-                    ScriptedClass targetClass = objType.get();
+                    ScriptedClass targetClass = superclass.get();
                     if (!targetClass.hasMethod(name.lexeme())) {
                         error(name, "unknown method '" + name.lexeme() + "'");
                         consumeBracketClose("arguments");
-                        return new Expr.StaticCall(objType, name, arguments, WILDCARD, "?");
+                        return new Expr.StaticCall(superclass, name, arguments, WILDCARD, "?");
                     }
                     ScriptedCallable callable = Util.getStaticMethod(targetClass, name.lexeme(), givenTypes);
                     ClassReference retType = VarTypeManager.VOID.reference();
                     String signature = null;
                     if (callable != null) {
-                        retType = checkArguments(arguments, callable, objType, name);
+                        retType = checkArguments(arguments, callable, superclass, name);
                         signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), callable.argTypes());
                     }
 
                     consumeBracketClose("arguments");
 
-                    return new Expr.SuperCall(new Expr.VarRef(reference, (byte) 0), objType, name, arguments, retType, signature);
+                    return new Expr.SuperCall(new Expr.VarRef(reference, (byte) 0), superclass, name, arguments, retType, signature);
                 }
             }
         }

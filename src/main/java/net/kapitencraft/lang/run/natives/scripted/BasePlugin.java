@@ -19,7 +19,6 @@ public class BasePlugin {
         registration.registerClass(ArithmeticException.class, "scripted.lang");
         registration.registerClass(VirtualMachineError.class, "scripted.lang");
         registration.registerClass(StackOverflowError.class, "scripted.lang");
-        registration.registerClass(Enum.class, "scripted.lang", "Enum");
         registration.registerClass(Annotation.class, "scripted.lang.annotations");
         registration.registerClass(String.class, "scripted.lang", "String");
         registration.registerClass(Throwable.class, "scripted.lang");

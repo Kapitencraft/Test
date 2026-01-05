@@ -37,6 +37,7 @@ public class NativeClassLoader {
         registerNative(VarTypeManager.BOOLEAN, Boolean.class, boolean.class);
         registerNative(VarTypeManager.CHAR, Character.class, char.class);
         registerNative(VarTypeManager.VOID, Void.class, void.class);
+        classLookup.put(Enum.class, VarTypeManager.ENUM);
     }
 
     private static boolean hadError = false;

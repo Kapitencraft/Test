@@ -221,7 +221,7 @@ public class StmtParser extends ExprParser {
                 expectType(init, arrayType);
                 consumeBracketClose("for");
                 //add 2 synthetic vars
-                int baseVar = varAnalyser.add("??", reference.array(), false, true); //array variable
+                int baseVar = varAnalyser.add("?", reference.array(), false, true); //array variable
                 varAnalyser.add("?", VarTypeManager.INTEGER.reference(), false, true); //iteration variable
                 pushScope();
                 loopIndex++;

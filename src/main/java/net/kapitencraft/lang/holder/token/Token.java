@@ -2,6 +2,7 @@ package net.kapitencraft.lang.holder.token;
 
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.LiteralHolder;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,5 +36,13 @@ public record Token(TokenType type, String lexeme, LiteralHolder literal, int li
 
     public Token withPrefix(@Nullable String namePrefix) {
         return new Token(this.type, namePrefix + this.lexeme, this.literal, this.line, this.lineStartIndex);
+    }
+
+    public Token asIdentifier(String newLexeme) {
+        return new Token(TokenType.IDENTIFIER, newLexeme, LiteralHolder.EMPTY, this.line, this.lineStartIndex);
+    }
+
+    public Token lexemeAsLiteral() {
+        return new Token(TokenType.STR, this.lexeme, new LiteralHolder(this.lexeme, VarTypeManager.STRING.get()), this.line, this.lineStartIndex);
     }
 }

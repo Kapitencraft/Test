@@ -13,11 +13,9 @@ import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
@@ -81,10 +79,21 @@ public class HolderParser extends AbstractParser {
 
     private Token[] getFieldCode() {
         List<Token> tokens = new ArrayList<>();
+        int sBracket = 0;
+        int cBracket = 0;
+        int bracket = 0; //necessary to allow parameter calls, and anonymous classes / lambda
         do {
-            tokens.add(advance());
-        } while (!check(EOA));
-        tokens.add(consumeEndOfArg());
+            Token advance = advance();
+            switch (advance.type()) {
+                case S_BRACKET_O -> sBracket++;
+                case S_BRACKET_C -> sBracket--;
+                case C_BRACKET_O -> cBracket++;
+                case C_BRACKET_C -> cBracket--;
+                case BRACKET_O -> bracket++;
+                case BRACKET_C -> bracket--;
+            }
+            tokens.add(advance);
+        } while ((sBracket > 0 || cBracket > 0 || bracket > 0) || !check(EOA));
         return tokens.toArray(Token[]::new);
     }
 
@@ -179,7 +188,7 @@ public class HolderParser extends AbstractParser {
         return VarTypeManager.getOrCreateClass(name, pck);
     }
 
-    public void parseClassProperties(ModifierScope.Group scope, List<Holder.Method> methods, @Nullable List<Holder.Constructor> constructors, List<Holder.Field> fields, ClassReference target, String pckId, Token name) {
+    public void parseClassProperties(ModifierScope.Group scope, List<Holder.Method> methods, @Nullable List<Holder.Constructor> constructors, List<Holder.Field> fields, ClassReference target, String pckId, Token name, boolean asEnum) {
         String constructorName = constructors != null ? name.lexeme().contains("$") ? name.lexeme().substring(name.lexeme().lastIndexOf('$') + 1) : name.lexeme() : null;
         while (!check(C_BRACKET_C) && !isAtEnd()) {
             ModifiersParser modifiers = MODIFIERS;
@@ -188,9 +197,9 @@ public class HolderParser extends AbstractParser {
             if (readClass(pckId, name.lexeme(), modifiers)) {
                 modifiers.generics.pushToStack(activeGenerics);
                 if (Objects.equals(advance().lexeme(), constructorName) && !check(IDENTIFIER)) {
-                    Token constName = previous(); //TODO allow classes to access themselves by getting their name
+                    Token constName = previous();
                     consumeBracketOpen("constructors");
-                    Holder.Constructor decl = constDecl(annotations, modifiers.getGenerics(), constName);
+                    Holder.Constructor decl = constructorDecl(annotations, modifiers.getGenerics(), constName, asEnum);
                     constructors.add(decl);
                 } else {
                     current--; //reset after advancing in the `if`
@@ -231,8 +240,13 @@ public class HolderParser extends AbstractParser {
     }
 
 
-    private Holder.Constructor constDecl(Holder.AnnotationObj[] annotation, Holder.Generics generics, Token origin) {
+    private Holder.Constructor constructorDecl(Holder.AnnotationObj[] annotation, Holder.Generics generics, Token origin, boolean asEnum) {
         List<Pair<SourceClassReference, String>> parameters = parseParams();
+        if (asEnum) { //add name and ordinal access
+            parameters.add(0, Pair.of(SourceClassReference.from(origin, VarTypeManager.STRING), "?"));
+            parameters.add(1, Pair.of(SourceClassReference.from(origin, VarTypeManager.INTEGER.reference()), "?"));
+        }
+
         consumeBracketClose("params");
 
         consumeCurlyOpen("method body");
@@ -361,7 +375,7 @@ public class HolderParser extends AbstractParser {
         short modifiers = mods != null ? mods.packModifiers() : 0;
         Holder.AnnotationObj[] annotations = mods != null ? mods.getAnnotations() : new Holder.AnnotationObj[0];
 
-        parseClassProperties(Modifiers.isAbstract(modifiers) ? ModifierScope.Group.ABSTRACT_CLASS : ModifierScope.Group.CLASS, methods, constructors, fields, target, pckID, name);
+        parseClassProperties(Modifiers.isAbstract(modifiers) ? ModifierScope.Group.ABSTRACT_CLASS : ModifierScope.Group.CLASS, methods, constructors, fields, target, pckID, name, false);
 
         if (stack != null) activeGenerics = stack;
         return new Holder.Class(ClassType.CLASS,
@@ -426,7 +440,6 @@ public class HolderParser extends AbstractParser {
 
         ClassReference target = getOrCreate(name.lexeme(), pckID);
 
-
         parser.addClass(SourceClassReference.from(name, target), originalName);
 
         List<SourceClassReference> interfaces = new ArrayList<>();
@@ -461,14 +474,14 @@ public class HolderParser extends AbstractParser {
         List<Holder.Method> methods = new ArrayList<>();
         List<Holder.Field> fields = new ArrayList<>();
 
-        parseClassProperties(ModifierScope.Group.ENUM, methods, constructors, fields, target, pckID, name);
+        parseClassProperties(ModifierScope.Group.ENUM, methods, constructors, fields, target, pckID, name, true);
 
         consumeCurlyClose("enum");
         activePackages.pop();
 
         return new Holder.Class(ClassType.ENUM,
                 target, modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), pckID, name,
-                SourceClassReference.from(Token.createNative("Enum"), VarTypeManager.ENUM),
+                SourceClassReference.from(name.asIdentifier("Enum"), VarTypeManager.ENUM),
                 interfaces.toArray(new SourceClassReference[0]),
                 constructors.toArray(new Holder.Constructor[0]),
                 methods.toArray(new Holder.Method[0]),
@@ -526,8 +539,8 @@ public class HolderParser extends AbstractParser {
         if (match(DEFAULT)) {
             defaultCode = getFieldCode();
             defaulted = true;
-        } else
-            consumeEndOfArg();
+        }
+        consumeEndOfArg();
         return new Holder.Method(Modifiers.pack(false, false, !defaulted), annotations, null, type, elementName, null, List.of(), defaultCode);
     }
 
@@ -572,7 +585,7 @@ public class HolderParser extends AbstractParser {
         List<Holder.Method> methods = new ArrayList<>();
         List<Holder.Field> fields = new ArrayList<>();
 
-        parseClassProperties(ModifierScope.Group.INTERFACE, methods, null, fields, target, pckID, name);
+        parseClassProperties(ModifierScope.Group.INTERFACE, methods, null, fields, target, pckID, name, false);
 
         consumeCurlyClose("class");
 
