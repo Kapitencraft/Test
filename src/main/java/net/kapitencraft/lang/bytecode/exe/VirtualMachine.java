@@ -26,6 +26,9 @@ public class VirtualMachine {
     private static int callStackTop = 0;
 
     private static CallFrame frame;
+    private static byte[] code;
+    private static byte[] constants;
+    private static int ip = 0;
 
     private static final class CallFrame {
         private final String signature;
@@ -134,7 +137,7 @@ public class VirtualMachine {
     }
 
     private static int readByte() {
-        return frame.code[frame.ip++] & 255;
+        return code[ip++] & 255;
     }
 
     private static int read2Byte() {
@@ -146,11 +149,11 @@ public class VirtualMachine {
     }
 
     private static int read4bWithOffset(int i) {
-        return ((((((frame.code[frame.ip + i] & 255) << 8) | (frame.code[frame.ip + i + 1] & 255)) << 8) | (frame.code[frame.ip + i + 2] & 255)) << 8) | (frame.code[frame.ip + i + 3] & 255);
+        return ((((((code[ip + i] & 255) << 8) | (code[ip + i + 1] & 255)) << 8) | (code[ip + i + 2] & 255)) << 8) | (frame.code[ip + i + 3] & 255);
     }
 
     private static int read2ByteWithOffset(int i) {
-        return ((((frame.code[frame.ip + i] & 255) << 8) | (frame.code[frame.ip + i + 1] & 255)) << 8);
+        return ((((code[ip + i] & 255) << 8) | (code[ip + i + 1] & 255)) << 8);
     }
 
     public static void runMainMethod(ScriptedClass target, String data, boolean profiling, boolean output) {
@@ -161,7 +164,7 @@ public class VirtualMachine {
                         System.err.println("Non-static method can not be referenced from a static context");
                         return;
                     }
-                    pushCall(new CallFrame(VarTypeManager.getClassName(target) + "main", method, 0));
+                    init(new CallFrame(VarTypeManager.getClassName(target) + "main", method, 0));
                     try {
                         Interpreter.start();
                         push(Arrays.stream(data.split(" ")).map(NativeClassLoader::wrapString).toArray());
@@ -187,7 +190,7 @@ public class VirtualMachine {
     @SuppressWarnings("ExpressionComparedToItself")
     public static void run() {
         func:
-        while (frame.ip < frame.code.length) {
+        while (ip < code.length) {
             try {
                 Opcode o = Opcode.byId(readByte());
                 if (DEBUG) System.out.printf("[DEBUG]:%s Executing %s\n", visualStackSize(), o);
@@ -235,17 +238,17 @@ public class VirtualMachine {
                     //endregion
                     case TRACE -> {
                         TraceTable table;
-                        if (tableData.containsKey(frame.ip + 2)) {
-                            frame.ip += 2;
-                            table = tableData.get(frame.ip);
+                        if (tableData.containsKey(ip + 2)) {
+                            ip += 2;
+                            table = tableData.get(ip);
                         } else {
-                            table = new TraceTable(readLocals(read2Byte()), frame.ip, frame.callable.getChunk().localVariableTable());
-                            tableData.put(frame.ip, table);
+                            table = new TraceTable(readLocals(read2Byte()), ip, frame.callable.getChunk().localVariableTable());
+                            tableData.put(ip, table);
                         }
                         table.lookup(frame.stackBottom);
                     }
                     case INVOKE_STATIC -> {
-                        String execute = constString(frame.constants, read2Byte());
+                        String execute = constString(constants, read2Byte());
                         StringReader reader = new StringReader(execute);
                         ScriptedClass type = VarTypeManager.flatParse(reader);
                         if (invokeStaticInitIfNecessary(type, 3)) continue;
@@ -267,7 +270,7 @@ public class VirtualMachine {
                             pushCall(new CallFrame(execute, callable, callableStackTop));
                     }
                     case INVOKE_VIRTUAL -> {
-                        String execute = constString(frame.constants, read2Byte());
+                        String execute = constString(constants, read2Byte());
                         StringReader reader = new StringReader(execute);
                         ScriptedClass type = VarTypeManager.flatParse(reader);
                         if (invokeStaticInitIfNecessary(type, 3)) continue;
@@ -315,10 +318,10 @@ public class VirtualMachine {
                             break func;
                     }
                     case SLICE -> slice();
-                    case JUMP -> frame.ip = read2Byte();
+                    case JUMP -> ip = read2Byte();
                     case JUMP_IF_FALSE -> {
-                        if (!(boolean) pop()) frame.ip = read2Byte();
-                        else frame.ip += 2;
+                        if (!(boolean) pop()) ip = read2Byte();
+                        else ip += 2;
                     }
                     case ARRAY_LENGTH -> push(arrayLength(pop()));
                     case GET -> get(readByte());
@@ -343,10 +346,10 @@ public class VirtualMachine {
                     case D_M1 -> push(-1d);
                     case F_1 -> push(1f);
                     case F_M1 -> push(-1f);
-                    case I_CONST -> push(constInt(frame.constants, read2Byte()));
-                    case D_CONST -> push(constDouble(frame.constants, read2Byte()));
-                    case F_CONST -> push(constFloat(frame.constants, read2Byte()));
-                    case S_CONST -> push(NativeClassLoader.wrapString(constString(frame.constants, read2Byte())));
+                    case I_CONST -> push(constInt(constants, read2Byte()));
+                    case D_CONST -> push(constDouble(constants, read2Byte()));
+                    case F_CONST -> push(constFloat(constants, read2Byte()));
+                    case S_CONST -> push(NativeClassLoader.wrapString(constString(constants, read2Byte())));
                     case CONCENTRATION ->
                             push(NativeClassLoader.wrapString(pop() + (String) ((NativeClassInstance) pop()).getObject()));
                     case I_NEGATION -> push(-(int) pop());
@@ -427,7 +430,7 @@ public class VirtualMachine {
                         while (lLoc < uLoc) {
                             int obj = read4bWithOffset(idx * 6);
                             if (obj == entry) {
-                                frame.ip = read2ByteWithOffset(idx * 6 + 4);
+                                ip = read2ByteWithOffset(idx * 6 + 4);
                                 break;
                             }
                             if (obj < entry)
@@ -437,34 +440,34 @@ public class VirtualMachine {
                             idx = (uLoc - lLoc) / 2;
                         }
                         if (lLoc >= uLoc) {
-                            frame.ip = defaultPos;
+                            ip = defaultPos;
                         }
                     }
                     case GET_FIELD -> {
                         ClassInstance instance = (ClassInstance) pop();
                         if (invokeStaticInitIfNecessary(instance.getType(), 1)) continue;
-                        String s = constString(frame.constants, read2Byte());
+                        String s = constString(constants, read2Byte());
                         push(instance.getField(s));
                     }
                     case GET_STATIC -> {
-                        String c = constString(frame.constants, read2Byte());
+                        String c = constString(constants, read2Byte());
                         ScriptedClass scriptedClass = VarTypeManager.directFlatParse(c);
                         if (invokeStaticInitIfNecessary(scriptedClass, 3)) continue;
-                        String field = constString(frame.constants, read2Byte());
+                        String field = constString(constants, read2Byte());
                         push(scriptedClass.getStaticField(field));
                     }
                     case PUT_FIELD -> {
                         Object value = pop();
                         ClassInstance instance = (ClassInstance) pop();
                         if (invokeStaticInitIfNecessary(instance.getType(), 1)) continue;
-                        String s = constString(frame.constants, read2Byte());
+                        String s = constString(constants, read2Byte());
                         instance.assignField(s, value);
                     }
                     case PUT_STATIC -> {
-                        String c = constString(frame.constants, read2Byte());
+                        String c = constString(constants, read2Byte());
                         ScriptedClass scriptedClass = VarTypeManager.directFlatParse(c);
                         if (invokeStaticInitIfNecessary(scriptedClass, 3)) continue;
-                        String field = constString(frame.constants, read2Byte());
+                        String field = constString(constants, read2Byte());
                         scriptedClass.setStaticField(field, pop());
                     }
                     default -> throw new IllegalArgumentException("unknown opcode: " + o);
@@ -478,10 +481,10 @@ public class VirtualMachine {
     }
 
     private static byte[] readLocals(int pos) {
-        byte localSize = frame.constants[pos];
+        byte localSize = constants[pos];
         byte[] locals = new byte[localSize];
         for (int i = 0; i < localSize; i++) {
-            locals[i] = frame.constants[pos + i + 1];
+            locals[i] = constants[pos + i + 1];
         }
         return locals;
     }
@@ -493,7 +496,7 @@ public class VirtualMachine {
         initialized.add(scriptedClass); //add it before so it doesn't create a recursion loop when a static call / get is executed from within the <clinit> method
         ScriptedCallable method = scriptedClass.getMethod("<clinit>()");
         if (method != null) {
-            frame.ip -= opcodeOffset; //reset to the last invoked Opcode, to prevent ip corruption
+            ip -= opcodeOffset; //reset to the last invoked Opcode, to prevent ip corruption
             pushCall(new CallFrame(VarTypeManager.getClassName(scriptedClass) + "<clinit>", method, stackIndex));
             return true;
         }
@@ -529,7 +532,7 @@ public class VirtualMachine {
         }
 
         while (callStackTop > 0) {
-            int ip = frame.ip;
+            int ip = VirtualMachine.ip;
             for (Chunk.ExceptionHandler handler : frame.handlers) {
                 if (ip >= handler.startOp() && ip < handler.endOp()) {
                     if (handler.catchType() != 0) {
@@ -537,7 +540,7 @@ public class VirtualMachine {
                         if (!reference.get().isParentOf(type)) continue;
                     }
                     push(exception);
-                    frame.ip = handler.handlerOp();
+                    VirtualMachine.ip = handler.handlerOp();
                     return true;
                 }
             }
@@ -596,6 +599,9 @@ public class VirtualMachine {
         stackIndex = frame.stackBottom;
         push(o);
         frame = callStack[callStackTop - 1];
+        ip = frame.ip;
+        code = frame.code;
+        constants = frame.constants;
         if (DEBUG) System.out.printf("[DEBUG]:%s POP_CALL (@%3d): stackIndex=%3d\n", visualStackSize(), callStackTop, frame.stackBottom);
     }
 
@@ -605,8 +611,19 @@ public class VirtualMachine {
         if (DEBUG) System.out.printf("[DEBUG]:%s POP_CALL_NO_ARG (@%3d): stackIndex=%3d\n", visualStackSize(), callStackTop, frame.stackBottom);
     }
 
-    private static void pushCall(CallFrame callFrame) {
+    private static void init(CallFrame callFrame) {
         frame = callStack[callStackTop++] = callFrame;
+        ip = callFrame.ip;
+        code = callFrame.code;
+        constants = callFrame.constants;
+    }
+
+    private static void pushCall(CallFrame callFrame) {
+        frame.ip = ip; //update IP before pushing
+        frame = callStack[callStackTop++] = callFrame;
+        ip = callFrame.ip;
+        code = callFrame.code;
+        constants = callFrame.constants;
         if (DEBUG) System.out.printf("[DEBUG]:%s PUSH_CALL (@%3d): stackIndex=%3d, name=%s\n", visualStackSize(), callStackTop - 1, callFrame.stackBottom, callFrame.signature);
     }
 
