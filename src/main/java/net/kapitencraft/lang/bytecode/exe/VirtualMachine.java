@@ -29,6 +29,7 @@ public class VirtualMachine {
     private static byte[] code;
     private static byte[] constants;
     private static int ip = 0;
+    private static int stackBottom;
 
     private static final class CallFrame {
         private final String signature;
@@ -245,7 +246,7 @@ public class VirtualMachine {
                             table = new TraceTable(readLocals(read2Byte()), ip, frame.callable.getChunk().localVariableTable());
                             tableData.put(ip, table);
                         }
-                        table.lookup(frame.stackBottom);
+                        table.lookup(stackBottom);
                     }
                     case INVOKE_STATIC -> {
                         String execute = constString(constants, read2Byte());
@@ -297,7 +298,7 @@ public class VirtualMachine {
                         if (!handleException((ClassInstance) pop())) return;
                     }
                     case NEW -> {
-                        ScriptedClass reference = VarTypeManager.directFlatParse(constString(frame.constants, read2Byte()));
+                        ScriptedClass reference = VarTypeManager.directFlatParse(constString(constants, read2Byte()));
                         push(new DynamicClassInstance(reference));
                     }
                     case IA_NEW -> push(new int[(int) pop()]);
@@ -358,7 +359,7 @@ public class VirtualMachine {
                     case I_POW -> push((int) Math.pow((int) pop(), (int) pop()));
                     case D_POW -> push(Math.pow((double) pop(), (double) pop()));
                     case F_POW -> push((float) Math.pow((float) pop(), (float) pop()));
-                    case I_ADD -> push((int) pop() + (int) pop());
+                    case I_ADD -> push((int) pop() + (int) pop()); //i, i -> i
                     case D_ADD -> push((double) pop() + (double) pop());
                     case F_ADD -> push((float) pop() + (float) pop());
                     case I_DIV -> push((int) pop() / (int) pop());
@@ -536,7 +537,7 @@ public class VirtualMachine {
             for (Chunk.ExceptionHandler handler : frame.handlers) {
                 if (ip >= handler.startOp() && ip < handler.endOp()) {
                     if (handler.catchType() != 0) {
-                        ClassReference reference = VarTypeManager.parseType(new StringReader(constString(frame.constants, handler.catchType())));
+                        ClassReference reference = VarTypeManager.parseType(new StringReader(constString(constants, handler.catchType())));
                         if (!reference.get().isParentOf(type)) continue;
                     }
                     push(exception);
@@ -584,30 +585,35 @@ public class VirtualMachine {
     }
 
     private static void get(int i) {
-        push(stack[frame.stackBottom + i]);
+        push(stack[stackBottom + i]);
         if (DEBUG) System.out.printf("[DEBUG]:%s GET: %s\n", visualStackSize(), i);
     }
 
     private static void assign(int i) {
-        stack[frame.stackBottom + i] = pop();
+        stack[stackBottom + i] = pop();
         if (DEBUG) System.out.printf("[DEBUG]:%s ASSIGN: %s\n", visualStackSize(), i);
     }
 
     //region flow-control
     private static void popCall() {
         Object o = pop();
-        stackIndex = frame.stackBottom;
+        stackIndex = stackBottom;
         push(o);
         frame = callStack[callStackTop - 1];
         ip = frame.ip;
         code = frame.code;
         constants = frame.constants;
+        stackBottom = frame.stackBottom;
         if (DEBUG) System.out.printf("[DEBUG]:%s POP_CALL (@%3d): stackIndex=%3d\n", visualStackSize(), callStackTop, frame.stackBottom);
     }
 
     private static void popCallNoArg() {
-        stackIndex = frame.stackBottom;
+        stackIndex = stackBottom;
         frame = callStack[callStackTop - 1];
+        ip = frame.ip;
+        code = frame.code;
+        constants = frame.constants;
+        stackBottom = frame.stackBottom;
         if (DEBUG) System.out.printf("[DEBUG]:%s POP_CALL_NO_ARG (@%3d): stackIndex=%3d\n", visualStackSize(), callStackTop, frame.stackBottom);
     }
 

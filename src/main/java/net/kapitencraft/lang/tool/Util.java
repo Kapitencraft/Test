@@ -45,7 +45,7 @@ public class Util {
             ClassReference gotType = got[i];
             ClassReference expectedType = expected[i];
             if (gotType == null || expectedType == null) return false;
-            if (!gotType.get().isChildOf(expectedType.get())) return false;
+            if (!gotType.is(expectedType)) return false;
         }
         return true;
     }

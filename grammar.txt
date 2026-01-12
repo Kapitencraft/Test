@@ -45,7 +45,8 @@ logic_and   -> equality ( ("and" | "&&") equality )*
 equality    -> comparison ( ( "!=" | "==" ) comparison )*
 comparison  -> term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term        -> factor ( ( "-" | "+" ) factor )*
-factor      -> unary ( ( "/" | "*" ) unary )*
+factor      -> pow ( "/" | "*" ) pow )*
+pow         -> unary ( "**" unary )*
 
 unary       -> (( "!" | "-" ) unary) | call | switch | constructor
 
@@ -63,9 +64,9 @@ generics    -> "<" genericType ("," genericType)* ">"
 genericDecl -> "<" IDENTIFIER ("," IDENTIFIER)* ">"
 
 //lexical
-NUMBER      -> DIGIT+ ( "." DIGIT+ )?
+NUMBER      -> DIGIT ( "." DIGIT )?
 STRING      -> "\"" <any char except "\"">* "\""
 IDENTIFIER  -> ALPHA ( ALPHA | DIGIT )*
-ALPHA       -> [a-zA-Z_]
-DIGIT       -> [0-9]
+ALPHA       -> [a-zA-Z_]+
+DIGIT       -> [0-9]+
 VAR_TYPE    -> IDENTIFIER ("." IDENTIFIER)*

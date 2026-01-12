@@ -297,6 +297,7 @@ public class ExprParser extends AbstractParser {
                 operand = Operand.RIGHT;
             }
         }
+        //search for overloads
         if (result == VarTypeManager.VOID && operation.getMethodName() != null) {
             String signature = operation.getMethodName() + "(" + VarTypeManager.getClassName(right) + ")";
             ScriptedCallable method = left.get().getMethod(signature);
@@ -383,15 +384,26 @@ public class ExprParser extends AbstractParser {
     }
 
     private Expr factor() {
+        Expr expr = pow();
+
+        while (match(DIV, MUL, MOD)) {
+            Token operator = previous();
+            Expr right = pow();
+
+            expr = parseBinaryExpr(expr, operator, right);
+        }
+        return expr;
+    }
+
+    private Expr pow() {
         Expr expr = unary();
 
-        while (match(DIV, MUL, MOD, POW)) {
+        while (match(POW)) {
             Token operator = previous();
             Expr right = unary();
 
             expr = parseBinaryExpr(expr, operator, right);
         }
-
         return expr;
     }
 

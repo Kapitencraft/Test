@@ -36,7 +36,6 @@ public class Disassembler {
                  D_NEGATION, D_ADD, D_SUB, D_MUL, D_DIV, D_POW,
                  F_NEGATION, F_ADD, F_SUB, F_MUL, F_DIV, F_POW,
                  ASSIGN_0, ASSIGN_1, ASSIGN_2,
-                 GET_0, GET_1, GET_2,
                  NULL, TRUE, FALSE, AND, XOR, OR, NOT, CONCENTRATION,
                  I_M1, I_0, I_1, I_2, I_3, I_4, I_5,
                  D_M1, D_1,
@@ -52,6 +51,9 @@ public class Disassembler {
                  SLICE, CA_NEW, DA_NEW, FA_NEW, IA_NEW, RA_NEW
                     -> simpleInstruction(opcode, offset);
             case GET, ASSIGN -> var(opcode, chunk, offset);
+            case GET_0 -> defVar(opcode, chunk, offset, 0);
+            case GET_1 -> defVar(opcode, chunk, offset, 1);
+            case GET_2 -> defVar(opcode, chunk, offset, 2);
             case I_CONST -> intConstInstruction(opcode, chunk, offset);
             case D_CONST -> doubleConstInstruction(opcode, chunk, offset);
             case F_CONST -> floatConstInstruction(opcode, chunk, offset);
@@ -110,8 +112,15 @@ public class Disassembler {
     }
 
     private static int var(Opcode opcode, Chunk chunk, int offset) {
-        System.out.printf("%-16s %4d\n", opcode, chunk.code()[offset + 1]);
+        int ordinal = chunk.code()[offset + 1];
+        defVar(opcode, chunk, offset, ordinal);
         return offset + 2;
+    }
+
+    private static int defVar(Opcode opcode, Chunk chunk, int offset, int ordinal) {
+        Pair<String, ClassReference> pair = chunk.localVariableTable().get(offset, ordinal);
+        System.out.printf("%-16s %4d: \"%s\" -> %s\n", opcode, ordinal, pair.left(), VarTypeManager.getClassName(pair.right()));
+        return offset + 1;
     }
 
     private static int invoke(Opcode opcode, Chunk chunk, int offset) {
