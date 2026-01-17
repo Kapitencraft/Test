@@ -26,8 +26,8 @@ public class HolderParser extends AbstractParser {
     private GenericStack activeGenerics = new GenericStack();
     private final Deque<String> activePackages = new ArrayDeque<>();
 
-    public HolderParser(Compiler.ErrorLogger errorLogger) {
-        super(errorLogger);
+    public HolderParser(Compiler.ErrorStorage errorStorage) {
+        super(errorStorage);
     }
 
     public void parseImports() {
@@ -310,16 +310,16 @@ public class HolderParser extends AbstractParser {
     private boolean readClass(String pckID, String name, ModifiersParser modifiers) {
         if (match(CLASS)) {
             ModifierScope.CLASS.check(this, modifiers);
-            Compiler.queueRegister(classDecl(modifiers, name, pckID, null), this.errorLogger, this.parser, name);
+            Compiler.queueRegister(classDecl(modifiers, name, pckID, null), this.errorStorage, this.parser, name);
         } else if (match(INTERFACE)) {
             ModifierScope.INTERFACE.check(this, modifiers);
-            Compiler.queueRegister(interfaceDecl(modifiers, name, pckID, null), this.errorLogger, this.parser, name);
+            Compiler.queueRegister(interfaceDecl(modifiers, name, pckID, null), this.errorStorage, this.parser, name);
         } else if (match(ENUM)) {
             ModifierScope.ENUM.check(this, modifiers);
-            Compiler.queueRegister(enumDecl(modifiers, name, pckID, null), this.errorLogger, this.parser, name);
+            Compiler.queueRegister(enumDecl(modifiers, name, pckID, null), this.errorStorage, this.parser, name);
         } else if (match(ANNOTATION)) {
             ModifierScope.ANNOTATION.check(this, modifiers);
-            Compiler.queueRegister(annotationDecl(modifiers, name, pckID, null), this.errorLogger, this.parser, name);
+            Compiler.queueRegister(annotationDecl(modifiers, name, pckID, null), this.errorStorage, this.parser, name);
         } else return true;
         return false;
     }

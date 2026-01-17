@@ -38,8 +38,8 @@ public class ExprParser extends AbstractParser {
     protected GenericStack generics = new GenericStack();
     private int anonymousCounter = 0; //counts how many anonymous classes have been created inside the class, to give each a unique name
 
-    public ExprParser(Compiler.ErrorLogger errorLogger) {
-        super(errorLogger);
+    public ExprParser(Compiler.ErrorStorage errorStorage) {
+        super(errorStorage);
         this.fallback = new ArrayList<>();
     }
 
@@ -125,7 +125,7 @@ public class ExprParser extends AbstractParser {
                 Map<String, Expr> properties = new HashMap<>();
                 do {
                     Token propertyName = consumeIdentifier();
-                    if (properties.containsKey(propertyName.lexeme())) errorLogger.errorF(propertyName, "duplicate annotation property with name %s", propertyName.lexeme());
+                    if (properties.containsKey(propertyName.lexeme())) errorStorage.errorF(propertyName, "duplicate annotation property with name %s", propertyName.lexeme());
                     consume(ASSIGN, "'=' expected");
                     Expr property = literalOrReference();
                     properties.put(propertyName.lexeme(), property);
@@ -232,7 +232,7 @@ public class ExprParser extends AbstractParser {
 
                 ClassReference type = checkVarExistence(name, true, false);
                 if (!type.get().isChildOf(VarTypeManager.NUMBER)) {
-                    errorLogger.errorF(name, "Operator '%s' can not be applied to '%s'", assign.lexeme(), type.absoluteName());
+                    errorStorage.errorF(name, "Operator '%s' can not be applied to '%s'", assign.lexeme(), type.absoluteName());
                 }
                 return new Expr.SpecialAssign(name, assign, ref.ordinal(), type);
             }
@@ -240,7 +240,7 @@ public class ExprParser extends AbstractParser {
             if (expr instanceof Expr.Get get) {
                 ClassReference reference = finder.findRetType(get.object()).get().getFieldType(get.name().lexeme());
                 if (!reference.get().isChildOf(VarTypeManager.NUMBER)) {
-                    errorLogger.errorF(get.name(), "Operator '%s' can not be applied to '%s'", assign.lexeme(), reference.absoluteName());
+                    errorStorage.errorF(get.name(), "Operator '%s' can not be applied to '%s'", assign.lexeme(), reference.absoluteName());
                 }
                 return new Expr.SpecialSet(get.object(), get.name(), assign, reference);
             }
@@ -248,7 +248,7 @@ public class ExprParser extends AbstractParser {
             if (expr instanceof Expr.ArrayGet arrayGet) {
                 ClassReference reference = finder.findRetType(arrayGet.object()).get().getComponentType().reference();
                 if (!reference.get().isChildOf(VarTypeManager.NUMBER)) {
-                    errorLogger.errorF(locFinder.find(arrayGet.object()), "Operator '%s' can not be applied to '%s'", assign.lexeme(), reference.absoluteName());
+                    errorStorage.errorF(locFinder.find(arrayGet.object()), "Operator '%s' can not be applied to '%s'", assign.lexeme(), reference.absoluteName());
                 }
                 return new Expr.ArraySpecial(arrayGet.object(), arrayGet.index(), assign, reference);
             }
@@ -313,7 +313,7 @@ public class ExprParser extends AbstractParser {
             }
         }
         if (result == VarTypeManager.VOID) {
-            errorLogger.errorF(operator, "operator '%s' not possible for argument types %s and %s", operator.lexeme(), left.absoluteName(), right.absoluteName());
+            errorStorage.errorF(operator, "operator '%s' not possible for argument types %s and %s", operator.lexeme(), left.absoluteName(), right.absoluteName());
             return Executor.UNKNOWN;
         }
         return new Executor(left, operand, result.reference(), null);
@@ -447,7 +447,7 @@ public class ExprParser extends AbstractParser {
         while (!check(C_BRACKET_C)) {
             if (match(CASE)) {
                 int key = literalOrEnum(type);
-                if (params.containsKey(key)) errorLogger.errorF(previous(), "Duplicate case key '%s'", previous().lexeme());
+                if (params.containsKey(key)) errorStorage.errorF(previous(), "Duplicate case key '%s'", previous().lexeme());
                 consume(LAMBDA, "not a statement");
                 Expr expr = expression();
                 consumeEndOfArg();
@@ -569,11 +569,11 @@ public class ExprParser extends AbstractParser {
         ClassReference[] expectedTypes = target == null ? new ClassReference[0] : target.argTypes();
         ClassReference[] givenTypes = argTypes(args);
         if (expectedTypes.length != givenTypes.length) {
-            errorLogger.errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
+            errorStorage.errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
 
-            errorLogger.logError("required: " + Util.getDescriptor(expectedTypes));
-            errorLogger.logError("found:    " + Util.getDescriptor(givenTypes));
-            errorLogger.logError("reason: actual and formal argument lists differ in length");
+            errorStorage.logError("required: " + Util.getDescriptor(expectedTypes));
+            errorStorage.logError("found:    " + Util.getDescriptor(givenTypes));
+            errorStorage.logError("reason: actual and formal argument lists differ in length");
         } else {
             for (int i = 0; i < givenTypes.length; i++) {
                 expectType(locFinder.find(args[i]), givenTypes[i], expectedTypes[i]);
@@ -585,7 +585,7 @@ public class ExprParser extends AbstractParser {
         if (type instanceof GenericClassReference genericClassReference) {
             GenericStack genericStack = new GenericStack();
             if (obj instanceof AppliedGenericsReference reference) {
-                reference.push(genericStack, errorLogger);
+                reference.push(genericStack, errorStorage);
             }
 
             Map<String, ClassReference> types = new HashMap<>();
@@ -638,7 +638,7 @@ public class ExprParser extends AbstractParser {
             consumeBracketClose("constructors");
 
             if (match(C_BRACKET_O)) {
-                HolderParser hParser = new HolderParser(this.errorLogger);
+                HolderParser hParser = new HolderParser(this.errorStorage);
                 if (type.get().isFinal()) {
                     error(previous(), "can not extend final class");
                 }
@@ -653,14 +653,14 @@ public class ExprParser extends AbstractParser {
                 if (original.get().isInterface()) {
                     Compiler.queueRegister(
                             hParser.parseInterface(typeTarget, pck, name, null, null, null, List.of(original)),
-                            this.errorLogger,
+                            this.errorStorage,
                             this.parser,
                             outName
                     );
                 } else {
                     Compiler.queueRegister(
                             hParser.parseClass(typeTarget, null, null, null, pck, name, original, List.of()),
-                            this.errorLogger,
+                            this.errorStorage,
                             this.parser,
                             outName
                     );
@@ -798,11 +798,11 @@ public class ExprParser extends AbstractParser {
         DataMethodContainer container = scriptedClass.getMethods().get("<init>");
         if (container == null) {
             if (args.length > 0) {
-                errorLogger.errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
+                errorStorage.errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
 
-                errorLogger.logError("required: ");
-                errorLogger.logError("found:    " + Util.getDescriptor(this.argTypes(args)));
-                errorLogger.logError("reason: actual and formal argument lists differ in length");
+                errorStorage.logError("required: ");
+                errorStorage.logError("found:    " + Util.getDescriptor(this.argTypes(args)));
+                errorStorage.logError("reason: actual and formal argument lists differ in length");
             }
             return null;
         }

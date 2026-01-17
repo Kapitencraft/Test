@@ -11,12 +11,10 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.Consumer;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 import static net.kapitencraft.lang.holder.token.TokenType.C_BRACKET_C;
@@ -24,8 +22,8 @@ import static net.kapitencraft.lang.holder.token.TokenType.C_BRACKET_C;
 @SuppressWarnings("ThrowableNotThrown")
 public class StmtParser extends ExprParser {
 
-    public StmtParser(Compiler.ErrorLogger errorLogger) {
-        super(errorLogger);
+    public StmtParser(Compiler.ErrorStorage errorStorage) {
+        super(errorStorage);
     }
 
     private ClassReference funcRetType = VarTypeManager.VOID.reference();

@@ -184,7 +184,7 @@ public class ClassLoader {
     }
 
     public static <T extends ClassLoaderHolder<T>> void useHolders(PackageHolder<T> root, Consumer<T> consumer, Executor executor) {
-        //List<CompletableFuture<?>> futures = new ArrayList<>();
+        List<CompletableFuture<?>> futures = new ArrayList<>();
         List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         while (!packageData.isEmpty()) {
@@ -192,15 +192,14 @@ public class ClassLoader {
             PackageHolder<T> holder = data.left();
             Package pck = data.right();
             holder.classes.forEach((n, o) ->
-                    consumer.accept(o)
-                    //futures.add(CompletableFuture.runAsync(() -> consumer.accept(o), executor))
+                    futures.add(CompletableFuture.runAsync(() -> consumer.accept(o), executor))
             );
             holder.packages.forEach((name, holder1) ->
                     packageData.add(Pair.of(holder1, pck.getOrCreatePackage(name))) //adding all packages back to the queue
             );
             packageData.remove(0);
         }
-        //CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
     }
 
     public static ClassReference loadClassReference(JsonObject object, String elementName) {
@@ -226,6 +225,11 @@ public class ClassLoader {
 
         public PackageHolder<T> getOrCreate(String name) {
             return packages.computeIfAbsent(name, n -> new PackageHolder<>());
+        }
+
+        public void forEach(Consumer<T> sink) {
+            classes.values().forEach(sink);
+            packages.values().forEach(h -> h.forEach(sink));
         }
     }
 

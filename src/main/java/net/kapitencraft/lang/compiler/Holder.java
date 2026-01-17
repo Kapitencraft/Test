@@ -37,16 +37,16 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public class Holder {
-    private static <T extends Validateable> void validateNullable(T[] validateable, Compiler.ErrorLogger logger) {
+    private static <T extends Validateable> void validateNullable(T[] validateable, Compiler.ErrorStorage logger) {
         if (validateable != null) for (T obj : validateable) obj.validate(logger);
     }
 
     public interface Validateable {
-        void validate(Compiler.ErrorLogger logger);
+        void validate(Compiler.ErrorStorage logger);
     }
 
     public record AnnotationObj(SourceClassReference type, Token[] properties) implements Validateable {
-        public void validate(Compiler.ErrorLogger logger) {
+        public void validate(Compiler.ErrorStorage logger) {
             this.type.validate(logger);
         }
     }
@@ -59,7 +59,7 @@ public class Holder {
                         Field[] fields,
                         EnumConstant[] enumConstants
     ) implements Validateable {
-        public void validate(Compiler.ErrorLogger logger) {
+        public void validate(Compiler.ErrorStorage logger) {
             validateNullable(annotations, logger);
             if (parent != null) parent.validate(logger);
             validateNullable(interfaces, logger);
@@ -76,7 +76,7 @@ public class Holder {
             return Arrays.stream(interfaces).map(SourceClassReference::get).map(VarTypeManager::getClassName).toArray(String[]::new);
         }
 
-        public Compiler.ClassBuilder construct(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+        public Compiler.ClassBuilder construct(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorStorage logger) {
             stmtParser.pushFallback(this.target);
             try {
                 return switch (this.type) {
@@ -93,7 +93,7 @@ public class Holder {
         /**
          * construct this enum to a baked class
          */
-        public BakedClass constructEnum(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+        public BakedClass constructEnum(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorStorage logger) {
 
             List<Stmt> statics = new ArrayList<>();
 
@@ -347,7 +347,7 @@ public class Holder {
 
         }
 
-        public BakedClass constructClass(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+        public BakedClass constructClass(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorStorage logger) {
             Map<Token, CompileField> fields = new HashMap<>();
             List<Stmt> statics = new ArrayList<>();
             for (Field field : fields()) {
@@ -447,7 +447,7 @@ public class Holder {
             return finalFields;
         }
 
-        public BakedInterface constructInterface(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+        public BakedInterface constructInterface(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorStorage logger) {
             Map<String, CompileField> staticFields = new HashMap<>();
             List<Stmt> statics = new ArrayList<>();
             for (Field field : fields()) {
@@ -521,7 +521,7 @@ public class Holder {
 
         }
 
-        public BakedAnnotation constructAnnotation(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorLogger logger) {
+        public BakedAnnotation constructAnnotation(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorStorage logger) {
             ImmutableMap.Builder<String, MethodWrapper> methods = new ImmutableMap.Builder<>();
             for (Method method : methods()) {
                 Expr val = null;
@@ -547,12 +547,12 @@ public class Holder {
 
         }
 
-        public void applySkeleton(Compiler.ErrorLogger logger) {
+        public void applySkeleton(Compiler.ErrorStorage logger) {
             ScriptedClass skeleton = createSkeleton(logger);
             this.target.setTarget(skeleton);
         }
 
-        public ScriptedClass createSkeleton(Compiler.ErrorLogger logger) {
+        public ScriptedClass createSkeleton(Compiler.ErrorStorage logger) {
             return switch (this.type) {
                 case INTERFACE -> createInterfaceSkeleton(logger);
                 case ENUM, CLASS -> createClassSkeleton(logger);
@@ -560,7 +560,7 @@ public class Holder {
             };
         }
 
-        public ScriptedClass createInterfaceSkeleton(Compiler.ErrorLogger logger) {
+        public ScriptedClass createInterfaceSkeleton(Compiler.ErrorStorage logger) {
 
             //fields
             ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
@@ -596,7 +596,7 @@ public class Holder {
             );
         }
 
-        public ScriptedClass createClassSkeleton(Compiler.ErrorLogger logger) {
+        public ScriptedClass createClassSkeleton(Compiler.ErrorStorage logger) {
 
             //fields
             ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
@@ -666,7 +666,7 @@ public class Holder {
         }
 
         //annotations are not available at skeleton construction
-        public ScriptedClass createAnnotationSkeleton(Compiler.ErrorLogger logger) {
+        public ScriptedClass createAnnotationSkeleton(Compiler.ErrorStorage logger) {
 
             ImmutableMap.Builder<String, AnnotationCallable> methods = new ImmutableMap.Builder<>();
             for (Method method : methods()) {
@@ -682,7 +682,7 @@ public class Holder {
     }
 
     public record Constructor(AnnotationObj[] annotations, Generics generics, Token name, Token closeBracket, List<Pair<SourceClassReference, String>> params, Token[] body) implements Validateable {
-        public void validate(Compiler.ErrorLogger logger) {
+        public void validate(Compiler.ErrorStorage logger) {
             validateNullable(annotations, logger);
             if (annotations != null) for (AnnotationObj obj : annotations) obj.validate(logger);
             params.forEach(p -> p.left().validate(logger));
@@ -698,14 +698,14 @@ public class Holder {
 
     public record Field(short modifiers, AnnotationObj[] annotations, SourceClassReference type, Token name, Token assign, Token[] body) implements Validateable {
         @Override
-        public void validate(Compiler.ErrorLogger logger) {
+        public void validate(Compiler.ErrorStorage logger) {
             validateNullable(annotations, logger);
             type.validate(logger);
         }
     }
 
     public record Method(short modifiers, AnnotationObj[] annotations, Generics generics, SourceClassReference type, Token name, Token closeBracket, List<? extends Pair<SourceClassReference, String>> params, Token[] body) {
-        public void validate(Compiler.ErrorLogger logger) {
+        public void validate(Compiler.ErrorStorage logger) {
             validateNullable(annotations, logger);
             type.validate(logger);
             params.forEach(p -> p.left().validate(logger));
@@ -724,7 +724,7 @@ public class Holder {
         }
 
         @Override
-        public void validate(Compiler.ErrorLogger logger) {
+        public void validate(Compiler.ErrorStorage logger) {
             for (Generic  generic : variables) generic.validate(logger);
         }
 
@@ -753,7 +753,7 @@ public class Holder {
         }
 
         @Override
-        public void validate(Compiler.ErrorLogger logger) {
+        public void validate(Compiler.ErrorStorage logger) {
             if (lowerBound != null) lowerBound.validate(logger);
             if (upperBound != null) upperBound.validate(logger);
         }
@@ -761,7 +761,7 @@ public class Holder {
 
     public record AppliedGenerics(Token reference, ClassReference[] references) {
 
-        public void applyToStack(GenericStack stack, Generics reference, Compiler.ErrorLogger logger) {
+        public void applyToStack(GenericStack stack, Generics reference, Compiler.ErrorStorage logger) {
             if (reference.variables.length != this.references.length) {
                 logger.error(this.reference, "Wrong number of type arguments: " + this.references.length + "; required: "+ reference.variables.length);
             }

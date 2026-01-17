@@ -6,8 +6,6 @@ import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Function;
@@ -30,7 +28,7 @@ public class Lexer {
 
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
-    private final Compiler.ErrorLogger logger;
+    private final Compiler.ErrorStorage errors;
     private int start = 0;
     private int current = 0;
     private int line = 1;
@@ -41,9 +39,9 @@ public class Lexer {
         indexAtLineStart = current;
     }
 
-    public Lexer(String source, Compiler.ErrorLogger logger) {
+    public Lexer(String source, Compiler.ErrorStorage errors) {
         this.source = source;
-        this.logger = logger;
+        this.errors = errors;
     }
 
     private boolean isAtEnd() {
@@ -251,10 +249,10 @@ public class Lexer {
     }
 
     private void error(String msg) {
-        logger.error(line-1, indexAtLineStart, msg);
+        errors.error(line-1, indexAtLineStart, msg);
     }
 
     private void warn(String msg) {
-        logger.warn(line-1, indexAtLineStart, msg);
+        errors.warn(line-1, indexAtLineStart, msg);
     }
 }

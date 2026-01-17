@@ -5,22 +5,28 @@ import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.load.CompilerLoaderHolder;
+import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
-import net.kapitencraft.lang.tool.Util;
+import org.checkerframework.checker.units.qual.A;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class Compiler {
@@ -39,15 +45,15 @@ public class Compiler {
         }
     }
 
-    public static void queueRegister(Holder.Class aClass, ErrorLogger errorLogger, VarTypeParser parser, @Nullable String namePrefix) {
+    public static void queueRegister(Holder.Class aClass, ErrorStorage errorStorage, VarTypeParser parser, @Nullable String namePrefix) {
         String name = aClass.name().lexeme();
-        ClassRegister e = ClassRegister.create(aClass, errorLogger, parser, name);
+        ClassRegister e = ClassRegister.create(aClass, errorStorage, parser, name);
         registers.add(e);
         Compiler.dispatch(e.holder);
     }
 
     private record ClassRegister(CompilerLoaderHolder holder, String pck, @Nullable String name) {
-        public static ClassRegister create(Holder.Class entry, ErrorLogger logger, VarTypeParser parser, @Nullable String name) {
+        public static ClassRegister create(Holder.Class entry, ErrorStorage logger, VarTypeParser parser, @Nullable String name) {
             return new ClassRegister(new CompilerLoaderHolder(entry, logger, parser), entry.pck(), name);
         }
 
@@ -64,34 +70,44 @@ public class Compiler {
 
         compileData = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
 
-        Executor executor = Executors.newFixedThreadPool(10);
+        ExecutorService executor = Executors.newFixedThreadPool(10, new CompilerThreadFactory());
         for (Stage stage : Stage.values()) {
             registers.forEach(ClassRegister::register);
             registers.clear();
             activeStage = stage;
             System.out.printf("executing step %s\n", stage);
 
+            if (stage == Stage.CACHING && cache.exists())
+                Util.delete(cache);
+
             ClassLoader.useHolders(compileData, stage.action, executor);
 
             if (errorCount > 0) {
+                printErrors(compileData);
+
                 if (errorCount > 100) {
                     System.err.println("only showing the first 100 errors out of " + errorCount + " total");
                 } else System.err.println(errorCount + " errors");
                 System.exit(65);
             }
         }
+        executor.shutdownNow();
+    }
 
-        if (cache.exists()) Util.delete(cache);
+    /**
+     * thread factory for more reasonable names
+     */
+    private static class CompilerThreadFactory implements ThreadFactory {
+        AtomicInteger poolNumber = new AtomicInteger(1);
 
-        System.out.println("executing step CACHING");
+        @Override
+        public Thread newThread(@NotNull Runnable r) {
+            return new Thread(r, "CompilerThread#" + poolNumber.getAndIncrement());
+        }
+    }
 
-        List<CompletableFuture<?>> futures = new ArrayList<>();
-        ClassLoader.useClasses(compileData, (stringClassHolderMap, aPackage) ->
-                stringClassHolderMap.values().forEach(classHolder -> futures.add(CompletableFuture.runAsync(classHolder::cache)))
-        );
-        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
-
-        if (errorCount > 0) System.exit(65);
+    private static void printErrors(ClassLoader.PackageHolder<CompilerLoaderHolder> compileData) {
+        compileData.forEach(CompilerLoaderHolder::printErrors);
     }
 
     public interface ClassBuilder {
@@ -119,21 +135,48 @@ public class Compiler {
         writer.close();
     }
 
-    public static class ErrorLogger {
+    public static class ErrorStorage {
         private final String[] lines;
         private final String fileLoc;
         private final LocationAnalyser finder;
+        private final List<Message> messages = new ArrayList<>();
 
-        public ErrorLogger(String[] lines, String fileLoc) {
+        public ErrorStorage(String[] lines, String fileLoc) {
             this.lines = lines;
             this.fileLoc = fileLoc;
             finder = new LocationAnalyser();
         }
 
-        public void error(Token loc, String msg) {
-            if (errorCount++ < 100) {
-                Compiler.error(loc, msg, fileLoc, lines[loc.line() - 1]);
+        public void printAll() {
+            for (Message msg : messages) {
+                msg.print(lines, fileLoc);
             }
+        }
+
+        private interface Message {
+
+            void print(String[] lines, String fileLoc);
+        }
+
+        private record Error(int lineIndex, int lineStartIndex, String msg, String line) implements Message {
+
+
+            @Override
+            public void print(String[] lines, String fileLoc) {
+                Compiler.error(lineIndex, lineStartIndex, msg, fileLoc, line);
+            }
+        }
+
+        private record Warn(int lineIndex, int lineStartIndex, String msg) implements Message {
+
+            @Override
+            public void print(String[] lines, String fileLoc) {
+                Compiler.warn(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
+            }
+        }
+
+        public void error(Token loc, String msg) {
+            error(loc.line(), loc.lineStartIndex(), msg);
         }
 
         public void errorF(Token loc, String format, Object... args) {
@@ -141,7 +184,8 @@ public class Compiler {
         }
 
         public void error(int lineIndex, int lineStartIndex, String msg) {
-            if (errorCount++ < 100) Compiler.error(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
+            if (errorCount++ < 100)
+                messages.add(new Error(lineIndex, lineStartIndex, msg, lines[lineIndex - 1]));
         }
 
         public void error(Stmt loc, String msg) {
@@ -157,11 +201,11 @@ public class Compiler {
         }
 
         public void warn(int lineIndex, int lineStartIndex, String msg) {
-            Compiler.warn(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
+            this.messages.add(new Warn(lineIndex, lineStartIndex, msg));
         }
 
         public void warn(Token loc, String msg) {
-            Compiler.warn(loc, msg, fileLoc, lines[loc.line()]);
+            warn(loc.line(), loc.lineStartIndex(), msg);
         }
 
         public void warn(Stmt loc, String msg) {
@@ -170,23 +214,16 @@ public class Compiler {
 
         @Override
         public String toString() {
-            return "ErrorLogger for '" + fileLoc + "' (errorCount: " + errorCount + ")";
+            return "ErrorStorage for '" + fileLoc + "' (errorCount: " + errorCount + ")";
         }
 
         public boolean hadError() {
             return errorCount > 0;
         }
     }
-    public static void error(Token token, String message, String fileId, String line) {
-        error(token.line(), token.lineStartIndex(), message, fileId, line);
-    }
 
     public static void error(int lineIndex, int lineStartIndex, String msg, String fileId, String line) {
         report(System.err, lineIndex, msg, fileId, lineStartIndex, line);
-    }
-
-    public static void warn(Token token, String msg, String fileId, String line) {
-        warn(token.line(), token.lineStartIndex(), msg, fileId, line);
     }
 
     public static void warn(int lineIndex, int lineStartIndex, String msg, String filedId, String line) {
@@ -211,7 +248,8 @@ public class Compiler {
         CREATE_SKELETON(CompilerLoaderHolder::applySkeleton),
         VALIDATE(CompilerLoaderHolder::validate),
         CONSTRUCT(CompilerLoaderHolder::construct),
-        LOAD(CompilerLoaderHolder::loadClass);
+        LOAD(CompilerLoaderHolder::loadClass),
+        CACHING(CompilerLoaderHolder::cache);
 
         private final Consumer<CompilerLoaderHolder> action;
 

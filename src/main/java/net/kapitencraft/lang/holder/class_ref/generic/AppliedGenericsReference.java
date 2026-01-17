@@ -3,8 +3,6 @@ package net.kapitencraft.lang.holder.class_ref.generic;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
-import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,7 +20,7 @@ public class AppliedGenericsReference extends ClassReference {
         return expected.generics.equals(gotten.generics);
     }
 
-    public void push(GenericStack genericStack, Compiler.ErrorLogger logger) {
+    public void push(GenericStack genericStack, Compiler.ErrorStorage logger) {
         this.generics.applyToStack(genericStack, this.reference.getGenerics(), logger);
     }
 

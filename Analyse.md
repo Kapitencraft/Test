@@ -66,3 +66,8 @@ Change:
 <br>ensured the array in for-each statements are not poped each iteration, decreasing its runtime as it is no longer necessary to re-load the value
 <br>Affected Expressions:
 <br>**ForEach**
+
+Change:
+<br>outsourced compiling into multi-threated executor service
+<br>Affected Expressions:
+<br>**All**

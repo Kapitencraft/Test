@@ -50,7 +50,7 @@ public class SourceClassReference implements Holder.Validateable {
         return reference;
     }
 
-    public void validate(Compiler.ErrorLogger logger) {
+    public void validate(Compiler.ErrorStorage logger) {
         if (!reference.exists())
             logger.errorF(nameToken, "unknown class '%s'", reference.absoluteName());
     }
