@@ -10,7 +10,6 @@ import net.kapitencraft.lang.run.algebra.OperationType;
 
 public class DoubleClass extends PrimitiveClass {
 
-
     public DoubleClass() {
         super(VarTypeManager.NUMBER, "double", 0d);
     }

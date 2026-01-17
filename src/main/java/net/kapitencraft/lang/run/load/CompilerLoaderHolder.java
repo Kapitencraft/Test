@@ -17,7 +17,7 @@ import java.util.Objects;
 
 public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder> {
     private final String content;
-    private final Compiler.ErrorLogger logger;
+    private final Compiler.ErrorStorage storage;
     private Holder.Class holder;
     private Compiler.ClassBuilder builder;
     private CacheableClass target;
@@ -30,27 +30,27 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.logger = new Compiler.ErrorLogger(
+        this.storage = new Compiler.ErrorStorage(
                 content.split("\n", Integer.MAX_VALUE), //second param required to not skip empty lines
                 file.getAbsolutePath().replace(".\\", "") //remove '\.\'
         );
         this.varTypeParser = new VarTypeParser();
     }
 
-    public CompilerLoaderHolder(Holder.Class holder, Compiler.ErrorLogger logger, VarTypeParser parser) {
+    public CompilerLoaderHolder(Holder.Class holder, Compiler.ErrorStorage storage, VarTypeParser parser) {
         super(null);
         this.content = null; //not necessary with the holder already present
-        this.logger = logger;
+        this.storage = storage;
         this.holder = holder;
         this.varTypeParser = parser;
     }
 
     public void parseSource() {
         if (this.holder != null) return; //only parse source if holder wasn't created
-        Lexer lexer = new Lexer(content, logger);
+        Lexer lexer = new Lexer(content, storage);
         List<Token> tokens = lexer.scanTokens();
         String fileName = file.getName().replace(".scr", "");
-        HolderParser parser = new HolderParser(logger);
+        HolderParser parser = new HolderParser(storage);
         parser.apply(tokens.toArray(new Token[0]), varTypeParser);
 
         Holder.Class decl = parser.parseFile(fileName);
@@ -61,7 +61,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         String pck = path.replace('\\', '.');
         String declPck = decl.pck();
         if (!Objects.equals(declPck, pck)) {
-            logger.errorF(
+            storage.errorF(
                     tokens.get(0),
                     "package path '%s' does not match file path '%s'", declPck, pck);
         }
@@ -71,9 +71,9 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
 
     public void construct() {
         if (!checkHolderCreated()) return;
-        StmtParser stmtParser = new StmtParser(this.logger);
+        StmtParser stmtParser = new StmtParser(this.storage);
 
-        builder = holder.construct(stmtParser, this.varTypeParser, this.logger);
+        builder = holder.construct(stmtParser, this.varTypeParser, this.storage);
     }
 
     public void cache() {
@@ -91,12 +91,12 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
     }
 
     public boolean checkHolderCreated() {
-        return holder != null && !logger.hadError();
+        return holder != null && !storage.hadError();
     }
 
     @Override
     public void applySkeleton() {
-        if (checkHolderCreated()) this.holder.applySkeleton(logger);
+        if (checkHolderCreated()) this.holder.applySkeleton(storage);
     }
 
     public void loadClass() {
@@ -104,9 +104,9 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
 
         if (builder.superclass() != null) {
             MethodLookup lookup = MethodLookup.createFromClass(builder.superclass().get(), builder.interfaces());
-            lookup.checkAbstract(logger, builder.name(), builder.methods());
+            lookup.checkAbstract(storage, builder.name(), builder.methods());
             if (builder instanceof BakedClass) {
-                lookup.checkFinal(logger, builder.methods());
+                lookup.checkFinal(storage, builder.methods());
             }
         }
         target = builder.build();
@@ -115,7 +115,11 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
 
     public void validate() {
         if (!checkHolderCreated()) return;
-        this.varTypeParser.validate(this.logger);
-        this.holder.validate(this.logger);
+        this.varTypeParser.validate(this.storage);
+        this.holder.validate(this.storage);
+    }
+
+    public void printErrors() {
+        this.storage.printAll();
     }
 }

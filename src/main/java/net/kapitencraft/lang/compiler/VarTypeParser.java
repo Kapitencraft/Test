@@ -41,7 +41,7 @@ public class VarTypeParser implements Holder.Validateable {
         return hasClass(Optional.ofNullable(nameOverride).orElseGet(target::name));
     }
 
-    public void validate(Compiler.ErrorLogger logger) {
+    public void validate(Compiler.ErrorStorage logger) {
         implemented.values().forEach(ref -> ref.validate(logger));
     }
 }

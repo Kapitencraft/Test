@@ -15,7 +15,7 @@ import net.kapitencraft.tool.Pair;
 import java.util.*;
 
 public record BakedClass(
-        Compiler.ErrorLogger logger,
+        Compiler.ErrorStorage logger,
         Holder.Generics generics,
         ClassReference target,
         Pair<Token, CompileCallable>[] methods,

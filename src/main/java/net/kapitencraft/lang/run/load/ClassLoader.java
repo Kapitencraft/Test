@@ -235,6 +235,11 @@ public class ClassLoader {
         public PackageHolder<T> getOrCreate(String name) {
             return packages.computeIfAbsent(name, n -> new PackageHolder<>());
         }
+
+        public void forEach(Consumer<T> sink) {
+            classes.values().forEach(sink);
+            packages.values().forEach(h -> h.forEach(sink));
+        }
     }
 
     public static String pck(File file) {

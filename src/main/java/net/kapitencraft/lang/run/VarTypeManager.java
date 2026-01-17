@@ -24,13 +24,18 @@ public class VarTypeManager {
 
     private static final HashMap<String, ScriptedClass> flatMap = new HashMap<>();
 
-    public static final PrimitiveClass NUMBER = new NumberClass();
-    public static final PrimitiveClass INTEGER = new IntegerClass();
-    public static final PrimitiveClass FLOAT = new FloatClass();
-    public static final PrimitiveClass DOUBLE = new DoubleClass();
-    public static final PrimitiveClass BOOLEAN = new BooleanClass();
-    public static final PrimitiveClass CHAR = new CharacterClass();
-    public static final PrimitiveClass VOID = new VoidClass();
+    private static PrimitiveClass registerPrimitive(PrimitiveClass primitiveClass) {
+        VarTypeManager.getOrCreatePackage("scripted.lang").addClass(primitiveClass.name(), primitiveClass);
+        return primitiveClass;
+    }
+
+    public static final PrimitiveClass NUMBER = registerPrimitive(new NumberClass());
+    public static final PrimitiveClass INTEGER = registerPrimitive(new IntegerClass());
+    public static final PrimitiveClass FLOAT = registerPrimitive(new FloatClass());
+    public static final PrimitiveClass DOUBLE = registerPrimitive(new DoubleClass());
+    public static final PrimitiveClass BOOLEAN = registerPrimitive(new BooleanClass());
+    public static final PrimitiveClass CHAR = registerPrimitive(new CharacterClass());
+    public static final PrimitiveClass VOID = registerPrimitive(new VoidClass());
 
     static {
         NativeClassLoader.load(); //load natives before actual java project

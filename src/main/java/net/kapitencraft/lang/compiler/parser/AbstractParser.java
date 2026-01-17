@@ -45,7 +45,7 @@ public class AbstractParser {
     protected RetTypeAnalyser finder;
     protected final LocationAnalyser locFinder = new LocationAnalyser();
     protected final Deque<List<ClassReference>> args = new ArrayDeque<>(); //TODO either use or remove
-    protected final Compiler.ErrorLogger errorLogger;
+    protected final Compiler.ErrorStorage errorStorage;
     protected BytecodeVars varAnalyser;
 
     protected ClassReference checkVarExistence(Token name, boolean requireValue, boolean mayBeFinal) {
@@ -109,7 +109,7 @@ public class AbstractParser {
         if (gotten == WILDCARD) return expected;
         if (expected == VarTypeManager.OBJECT) return gotten;
         if (!gotten.get().isChildOf(expected.get()))
-            errorLogger.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
+            errorStorage.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
         if (gotten instanceof AppliedGenericsReference reference) {
             if (expected instanceof AppliedGenericsReference reference1) {
                 Holder.AppliedGenerics gottenAppliedGenerics = reference.getApplied();
@@ -118,20 +118,20 @@ public class AbstractParser {
                 ClassReference[] gottenGenerics = gottenAppliedGenerics.references();
 
                 if (expectedGenerics.length != gottenGenerics.length) {
-                    errorLogger.errorF(gottenAppliedGenerics.reference(), "Wrong number of type arguments: %s; required: %s", gottenGenerics.length, expectedGenerics.length);
+                    errorStorage.errorF(gottenAppliedGenerics.reference(), "Wrong number of type arguments: %s; required: %s", gottenGenerics.length, expectedGenerics.length);
                 } else {
                     for (int i = 0; i < expectedGenerics.length; i++) {
                         if (!expectedGenerics[i].get().isChildOf(gottenGenerics[i].get())) {
                             String name = reference1.getGenerics().variables()[i].name().lexeme();
-                            errorLogger.errorF(reference.getApplied().reference(), "incompatible types: inference variable %s has incompatible bounds", name);
+                            errorStorage.errorF(reference.getApplied().reference(), "incompatible types: inference variable %s has incompatible bounds", name);
 
-                            errorLogger.logError("gotten: " + gottenGenerics[i].name());
-                            errorLogger.logError("lower bounds: " + expectedGenerics[i].name());
+                            errorStorage.logError("gotten: " + gottenGenerics[i].name());
+                            errorStorage.logError("lower bounds: " + expectedGenerics[i].name());
                         }
                     }
                 }
             } else {
-                errorLogger.errorF(reference.getApplied().reference(), "Type '%s' does not have type parameters", expected.absoluteName());
+                errorStorage.errorF(reference.getApplied().reference(), "Type '%s' does not have type parameters", expected.absoluteName());
             }
         }
         return gotten;
@@ -140,13 +140,13 @@ public class AbstractParser {
     protected byte createVar(Token name, ClassReference type, boolean hasValue, boolean isFinal) {
         BytecodeVars.FetchResult result = varAnalyser.get(name.lexeme());
         if (result != BytecodeVars.FetchResult.FAIL) {
-            errorLogger.errorF(name, "Variable '%s' already defined in current scope", name.lexeme());
+            errorStorage.errorF(name, "Variable '%s' already defined in current scope", name.lexeme());
         }
         return varAnalyser.add(name.lexeme(), type, !isFinal, hasValue);
     }
 
-    public AbstractParser(Compiler.ErrorLogger errorLogger) {
-        this.errorLogger = errorLogger;
+    public AbstractParser(Compiler.ErrorStorage errorStorage) {
+        this.errorStorage = errorStorage;
     }
 
     public void apply(Token[] toParse, VarTypeParser targetAnalyser) {
@@ -251,6 +251,18 @@ public class AbstractParser {
             throw error(previous().after(), message);
         } else
             throw error(peek(), message);
+    }
+
+    protected Token consumeNoThrow(TokenType type, String msg) {
+        if (check(type)) return advance();
+
+        Token token;
+        if (isAtEnd()) {
+            token = previous().after();
+        } else
+            token = peek();
+        error(token, msg);
+        return token;
     }
 
     protected Token[] getCurlyEnclosedCode() {
@@ -365,18 +377,18 @@ public class AbstractParser {
     }
 
     protected Token consumeEndOfArg() {
-        return this.consume(EOA, "';' expected");
+        return this.consumeNoThrow(EOA, "';' expected");
     }
 
     protected static class ParseError extends RuntimeException {}
 
     protected ParseError error(Token token, String message) {
-        errorLogger.error(token, message);
+        errorStorage.error(token, message);
         return new ParseError();
     }
 
     protected void warn(Token token, String message) {
-        errorLogger.warn(token, message);
+        errorStorage.warn(token, message);
     }
 
 

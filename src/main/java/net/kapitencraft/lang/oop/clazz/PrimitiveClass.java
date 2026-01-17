@@ -23,7 +23,6 @@ public abstract class PrimitiveClass implements ScriptedClass {
         this.name = name;
         this.superclass = superclass != null ? superclass.reference() : null;
         this.defaultValue = defaultValue;
-        VarTypeManager.getOrCreatePackage("scripted.lang").addClass(name, this);
         this.reference = new PrimitiveClassReference(this.name, this);
     }
 

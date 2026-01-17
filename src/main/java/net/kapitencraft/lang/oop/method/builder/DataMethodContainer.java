@@ -77,12 +77,12 @@ public record DataMethodContainer(ScriptedCallable[] methods) implements MethodC
             this.className = className;
         }
 
-        public void addMethod(Compiler.ErrorLogger errorLogger, ScriptedCallable callable, Token methodName) {
+        public void addMethod(Compiler.ErrorStorage errorStorage, ScriptedCallable callable, Token methodName) {
             List<? extends ClassReference[]> appliedTypes = methods.stream().map(ScriptedCallable::argTypes).toList();
             ClassReference[] argTypes = callable.argTypes();
             for (ClassReference[] appliedType : appliedTypes) {
                 if (Util.matchArgs(argTypes, appliedType)) {
-                    errorLogger.errorF(methodName, "method %s(%s) is already defined in class %s", methodName.lexeme(), Util.getDescriptor(argTypes), className.lexeme());
+                    errorStorage.errorF(methodName, "method %s(%s) is already defined in class %s", methodName.lexeme(), Util.getDescriptor(argTypes), className.lexeme());
                     return;
                 }
             }

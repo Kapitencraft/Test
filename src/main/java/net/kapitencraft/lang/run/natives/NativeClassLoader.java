@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
+import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -24,6 +25,10 @@ import org.reflections.Reflections;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class NativeClassLoader {
     @ApiStatus.Internal
@@ -85,7 +90,7 @@ public class NativeClassLoader {
 
     }
 
-    private static void setupLookup(Class<?> clazz, String name, String pck) {
+    private static synchronized void setupLookup(Class<?> clazz, String name, String pck) {
         ClassReference reference = VarTypeManager.getOrCreateClass(name, pck);
         reference.setTarget(new NativeWrapper(name, pck)); //set target for reference
         classLookup.put(clazz, reference);

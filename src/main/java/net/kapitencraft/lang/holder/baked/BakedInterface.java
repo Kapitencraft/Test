@@ -17,7 +17,7 @@ import net.kapitencraft.tool.Pair;
 import java.util.HashMap;
 import java.util.Map;
 
-public record BakedInterface(Compiler.ErrorLogger logger, Holder.Generics generics, ClassReference target,
+public record BakedInterface(Compiler.ErrorStorage logger, Holder.Generics generics, ClassReference target,
                              Pair<Token, CompileCallable>[] methods,
                              Map<String, CompileField> staticFields, ClassReference[] interfaces,
                              Token name, String pck,

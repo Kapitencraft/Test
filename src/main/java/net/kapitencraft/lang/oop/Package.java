@@ -63,7 +63,7 @@ public class Package {
         packages.put(name, pck);
     }
 
-    public Package getOrCreatePackage(String name) {
+    public synchronized Package getOrCreatePackage(String name) {
         if (!hasPackage(name)) {
             addPackage(name, new Package(this.name.isEmpty() ? name : this.name + "." + name));
         }
@@ -86,7 +86,7 @@ public class Package {
      * may only be called from compilation
      */
     @ApiStatus.Internal
-    public ClassReference getOrCreateClass(String name) {
+    public synchronized ClassReference getOrCreateClass(String name) {
         if (classes.containsKey(name)) return classes.get(name);
         ClassReference reference = new ClassReference(name, this.name);
         classes.put(name, reference);
