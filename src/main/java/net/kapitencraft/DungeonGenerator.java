@@ -6,7 +6,8 @@ public class DungeonGenerator {
 
     private static Dungeon generate(int width, int height, Random random) {
         Dungeon dungeon = new Dungeon(width, height);
-        dungeon.entrance =
+        dungeon.entrance = null;
+        return dungeon;
     }
 
     private static class Dungeon {
@@ -20,5 +21,6 @@ public class DungeonGenerator {
         }
     }
 
-    private record Vec2(int x, int y) {}
+    private record Vec2(int x, int y) {
+    }
 }
