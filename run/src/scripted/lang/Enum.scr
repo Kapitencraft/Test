@@ -1,0 +1,11 @@
+package scripted.lang;
+
+class Enum {
+    final String name;
+    final int ordinal;
+
+    Enum(String name, int ordinal) {
+        this.name = name;
+        this.ordinal = ordinal;
+    }
+}

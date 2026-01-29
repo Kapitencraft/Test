@@ -14,7 +14,7 @@ public class VarTypeParser implements Holder.Validateable {
     private final Map<String, SourceClassReference> implemented = new HashMap<>();
 
     public VarTypeParser() {
-        implemented.putAll(VarTypeManager.getPackage("scripted.lang").allClasses().stream().map(ClassReference::get).collect(Collectors.toMap(ScriptedClass::name, scriptedClass -> SourceClassReference.from(null, scriptedClass.reference()))));
+        implemented.putAll(VarTypeManager.getPackage("scripted.lang").allClasses().stream().collect(Collectors.toMap(ClassReference::name, scriptedClass -> SourceClassReference.from(null, scriptedClass))));
     }
 
     public boolean hasClass(String clazz) {

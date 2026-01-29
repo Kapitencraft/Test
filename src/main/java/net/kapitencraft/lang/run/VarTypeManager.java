@@ -43,7 +43,7 @@ public class VarTypeManager {
 
     public static final ClassReference OBJECT = getMainClass("Object");
 
-    public static final ClassReference ENUM = getMainClass("Enum");
+    public static final ClassReference ENUM = getOrCreateClass("Enum", "scripted.lang");
 
     public static final ClassReference STRING = getMainClass("String");
 
