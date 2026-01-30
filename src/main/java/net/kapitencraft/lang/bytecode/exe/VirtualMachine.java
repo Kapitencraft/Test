@@ -630,6 +630,7 @@ public class VirtualMachine {
         ip = callFrame.ip;
         code = callFrame.code;
         constants = callFrame.constants;
+        stackBottom = callFrame.stackBottom;
         if (DEBUG) System.out.printf("[DEBUG]:%s PUSH_CALL (@%3d): stackIndex=%3d, name=%s\n", visualStackSize(), callStackTop - 1, callFrame.stackBottom, callFrame.signature);
     }
 
