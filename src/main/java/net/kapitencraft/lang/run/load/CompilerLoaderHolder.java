@@ -99,7 +99,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         if (checkHolderCreated()) this.holder.applySkeleton(storage);
     }
 
-    public void loadClass() {
+    public void finalizeLoad() {
         if (!checkHolderCreated()) return;
 
         if (builder.superclass() != null) {

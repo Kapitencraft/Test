@@ -13,7 +13,6 @@ import net.kapitencraft.lang.run.load.CompilerLoaderHolder;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
-import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -248,7 +247,7 @@ public class Compiler {
         CREATE_SKELETON(CompilerLoaderHolder::applySkeleton),
         VALIDATE(CompilerLoaderHolder::validate),
         CONSTRUCT(CompilerLoaderHolder::construct),
-        LOAD(CompilerLoaderHolder::loadClass),
+        FINALIZE_LOAD(CompilerLoaderHolder::finalizeLoad),
         CACHING(CompilerLoaderHolder::cache);
 
         private final Consumer<CompilerLoaderHolder> action;

@@ -26,7 +26,7 @@ public record LocalVariableTable(Entry[] entries) {
 
     public Pair<String, ClassReference> get(int pc, int i) {
         for (Entry entry : entries) {
-            if (entry.index == i && entry.startPc < pc && entry.startPc + entry.length > pc)
+            if (entry.index == i && entry.startPc <= pc && entry.startPc + entry.length >= pc)
                 return Pair.of(entry.name, entry.type);
         }
         return Pair.of("UNKNOWN", VarTypeManager.VOID.reference());

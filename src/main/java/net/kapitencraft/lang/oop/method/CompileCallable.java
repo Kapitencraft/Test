@@ -37,11 +37,16 @@ public class CompileCallable implements ScriptedCallable {
             params.stream().map(Pair::left).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
             object.add("params", array);
         }
-        if (!Modifiers.isAbstract(modifiers)) {
+        if (!isAbstract()) {
             Chunk.Builder chunk = builder.setup();
+            int rIndex = 0;
+            if (!isStatic()) {
+                chunk.addLocal(0, 0, VarTypeManager.VOID.reference(), "this");
+                rIndex++;
+            }
             for (int i = 0; i < this.params.size(); i++) {
                 Pair<? extends ClassReference, String> param = this.params.get(i);
-                chunk.addLocal(0, i, param.left(), param.right());
+                chunk.addLocal(0, rIndex + i, param.left(), param.right());
             }
             for (Stmt compileStmt : body) {
                 builder.cache(compileStmt);
