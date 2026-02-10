@@ -96,6 +96,11 @@ public class CompileCallable implements ScriptedCallable {
     }
 
     @Override
+    public short modifiers() {
+        return modifiers;
+    }
+
+    @Override
     public ClassReference retType() {
         return retType;
     }

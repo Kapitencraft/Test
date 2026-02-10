@@ -139,7 +139,7 @@ public class Compiler {
         void analyse();
     }
 
-    public static void cache(File cacheBase, CacheBuilder builder, String path, CacheableClass target, String name) throws IOException {
+    public static void cache(File cacheBase, Synthesizer builder, String path, CacheableClass target, String name) throws IOException {
         JsonObject object = builder.cacheClass(target);
         File cacheTarget = new File(cacheBase, path + "/" + name + ".scrc");
         if (!cacheTarget.exists()) {

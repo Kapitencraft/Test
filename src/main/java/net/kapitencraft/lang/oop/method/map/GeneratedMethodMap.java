@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.oop.method.map;
 
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.ClassBuilder;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
@@ -21,7 +22,15 @@ public class GeneratedMethodMap implements AbstractMethodMap {
         return new GeneratedMethodMap(Map.of());
     }
 
-    public JsonObject save(CacheBuilder builder) {
+    public JsonObject save(ClassBuilder builder) {
+        this.methods.forEach((s, dataMethodContainer) -> {
+            for (ScriptedCallable method : dataMethodContainer.methods()) {
+                builder.write16BitShort(method.modifiers());
+                builder.
+                builder.writeArray(s.getBytes());
+                builder.writeArray(VarTypeManager.getMet);
+            }
+        });
         JsonObject methods = new JsonObject();
         this.methods.forEach((name, container) -> methods.add(name, container.cache(builder)));
         return methods;
