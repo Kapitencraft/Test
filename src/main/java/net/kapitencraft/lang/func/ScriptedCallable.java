@@ -39,4 +39,6 @@ public interface ScriptedCallable {
     default boolean isNative() {
         return true;
     }
+
+    short modifiers();
 }

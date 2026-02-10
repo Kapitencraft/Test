@@ -1,13 +1,13 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.Synthesizer;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
 
 public interface CacheableClass {
 
-    JsonObject save(CacheBuilder cacheBuilder);
+    JsonObject save(Synthesizer cacheBuilder);
 
     default ClassReference reference() {
         return VarTypeManager.getOrCreateClass(name(), pck());

@@ -24,17 +24,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
+public class Synthesizer implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public static final int majorVersion = 1, minorVersion = 0;
 
     //marks whether to keep the expr result on the stack or not
     private boolean retainExprResult = false;
     //marks whether the expr result has already been ignored and therefore no POP must be emitted
     private boolean ignoredExprResult = false;
-    private final Chunk.Builder builder = new Chunk.Builder();
+    private final Chunk.Builder builder;
     private final Stack<Loop> loops = new Stack<>();
 
-    public CacheBuilder() {
+    public Synthesizer(ConstantPoolBuilder pool) {
+        this.builder = new Chunk.Builder(pool);
     }
 
     public void cache(Expr expr) {

@@ -13,7 +13,6 @@ import net.kapitencraft.lang.run.load.CompilerLoaderHolder;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
-import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -123,7 +122,7 @@ public class Compiler {
         ClassReference[] interfaces();
     }
 
-    public static void cache(File cacheBase, CacheBuilder builder, String path, CacheableClass target, String name) throws IOException {
+    public static void cache(File cacheBase, Synthesizer builder, String path, CacheableClass target, String name) throws IOException {
         JsonObject object = builder.cacheClass(target);
         File cacheTarget = new File(cacheBase, path + "/" + name + ".scrc");
         if (!cacheTarget.exists()) {

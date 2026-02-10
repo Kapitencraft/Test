@@ -58,15 +58,6 @@ public class VirtualMachine {
         }
     }
 
-    public static void main(String[] args) {
-        Chunk.Builder builder = new Chunk.Builder();
-        builder.addDoubleConstant(15.4);
-        builder.addDoubleConstant(7.7);
-        builder.addCode(Opcode.D_DIV);
-        Chunk chunk = builder.build();
-        Disassembler.disassemble(chunk, "test");
-    }
-
     private static final Map<Integer, TraceTable> tableData = new HashMap<>();
 
     private static class TraceTable {

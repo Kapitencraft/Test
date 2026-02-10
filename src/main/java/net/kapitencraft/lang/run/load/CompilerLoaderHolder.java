@@ -80,7 +80,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         try {
             Compiler.cache(
                     ClassLoader.cacheLoc,
-                    new CacheBuilder(),
+                    new Synthesizer(),
                     target.pck().replace(".", "/"),
                     target,
                     target.name()

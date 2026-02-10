@@ -3,7 +3,7 @@ package net.kapitencraft.lang.oop.clazz.generated;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
-import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.Synthesizer;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
@@ -48,7 +48,7 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
         this.annotations = annotations;
     }
 
-    public JsonObject save(CacheBuilder cacheBuilder) {
+    public JsonObject save(Synthesizer cacheBuilder) {
         JsonObject object = new JsonObject();
         object.addProperty("TYPE", "class");
         object.addProperty("name", name);

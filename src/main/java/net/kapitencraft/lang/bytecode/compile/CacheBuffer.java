@@ -3,6 +3,7 @@ package net.kapitencraft.lang.bytecode.compile;
 import java.util.ArrayList;
 
 public class CacheBuffer {
+
     private final ArrayList<Byte> buffer;
 
     public CacheBuffer() {

@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.Synthesizer;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -47,7 +47,7 @@ public record DataMethodContainer(ScriptedCallable[] methods) implements MethodC
     }
 
     //expecting Container methods to be Functions (!)
-    public JsonArray cache(CacheBuilder builder) {
+    public JsonArray cache(Synthesizer builder) {
         JsonArray array = new JsonArray(methods.length);
         for (ScriptedCallable method : methods) {
             if (method instanceof CompileCallable function) {

@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
-import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.Synthesizer;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -29,7 +29,7 @@ public class CompileCallable implements ScriptedCallable {
         this.annotations = annotations;
     }
 
-    public JsonObject save(CacheBuilder builder) {
+    public JsonObject save(Synthesizer builder) {
         JsonObject object = new JsonObject();
         object.addProperty("retType", VarTypeManager.getClassName(retType.get()));
         {
@@ -72,6 +72,11 @@ public class CompileCallable implements ScriptedCallable {
     @Override
     public boolean isStatic() {
         return Modifiers.isStatic(modifiers);
+    }
+
+    @Override
+    public short modifiers() {
+        return modifiers;
     }
 
     @Override
