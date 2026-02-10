@@ -104,6 +104,11 @@ public class CompileCallable implements ScriptedCallable {
     }
 
     @Override
+    public short modifiers() {
+        return modifiers;
+    }
+
+    @Override
     public ClassReference declaringClass() {
         return this.declaring;
     }
