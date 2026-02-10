@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.scripted.lang.exe.Opcode;
 import net.kapitencraft.lang.compiler.ConstantPoolBuilder;
+import net.kapitencraft.lang.compiler.Synthesizer;
+import net.kapitencraft.lang.compiler.ConstantPoolBuilder;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;

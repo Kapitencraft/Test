@@ -32,7 +32,7 @@ public class CompileField implements ScriptedField {
         return type;
     }
 
-    public JsonElement cache(CacheBuilder cacheBuilder) {
+    public JsonElement cache(Synthesizer cacheBuilder) {
         JsonObject object = new JsonObject();
         object.addProperty("type", VarTypeManager.getClassName(type));
         object.addProperty("modifiers", this.modifiers);

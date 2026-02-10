@@ -52,7 +52,7 @@ public record DataMethodContainer(ScriptedCallable[] methods) implements MethodC
     }
 
     //expecting Container methods to be Functions (!)
-    public JsonArray cache(CacheBuilder builder) {
+    public JsonArray cache(Synthesizer builder) {
         JsonArray array = new JsonArray(methods.length);
         for (ScriptedCallable method : methods) {
             if (method instanceof CompileCallable function) {

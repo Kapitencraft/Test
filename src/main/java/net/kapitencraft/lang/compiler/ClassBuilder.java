@@ -5,16 +5,16 @@ import net.kapitencraft.lang.bytecode.compile.ConstantPoolBuilder;
 import net.kapitencraft.tool.ByteBuilder;
 
 public class ClassBuilder extends ByteBuilder {
-    private final BytecodeBuilder cp;
+    private final ConstantPoolBuilder cp;
     private final Synthesizer synthesizer;
 
     public ClassBuilder() {
         super(128);
-        this.cp = new BytecodeBuilder();
+        this.cp = new ConstantPoolBuilder();
         this.synthesizer = new Synthesizer(cp);
     }
 
-    public BytecodeBuilder getCp() {
+    public ConstantPoolBuilder getCp() {
         return cp;
     }
 }

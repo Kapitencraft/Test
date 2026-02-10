@@ -22,6 +22,20 @@ public class GeneratedMethodMap implements AbstractMethodMap {
         return new GeneratedMethodMap(Map.of());
     }
 
+    public JsonObject save(ClassBuilder builder) {
+        this.methods.forEach((s, dataMethodContainer) -> {
+            for (ScriptedCallable method : dataMethodContainer.methods()) {
+                builder.write16BitShort(method.modifiers());
+                builder.
+                builder.writeArray(s.getBytes());
+                builder.writeArray(VarTypeManager.getMet);
+            }
+        });
+        JsonObject methods = new JsonObject();
+        this.methods.forEach((name, container) -> methods.add(name, container.cache(builder)));
+           return methods;
+    }
+
     @Override
     public ScriptedCallable getMethod(String signature) {
         return plainMap.get(signature);
