@@ -17,6 +17,22 @@ dependencies {
 }
 
 sourceSets {
+    "lang" {
+        java {
+            srcDir 'src/main/java'
+            include 'lang/**'
+        }
+    }
+}
+
+tasks.register('langJar', Jar) {
+    from sourceSets.lang.output
+
+    manifest {
+        attributes(['Main-Class': 'lang.Main'])
+    }
+
+    archiveClassifier = 'lang'
 }
 
 tasks.register('generateAst', JavaExec) {
@@ -41,6 +57,10 @@ tasks.register('compile', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
 
     args = []
+}
+
+tasks.named('assemble').configure {
+    dependsOn 'langJar'
 }
 
 tasks.test {
