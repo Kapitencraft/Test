@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
@@ -33,10 +34,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private boolean retainExprResult = false;
     //marks whether the expr result has already been ignored and therefore no POP must be emitted
     private boolean ignoredExprResult = false;
+    private final CodeBuilder codeBuilder;
     private final Chunk.Builder builder = new Chunk.Builder();
     private final Stack<Loop> loops = new Stack<>();
 
     public CacheBuilder() {
+        this.codeBuilder = new CodeBuilder();
     }
 
     public void cache(Expr expr) {
@@ -44,7 +47,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void cacheOrNull(@Nullable Expr expr) {
-        if (expr == null) builder.addCode(Opcode.NULL);
+        if (expr == null) {
+            codeBuilder.addInstruction(Opcode.NULL);
+            builder.addCode(Opcode.NULL);
+        }
         else cache(expr);
     }
 
@@ -126,15 +132,14 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitBinaryExpr(Expr.Binary expr) {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
-        TokenType operator = expr.operator().type();
-        final ClassReference executor = expr.executor();
         cache(expr.left());
         cache(expr.right());
         //convertToStringIfNecessary(operator, executor); TODO
 
         if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
+            final ClassReference executor = expr.executor();
             this.builder.changeLineIfNecessary(expr.operator());
-            Opcode opcode = switch (operator) {
+            Opcode opcode = switch (expr.operator().type()) {
                 case EQUAL -> Opcode.EQUAL;
                 case NEQUAL -> Opcode.NEQUAL;
                 case LEQUAL -> getLequal(executor);
@@ -146,12 +151,13 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 case MUL -> getMul(executor);
                 case DIV -> getDiv(executor);
                 case POW -> getPow(executor);
-                case MOD -> getMod(executor);
-                default -> throw new IllegalStateException("not an operator: " + operator);
+                default -> throw new IllegalStateException("not a operator: " + expr.operator().type());
             };
             builder.addCode(opcode);
+            codeBuilder.addInstruction(opcode);
         } else {
             builder.addCode(Opcode.POP_2);
+            codeBuilder.addInstruction(Opcode.POP_2);
             ignoredExprResult = true;
         }
         retainExprResult = hadRetain;
@@ -216,10 +222,9 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
         cache(expr.callee());
-        //object is NOT POPED from the stack. keep it before the args
+        retainExprResult = hadRetain; //object is NOT POPED from the stack. keep it before the args
         this.builder.changeLineIfNecessary(expr.name());
         saveArgs(expr.args());
-        retainExprResult = hadRetain;
         builder.invokeVirtual(expr.id());
         if (expr.retType().is(VarTypeManager.VOID))
             ignoredExprResult = true;
@@ -284,12 +289,15 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             builder.changeLineIfNecessary(expr.name());
             if (expr.type().get().isArray()) { //only `.length` exists on arrays, so we can be sure
                 builder.addCode(Opcode.ARRAY_LENGTH);
+                codeBuilder.addInstruction(Opcode.ARRAY_LENGTH);
             } else {
                 builder.addCode(Opcode.GET_FIELD);
+                codeBuilder.addInstruction(Opcode.GET_FIELD);
                 builder.injectString(expr.name().lexeme());
             }
         } else {
             builder.addCode(Opcode.POP);
+            codeBuilder.addInstruction(Opcode.POP);
             ignoredExprResult = true;
         }
         return null;
@@ -300,6 +308,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (retainExprResult) {
             builder.changeLineIfNecessary(expr.name());
             builder.addCode(Opcode.GET_STATIC);
+            codeBuilder.addInstruction(Opcode.GET_STATIC);
             builder.injectString(VarTypeManager.getClassName(expr.target().get()));
             builder.injectString(expr.name().lexeme());
         }
@@ -313,9 +322,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(expr.index());
         cache(expr.object());
         if (hadRetain) {
-            builder.addCode(getArrayLoad(expr.type()));
+            Opcode opcode = getArrayLoad(expr.type());
+            builder.addCode(opcode);
+            codeBuilder.addInstruction(opcode);
         } else {
             builder.addCode(Opcode.POP_2);
+            codeBuilder.addInstruction(Opcode.POP_2);
             ignoredExprResult = true;
         }
         return null;
@@ -336,13 +348,15 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             builder.injectString(expr.name().lexeme());
             cache(expr.value());
             builder.changeLineIfNecessary(expr.assignType());
-            switch (type) {
-                case ADD_ASSIGN -> builder.addCode(getAdd(retType));
-                case SUB_ASSIGN -> builder.addCode(getSub(retType));
-                case MUL_ASSIGN -> builder.addCode(getMul(retType));
-                case DIV_ASSIGN -> builder.addCode(getDiv(retType));
-                case POW_ASSIGN -> builder.addCode(getPow(retType));
-            }
+            Opcode opcode = switch (type) {
+                case ADD_ASSIGN -> getAdd(retType);
+                case SUB_ASSIGN -> getSub(retType);
+                case MUL_ASSIGN -> getMul(retType);
+                case DIV_ASSIGN -> getDiv(retType);
+                case POW_ASSIGN -> getPow(retType);
+                default -> throw new IllegalArgumentException("not a assign type: " + type);
+            };
+            builder.addCode(opcode);
         } else {
             cache(expr.value());
             builder.changeLineIfNecessary(expr.assignType());
@@ -642,7 +656,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             builder.addCode(Opcode.POP);
             ignoredExprResult = true;
         }
-
         return null;
     }
 

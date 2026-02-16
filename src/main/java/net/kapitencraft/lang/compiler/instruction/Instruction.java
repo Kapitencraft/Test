@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.compiler;
+package net.kapitencraft.lang.compiler.instruction;
 
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 
