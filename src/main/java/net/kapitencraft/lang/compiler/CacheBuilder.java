@@ -31,10 +31,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private boolean retainExprResult = false;
     //marks whether the expr result has already been ignored and therefore no POP must be emitted
     private boolean ignoredExprResult = false;
+    private final CodeBuilder codeBuilder;
     private final Chunk.Builder builder = new Chunk.Builder();
     private final Stack<Loop> loops = new Stack<>();
 
     public CacheBuilder() {
+        this.codeBuilder = new CodeBuilder();
     }
 
     public void cache(Expr expr) {
@@ -42,7 +44,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void cacheOrNull(@Nullable Expr expr) {
-        if (expr == null) builder.addCode(Opcode.NULL);
+        if (expr == null) {
+            codeBuilder.addInstruction(Opcode.NULL);
+            builder.addCode(Opcode.NULL);
+        }
         else cache(expr);
     }
 
@@ -129,21 +134,25 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
             final ClassReference executor = expr.executor();
             this.builder.changeLineIfNecessary(expr.operator());
-            switch (expr.operator().type()) {
-                case EQUAL -> builder.addCode(Opcode.EQUAL);
-                case NEQUAL -> builder.addCode(Opcode.NEQUAL);
-                case LEQUAL -> builder.addCode(getLequal(executor));
-                case GEQUAL -> builder.addCode(getGequal(executor));
-                case LESSER -> builder.addCode(getLesser(executor));
-                case GREATER -> builder.addCode(getGreater(executor));
-                case SUB -> builder.addCode(getSub(executor));
-                case ADD -> builder.addCode(getAdd(executor));
-                case MUL -> builder.addCode(getMul(executor));
-                case DIV -> builder.addCode(getDiv(executor));
-                case POW -> builder.addCode(getPow(executor));
-            }
+            Opcode opcode = switch (expr.operator().type()) {
+                case EQUAL -> Opcode.EQUAL;
+                case NEQUAL -> Opcode.NEQUAL;
+                case LEQUAL -> getLequal(executor);
+                case GEQUAL -> getGequal(executor);
+                case LESSER -> getLesser(executor);
+                case GREATER -> getGreater(executor);
+                case SUB -> getSub(executor);
+                case ADD -> getAdd(executor);
+                case MUL -> getMul(executor);
+                case DIV -> getDiv(executor);
+                case POW -> getPow(executor);
+                default -> throw new IllegalStateException("not a operator: " + expr.operator().type());
+            };
+            builder.addCode(opcode);
+            codeBuilder.addInstruction(opcode);
         } else {
             builder.addCode(Opcode.POP_2);
+            codeBuilder.addInstruction(Opcode.POP_2);
             ignoredExprResult = true;
         }
         retainExprResult = hadRetain;
@@ -228,12 +237,15 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             builder.changeLineIfNecessary(expr.name());
             if (expr.type().get().isArray()) { //only `.length` exists on arrays, so we can be sure
                 builder.addCode(Opcode.ARRAY_LENGTH);
+                codeBuilder.addInstruction(Opcode.ARRAY_LENGTH);
             } else {
                 builder.addCode(Opcode.GET_FIELD);
+                codeBuilder.addInstruction(Opcode.GET_FIELD);
                 builder.injectString(expr.name().lexeme());
             }
         } else {
             builder.addCode(Opcode.POP);
+            codeBuilder.addInstruction(Opcode.POP);
             ignoredExprResult = true;
         }
         return null;
@@ -244,6 +256,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (retainExprResult) {
             builder.changeLineIfNecessary(expr.name());
             builder.addCode(Opcode.GET_STATIC);
+            codeBuilder.addInstruction(Opcode.GET_STATIC);
             builder.injectString(VarTypeManager.getClassName(expr.target().get()));
             builder.injectString(expr.name().lexeme());
         }
@@ -257,9 +270,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(expr.index());
         cache(expr.object());
         if (hadRetain) {
-            builder.addCode(getArrayLoad(expr.type()));
+            Opcode opcode = getArrayLoad(expr.type());
+            builder.addCode(opcode);
+            codeBuilder.addInstruction(opcode);
         } else {
             builder.addCode(Opcode.POP_2);
+            codeBuilder.addInstruction(Opcode.POP_2);
             ignoredExprResult = true;
         }
         return null;
@@ -280,13 +296,15 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             builder.injectString(expr.name().lexeme());
             cache(expr.value());
             builder.changeLineIfNecessary(expr.assignType());
-            switch (type) {
-                case ADD_ASSIGN -> builder.addCode(getAdd(retType));
-                case SUB_ASSIGN -> builder.addCode(getSub(retType));
-                case MUL_ASSIGN -> builder.addCode(getMul(retType));
-                case DIV_ASSIGN -> builder.addCode(getDiv(retType));
-                case POW_ASSIGN -> builder.addCode(getPow(retType));
-            }
+            Opcode opcode = switch (type) {
+                case ADD_ASSIGN -> getAdd(retType);
+                case SUB_ASSIGN -> getSub(retType);
+                case MUL_ASSIGN -> getMul(retType);
+                case DIV_ASSIGN -> getDiv(retType);
+                case POW_ASSIGN -> getPow(retType);
+                default -> throw new IllegalArgumentException("not a assign type: " + type);
+            };
+            builder.addCode(opcode);
         } else {
             cache(expr.value());
             builder.changeLineIfNecessary(expr.assignType());
