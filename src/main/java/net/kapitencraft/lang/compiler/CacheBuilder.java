@@ -189,9 +189,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
         cache(expr.callee());
-        retainExprResult = hadRetain; //object is NOT POPED from the stack. keep it before the args
+         //object is NOT POPED from the stack. keep it before the args
         this.builder.changeLineIfNecessary(expr.name());
         saveArgs(expr.args());
+        retainExprResult = hadRetain;
         builder.invokeVirtual(expr.id());
         if (expr.retType().is(VarTypeManager.VOID))
             ignoredExprResult = true;

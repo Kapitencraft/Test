@@ -1,0 +1,12 @@
+package test;
+
+class SumTest {
+
+    static void main(String[] args) {
+        int s = 0;
+        for (int i = 1; i <= 100; i++) {
+            s += i;
+        }
+        System.print(s);
+    }
+}
