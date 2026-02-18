@@ -1,0 +1,13 @@
+package net.kapitencraft.lang.compiler.instruction.constant;
+
+import net.kapitencraft.lang.bytecode.exe.Opcode;
+import net.kapitencraft.lang.compiler.instruction.SimpleInstruction;
+
+public class DoubleConstantInstruction extends SimpleInstruction {
+    private final double value;
+
+    public DoubleConstantInstruction(double value) {
+        super(Opcode.D_CONST);
+        this.value = value;
+    }
+}
