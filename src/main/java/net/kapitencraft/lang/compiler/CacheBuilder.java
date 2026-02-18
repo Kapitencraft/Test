@@ -5,6 +5,9 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
+import net.kapitencraft.lang.compiler.instruction.SwitchInstruction;
+import net.kapitencraft.lang.compiler.instruction.constant.DoubleConstantInstruction;
+import net.kapitencraft.lang.compiler.instruction.constant.FloatConstantInstruction;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -45,8 +48,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private void cacheOrNull(@Nullable Expr expr) {
         if (expr == null) {
-            codeBuilder.addInstruction(Opcode.NULL);
             builder.addCode(Opcode.NULL);
+            codeBuilder.addSimple(Opcode.NULL);
         }
         else cache(expr);
     }
@@ -121,7 +124,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         AssignOperators operators = getAssignOperators(expr.ordinal());
         specialAssign(expr.executor(), expr.assignType(), operators.get(), operators.assign(), b -> {
             if (expr.ordinal() > 2) b.addArg(expr.ordinal());
-        });
+        }, o -> {});
         return null;
     }
 
@@ -133,8 +136,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(expr.left());
         if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
             final ClassReference executor = expr.executor();
-            this.builder.changeLineIfNecessary(expr.operator());
-            Opcode opcode = switch (expr.operator().type()) {
+            Token operator = expr.operator();
+            this.builder.changeLineIfNecessary(operator);
+            codeBuilder.changeLineIfNecessary(operator);
+            Opcode opcode = switch (operator.type()) {
                 case EQUAL -> Opcode.EQUAL;
                 case NEQUAL -> Opcode.NEQUAL;
                 case LEQUAL -> getLequal(executor);
@@ -146,13 +151,13 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 case MUL -> getMul(executor);
                 case DIV -> getDiv(executor);
                 case POW -> getPow(executor);
-                default -> throw new IllegalStateException("not a operator: " + expr.operator().type());
+                default -> throw new IllegalStateException("not a operator: " + operator.type());
             };
             builder.addCode(opcode);
-            codeBuilder.addInstruction(opcode);
+            codeBuilder.addSimple(opcode);
         } else {
             builder.addCode(Opcode.POP_2);
-            codeBuilder.addInstruction(Opcode.POP_2);
+            codeBuilder.addSimple(Opcode.POP_2);
             ignoredExprResult = true;
         }
         retainExprResult = hadRetain;
@@ -190,6 +195,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitWhenExpr(Expr.When expr) {
         cache(expr.condition());
         this.builder.jumpElse(() -> cache(expr.ifTrue()), () -> cache(expr.ifFalse()));
+        this.codeBuilder.jumpElse(() -> cache(expr.ifTrue()), () -> cache(expr.ifFalse()));
         return null;
     }
 
@@ -198,10 +204,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
         cache(expr.callee());
-        retainExprResult = hadRetain; //object is NOT POPED from the stack. keep it before the args
         this.builder.changeLineIfNecessary(expr.name());
+        codeBuilder.changeLineIfNecessary(expr.name());
         saveArgs(expr.args());
+        retainExprResult = hadRetain; //object is NOT POPED from the stack. keep it before the args
         builder.invokeVirtual(expr.id());
+        codeBuilder.addStringInstruction(Opcode.INVOKE_VIRTUAL, expr.id());
         if (expr.retType().is(VarTypeManager.VOID))
             ignoredExprResult = true;
         return null;
@@ -210,19 +218,24 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitStaticCallExpr(Expr.StaticCall expr) {
         builder.changeLineIfNecessary(expr.name());
+        codeBuilder.changeLineIfNecessary(expr.name());
         saveArgs(expr.args());
         builder.invokeStatic(expr.id());
+        codeBuilder.addStringInstruction(Opcode.INVOKE_STATIC, expr.id());
         if (expr.retType().is(VarTypeManager.VOID))
             ignoredExprResult = true;
         return null;
     }
 
+    //TODO merge?
     @Override
     public Void visitSuperCallExpr(Expr.SuperCall expr) {
         getVar(0);
         builder.changeLineIfNecessary(expr.name());
+        codeBuilder.changeLineIfNecessary(expr.name());
         saveArgs(expr.args());
         builder.invokeStatic(expr.id());
+        codeBuilder.addStringInstruction(Opcode.INVOKE_STATIC, expr.id());
         if (expr.retType().is(VarTypeManager.VOID))
             ignoredExprResult = true;
         return null;
@@ -235,17 +248,18 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(expr.object());
         if (hadRetain) {
             builder.changeLineIfNecessary(expr.name());
+            codeBuilder.changeLineIfNecessary(expr.name());
             if (expr.type().get().isArray()) { //only `.length` exists on arrays, so we can be sure
                 builder.addCode(Opcode.ARRAY_LENGTH);
-                codeBuilder.addInstruction(Opcode.ARRAY_LENGTH);
+                codeBuilder.addSimple(Opcode.ARRAY_LENGTH);
             } else {
                 builder.addCode(Opcode.GET_FIELD);
-                codeBuilder.addInstruction(Opcode.GET_FIELD);
+                codeBuilder.addStringInstruction(Opcode.GET_FIELD, expr.name().lexeme());
                 builder.injectString(expr.name().lexeme());
             }
         } else {
             builder.addCode(Opcode.POP);
-            codeBuilder.addInstruction(Opcode.POP);
+            codeBuilder.addSimple(Opcode.POP);
             ignoredExprResult = true;
         }
         return null;
@@ -255,8 +269,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitStaticGetExpr(Expr.StaticGet expr) {
         if (retainExprResult) {
             builder.changeLineIfNecessary(expr.name());
+            codeBuilder.changeLineIfNecessary(expr.name());
             builder.addCode(Opcode.GET_STATIC);
-            codeBuilder.addInstruction(Opcode.GET_STATIC);
+            codeBuilder.addSimple(Opcode.GET_STATIC);
+            //TODO 2x String
             builder.injectString(VarTypeManager.getClassName(expr.target().get()));
             builder.injectString(expr.name().lexeme());
         }
@@ -272,10 +288,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (hadRetain) {
             Opcode opcode = getArrayLoad(expr.type());
             builder.addCode(opcode);
-            codeBuilder.addInstruction(opcode);
+            codeBuilder.addSimple(opcode);
         } else {
             builder.addCode(Opcode.POP_2);
-            codeBuilder.addInstruction(Opcode.POP_2);
+            codeBuilder.addSimple(Opcode.POP_2);
             ignoredExprResult = true;
         }
         return null;
@@ -292,10 +308,13 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (type != TokenType.ASSIGN) {
             builder.addCode(Opcode.DUP); //duplicate object down so the get field
             builder.changeLineIfNecessary(expr.name());
+            codeBuilder.changeLineIfNecessary(expr.name());
             builder.addCode(Opcode.GET_FIELD);
             builder.injectString(expr.name().lexeme());
+            codeBuilder.addStringInstruction(Opcode.GET_FIELD, expr.name().lexeme());
             cache(expr.value());
             builder.changeLineIfNecessary(expr.assignType());
+            codeBuilder.changeLineIfNecessary(expr.assignType());
             Opcode opcode = switch (type) {
                 case ADD_ASSIGN -> getAdd(retType);
                 case SUB_ASSIGN -> getSub(retType);
@@ -305,19 +324,24 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 default -> throw new IllegalArgumentException("not a assign type: " + type);
             };
             builder.addCode(opcode);
+            codeBuilder.addSimple(opcode);
         } else {
             cache(expr.value());
             builder.changeLineIfNecessary(expr.assignType());
+            codeBuilder.changeLineIfNecessary(expr.assignType());
         }
         if (hadRetain) {
             builder.addCode(Opcode.DUP_X1); //duplicate to keep value on the stack
+            codeBuilder.addSimple(Opcode.DUP_X1);
         } else {
             ignoredExprResult = true;
         }
         retainExprResult = hadRetain;
         builder.changeLineIfNecessary(expr.name());
+        codeBuilder.changeLineIfNecessary(expr.name());
         builder.addCode(Opcode.PUT_FIELD);
         builder.injectString(expr.name().lexeme());
+        codeBuilder.addStringInstruction(Opcode.PUT_FIELD, expr.name().lexeme());
         return null;
     }
 
@@ -345,26 +369,37 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             cache(expr.object());
             cache(expr.index());
             builder.addCode(Opcode.DUP2_X1);
-            builder.addCode(getArrayLoad(retType));
+            codeBuilder.addSimple(Opcode.DUP2_X1);
+            Opcode load = getArrayLoad(retType);
+            builder.addCode(load);
+            codeBuilder.addSimple(load);
             builder.changeLineIfNecessary(expr.assignType());
-            switch (type) {
-                case ADD_ASSIGN -> builder.addCode(getAdd(retType));
-                case SUB_ASSIGN -> builder.addCode(getSub(retType));
-                case MUL_ASSIGN -> builder.addCode(getMul(retType));
-                case DIV_ASSIGN -> builder.addCode(getDiv(retType));
-                case POW_ASSIGN -> builder.addCode(getPow(retType));
-            }
+            codeBuilder.changeLineIfNecessary(expr.assignType());
+            Opcode opcode = switch (type) {
+                case ADD_ASSIGN -> getAdd(retType);
+                case SUB_ASSIGN -> getSub(retType);
+                case MUL_ASSIGN -> getMul(retType);
+                case DIV_ASSIGN -> getDiv(retType);
+                case POW_ASSIGN -> getPow(retType);
+                default -> throw new IllegalStateException("unknown assign type: " + type);
+            };
+            builder.addCode(opcode);
+            codeBuilder.addSimple(opcode);
         } else {
             cache(expr.object());
             cache(expr.index());
             cache(expr.value());
         }
-        if (hadRetain)
+        if (hadRetain) {
             builder.addCode(Opcode.DUP); //duplicate to keep the value on the stack as the ARRAY_SET does not actually keep anything on the stack
+            codeBuilder.addSimple(Opcode.DUP);
+        }
         else
             ignoredExprResult = true;
         retainExprResult = hadRetain;
-        builder.addCode(getArrayStore(retType));
+        Opcode store = getArrayStore(retType);
+        builder.addCode(store);
+        codeBuilder.addSimple(store);
         return null;
     }
 
@@ -374,7 +409,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = true;
         cache(expr.callee());
         retainExprResult = hadRetain;
-        specialAssign(expr.retType(), expr.assignType(), Opcode.GET_FIELD, Opcode.PUT_FIELD, b -> b.injectString(expr.name().lexeme()));
+        specialAssign(expr.retType(), expr.assignType(), Opcode.GET_FIELD, Opcode.PUT_FIELD,
+                b -> b.injectString(expr.name().lexeme()),
+                o -> codeBuilder.addStringInstruction(o, expr.name().lexeme())
+        );
         return null;
     }
 
@@ -387,7 +425,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 getPlusOne(reference) : getMinusOne(reference)
         );
 
-        specialAssign(expr.executor(), expr.assignType(), Opcode.GET_STATIC, Opcode.PUT_STATIC, b -> b.injectString(id));
+        specialAssign(expr.executor(), expr.assignType(), Opcode.GET_STATIC, Opcode.PUT_STATIC,
+                b -> b.injectString(id),
+                o -> codeBuilder.addStringInstruction(o, id)
+        );
         return null;
     }
 
@@ -395,30 +436,43 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitArraySpecialExpr(Expr.ArraySpecial expr) {
         ClassReference reference = expr.executor();
         builder.changeLineIfNecessary(expr.assignType());
-        builder.addCode(expr.assignType().type() == TokenType.GROW ?
-                getPlusOne(reference) : getMinusOne(reference)
-        );
-        builder.addCode(getAdd(reference));
+        codeBuilder.changeLineIfNecessary(expr.assignType());
+        Opcode opcode = expr.assignType().type() == TokenType.GROW ?
+                getPlusOne(reference) : getMinusOne(reference);
+        builder.addCode(opcode);
+        codeBuilder.addSimple(opcode);
+        Opcode add = getAdd(reference);
+        builder.addCode(add);
+        codeBuilder.addSimple(add);
         cache(expr.index());
         cache(expr.object());
         builder.addCode(Opcode.DUP2_X1);
+        codeBuilder.addSimple(Opcode.DUP2_X1);
         return null;
     }
 
-    private void specialAssign(ClassReference reference, Token token, Opcode get, Opcode set, Consumer<Chunk.Builder> meta) {
+    private void specialAssign(ClassReference reference, Token token, Opcode get, Opcode set, Consumer<Chunk.Builder> meta, Consumer<Opcode> instructionSink) {
         builder.addCode(get);
         meta.accept(builder);
+        instructionSink.accept(get);
         builder.changeLineIfNecessary(token);
-        builder.addCode(token.type() == TokenType.GROW ?
-                getPlusOne(reference) : getMinusOne(reference)
-        );
-        builder.addCode(getAdd(reference));
-        if (retainExprResult)
+        Opcode o = token.type() == TokenType.GROW ?
+                getPlusOne(reference) : getMinusOne(reference);
+        builder.addCode(o);
+        codeBuilder.addSimple(o);
+        Opcode add = getAdd(reference);
+        builder.addCode(add);
+        codeBuilder.addSimple(add);
+        if (retainExprResult) {
             builder.addCode(Opcode.DUP); //duplicate value to emit it onto the object stack
+            codeBuilder.addSimple(Opcode.DUP);
+        }
         else
             ignoredExprResult = true;
         builder.addCode(set);
+        codeBuilder.addSimple(set);
         meta.accept(builder);
+        instructionSink.accept(set);
     }
 
     //region special assign
@@ -444,6 +498,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cacheOrNull(expr.end());
         cacheOrNull(expr.interval());
         builder.addCode(Opcode.SLICE);
+        codeBuilder.addSimple(Opcode.SLICE);
         retainExprResult = hadRetain;
         return null;
     }
@@ -453,6 +508,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(expr.provider());
         builder.addCode(Opcode.SWITCH);
         int defaultPatch = builder.currentCodeIndex();
+        int instDefaultPatch = codeBuilder.size();
         builder.addArg(0);
         builder.addArg(0);
         builder.add2bArg(expr.params().size()); //length of pairs
@@ -463,27 +519,38 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         record SwitchEntry(int key, int opcode, Expr entry) {}
 
         List<SwitchEntry> entries = new ArrayList<>();
+        List<SwitchInstruction.Entry> instEntries = new ArrayList<>();
         for (Integer key : keys) {
             Expr expr1 = expr.params().get(key);
             builder.add4bArg(key);
             entries.add(new SwitchEntry(key, builder.currentCodeIndex(), expr1));
             builder.addArg(0);
             builder.addArg(0);
+            instEntries.add(new SwitchInstruction.Entry(key));
         }
+        codeBuilder.addSwitch(expr.params().size(), instEntries);
         List<Integer> continueJumps = new ArrayList<>();
+        List<Integer> continueJumpInstructions = new ArrayList<>();
 
         //cache entries
-        for (SwitchEntry entry : entries) {
+        for (int i = 0, entriesSize = entries.size(); i < entriesSize; i++) {
+            SwitchEntry entry = entries.get(i);
             builder.patchJumpCurrent(entry.opcode);
+            instEntries.get(i).setIdx(codeBuilder.size());
             cache(entry.entry);
-            continueJumps.add(builder.addJump()); //TODO remove jump if default does not exist
+            if (expr.defaulted() != null || i < entriesSize - 1) {
+                continueJumps.add(builder.addJump());
+                continueJumpInstructions.add(codeBuilder.addJump());
+            }
         }
         builder.patchJumpCurrent(defaultPatch);
+        codeBuilder.patchJump(instDefaultPatch);
         if (expr.defaulted() != null) {
             cache(expr.defaulted());
         }
 
         continueJumps.forEach(builder::patchJumpCurrent);
+        codeBuilder.addJumpMultiTargetInstruction(continueJumpInstructions);
         //https://docs.oracle.com/javase/specs/jvms/se25/html/jvms-6.html#jvms-6.5.lookupswitch
         return null;
     }
@@ -506,31 +573,44 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             ignoredExprResult = true;
             return null;
         }
-        builder.changeLineIfNecessary(expr.literal());
-        LiteralHolder literal = expr.literal().literal();
+        Token literalToken = expr.literal();
+        builder.changeLineIfNecessary(literalToken);
+        codeBuilder.changeLineIfNecessary(literalToken);
+        LiteralHolder literal = literalToken.literal();
         ScriptedClass scriptedClass = literal.type();
         Object value = literal.value();
         if (scriptedClass == VarTypeManager.DOUBLE) {
             double v = (double) value;
-            if (v == 1d)
+            if (v == 1d) {
                 builder.addCode(Opcode.D_1);
+                codeBuilder.addSimple(Opcode.D_1);
+            }
             else if (v == -1d) {
                 builder.addCode(Opcode.D_M1);
-            } else
+                codeBuilder.addSimple(Opcode.D_M1);
+            } else {
                 builder.addDoubleConstant(v);
+                codeBuilder.add(new DoubleConstantInstruction(v));
+            }
         } else if (scriptedClass == VarTypeManager.INTEGER) {
             int v = (int) value;
             builder.addInt(v);
-        } else if (VarTypeManager.STRING.is(scriptedClass))
+            codeBuilder.addInt(v);
+        } else if (VarTypeManager.STRING.is(scriptedClass)) {
             builder.addStringConstant((String) value);
-        else if (VarTypeManager.FLOAT.is(scriptedClass)) {
+            codeBuilder.addStringInstruction(Opcode.S_CONST, ((String) value));
+        } else if (VarTypeManager.FLOAT.is(scriptedClass)) {
             float v = (float) value;
-            if (v == 1f)
+            if (v == 1f) {
                 builder.addCode(Opcode.F_1);
-            else if (v == -1f)
+                codeBuilder.addSimple(Opcode.F_1);
+            } else if (v == -1f) {
                 builder.addCode(Opcode.F_M1);
-            else
+                codeBuilder.addSimple(Opcode.F_M1);
+            } else {
                 builder.addFloatConstant(v);
+                codeBuilder.add(new FloatConstantInstruction(v));
+            }
         }
         return null;
     }
@@ -543,18 +623,26 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             cache(expr.size());
         } else {
             builder.addIntConstant(expr.obj().length);
+            //TODO
         }
         builder.changeLineIfNecessary(expr.keyword());
-        builder.addCode(getArrayNew(expr.compoundType()));
+        codeBuilder.changeLineIfNecessary(expr.keyword());
+        Opcode opcode = getArrayNew(expr.compoundType());
+        builder.addCode(opcode);
+        codeBuilder.addSimple(opcode);
         //builder.injectString(VarTypeManager.getClassName(expr.compoundType().get()));
         Expr[] objects = expr.obj();
         Opcode store = getArrayStore(expr.compoundType());
         if (objects != null) {
             for (int i = 0; i < objects.length; i++) {
                 builder.addCode(Opcode.DUP);
+                codeBuilder.addSimple(Opcode.DUP);
+                //TODO
                 builder.addInt(i);
+                codeBuilder.addInt(i);
                 cache(objects[i]);
                 builder.addCode(store);
+                codeBuilder.addSimple(store);
             }
         }
         retainExprResult = hadRetain;
@@ -569,14 +657,18 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(expr.left());
         if (hadRetain) {
             builder.changeLineIfNecessary(expr.operator());
-            builder.addCode(switch (expr.operator().type()) {
+            codeBuilder.changeLineIfNecessary(expr.operator());
+            Opcode opcode = switch (expr.operator().type()) {
                 case OR -> Opcode.OR;
                 case XOR -> Opcode.XOR;
                 case AND -> Opcode.AND;
                 default -> throw new IllegalArgumentException("unknown logical type: " + expr.operator());
-            });
+            };
+            builder.addCode(opcode);
+            codeBuilder.addSimple(opcode);
         } else {
             builder.addCode(Opcode.POP_2);
+            codeBuilder.addSimple(Opcode.POP_2);
             ignoredExprResult = true;
         }
         return null;
@@ -588,9 +680,18 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = true;
         cache(expr.right());
         if (hadRetain) {
-            builder.changeLineIfNecessary(expr.operator());
-            if (expr.operator().type() == TokenType.NOT) builder.addCode(Opcode.NOT);
-            else builder.addCode(getNeg(expr.executor()));
+            Token operator = expr.operator();
+            builder.changeLineIfNecessary(operator);
+            codeBuilder.changeLineIfNecessary(operator);
+            if (operator.type() == TokenType.NOT) {
+                builder.addCode(Opcode.NOT);
+                codeBuilder.addSimple(Opcode.NOT);
+            }
+            else {
+                Opcode neg = getNeg(expr.executor());
+                builder.addCode(neg);
+                codeBuilder.addSimple(neg);
+            }
         }
         retainExprResult = hadRetain;
         return null;
@@ -600,6 +701,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitVarRefExpr(Expr.VarRef expr) {
         if (retainExprResult) {
             builder.changeLineIfNecessary(expr.name());
+            codeBuilder.changeLineIfNecessary(expr.name());
             getVar(expr.ordinal());
         } else
             ignoredExprResult = true;
@@ -650,32 +752,44 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         object.addProperty("TYPE", "if");
         retainExprResult = true;
         builder.changeLineIfNecessary(stmt.keyword());
+        codeBuilder.changeLineIfNecessary(stmt.keyword());
         cache(stmt.condition());
         int jumpPatch = builder.addJumpIfFalse();
+        int instPatch = codeBuilder.addJumpIfFalse();
         retainExprResult = false;
         cache(stmt.thenBranch());
         if (stmt.elifs().length > 0 || stmt.elseBranch() != null) {
             List<Integer> branches = new ArrayList<>();
+            List<Integer> instBranches = new ArrayList<>();
             branches.add(builder.addJump()); //jump from branch past the IF
             for (int i = 0; i < stmt.elifs().length; i++) {
                 builder.patchJumpCurrent(jumpPatch);
+                codeBuilder.patchJump(instPatch);
                 ElifBranch branch = stmt.elifs()[i];
                 cache(branch.condition());
                 jumpPatch = builder.addJumpIfFalse();
+                instPatch = codeBuilder.addJumpIfFalse();
                 retainExprResult = false;
                 cache(branch.body());
-                if (!branch.seenReturn())
+                if (!branch.seenReturn()) {
                     branches.add(builder.addJump());
+                    instBranches.add(codeBuilder.addJump());
+                }
             }
             if (stmt.elseBranch() != null) {
                 builder.patchJumpCurrent(jumpPatch);
+                codeBuilder.patchJump(instPatch);
                 retainExprResult = false;
                 cache(stmt.elseBranch());
             }
             for (int branch : branches) {
                 builder.patchJumpCurrent(branch);
             }
-        } else builder.patchJumpCurrent(jumpPatch);
+            codeBuilder.addJumpMultiTargetInstruction(instBranches);
+        } else {
+            builder.patchJumpCurrent(jumpPatch);
+            codeBuilder.patchJump(instPatch);
+        }
         return null;
     }
 
@@ -684,10 +798,14 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (stmt.value() != null) {
             retainExprResult = true;
             builder.changeLineIfNecessary(stmt.keyword());
+            codeBuilder.changeLineIfNecessary(stmt.keyword());
             cache(stmt.value());
             builder.addCode(Opcode.RETURN_ARG);
-        } else
+            codeBuilder.addSimple(Opcode.RETURN_ARG);
+        } else {
             builder.addCode(Opcode.RETURN);
+            codeBuilder.addSimple(Opcode.RETURN);
+        }
         return null;
     }
 
@@ -864,13 +982,24 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void getVar(int i) {
+
         switch (i) {
-            case 0 -> builder.addCode(Opcode.GET_0);
-            case 1 -> builder.addCode(Opcode.GET_1);
-            case 2 -> builder.addCode(Opcode.GET_2);
+            case 0 -> {
+                builder.addCode(Opcode.GET_0);
+                codeBuilder.addSimple(Opcode.GET_0);
+            }
+            case 1 -> {
+                builder.addCode(Opcode.GET_1);
+                codeBuilder.addSimple(Opcode.GET_1);
+            }
+            case 2 -> {
+                builder.addCode(Opcode.GET_2);
+                codeBuilder.addSimple(Opcode.GET_2);
+            }
             default -> {
                 builder.addCode(Opcode.GET);
                 builder.addArg(i);
+                codeBuilder.addGet(i);
             }
         }
 
@@ -940,28 +1069,35 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         throw new IllegalStateException("could not create 'negation' for: " + reference);
     }
 
+    //TODO
     private void assign(ClassReference retType, Expr value, Token type, Opcode get, Opcode assign, Consumer<Chunk.Builder> meta) {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
         cache(value);
         builder.changeLineIfNecessary(type);
+        codeBuilder.changeLineIfNecessary(type);
         if (type.type() != TokenType.ASSIGN) {
             builder.addCode(get);
             meta.accept(builder);
-            switch (type.type()) {
-                case ADD_ASSIGN -> builder.addCode(getAdd(retType));
-                case SUB_ASSIGN -> builder.addCode(getSub(retType));
-                case MUL_ASSIGN -> builder.addCode(getMul(retType));
-                case DIV_ASSIGN -> builder.addCode(getDiv(retType));
-                case POW_ASSIGN -> builder.addCode(getPow(retType));
-            }
+            Opcode operation = switch (type.type()) {
+                case ADD_ASSIGN -> getAdd(retType);
+                case SUB_ASSIGN -> getSub(retType);
+                case MUL_ASSIGN -> getMul(retType);
+                case DIV_ASSIGN -> getDiv(retType);
+                case POW_ASSIGN -> getPow(retType);
+                default -> throw new IllegalStateException("no operation for type: " + type.type());
+            };
+            builder.addCode(operation);
+            codeBuilder.addSimple(operation);
         }
         if (hadRetain) {
             builder.addCode(Opcode.DUP);
+            codeBuilder.addSimple(Opcode.DUP);
         } else
             ignoredExprResult = true;
         retainExprResult = hadRetain;
         builder.addCode(assign);
+        codeBuilder.addSimple(assign);
         meta.accept(builder);
     }
 
