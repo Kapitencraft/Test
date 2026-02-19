@@ -1,14 +1,16 @@
 package net.kapitencraft.lang.compiler;
 
 import net.kapitencraft.lang.bytecode.exe.Opcode;
+import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.compiler.instruction.*;
 import net.kapitencraft.lang.compiler.instruction.constant.IntegerConstantInstruction;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CodeBuilder {
+public class ByteCodeBuilder {
     private final List<Instruction> instructions = new ArrayList<>();
 
     public void changeLineIfNecessary(Token obj) {
@@ -27,6 +29,12 @@ public class CodeBuilder {
         int i = instructions.size();
         add(new JumpInstruction(Opcode.JUMP));
         return i;
+    }
+
+    public void addJump(int target) {
+        JumpInstruction i = new JumpInstruction(Opcode.JUMP);
+        i.setTarget(target);
+        instructions.add(i);
     }
 
     public int addJumpIfFalse() {
@@ -82,7 +90,24 @@ public class CodeBuilder {
         });
     }
 
-    public void addGet(int i) {
-        add(new GetInstruction(i));
+    public void addLocalAccess(Opcode opcode, int i) {
+        add(new LocalInstruction(opcode, i));
+    }
+
+    public void addStaticFieldAccess(Opcode opcode, String className, String fieldName) {
+        add(new StaticFieldAccessInstruction(opcode, className, fieldName));
+    }
+
+    public void build(Chunk.Builder builder) {
+        this.instructions.forEach(instruction -> instruction.save(builder));
+    }
+
+    public void registerLocal(int i, ClassReference type, String lexeme) {
+        add(new RegisterLocalInstruction(i, type, lexeme));
+    }
+
+    public int jumpTarget() {
+        add(new JumpTargetInstruction());
+        return size();
     }
 }
