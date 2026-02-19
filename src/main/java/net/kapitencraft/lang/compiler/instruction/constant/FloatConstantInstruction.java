@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.instruction.constant;
 
 import net.kapitencraft.lang.bytecode.exe.Opcode;
+import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.compiler.instruction.SimpleInstruction;
 
 public class FloatConstantInstruction extends SimpleInstruction {
@@ -9,5 +10,10 @@ public class FloatConstantInstruction extends SimpleInstruction {
     public FloatConstantInstruction(float value) {
         super(Opcode.F_CONST);
         this.value = value;
+    }
+
+    @Override
+    public void save(Chunk.Builder builder) {
+        builder.addFloatConstant(value);
     }
 }

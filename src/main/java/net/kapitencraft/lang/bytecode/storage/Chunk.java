@@ -84,8 +84,8 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers, 
             patchJump(falsePatch, (short) currentCodeIndex());
         }
 
-        public void addLocal(int position, int index, ClassReference type, String  name) {
-            this.locals.addLocal(position, index, type, name);
+        public void addLocal(int index, ClassReference type, String  name) {
+            this.locals.addLocal(currentCodeIndex(), index, type, name);
         }
 
         public void patchJump(int index, short destination) {
@@ -251,7 +251,11 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers, 
         }
 
         public void changeLineIfNecessary(Token type) {
-            this.lineNumbers.changeIfNecessary(type.line(), this.currentCodeIndex());
+            this.changeLineIfNecessary(type.line());
+        }
+
+        public void changeLineIfNecessary(int line) {
+            this.lineNumbers.changeIfNecessary(line, this.currentCodeIndex());
         }
 
         public void addTraceDebug(byte[] ints) {

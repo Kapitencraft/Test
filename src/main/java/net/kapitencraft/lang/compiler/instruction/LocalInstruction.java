@@ -2,11 +2,11 @@ package net.kapitencraft.lang.compiler.instruction;
 
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 
-public class GetInstruction extends SimpleInstruction {
+public class LocalInstruction extends SimpleInstruction {
     private final int id;
 
-    public GetInstruction(int id) {
-        super(Opcode.GET);
+    public LocalInstruction(Opcode opcode, int id) {
+        super(opcode);
         this.id = id;
     }
 }

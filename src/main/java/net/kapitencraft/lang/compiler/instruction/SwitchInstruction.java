@@ -1,14 +1,19 @@
 package net.kapitencraft.lang.compiler.instruction;
 
+import net.kapitencraft.lang.bytecode.exe.Opcode;
+import net.kapitencraft.lang.bytecode.storage.Chunk;
+
 import java.util.List;
 import java.util.Objects;
 
-public class SwitchInstruction implements Instruction, JumpableInstruction {
+
+public class SwitchInstruction extends SimpleInstruction implements JumpableInstruction {
     private final int size;
     private int target;
     private final List<Entry> entries;
 
     public SwitchInstruction(int size, List<Entry> entries) {
+        super(Opcode.SWITCH);
         this.size = size;
         this.entries = entries;
     }
@@ -36,6 +41,17 @@ public class SwitchInstruction implements Instruction, JumpableInstruction {
 
         public void setIdx(int idx) {
             this.idx = idx;
+        }
+    }
+
+    @Override
+    public void save(Chunk.Builder builder) {
+        super.save(builder);
+        builder.add2bArg(target);
+        builder.add2bArg(size);
+        for (Entry entry : entries) {
+            builder.add4bArg(entry.id);
+            builder.add2bArg(entry.idx);
         }
     }
 }
