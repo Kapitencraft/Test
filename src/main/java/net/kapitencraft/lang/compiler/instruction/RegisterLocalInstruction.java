@@ -15,7 +15,7 @@ public class RegisterLocalInstruction implements Instruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder) {
+    public void save(Chunk.Builder builder, int[] instStartIndexes) {
         builder.addLocal(idx, type, name);
     }
 }

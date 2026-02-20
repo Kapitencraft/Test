@@ -3,6 +3,8 @@ package net.kapitencraft.lang.compiler.instruction;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
 
 public class JumpTargetInstruction implements Instruction {
+    //must be added AFTER the target instruction
+
     private final int index;
 
     public JumpTargetInstruction(int index) {
@@ -10,7 +12,7 @@ public class JumpTargetInstruction implements Instruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder) {
+    public void save(Chunk.Builder builder, int[] instStartIndexes) {
 
     }
 }

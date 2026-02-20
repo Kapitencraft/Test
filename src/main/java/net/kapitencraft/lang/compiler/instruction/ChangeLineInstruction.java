@@ -10,7 +10,7 @@ public class ChangeLineInstruction implements Instruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder) {
+    public void save(Chunk.Builder builder, int[] instStartIndexes) {
         builder.changeLineIfNecessary(line);
     }
 }

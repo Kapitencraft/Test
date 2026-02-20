@@ -45,13 +45,18 @@ public class SwitchInstruction extends SimpleInstruction implements JumpableInst
     }
 
     @Override
-    public void save(Chunk.Builder builder) {
-        super.save(builder);
-        builder.add2bArg(target);
+    public void save(Chunk.Builder builder, int[] instStartIndexes) {
+        super.save(builder, instStartIndexes);
+        builder.add2bArg(instStartIndexes[target]);
         builder.add2bArg(size);
         for (Entry entry : entries) {
             builder.add4bArg(entry.id);
-            builder.add2bArg(entry.idx);
+            builder.add2bArg(instStartIndexes[entry.idx]);
         }
+    }
+
+    @Override
+    public int length() {
+        return 5 + entries.size() * 6;
     }
 }
