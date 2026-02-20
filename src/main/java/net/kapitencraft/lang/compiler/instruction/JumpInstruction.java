@@ -15,8 +15,13 @@ public class JumpInstruction extends SimpleInstruction implements JumpableInstru
     }
 
     @Override
-    public void save(Chunk.Builder builder) {
-        super.save(builder);
-        builder.add2bArg(index);
+    public void save(Chunk.Builder builder, int[] instStartIndexes) {
+        super.save(builder, instStartIndexes);
+        builder.add2bArg(instStartIndexes[index]); //index is into instruction array, not bytecode array
+    }
+
+    @Override
+    public int length() {
+        return 3;
     }
 }

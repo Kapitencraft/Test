@@ -12,8 +12,13 @@ public class StringArgInstruction extends SimpleInstruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder) {
-        super.save(builder);
+    public void save(Chunk.Builder builder, int[] instStartIndexes) {
+        super.save(builder, instStartIndexes);
         builder.injectString(value);
+    }
+
+    @Override
+    public int length() {
+        return 3;
     }
 }

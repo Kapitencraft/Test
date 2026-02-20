@@ -48,13 +48,18 @@ public class ByteCodeBuilder {
         ((JumpableInstruction) this.instructions.get(jumpID)).setTarget(instructions.size());
     }
 
+    public void patchJumpAhead(int jumpID) {
+        add(new JumpTargetInstruction(jumpID));
+        ((JumpableInstruction) this.instructions.get(jumpID)).setTarget(instructions.size() + 1);
+    }
+
     public void jumpElse(Runnable ifTrue, Runnable ifFalse) {
         int truePatch = addJumpIfFalse();
         ifTrue.run();
         int falsePatch = addJump();
         patchJump(truePatch);
         ifFalse.run();
-        patchJump(falsePatch);
+        patchJumpAhead(falsePatch);
     }
 
     public void addJumpMultiTargetInstruction(List<Integer> origins) {
@@ -98,8 +103,8 @@ public class ByteCodeBuilder {
         add(new StaticFieldAccessInstruction(opcode, className, fieldName));
     }
 
-    public void build(Chunk.Builder builder) {
-        this.instructions.forEach(instruction -> instruction.save(builder));
+    public void build(Chunk.Builder builder, int[] instStartIndexes) {
+        this.instructions.forEach(instruction -> instruction.save(builder, instStartIndexes));
     }
 
     public void registerLocal(int i, ClassReference type, String lexeme) {
@@ -107,7 +112,20 @@ public class ByteCodeBuilder {
     }
 
     public int jumpTarget() {
-        add(new JumpTargetInstruction());
+        //add(new JumpTargetInstruction()); TODO
         return size();
+    }
+
+    public void addExceptionHandler(int handlerStart, int handlerEnd, String className) {
+        add(new ExceptionHandlerInstruction(handlerStart, handlerEnd, this.size(), className));
+    }
+
+    public int[] gatherStartIndexes() {
+        int[] startIndexes = new int[this.instructions.size() + 1];
+        startIndexes[0] = 0;
+        for (int i = 0; i < this.instructions.size(); i++) {
+            startIndexes[i + 1] = startIndexes[i] + this.instructions.get(i).length();
+        }
+        return startIndexes;
     }
 }

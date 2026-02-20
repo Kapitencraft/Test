@@ -3,20 +3,21 @@ package net.kapitencraft.lang.compiler.instruction;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
 
-public class SimpleInstruction implements Instruction {
-    private final Opcode opcode;
+public class TraceDebugInstruction extends SimpleInstruction {
+    private final byte[] locals;
 
-    public SimpleInstruction(Opcode opcode) {
-        this.opcode = opcode;
+    public TraceDebugInstruction(byte[] locals) {
+        super(Opcode.TRACE);
+        this.locals = locals;
     }
 
     @Override
     public void save(Chunk.Builder builder, int[] instStartIndexes) {
-        builder.addCode(opcode);
+        builder.addTraceDebug(locals);
     }
 
     @Override
     public int length() {
-        return 1;
+        return 3 + locals.length;
     }
 }

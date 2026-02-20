@@ -13,7 +13,12 @@ public class IntegerConstantInstruction extends SimpleInstruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder) {
+    public void save(Chunk.Builder builder, int[] instStartIndexes) {
         builder.addIntConstant(value);
+    }
+
+    @Override
+    public int length() {
+        return 3;
     }
 }

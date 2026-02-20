@@ -6,6 +6,7 @@ import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.instruction.SwitchInstruction;
+import net.kapitencraft.lang.compiler.instruction.TraceDebugInstruction;
 import net.kapitencraft.lang.compiler.instruction.constant.DoubleConstantInstruction;
 import net.kapitencraft.lang.compiler.instruction.constant.FloatConstantInstruction;
 import net.kapitencraft.lang.holder.LiteralHolder;
@@ -98,7 +99,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     public void build(Chunk.Builder chunk) {
-        this.byteCodeBuilder.build(chunk);
+        int[] startIndexes = this.byteCodeBuilder.gatherStartIndexes();
+        this.byteCodeBuilder.build(chunk, startIndexes);
     }
 
     private record AssignOperators(Opcode get, Opcode assign) {
@@ -791,12 +793,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitForEachStmt(Stmt.ForEach stmt) {
-        byteCodeBuilder.registerLocal(stmt.baseVar() + 1, stmt.type(), stmt.name().lexeme());
         retainExprResult = true;
         byteCodeBuilder.changeLineIfNecessary(stmt.name());
         cache(stmt.initializer()); //create array variable
-        builder.addCode(Opcode.I_0); //create iteration variable
-        byteCodeBuilder.addSimple(Opcode.I_0);
+        byteCodeBuilder.registerLocal(stmt.baseVar(), stmt.type().array(), "$array");
+        byteCodeBuilder.addSimple(Opcode.I_0);//create iteration variable
+        byteCodeBuilder.registerLocal(stmt.baseVar() + 1, VarTypeManager.INTEGER.reference(), "$i");
         int baseVarIndex = stmt.baseVar();
 
 
@@ -815,6 +817,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         getVar(baseVarIndex + 1); //load iteration var
         getVar(baseVarIndex); //load array var
         byteCodeBuilder.addSimple(getArrayLoad(stmt.type()));  //create entry var by loading array element
+        byteCodeBuilder.registerLocal(stmt.baseVar() + 2, stmt.type(), stmt.name().lexeme());
         //endregion
 
         retainExprResult = false;
@@ -826,15 +829,15 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         byteCodeBuilder.addSimple(Opcode.I_ADD); //add 1 to the iteration var
         assignVar(baseVarIndex + 1);
         //endregion
-        byteCodeBuilder.addJump(curIndex);
         loops.pop().patchBreaks();
+        byteCodeBuilder.addJump(curIndex);
         byteCodeBuilder.patchJump(result);
         return null;
     }
 
     @Override
     public Void visitDebugTraceStmt(Stmt.DebugTrace stmt) {
-        builder.addTraceDebug(stmt.locals());
+        byteCodeBuilder.add(new TraceDebugInstruction(stmt.locals()));
         return null;
     }
 
@@ -859,14 +862,14 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         jumps.add(byteCodeBuilder.addJump());
         for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches()) {
             for (ClassReference reference : aCatch.left().left()) {
-                builder.addExceptionHandler(handlerStart, handlerEnd, byteCodeBuilder.size(), builder.injectStringNoArg(VarTypeManager.getClassName(reference.get())));
+                byteCodeBuilder.addExceptionHandler(handlerStart, handlerEnd, VarTypeManager.getClassName(reference.get()));
             }
             retainExprResult = false;
             cache(aCatch.right());
             jumps.add(byteCodeBuilder.addJump());
         }
         if (stmt.finale() != null) {
-            builder.addExceptionHandler(handlerStart, handlerEnd, byteCodeBuilder.size(), 0);
+            byteCodeBuilder.addExceptionHandler(handlerStart, handlerEnd, null);
             retainExprResult = false;
             cache(stmt.finale());
         }

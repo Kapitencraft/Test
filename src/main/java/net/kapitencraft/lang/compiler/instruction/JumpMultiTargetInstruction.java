@@ -12,6 +12,6 @@ public class JumpMultiTargetInstruction implements Instruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder) {
+    public void save(Chunk.Builder builder, int[] instStartIndexes) {
     }
 }
