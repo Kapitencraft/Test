@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.compiler;
 
-import net.kapitencraft.lang.bytecode.exe.Opcode;
-import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.exe.Opcode;
+import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.compiler.instruction.*;
 import net.kapitencraft.lang.compiler.instruction.constant.IntegerConstantInstruction;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;

@@ -2,11 +2,10 @@ package net.kapitencraft.lang.oop.field;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.run.load.ClassLoader;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
 
 public class RuntimeField implements ScriptedField {

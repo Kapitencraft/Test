@@ -2,9 +2,8 @@ package net.kapitencraft.lang.holder.ast;
 
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.algebra.Operand;
+
 import java.util.Map;
-import net.kapitencraft.lang.holder.LiteralHolder;
 
 public interface Expr {
 

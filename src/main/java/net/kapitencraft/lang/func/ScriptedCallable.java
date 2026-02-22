@@ -1,9 +1,9 @@
 package net.kapitencraft.lang.func;
 
-import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exe.VarTypeManager;
 
 import java.util.HashMap;
 import java.util.Map;

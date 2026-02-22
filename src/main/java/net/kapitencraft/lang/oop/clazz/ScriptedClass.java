@@ -1,18 +1,18 @@
 package net.kapitencraft.lang.oop.clazz;
 
-import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.field.ScriptedField;
-import net.kapitencraft.lang.run.Interpreter;
-import net.kapitencraft.lang.run.algebra.Operand;
-import net.kapitencraft.lang.run.algebra.OperationType;
+import net.kapitencraft.lang.exe.Interpreter;
+import net.kapitencraft.lang.exe.algebra.Operand;
+import net.kapitencraft.lang.exe.algebra.OperationType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 

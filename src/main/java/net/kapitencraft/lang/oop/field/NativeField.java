@@ -2,8 +2,8 @@ package net.kapitencraft.lang.oop.field;
 
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.natives.NativeClassInstance;
-import net.kapitencraft.lang.run.natives.impl.NativeClassImpl;
+import net.kapitencraft.lang.exe.natives.NativeClassInstance;
+import net.kapitencraft.lang.exe.natives.impl.NativeClassImpl;
 
 import java.lang.reflect.Field;
 

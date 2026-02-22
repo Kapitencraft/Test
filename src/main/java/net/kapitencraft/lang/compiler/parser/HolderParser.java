@@ -11,7 +11,7 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.ClassType;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 

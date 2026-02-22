@@ -2,7 +2,7 @@ package net.kapitencraft.lang.holder.token;
 
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.LiteralHolder;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

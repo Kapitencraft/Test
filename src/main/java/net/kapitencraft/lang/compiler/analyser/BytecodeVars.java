@@ -2,14 +2,11 @@ package net.kapitencraft.lang.compiler.analyser;
 
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.VarTypeManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.kapitencraft.lang.exe.VarTypeManager;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public class BytecodeVars {
     private final Local[] locals = new Local[256];
