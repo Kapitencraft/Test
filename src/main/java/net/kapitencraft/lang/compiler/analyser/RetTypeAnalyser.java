@@ -2,9 +2,7 @@ package net.kapitencraft.lang.compiler.analyser;
 
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.run.algebra.Operand;
-import net.kapitencraft.lang.run.algebra.OperationType;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import org.jetbrains.annotations.Contract;
 
 public class RetTypeAnalyser implements Expr.Visitor<ClassReference> {

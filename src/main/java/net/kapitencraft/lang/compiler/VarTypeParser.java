@@ -2,8 +2,7 @@ package net.kapitencraft.lang.compiler;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
-import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.exe.VarTypeManager;
 
 import java.util.HashMap;
 import java.util.Map;
