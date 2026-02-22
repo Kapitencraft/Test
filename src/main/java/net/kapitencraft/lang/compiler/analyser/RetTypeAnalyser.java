@@ -6,7 +6,7 @@ import net.kapitencraft.lang.exe.VarTypeManager;
 import org.jetbrains.annotations.Contract;
 
 public class RetTypeAnalyser implements Expr.Visitor<ClassReference> {
-    private final BytecodeVars varAnalyser;
+    private final LocalVariableContainer varAnalyser;
 
     //STAGE: Skeleton
 
@@ -15,7 +15,7 @@ public class RetTypeAnalyser implements Expr.Visitor<ClassReference> {
         return expr.accept(this);
     }
 
-    public RetTypeAnalyser(BytecodeVars varAnalyser) {
+    public RetTypeAnalyser(LocalVariableContainer varAnalyser) {
         this.varAnalyser = varAnalyser;
     }
 

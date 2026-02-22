@@ -2,8 +2,10 @@ package net.kapitencraft.lang.exe.load;
 
 import net.kapitencraft.lang.compiler.*;
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.parser.HolderParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
+import net.kapitencraft.lang.compiler.parser.VarTypeParser;
 import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;

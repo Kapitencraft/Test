@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class BytecodeVars {
+public class LocalVariableContainer {
     private final Local[] locals = new Local[256];
     private byte localCount, scopeDepth;
 

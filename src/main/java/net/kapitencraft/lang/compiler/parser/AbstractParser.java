@@ -3,7 +3,7 @@ package net.kapitencraft.lang.compiler.parser;
 import com.google.common.collect.ImmutableList;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
-import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
+import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
@@ -12,7 +12,6 @@ import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.analyser.RetTypeAnalyser;
 import net.kapitencraft.lang.holder.token.Token;
@@ -46,12 +45,12 @@ public class AbstractParser {
     protected final LocationAnalyser locFinder = new LocationAnalyser();
     protected final Deque<List<ClassReference>> args = new ArrayDeque<>(); //TODO either use or remove
     protected final Compiler.ErrorStorage errorStorage;
-    protected BytecodeVars varAnalyser;
+    protected LocalVariableContainer varAnalyser;
 
     protected ClassReference checkVarExistence(Token name, boolean requireValue, boolean mayBeFinal) {
         String varName = name.lexeme();
-        BytecodeVars.FetchResult result = varAnalyser.get(varName);
-        if (result == BytecodeVars.FetchResult.FAIL) {
+        LocalVariableContainer.FetchResult result = varAnalyser.get(varName);
+        if (result == LocalVariableContainer.FetchResult.FAIL) {
             error(name, "cannot find symbol");
         } else if (requireValue && !result.assigned()) {
             error(name, "Variable '" + name.lexeme() + "' might not have been initialized");
@@ -62,8 +61,8 @@ public class AbstractParser {
     }
 
     protected void checkVarType(Token name, Expr value) {
-        BytecodeVars.FetchResult result = varAnalyser.get(name.lexeme());
-        if (result == BytecodeVars.FetchResult.FAIL) return;
+        LocalVariableContainer.FetchResult result = varAnalyser.get(name.lexeme());
+        if (result == LocalVariableContainer.FetchResult.FAIL) return;
         expectType(name, value, result.type());
     }
 
@@ -138,8 +137,8 @@ public class AbstractParser {
     }
 
     protected byte createVar(Token name, ClassReference type, boolean hasValue, boolean isFinal) {
-        BytecodeVars.FetchResult result = varAnalyser.get(name.lexeme());
-        if (result != BytecodeVars.FetchResult.FAIL) {
+        LocalVariableContainer.FetchResult result = varAnalyser.get(name.lexeme());
+        if (result != LocalVariableContainer.FetchResult.FAIL) {
             errorStorage.errorF(name, "Variable '%s' already defined in current scope", name.lexeme());
         }
         return varAnalyser.add(name.lexeme(), type, !isFinal, hasValue);
@@ -153,7 +152,7 @@ public class AbstractParser {
         this.current = 0;
         this.tokens = toParse;
         this.parser = targetAnalyser;
-        this.varAnalyser = new BytecodeVars();
+        this.varAnalyser = new LocalVariableContainer();
         this.finder = new RetTypeAnalyser(varAnalyser);
     }
 
@@ -287,7 +286,7 @@ public class AbstractParser {
     protected Optional<SourceClassReference> tryConsumeVarType(GenericStack generics) {
         Optional<ClassReference> optional = generics.getValue(peek().lexeme());
         if (optional.isPresent()) return Optional.of(SourceClassReference.from(advance(), optional.get()));
-        if (VarTypeManager.hasPackage(peek().lexeme()) && varAnalyser.get(peek().lexeme()) == BytecodeVars.FetchResult.FAIL) {
+        if (VarTypeManager.hasPackage(peek().lexeme()) && varAnalyser.get(peek().lexeme()) == LocalVariableContainer.FetchResult.FAIL) {
             advance();
             if (check(DOT)) {
                 current--;

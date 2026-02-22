@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.compiler;
+package net.kapitencraft.lang.compiler.bytecode;
 
 import java.util.ArrayList;
 

@@ -3,6 +3,7 @@ package net.kapitencraft.lang.holder.bytecode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.exe.Opcode;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
@@ -60,7 +61,7 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers, 
     }
 
     /**
-     * a builder for the chunk, used inside {@link net.kapitencraft.lang.compiler.CacheBuilder CacheBuilder} to create json format of the chunk
+     * a builder for the chunk, used inside {@link CacheBuilder CacheBuilder} to create json format of the chunk
      */
     public static class Builder {
         private final List<ExceptionHandler> handlers;

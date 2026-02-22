@@ -1,9 +1,9 @@
-package net.kapitencraft.lang.compiler.instruction.constant;
+package net.kapitencraft.lang.compiler.bytecode.instruction.constant;
 
 import net.kapitencraft.lang.exe.Opcode;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
-import net.kapitencraft.lang.compiler.ByteCodeBuilder;
-import net.kapitencraft.lang.compiler.instruction.CodeInstruction;
+import net.kapitencraft.lang.compiler.bytecode.ByteCodeBuilder;
+import net.kapitencraft.lang.compiler.bytecode.instruction.CodeInstruction;
 
 public class IntegerConstantInstruction extends CodeInstruction {
     private final int value;

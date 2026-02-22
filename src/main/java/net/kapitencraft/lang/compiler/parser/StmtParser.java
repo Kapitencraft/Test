@@ -2,8 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
-import net.kapitencraft.lang.compiler.VarTypeParser;
-import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
+import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -113,7 +112,7 @@ public class StmtParser extends ExprParser {
         if (match(S_BRACKET_O)) {
             do {
                 Token token = consumeIdentifier();
-                if (this.varAnalyser.get(token.lexeme()) == BytecodeVars.FetchResult.FAIL) {
+                if (this.varAnalyser.get(token.lexeme()) == LocalVariableContainer.FetchResult.FAIL) {
                     error(token, "no local variable named '" + token.lexeme() + "'");
                 }
                 locals.add(token.lexeme());

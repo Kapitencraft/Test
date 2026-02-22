@@ -1,9 +1,10 @@
-package net.kapitencraft.lang.compiler;
+package net.kapitencraft.lang.compiler.bytecode;
 
+import net.kapitencraft.lang.compiler.bytecode.instruction.*;
+import net.kapitencraft.lang.compiler.bytecode.optimize.BytecodeOptimizer;
 import net.kapitencraft.lang.exe.Opcode;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
-import net.kapitencraft.lang.compiler.instruction.*;
-import net.kapitencraft.lang.compiler.instruction.constant.IntegerConstantInstruction;
+import net.kapitencraft.lang.compiler.bytecode.instruction.constant.IntegerConstantInstruction;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 
@@ -134,6 +135,10 @@ public class ByteCodeBuilder {
 
     public void reset() {
         this.instructions.clear();
+    }
+
+    public void optimize() {
+        BytecodeOptimizer.INSTANCE.optimize(this.instructions);
     }
 
     public static class IpContainer {

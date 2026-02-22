@@ -2,8 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Holder;
-import net.kapitencraft.lang.compiler.VarTypeParser;
-import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
+import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -742,8 +741,8 @@ public class ExprParser extends AbstractParser {
 
         if (match(IDENTIFIER)) {
             Token previous = previous(); //the identifier just consumed
-            BytecodeVars.FetchResult result = varAnalyser.get(previous.lexeme()); //fetch variable under that name
-            if (result == BytecodeVars.FetchResult.FAIL) { //check if there exists a variable under that name
+            LocalVariableContainer.FetchResult result = varAnalyser.get(previous.lexeme()); //fetch variable under that name
+            if (result == LocalVariableContainer.FetchResult.FAIL) { //check if there exists a variable under that name
                 if (currentFallback().exists()) { //check if the parser has a class fallback available
                     ClassReference fallbackReference = currentFallback();
                     ScriptedClass fallback = fallbackReference.get(); //get said fallback
