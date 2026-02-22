@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.compiler.instruction;
+package net.kapitencraft.lang.compiler.bytecode.instruction;
 
 public interface JumpableInstruction {
 

@@ -1,14 +1,14 @@
-package net.kapitencraft.lang.compiler;
+package net.kapitencraft.lang.compiler.bytecode;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.exe.Opcode;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
-import net.kapitencraft.lang.compiler.instruction.SwitchInstruction;
-import net.kapitencraft.lang.compiler.instruction.TraceDebugInstruction;
-import net.kapitencraft.lang.compiler.instruction.constant.DoubleConstantInstruction;
-import net.kapitencraft.lang.compiler.instruction.constant.FloatConstantInstruction;
+import net.kapitencraft.lang.compiler.bytecode.instruction.SwitchInstruction;
+import net.kapitencraft.lang.compiler.bytecode.instruction.TraceDebugInstruction;
+import net.kapitencraft.lang.compiler.bytecode.instruction.constant.DoubleConstantInstruction;
+import net.kapitencraft.lang.compiler.bytecode.instruction.constant.FloatConstantInstruction;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;

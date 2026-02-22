@@ -1,7 +1,7 @@
-package net.kapitencraft.lang.compiler.instruction;
+package net.kapitencraft.lang.compiler.bytecode.instruction;
 
 import net.kapitencraft.lang.holder.bytecode.Chunk;
-import net.kapitencraft.lang.compiler.ByteCodeBuilder;
+import net.kapitencraft.lang.compiler.bytecode.ByteCodeBuilder;
 
 public class JumpTargetInstruction implements Instruction {
     //must be added AFTER the target instruction

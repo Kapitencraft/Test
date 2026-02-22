@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.oop.method.map;
 
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import org.jetbrains.annotations.Nullable;

@@ -1,8 +1,8 @@
-package net.kapitencraft.lang.compiler.instruction;
+package net.kapitencraft.lang.compiler.bytecode.instruction;
 
 import net.kapitencraft.lang.exe.Opcode;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
-import net.kapitencraft.lang.compiler.ByteCodeBuilder;
+import net.kapitencraft.lang.compiler.bytecode.ByteCodeBuilder;
 
 public class JumpInstruction extends CodeInstruction implements JumpableInstruction {
     private int index = -1;

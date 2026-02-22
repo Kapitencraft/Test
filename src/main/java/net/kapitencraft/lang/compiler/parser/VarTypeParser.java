@@ -1,5 +1,7 @@
-package net.kapitencraft.lang.compiler;
+package net.kapitencraft.lang.compiler.parser;
 
+import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.exe.VarTypeManager;
