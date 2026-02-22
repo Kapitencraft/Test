@@ -99,8 +99,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     public void build(Chunk.Builder chunk) {
-        int[] startIndexes = this.byteCodeBuilder.gatherStartIndexes();
-        this.byteCodeBuilder.build(chunk, startIndexes);
+        ByteCodeBuilder.IpContainer container = this.byteCodeBuilder.gatherStartIndexes();
+        this.byteCodeBuilder.build(chunk, container);
+    }
+
+    public void reset() {
+        this.byteCodeBuilder.reset();
     }
 
     private record AssignOperators(Opcode get, Opcode assign) {
@@ -433,7 +437,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             byteCodeBuilder.addSimple(Opcode.DUP); //duplicate value to emit it onto the object stack
         } else
             ignoredExprResult = true;
-        byteCodeBuilder.addSimple(set);
         instructionSink.accept(set);
     }
 
@@ -683,6 +686,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(stmt.thenBranch());
         if (stmt.elifs().length > 0 || stmt.elseBranch() != null) {
             List<Integer> instBranches = new ArrayList<>();
+            if (!stmt.branchSeenReturn())
+                instBranches.add(byteCodeBuilder.addJump()); //jump over else-ifs & else
             for (int i = 0; i < stmt.elifs().length; i++) {
                 byteCodeBuilder.patchJump(instPatch);
                 ElifBranch branch = stmt.elifs()[i];

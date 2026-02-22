@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.instruction;
 
 import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.compiler.ByteCodeBuilder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 
 public class RegisterLocalInstruction implements Instruction {
@@ -15,7 +16,7 @@ public class RegisterLocalInstruction implements Instruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder, int[] instStartIndexes) {
+    public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
         builder.addLocal(idx, type, name);
     }
 }

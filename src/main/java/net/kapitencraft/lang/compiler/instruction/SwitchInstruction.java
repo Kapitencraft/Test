@@ -2,12 +2,12 @@ package net.kapitencraft.lang.compiler.instruction;
 
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.compiler.ByteCodeBuilder;
 
 import java.util.List;
-import java.util.Objects;
 
 
-public class SwitchInstruction extends SimpleInstruction implements JumpableInstruction {
+public class SwitchInstruction extends CodeInstruction implements JumpableInstruction {
     private final int size;
     private int target;
     private final List<Entry> entries;
@@ -45,13 +45,13 @@ public class SwitchInstruction extends SimpleInstruction implements JumpableInst
     }
 
     @Override
-    public void save(Chunk.Builder builder, int[] instStartIndexes) {
-        super.save(builder, instStartIndexes);
-        builder.add2bArg(instStartIndexes[target]);
+    public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
+        super.save(builder, ips);
+        builder.add2bArg(ips.getIp(target));
         builder.add2bArg(size);
         for (Entry entry : entries) {
             builder.add4bArg(entry.id);
-            builder.add2bArg(instStartIndexes[entry.idx]);
+            builder.add2bArg(ips.getIp(entry.idx));
         }
     }
 

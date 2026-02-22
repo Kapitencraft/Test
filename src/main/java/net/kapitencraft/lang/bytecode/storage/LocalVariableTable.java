@@ -24,22 +24,22 @@ public record LocalVariableTable(Entry[] entries) {
                 .map(Entry::read).toArray(Entry[]::new));
     }
 
-    public Pair<String, ClassReference> get(int pc, int i) {
+    public Pair<String, String> get(int pc, int i) {
         for (Entry entry : entries) {
             if (entry.index == i && entry.startPc <= pc && entry.startPc + entry.length >= pc)
                 return Pair.of(entry.name, entry.type);
         }
-        return Pair.of("UNKNOWN", VarTypeManager.VOID.reference());
+        return Pair.of("UNKNOWN", "V");
     }
 
-    private record Entry(int startPc, int length, String name, ClassReference type, int index) {
+    private record Entry(int startPc, int length, String name, String type, int index) {
 
         public JsonObject toJson() {
             JsonObject object = new JsonObject();
             object.addProperty("startPc", startPc);
             object.addProperty("length", length);
             object.addProperty("name", name);
-            object.addProperty("type", VarTypeManager.getClassName(type.get()));
+            object.addProperty("type", type);
             object.addProperty("index", index);
             return object;
         }
@@ -49,7 +49,7 @@ public record LocalVariableTable(Entry[] entries) {
                     GsonHelper.getAsInt(object, "startPc"),
                     GsonHelper.getAsInt(object, "length"),
                     GsonHelper.getAsString(object, "name"),
-                    VarTypeManager.parseType(new StringReader(GsonHelper.getAsString(object, "type"))),
+                    GsonHelper.getAsString(object, "type"),
                     GsonHelper.getAsInt(object, "index")
             );
         }
@@ -59,7 +59,7 @@ public record LocalVariableTable(Entry[] entries) {
         private final List<Stub> stubs = new ArrayList<>();
         private final List<Entry> entries = new ArrayList<>();
 
-        public void addLocal(int position, int index, ClassReference type, String name) {
+        public void addLocal(int position, int index, String type, String name) {
             stubs.add(new Stub(position, index, type, name));
         }
 
@@ -77,7 +77,7 @@ public record LocalVariableTable(Entry[] entries) {
             this.entries.clear();
         }
 
-        private record Stub(int position, int index, ClassReference type, String name) {
+        private record Stub(int position, int index, String type, String name) {
 
             public Entry end(int codePos) {
                 return new Entry(position, codePos - position, name, type, index);

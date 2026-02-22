@@ -2,16 +2,17 @@ package net.kapitencraft.lang.compiler.instruction;
 
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.compiler.ByteCodeBuilder;
 
-public class SimpleInstruction implements Instruction {
+public class CodeInstruction implements Instruction {
     private final Opcode opcode;
 
-    public SimpleInstruction(Opcode opcode) {
+    public CodeInstruction(Opcode opcode) {
         this.opcode = opcode;
     }
 
     @Override
-    public void save(Chunk.Builder builder, int[] instStartIndexes) {
+    public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
         builder.addCode(opcode);
     }
 

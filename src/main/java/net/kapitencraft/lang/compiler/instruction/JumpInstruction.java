@@ -2,8 +2,9 @@ package net.kapitencraft.lang.compiler.instruction;
 
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.compiler.ByteCodeBuilder;
 
-public class JumpInstruction extends SimpleInstruction implements JumpableInstruction {
+public class JumpInstruction extends CodeInstruction implements JumpableInstruction {
     private int index = -1;
 
     public JumpInstruction(Opcode opcode) {
@@ -15,9 +16,9 @@ public class JumpInstruction extends SimpleInstruction implements JumpableInstru
     }
 
     @Override
-    public void save(Chunk.Builder builder, int[] instStartIndexes) {
-        super.save(builder, instStartIndexes);
-        builder.add2bArg(instStartIndexes[index]); //index is into instruction array, not bytecode array
+    public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
+        super.save(builder, ips);
+        builder.add2bArg(ips.getIp(index)); //index is into instruction array, not bytecode array
     }
 
     @Override

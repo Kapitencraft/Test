@@ -2,8 +2,9 @@ package net.kapitencraft.lang.compiler.instruction;
 
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.compiler.ByteCodeBuilder;
 
-public class LocalInstruction extends SimpleInstruction {
+public class LocalInstruction extends CodeInstruction {
     private final int id;
 
     public LocalInstruction(Opcode opcode, int id) {
@@ -12,8 +13,13 @@ public class LocalInstruction extends SimpleInstruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder, int[] instStartIndexes) {
-        super.save(builder, instStartIndexes);
+    public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
+        super.save(builder, ips);
         builder.addArg(id);
+    }
+
+    @Override
+    public int length() {
+        return 2;
     }
 }

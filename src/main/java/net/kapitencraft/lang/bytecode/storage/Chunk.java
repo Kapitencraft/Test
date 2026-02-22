@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
 
 import java.util.ArrayList;
@@ -85,7 +86,7 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers, 
         }
 
         public void addLocal(int index, ClassReference type, String  name) {
-            this.locals.addLocal(currentCodeIndex(), index, type, name);
+            this.locals.addLocal(currentCodeIndex(), index, VarTypeManager.getClassName(type), name);
         }
 
         public void patchJump(int index, short destination) {

@@ -2,8 +2,9 @@ package net.kapitencraft.lang.compiler.instruction;
 
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.compiler.ByteCodeBuilder;
 
-public class StringArgInstruction extends SimpleInstruction {
+public class StringArgInstruction extends CodeInstruction {
     private final String value;
 
     public StringArgInstruction(Opcode opcode, String value) {
@@ -12,8 +13,8 @@ public class StringArgInstruction extends SimpleInstruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder, int[] instStartIndexes) {
-        super.save(builder, instStartIndexes);
+    public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
+        super.save(builder, ips);
         builder.injectString(value);
     }
 

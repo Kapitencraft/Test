@@ -18,7 +18,7 @@ public class ByteCodeBuilder {
     }
 
     public void addSimple(Opcode opcode) {
-        add(new SimpleInstruction(opcode));
+        add(new CodeInstruction(opcode));
     }
 
     public void addStringInstruction(Opcode opcode, String val) {
@@ -48,21 +48,17 @@ public class ByteCodeBuilder {
         ((JumpableInstruction) this.instructions.get(jumpID)).setTarget(instructions.size());
     }
 
-    public void patchJumpAhead(int jumpID) {
-        add(new JumpTargetInstruction(jumpID));
-        ((JumpableInstruction) this.instructions.get(jumpID)).setTarget(instructions.size() + 1);
-    }
-
     public void jumpElse(Runnable ifTrue, Runnable ifFalse) {
         int truePatch = addJumpIfFalse();
         ifTrue.run();
         int falsePatch = addJump();
         patchJump(truePatch);
         ifFalse.run();
-        patchJumpAhead(falsePatch);
+        patchJump(falsePatch);
     }
 
     public void addJumpMultiTargetInstruction(List<Integer> origins) {
+        if (origins.isEmpty()) return; //ignore empty
         add(new JumpMultiTargetInstruction(origins));
         int target = this.instructions.size();
         for (Integer origin : origins) {
@@ -84,13 +80,13 @@ public class ByteCodeBuilder {
 
     public void addInt(int v) {
         add(switch (v) {
-            case -1 -> new SimpleInstruction(Opcode.I_M1);
-            case 0 -> new SimpleInstruction(Opcode.I_0);
-            case 1 -> new SimpleInstruction(Opcode.I_1);
-            case 2 -> new SimpleInstruction(Opcode.I_2);
-            case 3 -> new SimpleInstruction(Opcode.I_3);
-            case 4 -> new SimpleInstruction(Opcode.I_4);
-            case 5 -> new SimpleInstruction(Opcode.I_5);
+            case -1 -> new CodeInstruction(Opcode.I_M1);
+            case 0 -> new CodeInstruction(Opcode.I_0);
+            case 1 -> new CodeInstruction(Opcode.I_1);
+            case 2 -> new CodeInstruction(Opcode.I_2);
+            case 3 -> new CodeInstruction(Opcode.I_3);
+            case 4 -> new CodeInstruction(Opcode.I_4);
+            case 5 -> new CodeInstruction(Opcode.I_5);
             default -> new IntegerConstantInstruction(v);
         });
     }
@@ -103,8 +99,8 @@ public class ByteCodeBuilder {
         add(new StaticFieldAccessInstruction(opcode, className, fieldName));
     }
 
-    public void build(Chunk.Builder builder, int[] instStartIndexes) {
-        this.instructions.forEach(instruction -> instruction.save(builder, instStartIndexes));
+    public void build(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
+        this.instructions.forEach(instruction -> instruction.save(builder, ips));
     }
 
     public void registerLocal(int i, ClassReference type, String lexeme) {
@@ -120,12 +116,38 @@ public class ByteCodeBuilder {
         add(new ExceptionHandlerInstruction(handlerStart, handlerEnd, this.size(), className));
     }
 
-    public int[] gatherStartIndexes() {
-        int[] startIndexes = new int[this.instructions.size() + 1];
-        startIndexes[0] = 0;
+    public IpContainer gatherStartIndexes() {
+        int[] startIndexes = new int[this.instructions.size()];
+        int size = 0;
         for (int i = 0; i < this.instructions.size(); i++) {
-            startIndexes[i + 1] = startIndexes[i] + this.instructions.get(i).length();
+
+            int length = this.instructions.get(i).length();
+            if (length == -1) {
+                startIndexes[i] = -1;
+            } else {
+                startIndexes[i] = size;
+                size += length;
+            }
         }
-        return startIndexes;
+        return new IpContainer(startIndexes);
+    }
+
+    public void reset() {
+        this.instructions.clear();
+    }
+
+    public static class IpContainer {
+        private final int[] ips;
+
+        private IpContainer(int[] ips) {
+            this.ips = ips;
+        }
+
+        public int getIp(int startIdx) {
+            while (ips[startIdx] == -1) { //jump over non-code instructions
+                startIdx++;
+            }
+            return ips[startIdx];
+        }
     }
 }

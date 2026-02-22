@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.instruction;
 
 import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.compiler.ByteCodeBuilder;
 
 public class ExceptionHandlerInstruction implements Instruction {
     private final int handlerStart;
@@ -16,11 +17,11 @@ public class ExceptionHandlerInstruction implements Instruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder, int[] instStartIndexes) {
+    public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
         builder.addExceptionHandler(
-                instStartIndexes[handlerStart],
-                instStartIndexes[handlerEnd],
-                instStartIndexes[handlerIP],
+                ips.getIp(handlerStart),
+                ips.getIp(handlerEnd),
+                ips.getIp(handlerIP),
                 builder.injectStringNoArg(className)
         );
     }

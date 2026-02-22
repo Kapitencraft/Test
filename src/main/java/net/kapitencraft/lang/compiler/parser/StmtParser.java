@@ -282,7 +282,8 @@ public class StmtParser extends ExprParser {
 
         this.pushScope();
         Stmt thenBranch = statement();
-        boolean branchSeenReturn = seenReturn.peek();
+        boolean seenReturn = this.seenReturn.peek();
+        boolean branchSeenReturn = seenReturn;
         thenBranch = new Stmt.Block(
                 new Stmt[] {
                         thenBranch,
@@ -298,19 +299,21 @@ public class StmtParser extends ExprParser {
             consumeBracketClose("elif condition");
             this.pushScope();
             Stmt elifStmt = statement();
-            boolean seenReturn = this.seenReturn.peek();
-            branchSeenReturn &= seenReturn;
+            boolean elifSeenReturn = this.seenReturn.peek();
+            seenReturn &= elifSeenReturn;
             elifStmt = new Stmt.Block(new Stmt[] {
                     elifStmt,
                     popScope()
             });
-            elifs.add(new ElifBranch(elifCondition, elifStmt, seenReturn));
+            elifs.add(new ElifBranch(elifCondition, elifStmt, elifSeenReturn));
         }
 
+        boolean elseBranchSeenReturn = false;
         if (match(ELSE)) {
             this.pushScope();
             elseBranch = statement();
-            branchSeenReturn &= seenReturn.peek();
+            elseBranchSeenReturn = this.seenReturn.peek();
+            branchSeenReturn &= elseBranchSeenReturn;
             elseBranch = new Stmt.Block(
                     new Stmt[] {
                             elseBranch,
@@ -321,9 +324,9 @@ public class StmtParser extends ExprParser {
             branchSeenReturn = false;
 
         if (branchSeenReturn)
-            seenReturn(); //current scope has seen return only if all branches have seen return and there exists a else branch
+            seenReturn(); //current scope has seen return only if all branches have seen return AND there exists an else branch
 
-        return new Stmt.If(condition, thenBranch, elseBranch, elifs.toArray(ElifBranch[]::new), statement);
+        return new Stmt.If(condition, thenBranch, seenReturn, elseBranch, elseBranchSeenReturn, elifs.toArray(ElifBranch[]::new), statement);
     }
 
     private Stmt whileStatement() {

@@ -39,6 +39,7 @@ public class CompileCallable implements ScriptedCallable {
         }
         if (!isAbstract()) {
             Chunk.Builder chunk = new Chunk.Builder();
+            builder.reset();
             int rIndex = 0;
             if (!isStatic()) {
                 chunk.addLocal(0, VarTypeManager.VOID.reference(), "this");

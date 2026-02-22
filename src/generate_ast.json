@@ -42,6 +42,7 @@
           "id": "String"
         },
         "SuperCall": {
+          "callee": "Expr",
           "type": "ClassReference",
           "name": "Token",
           "args": "Expr[]",
@@ -168,7 +169,9 @@
         "If": {
           "condition": "Expr",
           "thenBranch": "Stmt",
+          "branchSeenReturn": "boolean",
           "elseBranch": "Stmt",
+          "elseBranchSeenReturn": "boolean",
           "elifs": "ElifBranch[]",
           "keyword": "Token"
         },
