@@ -80,7 +80,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         try {
             Compiler.cache(
                     ClassLoader.cacheLoc,
-                    new CacheBuilder(),
+                    new CacheBuilder(), //MUST under ALL CIRCUMSTANCES be thread-save. create a new object per class
                     target.pck().replace(".", "/"),
                     target,
                     target.name()

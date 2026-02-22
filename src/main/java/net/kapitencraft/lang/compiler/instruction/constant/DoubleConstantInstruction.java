@@ -2,9 +2,10 @@ package net.kapitencraft.lang.compiler.instruction.constant;
 
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
-import net.kapitencraft.lang.compiler.instruction.SimpleInstruction;
+import net.kapitencraft.lang.compiler.ByteCodeBuilder;
+import net.kapitencraft.lang.compiler.instruction.CodeInstruction;
 
-public class DoubleConstantInstruction extends SimpleInstruction {
+public class DoubleConstantInstruction extends CodeInstruction {
     private final double value;
 
     public DoubleConstantInstruction(double value) {
@@ -13,7 +14,7 @@ public class DoubleConstantInstruction extends SimpleInstruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder, int[] instStartIndexes) {
+    public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
         builder.addDoubleConstant(value);
     }
 

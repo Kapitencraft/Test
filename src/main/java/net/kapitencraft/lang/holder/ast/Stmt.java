@@ -157,7 +157,9 @@ public interface Stmt {
     record If(
         Expr condition, 
         Stmt thenBranch, 
+        boolean branchSeenReturn, 
         Stmt elseBranch, 
+        boolean elseBranchSeenReturn, 
         ElifBranch[] elifs, 
         Token keyword
     ) implements Stmt {

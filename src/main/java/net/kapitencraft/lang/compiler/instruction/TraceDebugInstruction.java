@@ -2,8 +2,9 @@ package net.kapitencraft.lang.compiler.instruction;
 
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.compiler.ByteCodeBuilder;
 
-public class TraceDebugInstruction extends SimpleInstruction {
+public class TraceDebugInstruction extends CodeInstruction {
     private final byte[] locals;
 
     public TraceDebugInstruction(byte[] locals) {
@@ -12,7 +13,7 @@ public class TraceDebugInstruction extends SimpleInstruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder, int[] instStartIndexes) {
+    public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
         builder.addTraceDebug(locals);
     }
 

@@ -2,8 +2,9 @@ package net.kapitencraft.lang.compiler.instruction;
 
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.compiler.ByteCodeBuilder;
 
-public class StaticFieldAccessInstruction extends SimpleInstruction {
+public class StaticFieldAccessInstruction extends CodeInstruction {
     private final String className, fieldName;
 
     public StaticFieldAccessInstruction(Opcode opcode, String className, String fieldName) {
@@ -13,8 +14,8 @@ public class StaticFieldAccessInstruction extends SimpleInstruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder, int[] instStartIndexes) {
-        super.save(builder, instStartIndexes);
+    public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
+        super.save(builder, ips);
         builder.injectString(className);
         builder.injectString(fieldName);
     }

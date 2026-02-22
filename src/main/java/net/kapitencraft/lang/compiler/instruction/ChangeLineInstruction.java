@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.instruction;
 
 import net.kapitencraft.lang.bytecode.storage.Chunk;
+import net.kapitencraft.lang.compiler.ByteCodeBuilder;
 
 public class ChangeLineInstruction implements Instruction {
     private final int line;
@@ -10,7 +11,7 @@ public class ChangeLineInstruction implements Instruction {
     }
 
     @Override
-    public void save(Chunk.Builder builder, int[] instStartIndexes) {
+    public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
         builder.changeLineIfNecessary(line);
     }
 }

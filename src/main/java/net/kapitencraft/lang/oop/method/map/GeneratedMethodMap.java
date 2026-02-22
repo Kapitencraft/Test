@@ -3,13 +3,9 @@ package net.kapitencraft.lang.oop.method.map;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.CacheBuilder;
 import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class GeneratedMethodMap implements AbstractMethodMap {
