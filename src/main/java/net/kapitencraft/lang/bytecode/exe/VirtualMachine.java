@@ -359,6 +359,9 @@ public class VirtualMachine {
                     case I_POW -> push((int) Math.pow((int) pop(), (int) pop()));
                     case D_POW -> push(Math.pow((double) pop(), (double) pop()));
                     case F_POW -> push((float) Math.pow((float) pop(), (float) pop()));
+                    case I_MOD -> push((int) pop() % (int) pop());
+                    case D_MOD -> push((double) pop() % (double) pop());
+                    case F_MOD -> push((float) pop() % (float) pop());
                     case I_ADD -> push((int) pop() + (int) pop()); //i, i -> i
                     case D_ADD -> push((double) pop() + (double) pop());
                     case F_ADD -> push((float) pop() + (float) pop());

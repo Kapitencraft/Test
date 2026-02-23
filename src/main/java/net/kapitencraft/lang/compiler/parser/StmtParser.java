@@ -321,7 +321,7 @@ public class StmtParser extends ExprParser {
             branchSeenReturn = false;
 
         if (branchSeenReturn)
-            seenReturn(); //current scope has seen return only if all branches have seen return and there exists a else branch
+            seenReturn(); //current scope has seen return only if all branches have seen return and there exists an else branch
 
         return new Stmt.If(condition, thenBranch, elseBranch, elifs.toArray(ElifBranch[]::new), statement);
     }

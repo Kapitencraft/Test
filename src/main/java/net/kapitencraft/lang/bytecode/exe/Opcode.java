@@ -33,6 +33,7 @@ public enum Opcode {
     I_MUL, D_MUL, F_MUL,
     I_DIV, D_DIV, F_DIV,
     I_POW, D_POW, F_POW,
+    I_MOD, D_MOD, F_MOD,
     JUMP, JUMP_IF_FALSE, SWITCH,
     GET_FIELD, GET_STATIC, PUT_FIELD, PUT_STATIC, NEW;
 

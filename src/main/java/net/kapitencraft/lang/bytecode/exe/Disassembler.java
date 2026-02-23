@@ -32,9 +32,9 @@ public class Disassembler {
             case TRACE -> debugTrace(chunk, offset);
             case POP, POP_2, DUP, DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2,
                  RETURN, RETURN_ARG, THROW,
-                 I_NEGATION, I_ADD, I_SUB, I_MUL, I_DIV, I_POW,
-                 D_NEGATION, D_ADD, D_SUB, D_MUL, D_DIV, D_POW,
-                 F_NEGATION, F_ADD, F_SUB, F_MUL, F_DIV, F_POW,
+                 I_NEGATION, I_ADD, I_SUB, I_MUL, I_DIV, I_POW, I_MOD,
+                 D_NEGATION, D_ADD, D_SUB, D_MUL, D_DIV, D_POW, D_MOD,
+                 F_NEGATION, F_ADD, F_SUB, F_MUL, F_DIV, F_POW, F_MOD,
                  ASSIGN_0, ASSIGN_1, ASSIGN_2,
                  NULL, TRUE, FALSE, AND, XOR, OR, NOT, CONCENTRATION,
                  I_M1, I_0, I_1, I_2, I_3, I_4, I_5,

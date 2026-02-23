@@ -129,19 +129,23 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
             final ClassReference executor = expr.executor();
             this.builder.changeLineIfNecessary(expr.operator());
-            switch (expr.operator().type()) {
-                case EQUAL -> builder.addCode(Opcode.EQUAL);
-                case NEQUAL -> builder.addCode(Opcode.NEQUAL);
-                case LEQUAL -> builder.addCode(getLequal(executor));
-                case GEQUAL -> builder.addCode(getGequal(executor));
-                case LESSER -> builder.addCode(getLesser(executor));
-                case GREATER -> builder.addCode(getGreater(executor));
-                case SUB -> builder.addCode(getSub(executor));
-                case ADD -> builder.addCode(getAdd(executor));
-                case MUL -> builder.addCode(getMul(executor));
-                case DIV -> builder.addCode(getDiv(executor));
-                case POW -> builder.addCode(getPow(executor));
-            }
+            TokenType operator = expr.operator().type();
+            Opcode opcode = switch (operator) {
+                case EQUAL -> Opcode.EQUAL;
+                case NEQUAL -> Opcode.NEQUAL;
+                case LEQUAL -> getLequal(executor);
+                case GEQUAL -> getGequal(executor);
+                case LESSER -> getLesser(executor);
+                case GREATER -> getGreater(executor);
+                case SUB -> getSub(executor);
+                case ADD -> getAdd(executor);
+                case MUL -> getMul(executor);
+                case DIV -> getDiv(executor);
+                case POW -> getPow(executor);
+                case MOD -> getMod(executor);
+                default -> throw new IllegalStateException("not an operator: " + operator);
+            };
+            builder.addCode(opcode);
         } else {
             builder.addCode(Opcode.POP_2);
             ignoredExprResult = true;
@@ -647,7 +651,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 jumpPatch = builder.addJumpIfFalse();
                 retainExprResult = false;
                 cache(branch.body());
-                if (!branch.seenReturn())
+                if (!branch.ended())
                     branches.add(builder.addJump());
             }
             if (stmt.elseBranch() != null) {
@@ -699,11 +703,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         builder.changeLineIfNecessary(stmt.keyword());
         cache(stmt.condition());
         int skip = builder.addJumpIfFalse();
-        loops.add(new Loop((short) index));
+        loops.add(new Loop());
         retainExprResult = false;
         cache(stmt.body());
         int returnIndex = builder.addJump();
-        loops.pop().patchBreaks();
+        loops.pop().patchBoth(index);
         builder.patchJumpCurrent(skip);
         builder.patchJump(returnIndex, (short) index);
         return null;
@@ -731,17 +735,18 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         ignoredExprResult = false;
         cache(stmt.condition());
         int jump1 = builder.addJumpIfFalse();
-        loops.add(new Loop((short) result));
+        loops.add(new Loop());
         retainExprResult = false;
         ignoredExprResult = false;
         cache(stmt.body());
         retainExprResult = false;
         ignoredExprResult = false;
+        int increment = builder.currentCodeIndex();
         cache(stmt.increment());
         if (!ignoredExprResult)
             builder.addCode(Opcode.POP); //pop the result of the increment
         int returnIndex = builder.addJump();
-        loops.pop().patchBreaks();
+        loops.pop().patchBoth(increment);
         builder.patchJumpCurrent(jump1);
         builder.patchJump(returnIndex, (short) result);
         return null;
@@ -765,7 +770,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         builder.addCode(Opcode.I_LESSER); //check if iteration var is less than the length of the array
         int result = builder.addJumpIfFalse(); //create jump out of the loop if check fails
         //endregion
-        loops.add(new Loop((short) result)); //push loop
+        loops.add(new Loop()); //push loop
 
         //region load iteration object
         getVar(baseVarIndex + 1); //load iteration var
@@ -777,13 +782,14 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(stmt.body()); //cache loop body
 
         //region increase iteration var
+        int increase = builder.currentCodeIndex();
         builder.addCode(Opcode.I_1); //load 1
         getVar(baseVarIndex + 1); //get iteration var
         builder.addCode(Opcode.I_ADD); //add 1 to the iteration var
         assignVar(baseVarIndex + 1);
         //endregion
         int returnIndex = builder.addJump();
-        loops.pop().patchBreaks();
+        loops.pop().patchBoth(increase);
         builder.patchJumpCurrent(result);
         builder.patchJump(returnIndex, (short) curIndex);
         return null;
@@ -801,7 +807,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         Loop loop = loops.peek();
         switch (stmt.type().type()) {
             case BREAK -> loop.addBreak(builder.addJump());
-            case CONTINUE -> builder.patchJump(builder.addJump(), loop.condition);
+            case CONTINUE -> loop.addContinue(builder.addJump());
         }
         return null;
     }
@@ -869,6 +875,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.IA_LOAD;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.DA_LOAD;
         if (reference.is(VarTypeManager.CHAR)) return Opcode.CA_LOAD;
+        if (reference.is(VarTypeManager.FLOAT)) return Opcode.FA_LOAD;
         return Opcode.RA_LOAD;
     }
 
@@ -876,6 +883,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.IA_STORE;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.DA_STORE;
         if (reference.is(VarTypeManager.CHAR)) return Opcode.CA_STORE;
+        if (reference.is(VarTypeManager.FLOAT)) return Opcode.FA_STORE;
         return Opcode.RA_STORE;
     }
 
@@ -883,30 +891,35 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.IA_NEW;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.DA_NEW;
         if (reference.is(VarTypeManager.CHAR)) return Opcode.CA_NEW;
+        if (reference.is(VarTypeManager.FLOAT)) return Opcode.FA_NEW;
         return Opcode.RA_NEW;
     }
 
     private Opcode getDiv(ClassReference reference) {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_DIV;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_DIV;
+        if (reference.is(VarTypeManager.FLOAT)) return Opcode.F_DIV;
         throw new IllegalStateException("could not create 'div' for: " + reference);
     }
 
     private Opcode getMul(ClassReference reference) {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_MUL;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_MUL;
+        if (reference.is(VarTypeManager.FLOAT)) return Opcode.F_MUL;
         throw new IllegalStateException("could not create 'mul' for: " + reference);
     }
 
     private Opcode getSub(ClassReference reference) {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_SUB;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_SUB;
+        if (reference.is(VarTypeManager.FLOAT)) return Opcode.F_SUB;
         throw new IllegalStateException("could not create 'sub' for: " + reference);
     }
 
     private Opcode getAdd(ClassReference reference) {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_ADD;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_ADD;
+        if (reference.is(VarTypeManager.FLOAT)) return Opcode.F_ADD;
         if (reference.is(VarTypeManager.STRING.get())) return Opcode.CONCENTRATION;
         throw new IllegalStateException("could not create 'add' for: " + reference);
     }
@@ -914,12 +927,21 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private Opcode getPow(ClassReference reference) {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_POW;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_POW;
+        if (reference.is(VarTypeManager.FLOAT)) return Opcode.F_POW;
         throw new IllegalStateException("could not create 'pow' for: " + reference);
     }
+
+    private Opcode getMod(ClassReference reference) {
+        if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_MOD;
+        if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_MOD;
+        throw new IllegalStateException("could not create 'pow' for: " + reference);
+    }
+
 
     private Opcode getNeg(ClassReference reference) {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_NEGATION;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_NEGATION;
+        if (reference.is(VarTypeManager.FLOAT)) return Opcode.F_NEGATION;
         throw new IllegalStateException("could not create 'negation' for: " + reference);
     }
 
@@ -949,12 +971,20 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private final class Loop {
-        private final short condition;
         private final List<Integer> breakIndices;
+        private final List<Integer> continueIndices;
 
-        private Loop(short condition) {
-            this.condition = condition;
+        private Loop() {
             this.breakIndices = new ArrayList<>();
+            this.continueIndices = new ArrayList<>();
+        }
+
+        public void addContinue(int patchIndex) {
+            this.continueIndices.add(patchIndex);
+        }
+
+        public void patchContinues(short idx) {
+            this.continueIndices.forEach(i -> builder.patchJump(i, idx));
         }
 
         public void addBreak(int patchIndex) {
@@ -963,6 +993,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
         public void patchBreaks() {
             this.breakIndices.forEach(builder::patchJumpCurrent);
+        }
+
+        public void patchBoth(int continueIndex) {
+            this.patchBreaks();
+            this.patchContinues((short) continueIndex);
         }
     }
 }
