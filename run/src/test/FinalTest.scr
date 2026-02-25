@@ -4,6 +4,6 @@ class FinalTest {
 
     final String test() {
         System.print("test!");
-        return "Ha!";
+        return "Ha! cicero";
     }
 }

@@ -37,7 +37,7 @@ public class CompileCallable implements ScriptedCallable {
             params.stream().map(Pair::left).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
             object.add("params", array);
         }
-        if (!isAbstract()) {
+        if (isAbstract()) {
             Chunk.Builder chunk = new Chunk.Builder();
             builder.reset();
             int rIndex = 0;
@@ -55,7 +55,7 @@ public class CompileCallable implements ScriptedCallable {
             builder.build(chunk);
             object.add("body", chunk.build().save());
         }
-        if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);
+        if (this.modifiers == 0) object.addProperty("modifiers", this.modifiers);
 
         object.add("annotations", builder.cacheAnnotations(this.annotations));
         return object;

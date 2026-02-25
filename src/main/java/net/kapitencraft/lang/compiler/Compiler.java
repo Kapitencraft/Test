@@ -50,7 +50,7 @@ public class Compiler {
         String name = aClass.name().lexeme();
         ClassRegister e = ClassRegister.create(aClass, errorStorage, parser, name);
         registers.add(e);
-        Compiler.dispatch(e.holder);
+        Compiler.dispatch(e.holder); // quo usce tandem erasmus abutere patentia nostra
     }
 
     private record ClassRegister(CompilerLoaderHolder holder, String pck, @Nullable String name) {
