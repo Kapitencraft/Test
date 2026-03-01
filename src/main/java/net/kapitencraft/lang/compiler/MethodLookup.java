@@ -28,12 +28,12 @@ public class MethodLookup {
     public void checkFinal(Compiler.ErrorStorage logger, Pair<Token, CompileCallable>[] map) {
         for (Pair<Token, CompileCallable> pair : map) {
             for (Pair<ScriptedClass, AbstractMethodMap> lookupElement : lookup) {
-                Map<String, DataMethodContainer> methodMap = lookupElement.right().asMap();
-                if (!methodMap.containsKey(pair.left().lexeme())) continue; //no method with name found, continuing
-                for (ScriptedCallable method : methodMap.get(pair.left().lexeme()).methods()) {
+                Map<String, DataMethodContainer> methodMap = lookupElement.getSecond().asMap();
+                if (!methodMap.containsKey(pair.getFirst().lexeme())) continue; //no method with name found, continuing
+                for (ScriptedCallable method : methodMap.get(pair.getFirst().lexeme()).methods()) {
                     if (!method.isFinal()) continue;
-                    if (Util.matchArgs(method.argTypes(), pair.right().argTypes())) {
-                        logger.errorF(pair.left(), "method '%s(%s)' can not override final method from class '%s'", pair.left().lexeme(), Util.getDescriptor(pair.right().argTypes()), lookupElement.left().name());
+                    if (Util.matchArgs(method.argTypes(), pair.getSecond().argTypes())) {
+                        logger.errorF(pair.getFirst(), "method '%s(%s)' can not override final method from class '%s'", pair.getFirst().lexeme(), Util.getDescriptor(pair.getSecond().argTypes()), lookupElement.getFirst().name());
                     }
                 }
             }
@@ -43,18 +43,18 @@ public class MethodLookup {
     public void checkAbstract(Compiler.ErrorStorage logger, Token className, Pair<Token, CompileCallable>[] map) {
         Map<String, List<Pair<ScriptedClass, ScriptedCallable>>> abstracts = new HashMap<>();
         for (Pair<ScriptedClass, AbstractMethodMap> methods : lookup) {
-            methods.right().asMap().forEach((s, dataMethodContainer) -> {
+            methods.getSecond().asMap().forEach((s, dataMethodContainer) -> {
                 a: for (ScriptedCallable method : dataMethodContainer.methods()) {
                     List<Pair<ScriptedClass, ScriptedCallable>> classData = abstracts.computeIfAbsent(s, k -> new ArrayList<>());
                     if (method.isAbstract()) {
                         for (Pair<ScriptedClass, ScriptedCallable> pair : classData) {
-                            if (Util.matchArgs(pair.right().argTypes(), method.argTypes())) continue a;
+                            if (Util.matchArgs(pair.getSecond().argTypes(), method.argTypes())) continue a;
                         }
-                        classData.add(Pair.of(methods.left(), method));
+                        classData.add(Pair.of(methods.getFirst(), method));
                     } else {
                         for (int i = 0; i < classData.size(); i++) {
                             Pair<ScriptedClass, ScriptedCallable> pair = classData.get(i);
-                            if (Util.matchArgs(pair.right().argTypes(), method.argTypes())) {
+                            if (Util.matchArgs(pair.getSecond().argTypes(), method.argTypes())) {
                                 classData.remove(i);
                                 continue a;
                             }
@@ -64,16 +64,16 @@ public class MethodLookup {
             });
         }
         for (Pair<Token, CompileCallable> pair : map) {
-            List<Pair<ScriptedClass, ScriptedCallable>> methods = abstracts.get(pair.left().lexeme());
+            List<Pair<ScriptedClass, ScriptedCallable>> methods = abstracts.get(pair.getFirst().lexeme());
             if (methods == null) continue; //no abstract method for that name, continuing
-            methods.removeIf(callablePair -> Util.matchArgs(pair.right().argTypes(), callablePair.right().argTypes()));
+            methods.removeIf(callablePair -> Util.matchArgs(pair.getSecond().argTypes(), callablePair.getSecond().argTypes()));
         }
         abstracts.forEach((string, pairs) -> {
             pairs.forEach(pair -> {
-                String errorMsg = pair.left().isInterface() ?
+                String errorMsg = pair.getFirst().isInterface() ?
                         "class %s must either be declared abstract or override abstract method '%s(%s)' from interface %s" :
                         "class %s must either be declared abstract or override abstract method '%s(%s)' from class %s";
-                logger.errorF(className, errorMsg, className.lexeme(), string, Util.getDescriptor(pair.right().argTypes()), pair.left().name());
+                logger.errorF(className, errorMsg, className.lexeme(), string, Util.getDescriptor(pair.getSecond().argTypes()), pair.getFirst().name());
             });
         });
     }
@@ -117,7 +117,7 @@ public class MethodLookup {
     private Map<String, ScriptedCallable> createExposed() {
         Map<String, ScriptedCallable> map = new HashMap<>();
         for (Pair<ScriptedClass, AbstractMethodMap> pair : lookup) {
-            map.putAll(ScriptedCallable.parseMethods(pair.right().asMap()));
+            map.putAll(ScriptedCallable.parseMethods(pair.getSecond().asMap()));
         }
         return map;
     }

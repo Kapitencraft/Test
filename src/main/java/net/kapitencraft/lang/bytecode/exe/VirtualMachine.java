@@ -85,7 +85,7 @@ public class VirtualMachine {
             List<String>[] values = new List[localIndexes.length];
             for (int i = 0; i < localIndexes.length; i++) {
                 List<String> v = values[i] = new ArrayList<>();
-                v.add(table.get(pc, localIndexes[i]).left());
+                v.add(table.get(pc, localIndexes[i]).getFirst());
             }
             for (Object[] entry : entries) {
                 for (int i = 0; i < localIndexes.length; i++) {

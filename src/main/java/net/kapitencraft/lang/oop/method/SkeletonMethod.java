@@ -10,7 +10,6 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.StringReader;
@@ -33,7 +32,7 @@ public class SkeletonMethod implements ScriptedCallable {
     }
 
     private static SkeletonMethod create(List<? extends Pair<SourceClassReference, String>> params, ClassReference type, short modifiers) {
-        return new SkeletonMethod(params.stream().map(Pair::left).map(SourceClassReference::getReference).toArray(ClassReference[]::new), type, modifiers);
+        return new SkeletonMethod(params.stream().map(Pair::getFirst).map(SourceClassReference::getReference).toArray(ClassReference[]::new), type, modifiers);
     }
 
     public static SkeletonMethod create(Holder.Constructor decl, ClassReference type) {

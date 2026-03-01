@@ -9,7 +9,6 @@ import net.kapitencraft.tool.Pair;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collector;
 
 public record LineNumberTable(Pair<Integer, Integer>[] lines) {
 
@@ -22,16 +21,16 @@ public record LineNumberTable(Pair<Integer, Integer>[] lines) {
     public JsonArray save() {
         return Arrays.stream(this.lines).map(p -> {
             JsonObject object = new JsonObject();
-            object.addProperty("pc", p.left());
-            object.addProperty("line", p.right());
+            object.addProperty("pc", p.getFirst());
+            object.addProperty("line", p.getSecond());
             return object;
         }).collect(GsonHelper.toJsonArray());
     }
 
     public int getLineAt(int ip) {
         int i = 0;
-        while (i < lines.length - 1 && lines[i].left() < ip) i++;
-        return lines[i].right();
+        while (i < lines.length - 1 && lines[i].getFirst() < ip) i++;
+        return lines[i].getSecond();
     }
 
     public static class Builder {
@@ -46,7 +45,7 @@ public record LineNumberTable(Pair<Integer, Integer>[] lines) {
         }
 
         public void changeIfNecessary(int line, int pc) {
-            if (line > -1 && (this.lineChanges.isEmpty() || this.lineChanges.get(this.lineChanges.size() - 1).right() != line)) {
+            if (line > -1 && (this.lineChanges.isEmpty() || this.lineChanges.get(this.lineChanges.size() - 1).getSecond() != line)) {
                 this.lineChanges.add(Pair.of(pc, line));
             }
         }

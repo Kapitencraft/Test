@@ -1,5 +1,7 @@
 package net.kapitencraft.lang.compiler;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -29,6 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class Compiler {
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
     static int errorCount = 0;
     private static ClassLoader.PackageHolder<CompilerLoaderHolder> compileData;
     private static final List<ClassRegister> registers = new ArrayList<>();
@@ -130,7 +134,7 @@ public class Compiler {
             cacheTarget.createNewFile();
         }
         FileWriter writer = new FileWriter(cacheTarget);
-        writer.write(GsonHelper.GSON.toJson(object));
+        writer.write(GSON.toJson(object));
         writer.close();
     }
 

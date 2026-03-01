@@ -85,37 +85,41 @@ public class ClassLoader {
                     System.out.println("\tlist                        - Lists all methods of the given class and their content");
                 } else if (line.startsWith("list ")) {
                     String classRef = line.substring(5);
-                    if ("$all".equals(classRef)) {
-                        VarTypeManager.listFlat();
-                    } else {
-                        ClassReference target = VarTypeManager.getClassForName(classRef);
-                        if (target == null) System.err.println("unable to find class for id '" + classRef + "'");
-                        else {
-                            ScriptedClass scriptedClass = target.get();
-                            System.out.println("==== Info ====");
-                            System.out.println("Name:    " + scriptedClass.name());
-                            System.out.println("Package: " + scriptedClass.pck());
-                            System.out.println("\n=== Methods ===");
-                            Map<String, DataMethodContainer> methods = scriptedClass.getMethods().asMap();
-                            methods.forEach((string, dataMethodContainer) -> {
-                                for (ScriptedCallable method : dataMethodContainer.methods()) {
-                                    String name = string + "(" + VarTypeManager.getArgsSignature(method.argTypes()) + ")" + VarTypeManager.getClassName(method.retType().get());
-                                    if (method.isNative()) {
-                                        System.out.println("== " + name + " ==");
-                                        System.out.println("<Native>");
-                                    } else {
-                                        Disassembler.disassemble(method.getChunk(), name);
-                                    }
-                                    System.out.println();
-                                }
-                            });
-                            System.out.println("==== Info End ====");
-                        }
-                    }
+                    list(classRef);
                 }
                 else if (!line.isEmpty()) System.err.println("unknown command: \"" + line + "\"");
             }
             line = scanner.next();
+        }
+    }
+
+    private static void list(String classRef) {
+        if ("$all".equals(classRef)) {
+            VarTypeManager.listFlat();
+        } else {
+            ClassReference target = VarTypeManager.getClassForName(classRef);
+            if (target == null) System.err.println("unable to find class for id '" + classRef + "'");
+            else {
+                ScriptedClass scriptedClass = target.get();
+                System.out.println("==== Info ====");
+                System.out.println("Name:    " + scriptedClass.name());
+                System.out.println("Package: " + scriptedClass.pck());
+                System.out.println("\n=== Methods ===");
+                Map<String, DataMethodContainer> methods = scriptedClass.getMethods().asMap();
+                methods.forEach((string, dataMethodContainer) -> {
+                    for (ScriptedCallable method : dataMethodContainer.methods()) {
+                        String name = string + "(" + VarTypeManager.getArgsSignature(method.argTypes()) + ")" + VarTypeManager.getClassName(method.retType().get());
+                        if (method.isNative()) {
+                            System.out.println("== " + name + " ==");
+                            System.out.println("<Native>");
+                        } else {
+                            Disassembler.disassemble(method.getChunk(), name);
+                        }
+                        System.out.println();
+                    }
+                });
+                System.out.println("==== Info End ====");
+            }
         }
     }
 
@@ -136,8 +140,8 @@ public class ClassLoader {
         pckLoader.add(Pair.of(fileLoc, root));
         while (!pckLoader.isEmpty()) {
             Pair<File, PackageHolder<T>> pck = pckLoader.get(0);
-            File file = pck.left();
-            PackageHolder<T> holder = pck.right();
+            File file = pck.getFirst();
+            PackageHolder<T> holder = pck.getSecond();
             File[] files = file.listFiles();
             if (files == null) {
                 pckLoader.remove(0);
@@ -173,8 +177,8 @@ public class ClassLoader {
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         while (!packageData.isEmpty()) {
             Pair<PackageHolder<T>, Package> data = packageData.get(0);
-            PackageHolder<T> holder = data.left();
-            Package pck = data.right();
+            PackageHolder<T> holder = data.getFirst();
+            Package pck = data.getSecond();
             consumer.accept(holder.classes, pck);
             holder.packages.forEach((name, holder1) ->
                     packageData.add(Pair.of(holder1, pck.getOrCreatePackage(name))) //adding all packages back to the queue
@@ -189,8 +193,8 @@ public class ClassLoader {
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         while (!packageData.isEmpty()) {
             Pair<PackageHolder<T>, Package> data = packageData.get(0);
-            PackageHolder<T> holder = data.left();
-            Package pck = data.right();
+            PackageHolder<T> holder = data.getFirst();
+            Package pck = data.getSecond();
             holder.classes.forEach((n, o) ->
                     futures.add(CompletableFuture.runAsync(() -> consumer.accept(o), executor))
             );

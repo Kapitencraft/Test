@@ -7,7 +7,6 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -276,7 +275,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     public Void visitTryStmt(Stmt.Try stmt) {
         analyse(stmt.body());
         for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches()) {
-            analyse(aCatch.right());
+            analyse(aCatch.getSecond());
         }
         return null;
     }

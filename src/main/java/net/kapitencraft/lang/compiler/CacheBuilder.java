@@ -729,20 +729,20 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitForStmt(Stmt.For stmt) {
         builder.changeLineIfNecessary(stmt.keyword());
-        cache(stmt.init());
+        cache(stmt.init()); //synthesise initializer
         int result = builder.currentCodeIndex();
         retainExprResult = true;
         ignoredExprResult = false;
-        cache(stmt.condition());
+        cache(stmt.condition()); //synthesise loop-condition
         int jump1 = builder.addJumpIfFalse();
-        loops.add(new Loop());
+        loops.add(new Loop()); //push loop for continue & break entries
         retainExprResult = false;
         ignoredExprResult = false;
-        cache(stmt.body());
+        cache(stmt.body()); //synthesise loop body
         retainExprResult = false;
         ignoredExprResult = false;
         int increment = builder.currentCodeIndex();
-        cache(stmt.increment());
+        cache(stmt.increment()); //synthesise increment
         if (!ignoredExprResult)
             builder.addCode(Opcode.POP); //pop the result of the increment
         int returnIndex = builder.addJump();
@@ -821,11 +821,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         List<Integer> jumps = new ArrayList<>();
         jumps.add(builder.addJump());
         for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches()) {
-            for (ClassReference reference : aCatch.left().left()) {
+            for (ClassReference reference : aCatch.getFirst().getFirst()) {
                 builder.addExceptionHandler(handlerStart, handlerEnd, builder.currentCodeIndex(), builder.injectStringNoArg(VarTypeManager.getClassName(reference.get())));
             }
             retainExprResult = false;
-            cache(aCatch.right());
+            cache(aCatch.getSecond());
             jumps.add(builder.addJump());
         }
         if (stmt.finale() != null) {

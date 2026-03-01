@@ -685,7 +685,7 @@ public class Holder {
         public void validate(Compiler.ErrorStorage logger) {
             validateNullable(annotations, logger);
             if (annotations != null) for (AnnotationObj obj : annotations) obj.validate(logger);
-            params.forEach(p -> p.left().validate(logger));
+            params.forEach(p -> p.getFirst().validate(logger));
         }
 
         public List<? extends Pair<ClassReference, String>> extractParams() {
@@ -708,7 +708,7 @@ public class Holder {
         public void validate(Compiler.ErrorStorage logger) {
             validateNullable(annotations, logger);
             type.validate(logger);
-            params.forEach(p -> p.left().validate(logger));
+            params.forEach(p -> p.getFirst().validate(logger));
         }
 
         public List<? extends Pair<ClassReference, String>> extractParams() {

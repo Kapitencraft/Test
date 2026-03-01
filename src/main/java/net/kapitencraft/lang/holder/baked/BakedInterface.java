@@ -29,9 +29,9 @@ public record BakedInterface(Compiler.ErrorStorage logger, Holder.Generics gener
 
         Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
         for (Pair<Token, CompileCallable> method : this.methods()) {
-            methods.putIfAbsent(method.left().lexeme(), new DataMethodContainer.Builder(this.name()));
-            DataMethodContainer.Builder builder = methods.get(method.left().lexeme());
-            builder.addMethod(logger, method.right(), method.left());
+            methods.putIfAbsent(method.getFirst().lexeme(), new DataMethodContainer.Builder(this.name()));
+            DataMethodContainer.Builder builder = methods.get(method.getFirst().lexeme());
+            builder.addMethod(logger, method.getSecond(), method.getFirst());
         }
 
         return new CompileClass(

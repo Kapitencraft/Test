@@ -376,7 +376,7 @@ public class StmtParser extends ExprParser {
         else this.generics.push(Map.of());
         if (targetClass != null) this.varAnalyser.add("this", targetClass, false, true);
         for (Pair<SourceClassReference, String> param : params) {
-            varAnalyser.add(param.right(), param.left().getReference(), true, true);
+            varAnalyser.add(param.getSecond(), param.getFirst().getReference(), true, true);
         }
     }
 
@@ -395,7 +395,7 @@ public class StmtParser extends ExprParser {
         else this.generics.push(Map.of());
 
         for (Pair<SourceClassReference, String> param : params) {
-            varAnalyser.add(param.right(), param.left().getReference(), true, true);
+            varAnalyser.add(param.getSecond(), param.getFirst().getReference(), true, true);
         }
     }
 }
