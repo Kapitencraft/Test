@@ -37,7 +37,7 @@ public class CompileCallable implements ScriptedCallable {
             params.stream().map(Pair::getFirst).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
             object.add("params", array);
         }
-        if (isAbstract()) {
+        if (!isAbstract()) {
             Chunk.Builder chunk = new Chunk.Builder();
             builder.reset();
             int rIndex = 0;
