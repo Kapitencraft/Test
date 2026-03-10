@@ -31,9 +31,9 @@ class LoopTest {
     }
 
     static void main(String[] args) {
-        //testIteration(args);
-        //testI();
-        //testWhile();
+        testIteration(args);
+        testI();
+        testWhile();
         testEnclosed();
     }
 }
