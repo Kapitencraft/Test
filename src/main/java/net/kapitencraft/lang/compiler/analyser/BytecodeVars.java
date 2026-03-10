@@ -36,15 +36,15 @@ public class BytecodeVars {
         scopeDepth++;
     }
 
-    public Stmt pop() {
+    public int pop() {
         int i = localCount - 1;
         while (i >= 0 && locals[i].depth >= scopeDepth) {
             i--;
         }
-        Stmt stmt = new Stmt.ClearLocals(localCount - (i + 1));
+        int localsToRemove = localCount - (i + 1);
         localCount = (byte) (i + 1);
         scopeDepth--;
-        return stmt;
+        return localsToRemove;
     }
 
     public ClassReference getType(String lexeme) {

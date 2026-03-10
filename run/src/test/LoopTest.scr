@@ -22,9 +22,18 @@ class LoopTest {
         }
     }
 
+    static void testEnclosed() {
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                System.print(j);
+            }
+        }
+    }
+
     static void main(String[] args) {
-        LoopTest.testIteration(args);
-        LoopTest.testI();
-        LoopTest.testWhile();
+        //testIteration(args);
+        //testI();
+        //testWhile();
+        testEnclosed();
     }
 }

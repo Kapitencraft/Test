@@ -42,6 +42,7 @@
           "id": "String"
         },
         "SuperCall": {
+          "callee": "Expr",
           "type": "ClassReference",
           "name": "Token",
           "args": "Expr[]",
@@ -197,7 +198,8 @@
           "condition": "Expr",
           "increment": "Expr",
           "body": "Stmt",
-          "keyword": "Token"
+          "keyword": "Token",
+          "popVarCount": "int"
         },
         "ForEach": {
           "type": "ClassReference",
