@@ -16,6 +16,7 @@ import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.lang.tool.Util;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -78,7 +79,7 @@ public final class RuntimeClass implements ScriptedClass {
     }
 
     @Override
-    public ClassReference getFieldType(String name) {
+    public @NotNull ClassReference getFieldType(String name) {
         return Optional.ofNullable(getFields().get(name)).map(ScriptedField::type).orElse(ScriptedClass.super.getFieldType(name));
     }
 

@@ -45,7 +45,7 @@ public class ExprParser extends AbstractParser {
 
     protected ClassReference currentFallback() {
         if (fallback.isEmpty()) throw new IllegalArgumentException("no fallback applied");
-        return fallback.get(fallback.size() - 1);
+        return fallback.getLast();
     }
 
     public void pushGenerics(Holder.Generics generics) {
@@ -58,7 +58,7 @@ public class ExprParser extends AbstractParser {
 
     public void popFallback() {
         if (this.fallback.isEmpty()) throw new IllegalStateException("fallback stack underflow");
-        this.fallback.remove(this.fallback.size() - 1);
+        this.fallback.removeLast();
     }
 
     public Expr expression() {
@@ -191,20 +191,19 @@ public class ExprParser extends AbstractParser {
             Token assign = previous();
             Expr value = assignment();
 
-            if (expr instanceof Expr.VarRef variable) {
-                Token name = variable.name();
+            if (expr instanceof Expr.VarRef(Token name, byte ordinal)) {
 
                 checkVarExistence(name, assign.type() != TokenType.ASSIGN,
                         false);
                 checkVarType(name, value);
                 Executor executor;
                 if (assign.type() == TokenType.ASSIGN) {
-                    varAnalyser.setHasValue(variable.ordinal());
+                    varAnalyser.setHasValue(ordinal);
                     executor = Executor.UNKNOWN;
                 } else
                     executor = getExecutor(varAnalyser.getType(name.lexeme()), assign, value);
 
-                return new Expr.Assign(name, value, assign, variable.ordinal(), executor.executor);
+                return new Expr.Assign(name, value, assign, ordinal, executor.executor);
             } else if (expr instanceof Expr.Get get) {
                 ClassReference target = finder.findRetType(get.object());
                 expectType(get.name(), target.get().getFieldType(get.name().lexeme()), finder.findRetType(value));
@@ -227,14 +226,13 @@ public class ExprParser extends AbstractParser {
 
             Token assign = previous();
 
-            if (expr instanceof Expr.VarRef ref) {
-                Token name = ref.name();
+            if (expr instanceof Expr.VarRef(Token name, byte ordinal)) {
 
                 ClassReference type = checkVarExistence(name, true, false);
                 if (!type.get().isChildOf(VarTypeManager.NUMBER)) {
                     errorStorage.errorF(name, "Operator '%s' can not be applied to '%s'", assign.lexeme(), type.absoluteName());
                 }
-                return new Expr.SpecialAssign(name, assign, ref.ordinal(), type);
+                return new Expr.SpecialAssign(name, assign, ordinal, type);
             }
 
             if (expr instanceof Expr.Get get) {

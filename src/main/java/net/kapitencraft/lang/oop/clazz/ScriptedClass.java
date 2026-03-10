@@ -14,6 +14,7 @@ import net.kapitencraft.lang.run.Interpreter;
 import net.kapitencraft.lang.run.algebra.Operand;
 import net.kapitencraft.lang.run.algebra.OperationType;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -35,17 +36,6 @@ public interface ScriptedClass {
     Object getStaticField(String name);
 
     Object setStaticField(String name, Object val);
-
-    default Object staticSpecialAssign(String name, TokenType assignType) {
-        Object val = getStaticField(name);
-        if (val instanceof Integer) {
-            return this.setStaticField(name, (int)val + (assignType == TokenType.GROW ? 1 : -1));
-        } else if (val instanceof Float) {
-            return this.setStaticField(name, (float) val + (assignType == TokenType.GROW ? 1 : -1));
-        } else {
-            return this.setStaticField(name, (double)val + (assignType == TokenType.GROW ? 1 : -1));
-        }
-    }
 
     //TODO move to reference?
     default ScriptedClass getComponentType() {
@@ -94,8 +84,9 @@ public interface ScriptedClass {
         return superclass() != null ? superclass().get().interfaces() : new ClassReference[0];
     }
 
+    @NotNull
     default ClassReference getFieldType(String name) {
-        return superclass() != null ? superclass().get().getFieldType(name) : null;
+        return superclass() != null ? superclass().get().getFieldType(name) : VarTypeManager.VOID.reference();
     }
 
     default boolean hasField(String name) {

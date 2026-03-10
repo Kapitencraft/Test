@@ -139,12 +139,12 @@ public class ClassLoader {
         List<Pair<File, PackageHolder<T>>> pckLoader = new ArrayList<>();
         pckLoader.add(Pair.of(fileLoc, root));
         while (!pckLoader.isEmpty()) {
-            Pair<File, PackageHolder<T>> pck = pckLoader.get(0);
+            Pair<File, PackageHolder<T>> pck = pckLoader.getFirst();
             File file = pck.getFirst();
             PackageHolder<T> holder = pck.getSecond();
             File[] files = file.listFiles();
             if (files == null) {
-                pckLoader.remove(0);
+                pckLoader.removeFirst();
                 continue;
             }
             for (File file1 : files) {
@@ -157,7 +157,7 @@ public class ClassLoader {
                     holder.classes.put(name, constructor.apply(file1));
                 }
             }
-            pckLoader.remove(0);
+            pckLoader.removeFirst();
         }
         return root;
     }
@@ -176,14 +176,14 @@ public class ClassLoader {
         List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         while (!packageData.isEmpty()) {
-            Pair<PackageHolder<T>, Package> data = packageData.get(0);
+            Pair<PackageHolder<T>, Package> data = packageData.getFirst();
             PackageHolder<T> holder = data.getFirst();
             Package pck = data.getSecond();
             consumer.accept(holder.classes, pck);
             holder.packages.forEach((name, holder1) ->
                     packageData.add(Pair.of(holder1, pck.getOrCreatePackage(name))) //adding all packages back to the queue
             );
-            packageData.remove(0);
+            packageData.removeFirst();
         }
     }
 
@@ -192,7 +192,7 @@ public class ClassLoader {
         List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         while (!packageData.isEmpty()) {
-            Pair<PackageHolder<T>, Package> data = packageData.get(0);
+            Pair<PackageHolder<T>, Package> data = packageData.getFirst();
             PackageHolder<T> holder = data.getFirst();
             Package pck = data.getSecond();
             holder.classes.forEach((n, o) ->
@@ -201,7 +201,7 @@ public class ClassLoader {
             holder.packages.forEach((name, holder1) ->
                     packageData.add(Pair.of(holder1, pck.getOrCreatePackage(name))) //adding all packages back to the queue
             );
-            packageData.remove(0);
+            packageData.removeFirst();
         }
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
     }

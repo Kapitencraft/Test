@@ -5,6 +5,7 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.builder.MethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -17,7 +18,7 @@ public interface ScriptedInterface extends ScriptedClass {
     }
 
     @Override
-    default ClassReference getFieldType(String name) {
+    default @NotNull ClassReference getFieldType(String name) {
         return VarTypeManager.VOID.reference();
     }
 

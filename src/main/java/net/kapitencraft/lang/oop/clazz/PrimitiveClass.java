@@ -8,6 +8,7 @@ import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -61,8 +62,8 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public ClassReference getFieldType(String name) {
-        return null;
+    public @NotNull ClassReference getFieldType(String name) {
+        return VarTypeManager.VOID.reference();
     }
 
     @Override

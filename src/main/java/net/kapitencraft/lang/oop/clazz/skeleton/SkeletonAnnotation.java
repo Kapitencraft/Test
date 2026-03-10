@@ -13,6 +13,7 @@ import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.AnnotationMethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -69,7 +70,7 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public ClassReference getFieldType(String name) {
+    public @NotNull ClassReference getFieldType(String name) {
         return VarTypeManager.VOID.reference();
     }
 

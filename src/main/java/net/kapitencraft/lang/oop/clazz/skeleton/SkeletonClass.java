@@ -14,6 +14,7 @@ import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.tool.GsonHelper;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -125,7 +126,7 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public ClassReference getFieldType(String name) {
+    public @NotNull ClassReference getFieldType(String name) {
         return Optional.ofNullable(this.fields.get(name)).map(SkeletonField::type).orElseGet(() -> superclass().get().getFieldType(name));
     }
 
