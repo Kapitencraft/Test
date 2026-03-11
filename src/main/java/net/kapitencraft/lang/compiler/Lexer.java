@@ -230,6 +230,7 @@ public class Lexer {
         addToken(getType(text));
     }
 
+    //TODO add formatted strings
     private void string() {
         while (peek() != '"' && !isAtEnd() && peek() != '\n') {
             advance();

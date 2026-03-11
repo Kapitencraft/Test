@@ -124,12 +124,14 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitBinaryExpr(Expr.Binary expr) {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
+        TokenType operator = expr.operator().type();
+        final ClassReference executor = expr.executor();
         cache(expr.right());
+        //convertToStringIfNecessary(operator, executor); TODO
+
         cache(expr.left());
         if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
-            final ClassReference executor = expr.executor();
             this.builder.changeLineIfNecessary(expr.operator());
-            TokenType operator = expr.operator().type();
             Opcode opcode = switch (operator) {
                 case EQUAL -> Opcode.EQUAL;
                 case NEQUAL -> Opcode.NEQUAL;
@@ -152,6 +154,13 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
         retainExprResult = hadRetain;
         return null;
+    }
+
+    private void convertToStringIfNecessary(TokenType operator, ClassReference executor) {
+        if (operator == TokenType.ADD && executor.is(VarTypeManager.STRING)) {
+            builder.addCode(Opcode.INVOKE_STATIC);
+            builder.addStringConstant("Lscripted/lang/String;valueOf(Lscripted/lang/Object)");
+        }
     }
 
     //region comparison
@@ -518,6 +527,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 builder.addCode(Opcode.F_M1);
             else
                 builder.addFloatConstant(v);
+        } else if (VarTypeManager.BOOLEAN.is(scriptedClass)) {
+            boolean b = (boolean) value;
+            if (b)
+                builder.addCode(Opcode.TRUE);
+            else
+                builder.addCode(Opcode.FALSE);
         }
         return null;
     }
@@ -550,22 +565,40 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitLogicalExpr(Expr.Logical expr) {
+        //l || r -> l ? true : r
+        //l && r -> l ? r : false
+        //l ^ r  -> l ? r : !r
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
-        cache(expr.right());
         cache(expr.left());
-        if (hadRetain) {
-            builder.changeLineIfNecessary(expr.operator());
-            builder.addCode(switch (expr.operator().type()) {
-                case OR -> Opcode.OR;
-                case XOR -> Opcode.XOR;
-                case AND -> Opcode.AND;
-                default -> throw new IllegalArgumentException("unknown logical type: " + expr.operator());
-            });
-        } else {
-            builder.addCode(Opcode.POP_2);
-            ignoredExprResult = true;
+        int jumpPatch = builder.addJumpIfFalse();
+        switch (expr.operator().type()) {
+            case XOR -> {
+                cache(expr.right());
+                builder.addCode(Opcode.NOT);
+                int jumpRPatch = builder.addJump();
+                builder.patchJumpCurrent(jumpPatch);
+                cache(expr.right());
+                builder.patchJumpCurrent(jumpRPatch);
+            }
+            case OR -> {
+                builder.addCode(Opcode.TRUE);
+                int jumpRPatch = builder.addJump();
+                builder.patchJumpCurrent(jumpPatch);
+                cache(expr.right());
+                builder.patchJumpCurrent(jumpRPatch);
+            }
+            case AND -> {
+                cache(expr.right());
+                int jumpRPatch = builder.addJump();
+                builder.patchJumpCurrent(jumpPatch);
+                builder.addCode(Opcode.FALSE);
+                builder.patchJumpCurrent(jumpRPatch);
+            }
         }
+        if (!hadRetain)
+            builder.addCode(Opcode.POP);
+
         return null;
     }
 

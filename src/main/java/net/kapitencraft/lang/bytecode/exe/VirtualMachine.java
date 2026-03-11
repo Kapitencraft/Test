@@ -419,9 +419,6 @@ public class VirtualMachine {
                     case D_LESSER -> push((double) pop() < (double) pop());
                     case F_LESSER -> push((float) pop() < (float) pop());
                     case NOT -> push(!(boolean) pop());
-                    case OR -> push((boolean) pop() || (boolean) pop());
-                    case AND -> push((boolean) pop() && (boolean) pop());
-                    case XOR -> push((boolean) pop() ^ (boolean) pop());
                     case D2F -> push((float) (double) pop());
                     case SWITCH -> {
                         int entry = (int) pop();
@@ -589,12 +586,12 @@ public class VirtualMachine {
 
     private static void get(int i) {
         push(stack[stackBottom + i]);
-        if (DEBUG) System.out.printf("[DEBUG]:%s GET: %s\n", visualStackSize(), i);
+        if (DEBUG) System.out.printf("[DEBUG]:%s GET: %s (%s)\n", visualStackSize(), i, frame.callable.getChunk().localVariableTable().get(ip, i).getFirst());
     }
 
     private static void assign(int i) {
         stack[stackBottom + i] = pop();
-        if (DEBUG) System.out.printf("[DEBUG]:%s ASSIGN: %s\n", visualStackSize(), i);
+        if (DEBUG) System.out.printf("[DEBUG]:%s ASSIGN: %s (%s)\n", visualStackSize(), i, frame.callable.getChunk().localVariableTable().get(ip, i).getFirst());
     }
 
     //region flow-control

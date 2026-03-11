@@ -36,7 +36,7 @@ public class Disassembler {
                  D_NEGATION, D_ADD, D_SUB, D_MUL, D_DIV, D_POW, D_MOD,
                  F_NEGATION, F_ADD, F_SUB, F_MUL, F_DIV, F_POW, F_MOD,
                  ASSIGN_0, ASSIGN_1, ASSIGN_2,
-                 NULL, TRUE, FALSE, AND, XOR, OR, NOT, CONCENTRATION,
+                 NULL, TRUE, FALSE, NOT, CONCENTRATION,
                  I_M1, I_0, I_1, I_2, I_3, I_4, I_5,
                  D_M1, D_1,
                  F_M1, F_1,
