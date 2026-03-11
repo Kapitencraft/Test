@@ -338,6 +338,7 @@ public class ExprParser extends AbstractParser {
     private Expr equality() {
         Expr expr = comparison();
 
+        //TODO: add hyperoptimization for x < y && y < z -> x < y < z
         while (match(EQUALITY)) {
             Token operator = previous();
             Expr right = comparison();
