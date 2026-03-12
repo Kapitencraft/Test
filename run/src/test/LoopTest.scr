@@ -25,7 +25,7 @@ class LoopTest {
     static void testEnclosed() {
         for (int i = -4; i < 5; i++) {
             for (int j = -4; j < 5; j++) {
-                if (14 < i * i + j * j && i * i + j * j < 16) {
+                if (14 < i * i + j * j < 16) {
                     System.print(i);
                     System.print(j);
                 }

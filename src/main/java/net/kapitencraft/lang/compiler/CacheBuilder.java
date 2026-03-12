@@ -2,8 +2,8 @@ package net.kapitencraft.lang.compiler;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
+import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
@@ -21,7 +21,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.RetentionPolicy;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 import java.util.function.Consumer;
 
 public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
@@ -164,6 +166,18 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     //region comparison
+    private Opcode getComparator(TokenType type, ClassReference reference) {
+        return switch (type) {
+            case EQUAL -> Opcode.EQUAL;
+            case NEQUAL -> Opcode.NEQUAL;
+            case GREATER -> getGreater(reference);
+            case LESSER -> getLesser(reference);
+            case GEQUAL -> getGequal(reference);
+            case LEQUAL -> getLequal(reference);
+            default -> throw new IllegalArgumentException("not a comparator: " + type);
+        };
+    }
+
     private Opcode getGreater(ClassReference reference) {
         if (reference.is(VarTypeManager.INTEGER)) return Opcode.I_GREATER;
         if (reference.is(VarTypeManager.DOUBLE)) return Opcode.D_GREATER;
@@ -202,7 +216,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
         cache(expr.callee());
-         //object is NOT POPED from the stack. keep it before the args
+        //object is NOT POPED from the stack. keep it before the args
         this.builder.changeLineIfNecessary(expr.name());
         saveArgs(expr.args());
         retainExprResult = hadRetain;
@@ -230,6 +244,21 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         builder.invokeStatic(expr.id());
         if (expr.retType().is(VarTypeManager.VOID))
             ignoredExprResult = true;
+        return null;
+    }
+
+    @Override
+    public Void visitComparisonChainExpr(Expr.ComparisonChain expr) {
+        //l && r -> l ? r : false
+
+        List<Integer> jumps = new ArrayList<>();
+        for (int i = 0; i < expr.entries().length - 1; i++) {
+            cache(expr.entries()[i]);
+            builder.addCode(getComparator(expr.dataType()));
+        }
+
+
+        builder.addCode(Opcode.POP); //necessary to remove the unused DUPed parameter
         return null;
     }
 
@@ -764,7 +793,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitForStmt(Stmt.For stmt) {
         builder.changeLineIfNecessary(stmt.keyword());
-        cache(stmt.init()); //synthesise initializer
+        cache(stmt.init()); //synthesize initializer
         int result = builder.currentCodeIndex();
         retainExprResult = true;
         ignoredExprResult = false;
@@ -773,11 +802,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         loops.add(new Loop()); //push loop for continue & break entries
         retainExprResult = false;
         ignoredExprResult = false;
-        cache(stmt.body()); //synthesise loop body
+        cache(stmt.body()); //synthesize loop body
         retainExprResult = false;
         ignoredExprResult = false;
         int increment = builder.currentCodeIndex();
-        cache(stmt.increment()); //synthesise increment
+        cache(stmt.increment()); //synthesize increment
         if (!ignoredExprResult)
             builder.addCode(Opcode.POP); //pop the result of the increment
         int returnIndex = builder.addJump();

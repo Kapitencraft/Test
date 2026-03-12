@@ -150,6 +150,11 @@
           "target": "ClassReference",
           "args": "Expr[]",
           "signature": "String"
+        },
+        "ComparisonChain": {
+          "entries": "Expr[]",
+          "types": "Token[]",
+          "dataType": "ClassReference"
         }
       },
       "imports": [
