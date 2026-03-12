@@ -363,9 +363,27 @@ public class VirtualMachine {
                     case I_NEGATION -> push(-(int) pop());
                     case D_NEGATION -> push(-(double) pop());
                     case F_NEGATION -> push(-(float) pop());
-                    case I_POW -> push((int) Math.pow((int) pop(), (int) pop()));
-                    case D_POW -> push(Math.pow((double) pop(), (double) pop()));
-                    case F_POW -> push((float) Math.pow((float) pop(), (float) pop()));
+                    case I_POW -> {
+                        int value2 = (int) pop();
+                        int value1 = (int) pop();
+                        push((int) Math.pow(value1, value2));
+                    }
+                    case D_POW -> {
+                        double value2 = (double) pop();
+                        double value1 = (double) pop();
+                        push(Math.pow(value1, value2));
+                    }
+                    case F_POW -> {
+                        float value2 = (float) pop();
+                        float value1 = (float) pop();
+                        push((float) Math.pow(value1, value2));
+                    }
+                    case I_MOD -> {
+                        int value2 = (int) pop();
+                        int value1 = (int) pop();
+                        push(value1 % value2);
+                    }
+
                     case I_MOD -> push((int) pop() % (int) pop());
                     case D_MOD -> push((double) pop() % (double) pop());
                     case F_MOD -> push((float) pop() % (float) pop());
