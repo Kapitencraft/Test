@@ -596,8 +596,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 builder.patchJumpCurrent(jumpRPatch);
             }
         }
-        if (!hadRetain)
+        if (!hadRetain) {
             builder.addCode(Opcode.POP);
+            ignoredExprResult = true;
+        }
 
         return null;
     }

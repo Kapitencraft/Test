@@ -68,11 +68,12 @@ public class ClassLoader {
                         default -> System.err.println("unknown profiler operation : \"" + line.substring(10) + "\"");
                     }
                 } else if (line.startsWith("debug")) {
-                    if (VirtualMachine.DEBUG = !VirtualMachine.DEBUG) {
-                        System.out.println("enabled debug");
-                    } else {
-                        System.out.println("disabled debug");
-                    }
+                    VirtualMachine.DEBUG = switch (line.substring(5)) {
+                        case "operations" -> VirtualMachine.DebugType.OPERATIONS;
+                        case "stack" -> VirtualMachine.DebugType.STACK;
+                        default -> VirtualMachine.DebugType.NONE;
+                    };
+                    System.out.println("set debug mode to " + VirtualMachine.DEBUG);
                 } else if (line.startsWith("test")) {
                     TestLoader.run();
                 } else if (line.startsWith("help")) {
