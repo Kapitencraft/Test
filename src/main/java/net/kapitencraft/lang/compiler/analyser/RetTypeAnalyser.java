@@ -139,8 +139,8 @@ public class RetTypeAnalyser implements Expr.Visitor<ClassReference> {
 
     @Override
     public ClassReference visitComparisonChainExpr(Expr.ComparisonChain expr) {
-        return expr.dataType();
-    }
+        return VarTypeManager.BOOLEAN.reference();
+        }
 
     @Override
     public ClassReference visitUnaryExpr(Expr.Unary expr) {

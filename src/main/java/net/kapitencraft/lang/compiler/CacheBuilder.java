@@ -128,10 +128,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = true;
         TokenType operator = expr.operator().type();
         final ClassReference executor = expr.executor();
+        cache(expr.left());
         cache(expr.right());
         //convertToStringIfNecessary(operator, executor); TODO
 
-        cache(expr.left());
         if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
             this.builder.changeLineIfNecessary(expr.operator());
             Opcode opcode = switch (operator) {
@@ -250,15 +250,28 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitComparisonChainExpr(Expr.ComparisonChain expr) {
         //l && r -> l ? r : false
+        //i < j && j < k
+        //1. i, j -> bool
 
         List<Integer> jumps = new ArrayList<>();
-        for (int i = 0; i < expr.entries().length - 1; i++) {
-            cache(expr.entries()[i]);
-            builder.addCode(getComparator(expr.dataType()));
+        cache(expr.entries()[0]);
+        for (int i = 0; i < expr.entries().length - 2; i++) {
+            cache(expr.entries()[i + 1]);
+            builder.addCode(Opcode.DUP_X1);
+            builder.changeLineIfNecessary(expr.types()[i]);
+            builder.addCode(getComparator(expr.types()[i].type(), expr.dataType()));
+            jumps.add(builder.addJumpIfFalse());
         }
+        cache(expr.entries()[expr.entries().length - 1]);
+        Token token = expr.types()[expr.types().length - 1];
+        builder.changeLineIfNecessary(token);
+        builder.addCode(getComparator(token.type(), expr.dataType()));
 
-
+        int jump = builder.addJump();
+        jumps.forEach(builder::patchJumpCurrent);
         builder.addCode(Opcode.POP); //necessary to remove the unused DUPed parameter
+        builder.addCode(Opcode.FALSE);
+        builder.patchJumpCurrent(jump);
         return null;
     }
 
