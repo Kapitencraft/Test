@@ -3,9 +3,8 @@ package test;
 class BoolAlgebraTest {
 
     static void main(String[] args) {
-        //System.print(4 < 5 && 5 < 6);
-        //System.print(3 > 4 || 4 > 3);
-        //System.print(true ^ false);
-        System.print(44 < 4 * 4 + 5 * 5 && 4 * 4 + 5 * 5 < 49);
+        System.print(4 < 5 && 5 < 6);
+        System.print(3 > 4 || 4 > 3);
+        System.print(true ^ false);
     }
 }

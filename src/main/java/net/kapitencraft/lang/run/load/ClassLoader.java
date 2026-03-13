@@ -68,7 +68,7 @@ public class ClassLoader {
                         default -> System.err.println("unknown profiler operation : \"" + line.substring(10) + "\"");
                     }
                 } else if (line.startsWith("debug")) {
-                    VirtualMachine.DEBUG = switch (line.substring(5)) {
+                    VirtualMachine.DEBUG = switch (line.substring(6)) {
                         case "operations" -> VirtualMachine.DebugType.OPERATIONS;
                         case "stack" -> VirtualMachine.DebugType.STACK;
                         default -> VirtualMachine.DebugType.NONE;

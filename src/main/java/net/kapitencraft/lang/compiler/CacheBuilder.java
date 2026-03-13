@@ -850,9 +850,9 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         int curIndex = builder.currentCodeIndex(); //link to jump back when loop is completed
 
         //region condition
+        getVar(baseVarIndex + 1); //get iteration var
         getVar(baseVarIndex); //get array var
         builder.addCode(Opcode.ARRAY_LENGTH); //get length of array
-        getVar(baseVarIndex + 1); //get iteration var
         builder.addCode(Opcode.I_LESSER); //check if iteration var is less than the length of the array
         int result = builder.addJumpIfFalse(); //create jump out of the loop if check fails
         //endregion
@@ -869,8 +869,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
         //region increase iteration var
         int increase = builder.currentCodeIndex();
-        builder.addCode(Opcode.I_1); //load 1
         getVar(baseVarIndex + 1); //get iteration var
+        builder.addCode(Opcode.I_1); //load 1
         builder.addCode(Opcode.I_ADD); //add 1 to the iteration var
         assignVar(baseVarIndex + 1);
         //endregion
