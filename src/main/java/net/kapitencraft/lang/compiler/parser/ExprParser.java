@@ -367,7 +367,6 @@ public class ExprParser extends AbstractParser {
                     operators.add(previous());
                     values.add(term());
                 }
-                //TODO add overloads
                 expr = new Expr.ComparisonChain(values.toArray(Expr[]::new), operators.toArray(Token[]::new), VarTypeManager.INTEGER.reference());
             } else {
                 expr = parseBinaryExpr(expr, operator, right);

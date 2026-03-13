@@ -44,7 +44,7 @@ public class AbstractParser {
     protected VarTypeParser parser;
     protected RetTypeAnalyser finder;
     protected final LocationAnalyser locFinder = new LocationAnalyser();
-    protected final Deque<List<ClassReference>> args = new ArrayDeque<>(); //TODO either use or remove
+    protected final Deque<List<ClassReference>> args = new ArrayDeque<>();
     protected final Compiler.ErrorStorage errorStorage;
     protected BytecodeVars varAnalyser;
 
@@ -343,8 +343,16 @@ public class AbstractParser {
         }
 
         Token last = previous();
-        while (match(DOT) && reference != null) { //TODO fix token corruption due to consumption
+        int index = current;
+        while (match(DOT) && reference != null) {
             String enclosingName = consumeIdentifier().lexeme(); //needs to stay here for the mean-time to ensure the compiler doesn't break
+            ClassReference name = VarTypeManager.getClassForName(reference.absoluteName() + "." + enclosingName);
+            if (name == null) {
+                current = index;
+                break;
+            }
+            reference = name;
+            index = current;
         }
 
         if (reference == null) {
