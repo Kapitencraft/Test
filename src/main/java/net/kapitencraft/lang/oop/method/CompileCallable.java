@@ -55,7 +55,7 @@ public class CompileCallable implements ScriptedCallable {
             builder.build(chunk);
             object.add("body", chunk.build().save());
         }
-        if (this.modifiers == 0) object.addProperty("modifiers", this.modifiers);
+        if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);
 
         object.add("annotations", builder.cacheAnnotations(this.annotations));
         return object;
