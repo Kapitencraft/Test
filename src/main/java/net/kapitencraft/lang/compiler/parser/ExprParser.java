@@ -832,7 +832,8 @@ public class ExprParser extends AbstractParser {
 
     private Expr statics() {
         ClassReference target = consumeVarType(generics).getReference();
-        Token name = previous();
+        consume(DOT, "'.' expected");
+        Token name = consumeIdentifier();
         if (match(BRACKET_O)) return finishCall(name, target, null);
         if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
         if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);

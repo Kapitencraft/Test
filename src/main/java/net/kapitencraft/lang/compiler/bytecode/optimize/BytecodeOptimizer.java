@@ -14,6 +14,8 @@ public class BytecodeOptimizer {
     public void optimize(List<Instruction> instructions) {
         Executor executor = new Executor(instructions);
         for (Optimization optimization : optimizations) {
+            int i = 0;
+            optimization.tryExecute(executor, i);
         }
     }
 

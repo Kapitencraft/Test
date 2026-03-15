@@ -51,7 +51,7 @@ public class NativeClassLoader {
     @ApiStatus.Internal
     public static void load() {
         System.out.println("loading natives...");
-        Reflections reflections = new Reflections("net.kapitencraft.lang.run.natives.scripted");
+        Reflections reflections = new Reflections("net.kapitencraft.lang.exe.natives.scripted");
 
         List<ClassObj> nativeClasses = new ArrayList<>();
 

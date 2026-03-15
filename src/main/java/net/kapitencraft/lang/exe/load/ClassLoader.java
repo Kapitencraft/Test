@@ -25,7 +25,6 @@ public class ClassLoader {
 
     public static final File cacheLoc = new File("./run/cache");
 
-    @SuppressWarnings("AssignmentUsedAsCondition")
     public static void main(String[] args) throws IOException {
         loadClasses();
         System.out.println("Loading complete.");

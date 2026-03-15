@@ -44,9 +44,12 @@ public class ByteCodeBuilder {
         return i;
     }
 
-    public void patchJump(int jumpID) {
-        add(new JumpTargetInstruction(jumpID));
-        ((JumpableInstruction) this.instructions.get(jumpID)).setTarget(instructions.size());
+    public void patchJump(int jumpIdx) {
+        patchJump(jumpIdx, instructions.size());
+    }
+
+    public void patchJump(int jumpIdx, int jumpOrigin) {
+        ((JumpableInstruction) this.instructions.get(jumpIdx)).setTarget(jumpOrigin);
     }
 
     public void jumpElse(Runnable ifTrue, Runnable ifFalse) {
@@ -60,7 +63,6 @@ public class ByteCodeBuilder {
 
     public void addJumpMultiTargetInstruction(List<Integer> origins) {
         if (origins.isEmpty()) return; //ignore empty
-        add(new JumpMultiTargetInstruction(origins));
         int target = this.instructions.size();
         for (Integer origin : origins) {
             ((JumpableInstruction) this.instructions.get(origin)).setTarget(target);
@@ -106,11 +108,6 @@ public class ByteCodeBuilder {
 
     public void registerLocal(int i, ClassReference type, String lexeme) {
         add(new RegisterLocalInstruction(i, type, lexeme));
-    }
-
-    public int jumpTarget() {
-        //add(new JumpTargetInstruction()); TODO
-        return size();
     }
 
     public void addExceptionHandler(int handlerStart, int handlerEnd, String className) {

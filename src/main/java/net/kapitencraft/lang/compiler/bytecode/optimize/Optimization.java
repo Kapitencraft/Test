@@ -1,9 +1,5 @@
 package net.kapitencraft.lang.compiler.bytecode.optimize;
 
-import net.kapitencraft.lang.compiler.bytecode.instruction.Instruction;
-
-import java.util.List;
-
 public interface Optimization {
 
     void tryExecute(BytecodeOptimizer.Executor executor, int index);

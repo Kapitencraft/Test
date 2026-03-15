@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.oop.clazz;
 
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
