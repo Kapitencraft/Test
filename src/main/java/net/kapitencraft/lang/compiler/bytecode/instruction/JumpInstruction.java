@@ -16,6 +16,11 @@ public class JumpInstruction extends CodeInstruction implements JumpableInstruct
     }
 
     @Override
+    public int getTarget() {
+        return index;
+    }
+
+    @Override
     public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
         super.save(builder, ips);
         builder.add2bArg(ips.getIp(index)); //index is into instruction array, not bytecode array

@@ -20,4 +20,8 @@ public class CodeInstruction implements Instruction {
     public int length() {
         return 1;
     }
+
+    public Opcode code() {
+        return opcode;
+    }
 }

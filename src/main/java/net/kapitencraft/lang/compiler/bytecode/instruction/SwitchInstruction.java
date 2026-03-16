@@ -23,6 +23,15 @@ public class SwitchInstruction extends CodeInstruction implements JumpableInstru
         this.target = target;
     }
 
+    @Override
+    public int getTarget() {
+        return target;
+    }
+
+    public List<Entry> getEntries() {
+        return entries;
+    }
+
     public static final class Entry {
         private final int id;
         private int idx;
