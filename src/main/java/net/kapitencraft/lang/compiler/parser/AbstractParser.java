@@ -7,8 +7,9 @@ import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
+import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsSourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.exe.VarTypeManager;
@@ -40,7 +41,7 @@ public class AbstractParser {
 
     protected int current;
     protected Token[] tokens;
-    protected VarTypeParser parser;
+    protected VarTypeContainer parser;
     protected RetTypeAnalyser finder;
     protected final LocationAnalyser locFinder = new LocationAnalyser();
     protected final Deque<List<ClassReference>> args = new ArrayDeque<>();
@@ -148,7 +149,7 @@ public class AbstractParser {
         this.errorStorage = errorStorage;
     }
 
-    public void apply(Token[] toParse, VarTypeParser targetAnalyser) {
+    public void apply(Token[] toParse, VarTypeContainer targetAnalyser) {
         this.current = 0;
         this.tokens = toParse;
         this.parser = targetAnalyser;
@@ -183,7 +184,7 @@ public class AbstractParser {
 
     private Holder.Generic generic(GenericStack genericStack) {
         Token name = consumeIdentifier();
-        SourceClassReference lowerBound = null, upperBound = null;
+        SourceReference lowerBound = null, upperBound = null;
         if (match(EXTENDS)) {
             lowerBound = consumeVarType(genericStack);
         } else if (match(SUPER)) {
@@ -283,9 +284,9 @@ public class AbstractParser {
         return tokens.toArray(Token[]::new);
     }
 
-    protected Optional<SourceClassReference> tryConsumeVarType(GenericStack generics) {
+    protected Optional<SourceReference> tryConsumeVarType(GenericStack generics) {
         Optional<ClassReference> optional = generics.getValue(peek().lexeme());
-        if (optional.isPresent()) return Optional.of(SourceClassReference.from(advance(), optional.get()));
+        if (optional.isPresent()) return Optional.of(SourceReference.from(advance(), optional.get()));
         if (VarTypeManager.hasPackage(peek().lexeme()) && varAnalyser.get(peek().lexeme()) == LocalVariableContainer.FetchResult.FAIL) {
             advance();
             if (check(DOT)) {
@@ -299,34 +300,38 @@ public class AbstractParser {
         if (reference != null && !check(DOT)) {
             Holder.AppliedGenerics declared = appliedGenerics(generics);
             if (declared != null) reference = new AppliedGenericsReference(reference, declared);
-            return Optional.of(SourceClassReference.from(t, reference));
+            return Optional.of(SourceReference.from(t, reference));
         } else
             current--;
         return Optional.empty();
     }
 
     @NotNull
-    protected SourceClassReference consumeVarType(GenericStack generics) {
-        SourceClassReference sourceClassReference = consumeVarTypeNoArray(generics);
-        ClassReference reference = sourceClassReference.getReference();
-        Token last = sourceClassReference.getToken();
+    protected SourceReference consumeVarType(GenericStack generics) {
+        SourceReference sourceReference = consumeVarTypeNoArray(generics);
+        ClassReference reference = sourceReference.getReference();
+        Token last = sourceReference.getToken();
+        Holder.AppliedGenerics appliedGenerics = appliedGenerics(generics);
+        if (appliedGenerics != null) {
+            return AppliedGenericsSourceReference.create(last, reference, appliedGenerics);
+        }
         while (match(S_BRACKET_O)) {
             consume(S_BRACKET_C, "']' expected");
             reference = reference.array();
             last = previous();
         }
-        if (last != sourceClassReference.getToken()) {
-            return SourceClassReference.from(last, reference);
+        if (last != sourceReference.getToken()) {
+            return SourceReference.from(last, reference);
         }
-        return sourceClassReference;
+        return sourceReference;
     }
 
-    protected SourceClassReference consumeVarTypeNoArray(GenericStack stack) {
+    protected SourceReference consumeVarTypeNoArray(GenericStack stack) {
         Token token = consumeIdentifier();
         ClassReference reference = parser.getClass(token.lexeme());
         if (reference == null) {
             Optional<ClassReference> optional = stack.getValue(token.lexeme());
-            if (optional.isPresent()) return SourceClassReference.from(token, optional.get());
+            if (optional.isPresent()) return SourceReference.from(token, optional.get());
         }
         if (reference == null) {
             Package p = VarTypeManager.getPackage(token.lexeme());
@@ -356,11 +361,11 @@ public class AbstractParser {
 
         if (reference == null) {
             error(token, "unknown symbol");
-            return SourceClassReference.from(token, VarTypeManager.VOID.reference()); //skip rest
+            return SourceReference.from(token, VarTypeManager.VOID.reference()); //skip rest
         }
         Holder.AppliedGenerics declared = appliedGenerics(stack);
-        if (declared != null) return SourceClassReference.from(last, new AppliedGenericsReference(reference, declared));
-        return SourceClassReference.from(last, reference);
+        if (declared != null) return SourceReference.from(last, new AppliedGenericsReference(reference, declared));
+        return SourceReference.from(last, reference);
     }
 
     protected Token consumeIdentifier() {
@@ -368,11 +373,11 @@ public class AbstractParser {
     }
 
     protected Token consumeBracketOpen(String method) {
-        return this.consume(BRACKET_O, "Expected '(' after '" + method + "'.");
+        return this.consume(BRACKET_O, "Expected '(' after " + method + ".");
     }
 
-    protected Token consumeCurlyOpen(String method) {
-        return this.consume(C_BRACKET_O, "Expected '{' after '" + method + "'.");
+    protected Token consumeCurlyOpen(String obj) {
+        return this.consume(C_BRACKET_O, "Expected '{' after " + obj + ".");
     }
 
     protected Token consumeCurlyClose(String method) {

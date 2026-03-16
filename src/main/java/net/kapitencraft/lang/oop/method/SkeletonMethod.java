@@ -7,7 +7,7 @@ import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
@@ -31,8 +31,8 @@ public class SkeletonMethod implements ScriptedCallable {
         return create(decl.params(), decl.type().getReference(), decl.modifiers());
     }
 
-    private static SkeletonMethod create(List<? extends Pair<SourceClassReference, String>> params, ClassReference type, short modifiers) {
-        return new SkeletonMethod(params.stream().map(Pair::getFirst).map(SourceClassReference::getReference).toArray(ClassReference[]::new), type, modifiers);
+    private static SkeletonMethod create(List<? extends Pair<SourceReference, String>> params, ClassReference type, short modifiers) {
+        return new SkeletonMethod(params.stream().map(Pair::getFirst).map(SourceReference::getReference).toArray(ClassReference[]::new), type, modifiers);
     }
 
     public static SkeletonMethod create(Holder.Constructor decl, ClassReference type) {

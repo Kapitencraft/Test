@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
-import net.kapitencraft.lang.compiler.parser.VarTypeParser;
+import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -15,7 +15,6 @@ import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.exe.load.ClassLoader;
 import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
 import net.kapitencraft.lang.tool.Util;
-import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -50,7 +49,7 @@ public class Compiler {
         }
     }
 
-    public static void queueRegister(Holder.Class aClass, ErrorStorage errorStorage, VarTypeParser parser, @Nullable String namePrefix) {
+    public static void queueRegister(Holder.Class aClass, ErrorStorage errorStorage, VarTypeContainer parser, @Nullable String namePrefix) {
         String name = aClass.name().lexeme();
         ClassRegister e = ClassRegister.create(aClass, errorStorage, parser, name);
         registers.add(e);
@@ -58,7 +57,7 @@ public class Compiler {
     }
 
     private record ClassRegister(CompilerLoaderHolder holder, String pck, @Nullable String name) {
-        public static ClassRegister create(Holder.Class entry, ErrorStorage logger, VarTypeParser parser, @Nullable String name) {
+        public static ClassRegister create(Holder.Class entry, ErrorStorage logger, VarTypeContainer parser, @Nullable String name) {
             return new ClassRegister(new CompilerLoaderHolder(entry, logger, parser), entry.pck(), name);
         }
 
@@ -158,6 +157,7 @@ public class Compiler {
             }
         }
 
+        //region message
         private interface Message {
 
             void print(String[] lines, String fileLoc);
@@ -179,6 +179,7 @@ public class Compiler {
                 Compiler.warn(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
             }
         }
+        //endregion
 
         public void error(Token loc, String msg) {
             error(loc.line(), loc.lineStartIndex(), msg);

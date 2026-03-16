@@ -7,7 +7,7 @@ import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
@@ -30,7 +30,7 @@ public class StmtParser extends ExprParser {
     private int loopIndex = 0;
 
     @Override
-    public void apply(Token[] toParse, VarTypeParser targetAnalyser) {
+    public void apply(Token[] toParse, VarTypeContainer targetAnalyser) {
         super.apply(toParse, targetAnalyser);
         seenReturn.clear(); //reset entire return stack
         seenReturn.add(false);
@@ -61,7 +61,7 @@ public class StmtParser extends ExprParser {
         try {
             if (match(FINAL)) return varDeclaration(true, consumeVarType(generics).getReference());
 
-            Optional<SourceClassReference> type = tryConsumeVarType(generics);
+            Optional<SourceReference> type = tryConsumeVarType(generics);
             return type.map(sourceClassReference -> varDeclaration(false, sourceClassReference.getReference())).orElseGet(this::statement);
         } catch (ParseError error) {
             synchronize();
@@ -208,7 +208,7 @@ public class StmtParser extends ExprParser {
 
         consumeBracketOpen("for");
 
-        Optional<SourceClassReference> type = tryConsumeVarType(generics);
+        Optional<SourceReference> type = tryConsumeVarType(generics);
 
         Stmt initializer;
         if (type.isPresent()) {
@@ -383,13 +383,13 @@ public class StmtParser extends ExprParser {
         return stmts.toArray(Stmt[]::new);
     }
 
-    public void applyMethod(List<? extends Pair<SourceClassReference, String>> params, ClassReference targetClass, ClassReference funcRetType, @Nullable Holder.Generics generics) {
+    public void applyMethod(List<? extends Pair<SourceReference, String>> params, ClassReference targetClass, ClassReference funcRetType, @Nullable Holder.Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
         if (targetClass != null) this.varAnalyser.add("this", targetClass, false, true);
-        for (Pair<SourceClassReference, String> param : params) {
+        for (Pair<SourceReference, String> param : params) {
             varAnalyser.add(param.getSecond(), param.getFirst().getReference(), true, true);
         }
     }
@@ -402,13 +402,13 @@ public class StmtParser extends ExprParser {
         funcRetType = VarTypeManager.VOID.reference();
     }
 
-    public void applyStaticMethod(List<? extends Pair<SourceClassReference, String>> params, ClassReference funcRetType, @Nullable Holder.Generics generics) {
+    public void applyStaticMethod(List<? extends Pair<SourceReference, String>> params, ClassReference funcRetType, @Nullable Holder.Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
 
-        for (Pair<SourceClassReference, String> param : params) {
+        for (Pair<SourceReference, String> param : params) {
             varAnalyser.add(param.getSecond(), param.getFirst().getReference(), true, true);
         }
     }

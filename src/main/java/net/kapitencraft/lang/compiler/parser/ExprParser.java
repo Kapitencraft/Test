@@ -6,7 +6,7 @@ import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
@@ -70,7 +70,7 @@ public class ExprParser extends AbstractParser {
 
     public Expr literalOrReference() {
         if (match(AT)) {
-            SourceClassReference reference = consumeVarType(generics);
+            SourceReference reference = consumeVarType(generics);
             Token errorPoint = previous();
             if (match(BRACKET_O)) {
                 parseAnnotationProperties(reference, errorPoint);
@@ -80,17 +80,18 @@ public class ExprParser extends AbstractParser {
             return new Expr.Literal(previous());
         }
         ClassReference target = consumeVarType(generics).getReference();
-        Token name = previous();
+        consume(DOT, "expected class property");
+        Token name = consumeIdentifier();
 
         return new Expr.StaticGet(target, name);
     }
 
-    public Annotation parseAnnotation(Holder.AnnotationObj obj, VarTypeParser varTypeParser) {
-        this.apply(obj.properties(), varTypeParser);
+    public Annotation parseAnnotation(Holder.AnnotationObj obj, VarTypeContainer varTypeContainer) {
+        this.apply(obj.properties(), varTypeContainer);
         return parseAnnotationProperties(obj.type(), obj.type().getToken());
     }
 
-    public Annotation parseAnnotationProperties(SourceClassReference typeRef, Token errorPoint) {
+    public Annotation parseAnnotationProperties(SourceReference typeRef, Token errorPoint) {
         ScriptedClass type = typeRef.getReference().get();
 
         if (!type.isAnnotation()) {
@@ -637,7 +638,7 @@ public class ExprParser extends AbstractParser {
 
     private Expr primary() {
         if (match(NEW)) {
-            SourceClassReference type = consumeVarTypeNoArray(generics);
+            SourceReference type = consumeVarTypeNoArray(generics);
             if (match(S_BRACKET_O)) {
                 Expr size = null;
                 //array creation
@@ -668,8 +669,8 @@ public class ExprParser extends AbstractParser {
                 String outName = this.currentFallback().name() + "$" + nameLiteral;
                 ClassReference typeTarget = VarTypeManager.getOrCreateClass(outName, pck);
                 Token name = new Token(IDENTIFIER, outName, LiteralHolder.EMPTY, type.getToken().line(), type.getToken().lineStartIndex());
-                SourceClassReference original = type;
-                type = SourceClassReference.from(name, typeTarget);
+                SourceReference original = type;
+                type = SourceReference.from(name, typeTarget);
                 if (original.get().isInterface()) {
                     Compiler.queueRegister(
                             hParser.parseInterface(typeTarget, pck, name, null, null, null, List.of(original)),

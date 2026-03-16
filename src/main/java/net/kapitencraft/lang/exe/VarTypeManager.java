@@ -2,7 +2,7 @@ package net.kapitencraft.lang.exe;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.Package;
@@ -149,14 +149,14 @@ public class VarTypeManager {
         return pg.getClass(lexeme);
     }
 
-    public static SourceClassReference getOrCreateClass(List<Token> path) {
+    public static SourceReference getOrCreateClass(List<Token> path) {
         Package pg = rootPackage();
         for (int i = 0; i < path.size() - 1; i++) {
             String pckName = path.get(i).lexeme();
             pg = pg.getOrCreatePackage(pckName);
         }
         Token last = path.get(path.size() - 1);
-        return SourceClassReference.from(last, pg.getOrCreateClass(last.lexeme()));
+        return SourceReference.from(last, pg.getOrCreateClass(last.lexeme()));
     }
 
     private static ClassReference getMainClass(String name) {

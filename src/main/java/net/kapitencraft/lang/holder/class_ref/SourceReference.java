@@ -6,12 +6,12 @@ import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
-public class SourceClassReference implements Holder.Validateable {
+public class SourceReference implements Holder.Validateable {
     private final Token nameToken;
     private final ClassReference reference;
     private final String name;
 
-    protected SourceClassReference(String name, Token nameToken, ClassReference reference) {
+    protected SourceReference(String name, Token nameToken, ClassReference reference) {
         this.name = name;
         this.nameToken = nameToken;
         this.reference = reference;
@@ -29,8 +29,8 @@ public class SourceClassReference implements Holder.Validateable {
         reference.setTarget(target);
     }
 
-    public static SourceClassReference from(Token name, ClassReference other) {
-        return new SourceClassReference(other.name(), name, other);
+    public static SourceReference from(Token name, ClassReference other) {
+        return new SourceReference(other.name(), name, other);
     }
 
     public String absoluteName() {

@@ -3,19 +3,20 @@ package net.kapitencraft.lang.compiler.parser;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.exe.VarTypeManager;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class VarTypeParser implements Holder.Validateable {
-    private final Map<String, SourceClassReference> implemented = new HashMap<>();
+public class VarTypeContainer implements Holder.Validateable {
+    private final Map<String, SourceReference> implemented = new HashMap<>();
 
-    public VarTypeParser() {
-        implemented.putAll(VarTypeManager.getPackage("scripted.lang").allClasses().stream().collect(Collectors.toMap(ClassReference::name, scriptedClass -> SourceClassReference.from(null, scriptedClass))));
+    public VarTypeContainer() {
+        implemented.putAll(VarTypeManager.getPackage("scripted.lang").allClasses().stream().collect(Collectors.toMap(ClassReference::name, scriptedClass -> SourceReference.from(null, scriptedClass))));
     }
 
     public boolean hasClass(String clazz) {
@@ -23,13 +24,13 @@ public class VarTypeParser implements Holder.Validateable {
     }
 
     public ClassReference getClass(String clazz) {
-        SourceClassReference reference = implemented.get(clazz);
+        SourceReference reference = implemented.get(clazz);
         if (reference == null)
             return null;
         return reference.getReference();
     }
 
-    public void addClass(SourceClassReference clazz, String nameOverride) {
+    public void addClass(SourceReference clazz, @Nullable String nameOverride) {
         implemented.put(nameOverride != null ? nameOverride : clazz.getReference().name(), clazz);
     }
 
