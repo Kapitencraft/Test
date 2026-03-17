@@ -21,6 +21,8 @@ public class RemoveUnreachableOpcodesOptimization implements AdvancedOptimizatio
         while (!ipQueue.isEmpty()) {
             int i = ipQueue.pop();
             while (i < instructions.size()) {
+                if (flags[i])
+                    break; //check has already happened for these instructions. no need to check again
                 flags[i] = true; //mark instruction as reachable
                 if (instructions.get(i) instanceof CodeInstruction cI) {
                     if (cI.code() == Opcode.RETURN || cI.code() == Opcode.RETURN_ARG) {
@@ -42,6 +44,7 @@ public class RemoveUnreachableOpcodesOptimization implements AdvancedOptimizatio
         }
         for (int i = flags.length - 1; i >= 0; i--) {
             if (!flags[i]) {
+                //TODO include exception handlers
                 instructions.remove(i); //remove from the back to the front to keep the order aligned
             }
         }

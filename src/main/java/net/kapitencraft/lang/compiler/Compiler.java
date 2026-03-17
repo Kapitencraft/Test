@@ -34,6 +34,7 @@ import java.util.function.Consumer;
 public class Compiler {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
+    public static boolean optimize = false;
     static int errorCount = 0;
     private static ClassLoader.PackageHolder<CompilerLoaderHolder> compileData;
     private static final List<ClassRegister> registers = new ArrayList<>();
@@ -67,6 +68,10 @@ public class Compiler {
     }
 
     public static void main(String[] args) {
+        if (args.length > 0 && "-o".equals(args[0])) {
+            optimize = true;
+        }
+
         File root = new File("./run/src");
         File cache = ClassLoader.cacheLoc;
 

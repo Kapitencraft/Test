@@ -101,8 +101,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     public void build(Chunk.Builder chunk) {
-        ByteCodeBuilder.IpContainer container = this.byteCodeBuilder.gatherStartIndexes();
-        this.byteCodeBuilder.build(chunk, container);
+        this.byteCodeBuilder.build(chunk);
     }
 
     public void reset() {

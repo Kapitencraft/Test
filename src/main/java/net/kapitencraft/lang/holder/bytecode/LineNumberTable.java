@@ -45,7 +45,7 @@ public record LineNumberTable(Pair<Integer, Integer>[] lines) {
         }
 
         public void changeIfNecessary(int line, int pc) {
-            if (line > -1 && (this.lineChanges.isEmpty() || this.lineChanges.get(this.lineChanges.size() - 1).getSecond() != line)) {
+            if (line > -1 && (this.lineChanges.isEmpty() || this.lineChanges.getLast().getSecond() != line)) {
                 this.lineChanges.add(Pair.of(pc, line));
             }
         }
