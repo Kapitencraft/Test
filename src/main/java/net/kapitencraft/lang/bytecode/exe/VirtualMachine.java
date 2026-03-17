@@ -77,7 +77,7 @@ public class VirtualMachine {
 
     private static class TraceTable {
         private final byte[] localIndexes;
-        private final List<Object[]> entries = new ArrayList<>();
+        private final List<String[]> entries = new ArrayList<>();
         private final int pc;
         private final LocalVariableTable table;
 
@@ -93,15 +93,15 @@ public class VirtualMachine {
                 List<String> v = values[i] = new ArrayList<>();
                 v.add(table.get(pc, localIndexes[i]).getFirst());
             }
-            for (Object[] entry : entries) {
+            for (String[] entry : entries) {
                 for (int i = 0; i < localIndexes.length; i++) {
-                    values[i].add(Util.objToString(entry[i]));
+                    values[i].add(entry[i]);
                 }
             }
 
             record TableRow(int width, List<String> elements) {
                 private void appendHeader(StringBuilder builder) {
-                    builder.append(String.format("%-" + TableRow.this.width + "s", elements().get(0)));
+                    builder.append(String.format("%-" + TableRow.this.width + "s", elements().getFirst()));
                 }
 
                 void appendElement(StringBuilder sink, int index) {
@@ -135,9 +135,9 @@ public class VirtualMachine {
         }
 
         public void lookup(int localBottom) {
-            Object[] elements = new Object[localIndexes.length];
+            String[] elements = new String[localIndexes.length];
             for (int i = 0; i < localIndexes.length; i++) {
-                elements[i] = stack[localBottom + localIndexes[i]];
+                elements[i] = Util.objToString(stack[localBottom + localIndexes[i]]);
             }
             this.entries.add(elements);
         }

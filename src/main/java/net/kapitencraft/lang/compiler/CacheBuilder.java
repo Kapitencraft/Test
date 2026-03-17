@@ -374,7 +374,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitArraySetExpr(Expr.ArraySet expr) {
         //order: arr, index, val -> val
-        ClassReference retType = expr.executor();
+        ClassReference retType = expr.componentType();
         TokenType type = expr.assignType().type();
         boolean hadRetain = retainExprResult;
         retainExprResult = true;

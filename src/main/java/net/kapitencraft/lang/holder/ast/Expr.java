@@ -209,7 +209,8 @@ public interface Expr {
         Expr index, 
         Expr value, 
         Token assignType, 
-        ClassReference executor
+        ClassReference executor, 
+        ClassReference componentType
     ) implements Expr {
 
         @Override

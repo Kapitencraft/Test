@@ -94,7 +94,8 @@
           "index": "Expr",
           "value": "Expr",
           "assignType": "Token",
-          "executor": "ClassReference"
+          "executor": "ClassReference",
+          "componentType": "ClassReference"
         },
         "ArraySpecial": {
           "object": "Expr",

@@ -214,11 +214,11 @@ public class ExprParser extends AbstractParser {
                 if (assign.type() != ASSIGN) executor = getExecutor(fieldType, assign, value);
                 else executor = Executor.UNKNOWN;
                 return new Expr.Set(get.object(), get.name(), value, assign, executor.executor);
-            } else if (expr instanceof Expr.ArrayGet get) {
+            } else if (expr instanceof Expr.ArrayGet(Expr object, Expr index, ClassReference type)) {
                 Executor executor;
-                if (assign.type() != ASSIGN) executor = getExecutor(get, assign, value);
+                if (assign.type() != ASSIGN) executor = getExecutor(expr, assign, value);
                 else executor = Executor.UNKNOWN;
-                return new Expr.ArraySet(get.object(), get.index(), value, assign, executor.executor);
+                return new Expr.ArraySet(object, index, value, assign, executor.executor, type);
             } else if (expr instanceof Expr.StaticGet(ClassReference target, Token name)) {
                 Executor executor;
                 if (assign.type() != ASSIGN) executor = getExecutor(expr, assign, value);
