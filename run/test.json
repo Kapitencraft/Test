@@ -91,7 +91,7 @@
     "output": ["true", "true", "true"]
   },
   {
-    "target": "NumberFormatTest",
-    "output": ["255", "3", "14"]
+    "target": "test.NumberFormatTest",
+    "output": ["255", "3", "14", "0.25", "-24"]
   }
 ]

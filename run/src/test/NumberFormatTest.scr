@@ -6,5 +6,7 @@ class NumberFormatTest {
         System.print(0xFF);
         System.print(0b11);
         System.print(14);
+        System.print(.25);
+        System.print(-24);
     }
 }

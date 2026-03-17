@@ -215,17 +215,25 @@ public class Lexer {
 
     private void number() {
         boolean seenDecimal = match('.');
+        boolean dotPrevious = false;
+        if (tokens.getLast().type() == DOT) {
+            dotPrevious = true;
+            seenDecimal = true;
+            tokens.removeLast();
+        }
         if (source.charAt(start) == '0') {
             if (peek() == 'x') {
-                advance(); advance(); //jump over 0x
-                while (isHexadecimalDigit(peek())) advance();
+                advance();
+                do advance();
+                while (isHexadecimalDigit(peek()));
                 String literal = source.substring(start + 2, current);
                 addToken(NUM, Integer.parseInt(literal, 16), VarTypeManager.INTEGER);
                 return;
             }
             if (peek() == 'b') {
-                advance(); advance(); //jump over 0b
-                while (isBinaryDigit(peek())) advance();
+                advance();
+                do advance();
+                while (isBinaryDigit(peek()));
                 String literal = source.substring(start + 2, current);
                 addToken(NUM, Integer.parseInt(literal, 2), VarTypeManager.INTEGER);
                 return;
@@ -240,6 +248,8 @@ public class Lexer {
             while (isDigit(peek()));
         }
         String literal = source.substring(start, current);
+        if (dotPrevious)
+            literal = "." + literal;
         if (match('f') || match('F')) { //float :hypers:
             addToken(NUM, Float.parseFloat(literal), VarTypeManager.FLOAT);
         } else if (match('d') || match('D')) {
