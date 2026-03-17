@@ -203,6 +203,14 @@ public class Lexer {
         return c >= '0' && c <= '9';
     }
 
+    private boolean isHexadecimalDigit(char c) {
+        return c >= '0' && c <= '9' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
+    }
+
+    private boolean isBinaryDigit(char c) {
+        return c == '0' || c == '1';
+    }
+
     private void number() {
         boolean seenDecimal = match('.');
         while (isDigit(peek())) advance();

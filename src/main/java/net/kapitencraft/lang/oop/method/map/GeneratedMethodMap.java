@@ -27,7 +27,6 @@ public class GeneratedMethodMap implements AbstractMethodMap {
         this.methods.forEach((s, dataMethodContainer) -> {
             for (ScriptedCallable method : dataMethodContainer.methods()) {
                 builder.write16BitShort(method.modifiers());
-                builder.
                 builder.writeArray(s.getBytes());
                 builder.writeArray(VarTypeManager.getMet);
             }
