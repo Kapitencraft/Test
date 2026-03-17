@@ -1,0 +1,10 @@
+package test;
+
+class NumberFormatTest {
+
+    static void main(String[] args) {
+        System.print(0xFF);
+        System.print(0b11);
+        System.print(14);
+    }
+}

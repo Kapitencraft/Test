@@ -203,8 +203,34 @@ public class Lexer {
         return c >= '0' && c <= '9';
     }
 
+    private boolean isHexadecimalDigit(char c) {
+        return c >= '0' && c <= '9' ||
+                c >= 'a' && c <= 'f' ||
+                c >= 'A' && c <= 'F';
+    }
+
+    private boolean isBinaryDigit(char c) {
+        return c == '0' || c == '1';
+    }
+
     private void number() {
         boolean seenDecimal = match('.');
+        if (source.charAt(start) == '0') {
+            if (peek() == 'x') {
+                advance(); advance(); //jump over 0x
+                while (isHexadecimalDigit(peek())) advance();
+                String literal = source.substring(start + 2, current);
+                addToken(NUM, Integer.parseInt(literal, 16), VarTypeManager.INTEGER);
+                return;
+            }
+            if (peek() == 'b') {
+                advance(); advance(); //jump over 0b
+                while (isBinaryDigit(peek())) advance();
+                String literal = source.substring(start + 2, current);
+                addToken(NUM, Integer.parseInt(literal, 2), VarTypeManager.INTEGER);
+                return;
+            }
+        }
         while (isDigit(peek())) advance();
 
         // Look for a fractional part.

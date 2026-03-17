@@ -89,5 +89,9 @@
   {
     "target": "test.BoolAlgebraTest",
     "output": ["true", "true", "true"]
+  },
+  {
+    "target": "NumberFormatTest",
+    "output": ["255", "3", "14"]
   }
 ]
