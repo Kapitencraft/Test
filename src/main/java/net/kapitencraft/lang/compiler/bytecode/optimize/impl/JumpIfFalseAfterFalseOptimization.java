@@ -6,6 +6,9 @@ import net.kapitencraft.lang.compiler.bytecode.optimize.BytecodeOptimizer;
 import net.kapitencraft.lang.compiler.bytecode.optimize.SimpleOptimization;
 import net.kapitencraft.lang.exe.Opcode;
 
+/**
+ * replaces {@code JUMP_IF_FALSE} instructions with pure {@code JUMP} instruction if the original is prefixed by a {@code FALSE} instruction
+ */
 public class JumpIfFalseAfterFalseOptimization implements SimpleOptimization {
     @Override
     public void tryExecute(BytecodeOptimizer.Executor executor, int index) {

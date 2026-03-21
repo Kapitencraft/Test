@@ -5,6 +5,9 @@ import net.kapitencraft.lang.compiler.bytecode.optimize.BytecodeOptimizer;
 import net.kapitencraft.lang.compiler.bytecode.optimize.SimpleOptimization;
 import net.kapitencraft.lang.exe.Opcode;
 
+/**
+ * merges {@code JUMP} instructions targeting other JUMP instructions
+ */
 public class JumpMergeOptimization implements SimpleOptimization {
     @Override
     public void tryExecute(BytecodeOptimizer.Executor executor, int index) {
