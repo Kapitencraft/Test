@@ -5,6 +5,9 @@ import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.compiler.bytecode.ByteCodeBuilder;
 
 public class CodeInstruction implements Instruction {
+    public static final CodeInstruction POP = new CodeInstruction(Opcode.POP);
+    public static final CodeInstruction POP_2 = new CodeInstruction(Opcode.POP_2);
+
     private final Opcode opcode;
 
     public CodeInstruction(Opcode opcode) {

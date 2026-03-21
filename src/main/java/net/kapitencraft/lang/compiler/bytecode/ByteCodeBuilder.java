@@ -20,7 +20,13 @@ public class ByteCodeBuilder {
     }
 
     public void addSimple(Opcode opcode) {
-        add(new CodeInstruction(opcode));
+        add(switch (opcode) {
+            case POP -> CodeInstruction.POP;
+            case POP_2 -> CodeInstruction.POP_2;
+            case INVOKE_STATIC, INVOKE_VIRTUAL, JUMP, JUMP_IF_FALSE,
+                 D_CONST, F_CONST, I_CONST, S_CONST, SWITCH, TRACE -> throw new IllegalStateException("missing required arguments for " + opcode + " instruction");
+            default -> new CodeInstruction(opcode);
+        });
     }
 
     public void addStringInstruction(Opcode opcode, String val) {
