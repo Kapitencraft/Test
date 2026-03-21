@@ -1,19 +1,28 @@
 package net.kapitencraft.lang.compiler.bytecode.optimize.impl;
 
-import net.kapitencraft.lang.compiler.bytecode.instruction.CodeInstruction;
-import net.kapitencraft.lang.compiler.bytecode.instruction.Instruction;
-import net.kapitencraft.lang.compiler.bytecode.instruction.JumpInstruction;
-import net.kapitencraft.lang.compiler.bytecode.instruction.SwitchInstruction;
+import net.kapitencraft.lang.compiler.bytecode.instruction.*;
 import net.kapitencraft.lang.compiler.bytecode.optimize.AdvancedOptimization;
 import net.kapitencraft.lang.exe.Opcode;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+/**
+ * removes instructions that can never be reached in code
+ */
 public class RemoveUnreachableOpcodesOptimization implements AdvancedOptimization {
 
     @Override
     public void optimize(List<Instruction> instructions) {
+        List<ExceptionHandlerInstruction> handlers = new ArrayList<>();
+        for (Instruction instruction : instructions) {
+            if (instruction instanceof ExceptionHandlerInstruction handlerInstruction) {
+                handlers.add(handlerInstruction);
+            }
+        }
+
         ArrayDeque<Integer> ipQueue = new ArrayDeque<>();
         ipQueue.push(0);
         boolean[] flags = new boolean[instructions.size()];
@@ -24,6 +33,14 @@ public class RemoveUnreachableOpcodesOptimization implements AdvancedOptimizatio
                 if (flags[i])
                     break; //check has already happened for these instructions. no need to check again
                 flags[i] = true; //mark instruction as reachable
+                for (Iterator<ExceptionHandlerInstruction> iterator = handlers.iterator(); iterator.hasNext(); ) {
+                    ExceptionHandlerInstruction handler = iterator.next();
+                    if (handler.getHandlerStart() <= i && handler.getHandlerEnd() > i) {
+                        ipQueue.add(handler.getHandlerIP());
+                        iterator.remove(); //handler no longer needs to be analysed
+                    }
+                }
+
                 if (instructions.get(i) instanceof CodeInstruction cI) {
                     if (cI.code() == Opcode.RETURN || cI.code() == Opcode.RETURN_ARG) {
                         break;

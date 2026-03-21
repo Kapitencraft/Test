@@ -25,4 +25,16 @@ public class ExceptionHandlerInstruction implements Instruction {
                 builder.injectStringNoArg(className)
         );
     }
+
+    public int getHandlerStart() {
+        return handlerStart;
+    }
+
+    public int getHandlerEnd() {
+        return handlerEnd;
+    }
+
+    public int getHandlerIP() {
+        return handlerIP;
+    }
 }
