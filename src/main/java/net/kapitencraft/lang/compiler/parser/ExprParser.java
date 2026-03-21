@@ -490,6 +490,7 @@ public class ExprParser extends AbstractParser {
     private int literalOrEnum(ClassReference type) {
         if (check(PRIMITIVE)) {
             if (type.get().isChildOf(VarTypeManager.ENUM.get())) {
+                error(previous(), "enum constant expected");
                 //error wrong type
             }
             return (int) literal();
