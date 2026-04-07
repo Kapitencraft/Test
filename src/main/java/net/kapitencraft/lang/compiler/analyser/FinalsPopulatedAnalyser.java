@@ -36,22 +36,22 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     @Override
     public Void visitSetExpr(Expr.Set expr) {
         //TODO
-        analyse(expr.value());
-        analyse(expr.object());
+        analyse(expr.value);
+        analyse(expr.object);
         return null;
     }
 
     @Override
     public Void visitArraySpecialExpr(Expr.ArraySpecial expr) {
-        analyse(expr.object());
-        analyse(expr.index());
+        analyse(expr.object);
+        analyse(expr.index);
         return null;
     }
 
     @Override
     public Void visitInstCallExpr(Expr.InstCall expr) {
-        analyse(expr.callee());
-        for (Expr arg : expr.args()) {
+        analyse(expr.callee);
+        for (Expr arg : expr.args) {
             analyse(arg);
         }
         return null;
@@ -59,15 +59,15 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitLogicalExpr(Expr.Logical expr) {
-        analyse(expr.left());
-        analyse(expr.right());
+        analyse(expr.left);
+        analyse(expr.right);
         return null;
     }
 
     @Override
     public Void visitSuperCallExpr(Expr.SuperCall expr) {
-        analyse(expr.callee());
-        for (Expr arg : expr.args()) {
+        analyse(expr.callee);
+        for (Expr arg : expr.args) {
             analyse(arg);
         }
         return null;
@@ -75,7 +75,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitComparisonChainExpr(Expr.ComparisonChain expr) {
-        for (Expr entry : expr.entries()) {
+        for (Expr entry : expr.entries) {
             analyse(entry);
         }
         return null;
@@ -83,14 +83,14 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitCastCheckExpr(Expr.CastCheck expr) {
-        analyse(expr.object());
+        analyse(expr.object);
         return null;
     }
 
     @Override
     public Void visitArrayGetExpr(Expr.ArrayGet expr) {
-        analyse(expr.object());
-        analyse(expr.index());
+        analyse(expr.object);
+        analyse(expr.index);
         return null;
     }
 
@@ -101,10 +101,10 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitArrayConstructorExpr(Expr.ArrayConstructor expr) {
-        if (expr.size() != null)
-            analyse(expr.size());
+        if (expr.size != null)
+            analyse(expr.size);
         else {
-            for (Expr arg : expr.obj()) {
+            for (Expr arg : expr.obj) {
                 analyse(arg);
             }
         }
@@ -118,15 +118,15 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitSpecialSetExpr(Expr.SpecialSet expr) {
-        analyse(expr.callee());
+        analyse(expr.callee);
         return null;
     }
 
     @Override
     public Void visitArraySetExpr(Expr.ArraySet expr) {
-        analyse(expr.object());
-        analyse(expr.value());
-        analyse(expr.index());
+        analyse(expr.object);
+        analyse(expr.value);
+        analyse(expr.index);
         return null;
     }
 
@@ -137,7 +137,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitConstructorExpr(Expr.Constructor expr) {
-        for (Expr arg : expr.args()) {
+        for (Expr arg : expr.args) {
             analyse(arg);
         }
         return null;
@@ -145,27 +145,27 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitStaticSetExpr(Expr.StaticSet expr) {
-        analyse(expr.value());
+        analyse(expr.value);
         return null;
     }
 
     @Override
     public Void visitGroupingExpr(Expr.Grouping expr) {
-        analyse(expr.expression());
+        analyse(expr.expression);
         return null;
     }
 
     @Override
     public Void visitUnaryExpr(Expr.Unary expr) {
-        analyse(expr.right());
+        analyse(expr.right);
         return null;
     }
 
     @Override
     public Void visitWhenExpr(Expr.When expr) {
-        analyse(expr.condition());
-        analyse(expr.ifTrue());
-        analyse(expr.ifFalse());
+        analyse(expr.condition);
+        analyse(expr.ifTrue);
+        analyse(expr.ifFalse);
         return null;
     }
 
@@ -176,38 +176,38 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitSwitchExpr(Expr.Switch expr) {
-        analyse(expr.provider());
-        expr.params().values().forEach(this::analyse);
+        analyse(expr.provider);
+        expr.params.values().forEach(this::analyse);
         return null;
     }
 
     @Override
     public Void visitSliceExpr(Expr.Slice expr) {
-        analyse(expr.object());
-        if (expr.start() != null)
-            analyse(expr.start());
-        if (expr.end() != null)
-            analyse(expr.end());
-        if (expr.interval() != null)
-            analyse(expr.interval());
+        analyse(expr.object);
+        if (expr.start != null)
+            analyse(expr.start);
+        if (expr.end != null)
+            analyse(expr.end);
+        if (expr.interval != null)
+            analyse(expr.interval);
         return null;
     }
 
     @Override
     public Void visitGetExpr(Expr.Get expr) {
-        analyse(expr.object());
+        analyse(expr.object);
         return null;
     }
 
     @Override
     public Void visitAssignExpr(Expr.Assign expr) {
-        analyse(expr.value());
+        analyse(expr.value);
         return null;
     }
 
     @Override
     public Void visitStaticCallExpr(Expr.StaticCall expr) {
-        for (Expr arg : expr.args()) {
+        for (Expr arg : expr.args) {
             analyse(arg);
         }
         return null;
@@ -215,8 +215,8 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitBinaryExpr(Expr.Binary expr) {
-        analyse(expr.left());
-        analyse(expr.right());
+        analyse(expr.left);
+        analyse(expr.right);
         return null;
     }
 
@@ -227,24 +227,24 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitForStmt(Stmt.For stmt) {
-        analyse(stmt.init());
-        analyse(stmt.condition());
-        analyse(stmt.increment());
-        analyse(stmt.body());
+        analyse(stmt.init);
+        analyse(stmt.condition);
+        analyse(stmt.increment);
+        analyse(stmt.body);
         return null;
     }
 
     @Override
     public Void visitWhileStmt(Stmt.While stmt) {
-        analyse(stmt.condition());
-        analyse(stmt.body());
+        analyse(stmt.condition);
+        analyse(stmt.body);
         return null;
     }
 
     @Override
     public Void visitForEachStmt(Stmt.ForEach stmt) {
-        analyse(stmt.initializer());
-        analyse(stmt.body());
+        analyse(stmt.initializer);
+        analyse(stmt.body);
         return null;
     }
 
@@ -255,14 +255,14 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
-        analyse(stmt.expression());
+        analyse(stmt.expression);
         return null;
     }
 
     @Override
     public Void visitVarDeclStmt(Stmt.VarDecl stmt) {
-        if (stmt.initializer() != null)
-            analyse(stmt.initializer());
+        if (stmt.initializer != null)
+            analyse(stmt.initializer);
         return null;
     }
 
@@ -273,7 +273,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitBlockStmt(Stmt.Block stmt) {
-        for (Stmt statement : stmt.statements()) {
+        for (Stmt statement : stmt.statements) {
             analyse(statement);
         }
         return null;
@@ -281,8 +281,8 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitTryStmt(Stmt.Try stmt) {
-        analyse(stmt.body());
-        for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches()) {
+        analyse(stmt.body);
+        for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches) {
             analyse(aCatch.getSecond());
         }
         return null;
@@ -295,14 +295,14 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitIfStmt(Stmt.If stmt) {
-        analyse(stmt.condition());
-        analyse(stmt.thenBranch());
-        for (ElifBranch branch : stmt.elifs()) {
+        analyse(stmt.condition);
+        analyse(stmt.thenBranch);
+        for (ElifBranch branch : stmt.elifs) {
             analyse(branch.condition());
             analyse(branch.body());
         }
-        if (stmt.elseBranch() != null)
-            analyse(stmt.elseBranch());
+        if (stmt.elseBranch != null)
+            analyse(stmt.elseBranch);
         return null;
     }
 

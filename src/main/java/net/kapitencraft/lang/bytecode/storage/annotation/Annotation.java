@@ -211,14 +211,14 @@ public class Annotation {
 
     public static EntryValue fromExpr(Expr expr) {
         if (expr instanceof Expr.Literal literal) {
-            Object object = literal.literal().literal().value();
+            Object object = literal.literal.literal().value();
             if (object instanceof String s) return new StringValue(s);
             else return new NumberValue((Number) object);
         } else if (expr instanceof Expr.StaticGet get) {
-            return new EnumValue(VarTypeManager.getClassName(get.target()), get.name().lexeme());
+            return new EnumValue(VarTypeManager.getClassName(get.target), get.name.lexeme());
         } else if (expr instanceof Expr.ArrayConstructor constructor) {
-            if (constructor.size() != null) return new ArrayValue(new EntryValue[0]);
-            return new ArrayValue(Arrays.stream(constructor.obj()).map(Annotation::fromExpr).toArray(EntryValue[]::new));
+            if (constructor.size != null) return new ArrayValue(new EntryValue[0]);
+            return new ArrayValue(Arrays.stream(constructor.obj).map(Annotation::fromExpr).toArray(EntryValue[]::new));
         }
         return null; //TODO
     }

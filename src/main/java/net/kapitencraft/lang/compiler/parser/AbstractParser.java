@@ -1,23 +1,18 @@
 package net.kapitencraft.lang.compiler.parser;
 
-import com.google.common.collect.ImmutableList;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
-import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
-import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
-import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
-import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
-import net.kapitencraft.lang.oop.Package;
-import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.compiler.VarTypeParser;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
-import net.kapitencraft.lang.compiler.analyser.RetTypeAnalyser;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
+import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
+import net.kapitencraft.lang.oop.Package;
+import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +22,6 @@ import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 @SuppressWarnings({"ThrowableNotThrown", "UnusedReturnValue"})
 public class AbstractParser {
-    protected static final ClassReference WILDCARD = new GenericClassReference("", null, null);
 
     private static final Map<TokenTypeCategory, TokenType[]> categoryLookup = createCategoryLookup();
 
@@ -42,108 +36,9 @@ public class AbstractParser {
     protected int current;
     protected Token[] tokens;
     protected VarTypeParser parser;
-    protected RetTypeAnalyser finder;
     protected final LocationAnalyser locFinder = new LocationAnalyser();
-    protected final Deque<List<ClassReference>> args = new ArrayDeque<>();
     protected final Compiler.ErrorStorage errorStorage;
-    protected BytecodeVars varAnalyser;
 
-    protected ClassReference checkVarExistence(Token name, boolean requireValue, boolean mayBeFinal) {
-        String varName = name.lexeme();
-        BytecodeVars.FetchResult result = varAnalyser.get(varName);
-        if (result == BytecodeVars.FetchResult.FAIL) {
-            error(name, "cannot find symbol");
-        } else if (requireValue && !result.assigned()) {
-            error(name, "Variable '" + name.lexeme() + "' might not have been initialized");
-        } else if (!mayBeFinal && !result.canAssign()) {
-            error(name, "Can not assign to final variable");
-        }
-        return result.type();
-    }
-
-    protected void checkVarType(Token name, Expr value) {
-        BytecodeVars.FetchResult result = varAnalyser.get(name.lexeme());
-        if (result == BytecodeVars.FetchResult.FAIL) return;
-        expectType(name, value, result.type());
-    }
-
-    protected void expectType(ClassReference... types) {
-        args.push(List.of(types));
-    }
-
-    protected void popExpectation() {
-        args.pop();
-    }
-
-    protected boolean typeAllowed(ClassReference target) {
-        return searched().contains(target);
-    }
-
-    protected List<ClassReference> searched() {
-        return args.getLast();
-    }
-
-    protected void expectType(List<ClassReference> types) {
-        args.push(ImmutableList.copyOf(types));
-    }
-
-    protected ClassReference expectType(Token errorLoc, Expr value, ClassReference type) {
-        ClassReference got = finder.findRetType(value);
-        return expectType(errorLoc, got, type);
-    }
-
-    protected ClassReference expectType(Expr value, ClassReference type) {
-        return expectType(this.locFinder.find(value), value, type);
-    }
-
-    protected void expectCondition(Token errorLoc, Expr gotten) {
-        expectType(errorLoc, gotten, VarTypeManager.BOOLEAN.reference());
-    }
-
-    protected void expectCondition(Expr gotten) {
-        expectCondition(locFinder.find(gotten), gotten);
-    }
-
-    protected ClassReference expectType(Token errorLoc, ClassReference gotten, ClassReference expected) {
-        if (gotten == null) return WILDCARD;
-        if (gotten == WILDCARD) return expected;
-        if (expected == VarTypeManager.OBJECT) return gotten;
-        if (!gotten.get().isChildOf(expected.get()))
-            errorStorage.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
-        if (gotten instanceof AppliedGenericsReference reference) {
-            if (expected instanceof AppliedGenericsReference reference1) {
-                Holder.AppliedGenerics gottenAppliedGenerics = reference.getApplied();
-                Holder.AppliedGenerics expectedAppliedGenerics = reference1.getApplied();
-                ClassReference[] expectedGenerics = expectedAppliedGenerics.references();
-                ClassReference[] gottenGenerics = gottenAppliedGenerics.references();
-
-                if (expectedGenerics.length != gottenGenerics.length) {
-                    errorStorage.errorF(gottenAppliedGenerics.reference(), "Wrong number of type arguments: %s; required: %s", gottenGenerics.length, expectedGenerics.length);
-                } else {
-                    for (int i = 0; i < expectedGenerics.length; i++) {
-                        if (!expectedGenerics[i].get().isChildOf(gottenGenerics[i].get())) {
-                            String name = reference1.getGenerics().variables()[i].name().lexeme();
-                            errorStorage.errorF(reference.getApplied().reference(), "incompatible types: inference variable %s has incompatible bounds", name);
-
-                            errorStorage.logError("gotten: " + gottenGenerics[i].name());
-                            errorStorage.logError("lower bounds: " + expectedGenerics[i].name());
-                        }
-                    }
-                }
-            } else {
-                errorStorage.errorF(reference.getApplied().reference(), "Type '%s' does not have type parameters", expected.absoluteName());
-            }
-        }
-        return gotten;
-    }
-
-    protected byte createVar(Token name, ClassReference type, boolean hasValue, boolean isFinal) {
-        BytecodeVars.FetchResult result = varAnalyser.get(name.lexeme());
-        if (result != BytecodeVars.FetchResult.FAIL) {
-            errorStorage.errorF(name, "Variable '%s' already defined in current scope", name.lexeme());
-        }
-        return varAnalyser.add(name.lexeme(), type, !isFinal, hasValue);
-    }
 
     public AbstractParser(Compiler.ErrorStorage errorStorage) {
         this.errorStorage = errorStorage;
@@ -153,8 +48,6 @@ public class AbstractParser {
         this.current = 0;
         this.tokens = toParse;
         this.parser = targetAnalyser;
-        this.varAnalyser = new BytecodeVars();
-        this.finder = new RetTypeAnalyser(varAnalyser);
     }
 
     protected @Nullable Holder.AppliedGenerics appliedGenerics(GenericStack stack) {
@@ -287,7 +180,7 @@ public class AbstractParser {
     protected Optional<SourceClassReference> tryConsumeVarType(GenericStack generics) {
         Optional<ClassReference> optional = generics.getValue(peek().lexeme());
         if (optional.isPresent()) return Optional.of(SourceClassReference.from(advance(), optional.get()));
-        if (VarTypeManager.hasPackage(peek().lexeme()) && varAnalyser.get(peek().lexeme()) == BytecodeVars.FetchResult.FAIL) {
+        if (VarTypeManager.hasPackage(peek().lexeme())) {
             advance();
             if (check(DOT)) {
                 current--;
@@ -388,7 +281,8 @@ public class AbstractParser {
         return this.consumeNoThrow(EOA, "';' expected");
     }
 
-    protected static class ParseError extends RuntimeException {}
+    protected static class ParseError extends RuntimeException {
+    }
 
     protected ParseError error(Token token, String message) {
         errorStorage.error(token, message);

@@ -186,6 +186,10 @@ public class Compiler {
             error(loc, String.format(format, args));
         }
 
+        public void errorF(Expr loc, String format, Object... args) {
+            errorF(finder.find(loc), format, args);
+        }
+
         public void error(int lineIndex, int lineStartIndex, String msg) {
             if (errorCount++ < 100)
                 messages.add(new Error(lineIndex, lineStartIndex, msg, lines[lineIndex - 1]));

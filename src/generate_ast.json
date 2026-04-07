@@ -7,20 +7,22 @@
           "value": "Expr",
           "type": "Token",
           "ordinal": "byte",
-          "executor": "ClassReference"
+          "executor": "ClassReference",
+          "signature": "String"
         },
         "SpecialAssign": {
           "name": "Token",
           "assignType": "Token",
           "ordinal": "int",
-          "executor": "ClassReference"
+          "executor": "ClassReference",
+          "signature": "String"
         },
         "Binary": {
           "left": "Expr",
           "right": "Expr",
           "operator": "Token",
           "executor": "ClassReference",
-          "retType": "ClassReference"
+          "signature": "String"
         },
         "When": {
           "condition": "Expr",
@@ -28,26 +30,23 @@
           "ifFalse": "Expr"
         },
         "InstCall": {
-          "callee": "Expr",
+          "object": "Expr",
           "name": "Token",
           "args": "Expr[]",
-          "retType": "ClassReference",
-          "id": "String"
+          "signature": "String"
         },
         "StaticCall": {
           "target": "ClassReference",
           "name": "Token",
           "args": "Expr[]",
-          "retType": "ClassReference",
-          "id": "String"
+          "signature": "String"
         },
         "SuperCall": {
-          "callee": "Expr",
+          "object": "Expr",
           "type": "ClassReference",
           "name": "Token",
           "args": "Expr[]",
-          "retType": "ClassReference",
-          "id": "String"
+          "signature": "String"
         },
         "Get": {
           "object": "Expr",
@@ -61,33 +60,36 @@
         "ArrayGet": {
           "object": "Expr",
           "index": "Expr",
-          "type": "ClassReference"
+          "componentType": "ClassReference"
         },
         "Set": {
           "object": "Expr",
           "name": "Token",
           "value": "Expr",
           "assignType": "Token",
-          "executor": "ClassReference"
+          "executor": "ClassReference",
+          "signature": "String"
         },
         "SpecialSet": {
-          "callee": "Expr",
+          "object": "Expr",
           "name": "Token",
           "assignType": "Token",
-          "retType": "ClassReference"
+          "signature": "String"
         },
         "StaticSet": {
           "target": "ClassReference",
           "name": "Token",
           "value": "Expr",
           "assignType": "Token",
-          "executor": "ClassReference"
+          "executor": "ClassReference",
+          "signature": "String"
         },
         "StaticSpecial": {
           "target": "ClassReference",
           "name": "Token",
           "assignType": "Token",
-          "executor": "ClassReference"
+          "executor": "ClassReference",
+          "signature": "String"
         },
         "ArraySet": {
           "object": "Expr",
@@ -95,13 +97,15 @@
           "value": "Expr",
           "assignType": "Token",
           "executor": "ClassReference",
-          "componentType": "ClassReference"
+          "componentType": "ClassReference",
+          "signature": "String"
         },
         "ArraySpecial": {
           "object": "Expr",
           "index": "Expr",
           "assignType": "Token",
-          "executor": "ClassReference"
+          "executor": "ClassReference",
+          "signature": "String"
         },
         "Slice": {
           "object": "Expr",
@@ -111,7 +115,7 @@
         },
         "Switch": {
           "provider": "Expr",
-          "params": "Map<Integer,Expr>",
+          "params": "SwitchKey[]",
           "defaulted": "Expr",
           "keyword": "Token"
         },
@@ -119,9 +123,6 @@
           "object": "Expr",
           "targetType": "ClassReference",
           "patternVarName": "Token"
-        },
-        "Grouping": {
-          "expression": "Expr"
         },
         "Literal": {
           "literal": "Token"
@@ -159,15 +160,16 @@
         }
       },
       "imports": [
-        "net.kapitencraft.lang.run.algebra.Operand",
-        "java.util.Map",
-        "net.kapitencraft.lang.holder.LiteralHolder"
-      ]
+        "java.util.Map"
+      ],
+      "fields": {
+        "retType": "ClassReference"
+      }
     },
     "Stmt": {
       "values": {
         "Block": {
-          "statements": "Stmt[]"
+          "statements": "List<Stmt>"
         },
         "Expression": {
           "expression": "Expr"
@@ -227,11 +229,13 @@
         },
         "DebugTrace": {
           "keyword": "Token",
-          "locals": "byte[]"
+          "localNames": "Token[]",
+          "localOrdinals": "byte[]"
         }
       },
       "imports": [
-        "net.kapitencraft.tool.Pair"
+        "net.kapitencraft.tool.Pair",
+        "java.util.List"
       ]
     }
   },

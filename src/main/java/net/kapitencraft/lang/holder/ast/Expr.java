@@ -2,9 +2,9 @@ package net.kapitencraft.lang.holder.ast;
 
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.algebra.Operand;
+
+import java.util.List;
 import java.util.Map;
-import net.kapitencraft.lang.holder.LiteralHolder;
 
 public interface Expr {
 
@@ -40,10 +40,10 @@ public interface Expr {
 
     <R> R accept(Visitor<R> visitor);
 
-    record VarRef(
-        Token name, 
-        byte ordinal
-    ) implements Expr {
+    class VarRef implements Expr {
+        public Token name; 
+        public byte ordinal;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -51,13 +51,13 @@ public interface Expr {
         }
     }
 
-    record Set(
-        Expr object, 
-        Token name, 
-        Expr value, 
-        Token assignType, 
-        ClassReference executor
-    ) implements Expr {
+    class Set implements Expr {
+        public Expr object;
+        public Token name;
+        public Expr value;
+        public Token assignType; 
+        public ClassReference executor;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -65,12 +65,12 @@ public interface Expr {
         }
     }
 
-    record ArraySpecial(
-        Expr object, 
-        Expr index, 
-        Token assignType, 
-        ClassReference executor
-    ) implements Expr {
+    class ArraySpecial implements Expr {
+        public Expr object; 
+        public Expr index; 
+        public Token assignType; 
+        public ClassReference executor;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -78,13 +78,12 @@ public interface Expr {
         }
     }
 
-    record InstCall(
-        Expr callee, 
-        Token name, 
-        Expr[] args, 
-        ClassReference retType, 
-        String id
-    ) implements Expr {
+    class InstCall implements Expr {
+        public Expr callee; 
+        public Token name; 
+        public Expr[] args; 
+        public String id;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -92,11 +91,11 @@ public interface Expr {
         }
     }
 
-    record Logical(
-        Expr left, 
-        Token operator, 
-        Expr right
-    ) implements Expr {
+    class Logical implements Expr {
+        public Expr left; 
+        public Token operator; 
+        public Expr right;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -104,14 +103,13 @@ public interface Expr {
         }
     }
 
-    record SuperCall(
-        Expr callee, 
-        ClassReference type, 
-        Token name, 
-        Expr[] args, 
-        ClassReference retType, 
-        String id
-    ) implements Expr {
+    class SuperCall implements Expr {
+        public Expr callee; 
+        public ClassReference type; 
+        public Token name; 
+        public Expr[] args; 
+        public String id;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -119,11 +117,11 @@ public interface Expr {
         }
     }
 
-    record ComparisonChain(
-        Expr[] entries, 
-        Token[] types, 
-        ClassReference dataType
-    ) implements Expr {
+    class ComparisonChain implements Expr {
+        public Expr[] entries; 
+        public Token[] types; 
+        public ClassReference dataType;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -131,11 +129,11 @@ public interface Expr {
         }
     }
 
-    record CastCheck(
-        Expr object, 
-        ClassReference targetType, 
-        Token patternVarName
-    ) implements Expr {
+    class CastCheck implements Expr {
+        public Expr object; 
+        public ClassReference targetType; 
+        public Token patternVarName;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -143,11 +141,11 @@ public interface Expr {
         }
     }
 
-    record ArrayGet(
-        Expr object, 
-        Expr index, 
-        ClassReference type
-    ) implements Expr {
+    class ArrayGet implements Expr {
+        public Expr object;
+        public Expr index;
+        public ClassReference type;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -155,9 +153,9 @@ public interface Expr {
         }
     }
 
-    record Literal(
-        Token literal
-    ) implements Expr {
+    class Literal implements Expr {
+        public Token literal;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -165,12 +163,12 @@ public interface Expr {
         }
     }
 
-    record ArrayConstructor(
-        Token keyword, 
-        ClassReference compoundType, 
-        Expr size, 
-        Expr[] obj
-    ) implements Expr {
+    class ArrayConstructor implements Expr {
+        public Token keyword; 
+        public ClassReference compoundType; 
+        public Expr size; 
+        public Expr[] obj;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -178,12 +176,12 @@ public interface Expr {
         }
     }
 
-    record StaticSpecial(
-        ClassReference target, 
-        Token name, 
-        Token assignType, 
-        ClassReference executor
-    ) implements Expr {
+    class StaticSpecial implements Expr {
+        public ClassReference target; 
+        public Token name; 
+        public Token assignType; 
+        public ClassReference executor;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -191,12 +189,11 @@ public interface Expr {
         }
     }
 
-    record SpecialSet(
-        Expr callee, 
-        Token name, 
-        Token assignType, 
-        ClassReference retType
-    ) implements Expr {
+    class SpecialSet implements Expr {
+        public Expr callee; 
+        public Token name; 
+        public Token assignType;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -204,14 +201,14 @@ public interface Expr {
         }
     }
 
-    record ArraySet(
-        Expr object, 
-        Expr index, 
-        Expr value, 
-        Token assignType, 
-        ClassReference executor, 
-        ClassReference componentType
-    ) implements Expr {
+    class ArraySet implements Expr {
+        public Expr object; 
+        public Expr index; 
+        public Expr value; 
+        public Token assignType; 
+        public ClassReference executor; 
+        public ClassReference componentType;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -219,12 +216,12 @@ public interface Expr {
         }
     }
 
-    record SpecialAssign(
-        Token name, 
-        Token assignType, 
-        int ordinal, 
-        ClassReference executor
-    ) implements Expr {
+    class SpecialAssign implements Expr {
+        public Token name; 
+        public Token assignType; 
+        public int ordinal; 
+        public ClassReference executor;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -232,12 +229,12 @@ public interface Expr {
         }
     }
 
-    record Constructor(
-        Token keyword, 
-        ClassReference target, 
-        Expr[] args, 
-        String signature
-    ) implements Expr {
+    class Constructor implements Expr {
+        public Token keyword; 
+        public ClassReference target; 
+        public Expr[] args; 
+        public String signature;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -245,13 +242,13 @@ public interface Expr {
         }
     }
 
-    record StaticSet(
-        ClassReference target, 
-        Token name, 
-        Expr value, 
-        Token assignType, 
-        ClassReference executor
-    ) implements Expr {
+    class StaticSet implements Expr {
+        public ClassReference target; 
+        public Token name; 
+        public Expr value; 
+        public Token assignType; 
+        public ClassReference executor;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -259,9 +256,9 @@ public interface Expr {
         }
     }
 
-    record Grouping(
-        Expr expression
-    ) implements Expr {
+    class Grouping implements Expr {
+        public Expr expression;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -269,11 +266,11 @@ public interface Expr {
         }
     }
 
-    record Unary(
-        Token operator, 
-        Expr right, 
-        ClassReference executor
-    ) implements Expr {
+    class Unary implements Expr {
+        public Token operator; 
+        public Expr right; 
+        public ClassReference executor;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -281,11 +278,11 @@ public interface Expr {
         }
     }
 
-    record When(
-        Expr condition, 
-        Expr ifTrue, 
-        Expr ifFalse
-    ) implements Expr {
+    class When implements Expr {
+        public Expr condition; 
+        public Expr ifTrue; 
+        public Expr ifFalse;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -293,10 +290,10 @@ public interface Expr {
         }
     }
 
-    record StaticGet(
-        ClassReference target, 
-        Token name
-    ) implements Expr {
+    class StaticGet implements Expr {
+        public ClassReference target; 
+        public Token name;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -304,12 +301,12 @@ public interface Expr {
         }
     }
 
-    record Switch(
-        Expr provider, 
-        Map<Integer,Expr> params, 
-        Expr defaulted, 
-        Token keyword
-    ) implements Expr {
+    class Switch implements Expr {
+        public Expr provider; 
+        public SwitchKey[] params;
+        public Expr defaulted; 
+        public Token keyword;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -317,12 +314,12 @@ public interface Expr {
         }
     }
 
-    record Slice(
-        Expr object, 
-        Expr start, 
-        Expr end, 
-        Expr interval
-    ) implements Expr {
+    class Slice implements Expr {
+        public Expr object; 
+        public Expr start; 
+        public Expr end; 
+        public Expr interval;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -330,11 +327,11 @@ public interface Expr {
         }
     }
 
-    record Get(
-        Expr object, 
-        Token name, 
-        ClassReference type
-    ) implements Expr {
+    class Get implements Expr {
+        public Expr object; 
+        public Token name; 
+        public ClassReference type;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -342,13 +339,13 @@ public interface Expr {
         }
     }
 
-    record Assign(
-        Token name, 
-        Expr value, 
-        Token type, 
-        byte ordinal, 
-        ClassReference executor
-    ) implements Expr {
+    class Assign implements Expr {
+        public Token name; 
+        public Expr value; 
+        public Token type; 
+        public byte ordinal; 
+        public ClassReference executor;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -356,13 +353,12 @@ public interface Expr {
         }
     }
 
-    record StaticCall(
-        ClassReference target, 
-        Token name, 
-        Expr[] args, 
-        ClassReference retType, 
-        String id
-    ) implements Expr {
+    class StaticCall implements Expr {
+        public ClassReference target; 
+        public Token name; 
+        public Expr[] args; 
+        public String id;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -370,13 +366,12 @@ public interface Expr {
         }
     }
 
-    record Binary(
-        Expr left, 
-        Expr right, 
-        Token operator, 
-        ClassReference executor, 
-        ClassReference retType
-    ) implements Expr {
+    class Binary implements Expr {
+        public Expr left; 
+        public Expr right; 
+        public Token operator; 
+        public ClassReference executor;
+        public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {

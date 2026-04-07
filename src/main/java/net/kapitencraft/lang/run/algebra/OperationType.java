@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.run.algebra;
 
-import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import org.jetbrains.annotations.Nullable;
@@ -14,6 +13,10 @@ public enum OperationType {
     DIVISION("div", TokenType.DIV, TokenType.DIV_ASSIGN),
     MODULUS("mod", TokenType.MOD, TokenType.MOD_ASSIGN),
     POTENCY("pow", TokenType.POW, TokenType.POW_ASSIGN),
+    GROW("grow", TokenType.GROW),
+    SHRINK("shrink", TokenType.SHRINK),
+    NEGATE("negate", TokenType.NOT),
+    INVERT("invert", TokenType.SUB),
     LEQUAL(null, TokenType.LEQUAL),
     NEQUAL(null, TokenType.NEQUAL),
     GEQUAL(null, TokenType.GEQUAL),

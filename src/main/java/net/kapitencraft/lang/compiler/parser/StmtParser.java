@@ -42,17 +42,16 @@ public class StmtParser extends ExprParser {
     }
 
     private void pushScope() {
-        varAnalyser.push();
         seenReturn.add(false);
     }
 
-    private int popScope() {
+    private void popScope() {
         seenReturn.pop();
-        return varAnalyser.pop();
     }
 
     private Stmt popScopeStmt() {
-        return new Stmt.ClearLocals(popScope());
+        popScope();
+        return new Stmt.ClearLocals();
     }
 
     private Stmt declaration() {
@@ -77,14 +76,19 @@ public class StmtParser extends ExprParser {
             initializer = expression();
         }
 
-        byte index = createVar(name, type, initializer != null, isFinal);
-
-        if (initializer != null) {
-            checkVarType(name, initializer);
-        }
+        //byte index = createVar(name, type, initializer != null, isFinal);
+//
+        //if (initializer != null) {
+        //    checkVarType(name, initializer);
+        //}
 
         consumeEndOfArg();
-        return new Stmt.VarDecl(name, type, initializer, isFinal, index);
+        Stmt.VarDecl varDecl = new Stmt.VarDecl();
+        varDecl.name = name;
+        varDecl.type = type;
+        varDecl.initializer = initializer;
+        varDecl.isFinal = isFinal;
+        return varDecl;
     }
 
     private Stmt varDeclaration(boolean isFinal, ClassReference type) {
@@ -94,7 +98,11 @@ public class StmtParser extends ExprParser {
 
     private Stmt statement() {
         try {
-            if (match(C_BRACKET_O)) return new Stmt.Block(block("block"));
+            if (match(C_BRACKET_O)) {
+                Stmt.Block block = new Stmt.Block();
+                block.statements = block("block");
+                return block;
+            }
             if (match(RETURN)) return returnStatement();
             if (match(TRY)) return tryStatement();
             if (match(THROW)) return thrStatement();
@@ -113,27 +121,24 @@ public class StmtParser extends ExprParser {
 
     private Stmt debugTrace() {
         Token keyword = previous();
-        List<String> locals = new ArrayList<>();
+        List<Token> locals = new ArrayList<>();
         if (match(S_BRACKET_O)) {
             do {
-                Token token = consumeIdentifier();
-                if (this.varAnalyser.get(token.lexeme()) == BytecodeVars.FetchResult.FAIL) {
-                    error(token, "no local variable named '" + token.lexeme() + "'");
-                }
-                locals.add(token.lexeme());
+                locals.add(consumeIdentifier());
             } while (match(COMMA));
             consume(S_BRACKET_C, "expected ']' after trace debug");
-        } else {
-            locals = this.varAnalyser.dumpNames();
         }
         consumeEndOfArg();
-        byte[] localIndexes = this.varAnalyser.gatherLocalIndexes(locals);
-        return new Stmt.DebugTrace(keyword, localIndexes);
+        Stmt.DebugTrace debugTrace = new Stmt.DebugTrace();
+        debugTrace.keyword = keyword;
+        debugTrace.localNames = locals.toArray(Token[]::new);
+        return debugTrace;
     }
 
     private Stmt tryStatement() {
         consumeCurlyOpen("try statement");
-        Stmt.Block tryBlock = new Stmt.Block(block("try statement"));
+        Stmt.Block tryBlock = new Stmt.Block();
+        tryBlock.statements = block("try statement");
         Token brClose = previous();
 
         List<Pair<Pair<ClassReference[],Token>, Stmt.Block>> catches = new ArrayList<>(); //what an insane varType
@@ -146,38 +151,41 @@ public class StmtParser extends ExprParser {
             pushScope();
             Token name = consumeIdentifier();
             consumeBracketClose("catch");
-            createVar(name, VarTypeManager.THROWABLE, true, false);
             consumeCurlyOpen("catch statement");
-            Stmt.Block block = new Stmt.Block(block("catch statement"));
-            block = new Stmt.Block(new Stmt[] {
-                    block,
-                    popScopeStmt()
-            });
+            Stmt.Block body = new Stmt.Block();
+            body.statements =  block("catch statement");
+            body.statements.add(popScopeStmt());
             catches.add(Pair.of(
                     Pair.of(
                             targets.toArray(new ClassReference[0]),
                             name
                     ),
-                    block
+                    body
             ));
         }
         Stmt.Block finallyBlock = null;
         if (match(FINALLY)) {
             consumeCurlyOpen("finally statement");
-            finallyBlock = new Stmt.Block(block("finally statement"));
+            finallyBlock = new Stmt.Block();
+            finallyBlock.statements = block("finally statement");
         } else if (catches.isEmpty()) error(brClose, "expected 'catch' or 'finally'");
-        return new Stmt.Try(tryBlock, catches.toArray(Pair[]::new), finallyBlock);
+
+        Stmt.Try aTry = new Stmt.Try();
+        aTry.body = tryBlock;
+        aTry.catches = catches.toArray(Pair[]::new);
+        aTry.finale = finallyBlock;
+        return aTry;
     }
 
     private Stmt thrStatement() {
         Token keyword = previous();
-        expectType(VarTypeManager.THROWABLE);
         Expr val = expression();
-        expectType(val, VarTypeManager.THROWABLE);
         consumeEndOfArg();
-        popExpectation();
         seenReturn();
-        return new Stmt.Throw(keyword, val);
+        Stmt.Throw aThrow = new Stmt.Throw();
+        aThrow.keyword = keyword;
+        aThrow.value = val;
+        return aThrow;
     }
 
     private Stmt returnStatement() {
@@ -187,13 +195,12 @@ public class StmtParser extends ExprParser {
             value = expression();
         }
 
-        if (funcRetType == VarTypeManager.VOID.reference() && value != null) error(keyword, "incompatible types: unexpected return value.");
-        else if (value != null) expectType(value, funcRetType);
-        else if (funcRetType != VarTypeManager.VOID.reference()) error(keyword, "incompatible types: missing return value.");
-
         consumeEndOfArg();
         seenReturn();
-        return new Stmt.Return(keyword, value);
+        Stmt.Return aReturn = new Stmt.Return();
+        aReturn.keyword = keyword;
+        aReturn.value = value;
+        return aReturn;
     }
 
     private Stmt loopInterruptionStatement() {
@@ -201,7 +208,9 @@ public class StmtParser extends ExprParser {
         if (loopIndex <= 0) error(token, "'" + token.lexeme() + "' can only be used inside loops");
         consumeEndOfArg();
         seenReturn();
-        return new Stmt.LoopInterruption(token);
+        Stmt.LoopInterruption loopInterruption = new Stmt.LoopInterruption();
+        loopInterruption.type = token;
+        return loopInterruption;
     }
 
     private Stmt forStatement() {
@@ -216,28 +225,19 @@ public class StmtParser extends ExprParser {
             Token name = consumeIdentifier();
             ClassReference reference = type.get().getReference();
             if (match(COLON)) {
-                ClassReference arrayType = reference.array();
-                expectType(arrayType);
                 Expr init = expression();
-                popExpectation();
-                expectType(init, arrayType);
                 consumeBracketClose("for");
-                //add 2 synthetic vars
-                int baseVar = varAnalyser.add("?", reference.array(), false, true); //array variable
-                varAnalyser.add("?", VarTypeManager.INTEGER.reference(), false, true); //iteration variable
                 pushScope();
                 loopIndex++;
 
-                varAnalyser.add(name.lexeme(), reference, true, true); //named variable from sourcecode
                 Stmt stmt = statement();
-                loopIndex--;
-                stmt = new Stmt.Block(
-                        new Stmt[] {
-                                stmt,
-                                popScopeStmt()
-                        }
-                );
-                return new Stmt.ForEach(reference, name, init, stmt, baseVar);
+                stmt = mergeBody(stmt, popScopeStmt());
+                Stmt.ForEach forEach = new Stmt.ForEach();
+                forEach.type = reference;
+                forEach.name = name;
+                forEach.initializer = init;
+                forEach.body = stmt;
+                return forEach;
             }
             pushScope();
             loopIndex++;
@@ -260,7 +260,6 @@ public class StmtParser extends ExprParser {
         if (!check(EOA)) {
             condition = expression();
         }
-        expectCondition(condition);
         consumeEndOfArg();
 
         Expr increment = null;
@@ -273,90 +272,83 @@ public class StmtParser extends ExprParser {
 
         Stmt body = statement();
 
-        body = new Stmt.Block(new Stmt[] {
-                body,
-                popScopeStmt()
-        });
+        body = mergeBody(body, popScopeStmt());
 
-        loopIndex--;
-
-        int localsCleared = popScope();
-
-        return new Stmt.For(initializer, condition, increment, body, keyword, localsCleared);
+        Stmt.For aFor = new Stmt.For();
+        aFor.init = initializer;
+        aFor.condition = condition;
+        aFor.increment = increment;
+        aFor.body = body;
+        aFor.keyword = keyword;
+        return aFor;
     }
 
     private Stmt ifStatement() {
-        Token statement = previous();
+        Token keyword = previous();
         consumeBracketOpen("if");
         Expr condition = expression();
-        this.expectCondition(condition);
         consumeBracketClose("if condition");
 
-        this.pushScope();
         Stmt thenBranch = statement();
-        boolean branchSeenReturn = seenReturn.peek();
-        thenBranch = new Stmt.Block(
-                new Stmt[] {
-                        thenBranch,
-                        popScopeStmt()
-                }
-        );
+        thenBranch = mergeBody(thenBranch, popScopeStmt());
         Stmt elseBranch = null;
         List<ElifBranch> elifs = new ArrayList<>();
         while (match(ELIF)) {
             consumeBracketOpen("elif");
             Expr elifCondition = expression();
-            this.expectCondition(elifCondition);
             consumeBracketClose("elif condition");
-            this.pushScope();
             Stmt elifStmt = statement();
-            boolean seenReturn = this.seenReturn.peek();
-            branchSeenReturn &= seenReturn;
-            elifStmt = new Stmt.Block(new Stmt[] {
-                    elifStmt,
-                    popScopeStmt()
-            });
-            elifs.add(new ElifBranch(elifCondition, elifStmt, seenReturn));
+            elifStmt = mergeBody(elifStmt, popScopeStmt());
+            elifs.add(new ElifBranch(elifCondition, elifStmt, false));
         }
 
         if (match(ELSE)) {
-            this.pushScope();
             elseBranch = statement();
-            branchSeenReturn &= seenReturn.peek();
-            elseBranch = new Stmt.Block(
-                    new Stmt[] {
-                            elseBranch,
-                            popScopeStmt()
-                    }
-            );
-        } else
-            branchSeenReturn = false;
+            elseBranch = mergeBody(elseBranch, popScopeStmt());
+        }
 
-        if (branchSeenReturn)
-            seenReturn(); //current scope has seen return only if all branches have seen return and there exists an else branch
+        Stmt.If anIf = new Stmt.If();
+        anIf.condition = condition;
+        anIf.thenBranch = thenBranch;
+        anIf.elseBranch = elseBranch;
+        anIf.elifs = elifs.toArray(ElifBranch[]::new);
+        anIf.keyword = keyword;
+        return anIf;
+    }
 
-        return new Stmt.If(condition, thenBranch, elseBranch, elifs.toArray(ElifBranch[]::new), statement);
+    private Stmt mergeBody(Stmt first, Stmt second) {
+        if (first instanceof Stmt.Block block) {
+            block.statements.add(second);
+            return block;
+        } else  if (second instanceof Stmt.Block block) {
+            block.statements.addFirst(first);
+            return block;
+        }
+        Stmt.Block stmt = new Stmt.Block();
+        stmt.statements = new ArrayList<>();
+        stmt.statements.add(first);
+        stmt.statements.add(second);
+        return stmt;
     }
 
     private Stmt whileStatement() {
         Token keyword = previous();
         consumeBracketOpen("while");
         Expr condition = expression();
-        this.expectCondition(condition);
         consumeBracketClose("while condition");
         this.loopIndex++;
         this.pushScope();
         Stmt body = statement();
-        body = new Stmt.Block(new Stmt[]{
-                body,
-                popScopeStmt()
-            });
-        this.loopIndex--;
+        body = mergeBody(body, popScopeStmt());
 
-        return new Stmt.While(condition, body, keyword);
+        Stmt.While aWhile = new Stmt.While();
+        aWhile.condition = condition;
+        aWhile.body = body;
+        aWhile.keyword = keyword;
+        return aWhile;
     }
 
-    private Stmt[] block(String name) {
+    private List<Stmt> block(String name) {
         List<Stmt> statements = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
@@ -364,32 +356,30 @@ public class StmtParser extends ExprParser {
         }
 
         consumeCurlyClose(name);
-        return statements.toArray(new Stmt[0]);
+        return statements;
     }
 
     private Stmt expressionStatement() {
         Expr expr = expression();
         consumeEndOfArg();
-        return new Stmt.Expression(expr);
+        Stmt.Expression stmt = new Stmt.Expression();
+        stmt.expression = expr;
+        return stmt;
     }
 
     public Stmt[] parse() {
-        if (tokens.length == 0) return new Stmt[] {new Stmt.Return(Token.createNative("return"), null)};
+        if (tokens.length == 0) return new Stmt[] {new Stmt.Return()};
         List<Stmt> stmts = new ArrayList<>();
         while (!isAtEnd()) stmts.add(declaration());
-        if (!seenReturn.peek()) stmts.add(new Stmt.Return(Token.createNative("return"), null));
+        if (!seenReturn.peek()) stmts.add(new Stmt.Return());
         return stmts.toArray(Stmt[]::new);
     }
 
-    public void applyMethod(List<? extends Pair<SourceClassReference, String>> params, ClassReference targetClass, ClassReference funcRetType, @Nullable Holder.Generics generics) {
+    public void applyMethod(ClassReference funcRetType, @Nullable Holder.Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
-        if (targetClass != null) this.varAnalyser.add("this", targetClass, false, true);
-        for (Pair<SourceClassReference, String> param : params) {
-            varAnalyser.add(param.getSecond(), param.getFirst().getReference(), true, true);
-        }
     }
 
     public void popMethod(Token methodEnd) {
@@ -406,8 +396,5 @@ public class StmtParser extends ExprParser {
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
 
-        for (Pair<SourceClassReference, String> param : params) {
-            varAnalyser.add(param.getSecond(), param.getFirst().getReference(), true, true);
-        }
     }
 }
