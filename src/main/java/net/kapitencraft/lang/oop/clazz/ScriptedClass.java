@@ -3,21 +3,19 @@ package net.kapitencraft.lang.oop.clazz;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
+import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.holder.token.TokenType;
-import net.kapitencraft.lang.oop.field.ScriptedField;
-import net.kapitencraft.lang.exe.Interpreter;
-import net.kapitencraft.lang.exe.algebra.Operand;
 import net.kapitencraft.lang.exe.algebra.OperationType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Map;
 
 public interface ScriptedClass {
 
@@ -43,25 +41,18 @@ public interface ScriptedClass {
     }
 
     /**
-     * @param type the operation
+     * @param type  the operation
      * @param other the other type
      * @return the resulting type or {@link VarTypeManager#VOID}, if this operation is not possible (must return {@link VarTypeManager#BOOLEAN} or {@link VarTypeManager#VOID} for comparators)
      * <br><br>API note: it's recommended to call {@code super.checkOperation(...)} due to the given equality check
      */
     @Deprecated
-    default ScriptedClass checkOperation(OperationType type, Operand operand, ClassReference other) {
+    default ScriptedClass checkOperation(OperationType type, ClassReference other) {
         return type == OperationType.ADDITION && "scripted.lang.String".equals(this.absoluteName()) ?
                 VarTypeManager.STRING.get() :
                 type.is(TokenTypeCategory.EQUALITY) && other.is(this) ?
                         VarTypeManager.BOOLEAN :
                         VarTypeManager.VOID;
-    }
-
-    default Object doOperation(OperationType type, Operand operand, Object self, Object other) {
-        String selfS = Interpreter.stringify(self);
-        String otherS = Interpreter.stringify(other);
-        return type == OperationType.ADDITION && "scripted.lang.String".equals(this.absoluteName()) ?
-                operand == Operand.LEFT ? selfS + otherS  : otherS + selfS : null;
     }
 
     @Contract(pure = true)
@@ -102,7 +93,8 @@ public interface ScriptedClass {
     }
 
     default boolean isParentOf(ScriptedClass suspectedChild) {
-        if (suspectedChild.is(this) || (!suspectedChild.isInterface() && VarTypeManager.OBJECT.get().is(this))) return true;
+        if (suspectedChild.is(this) || (!suspectedChild.isInterface() && VarTypeManager.OBJECT.get().is(this)))
+            return true;
         while (suspectedChild != null && suspectedChild.superclass() != null && suspectedChild != VarTypeManager.OBJECT.get() && !suspectedChild.is(this)) {
             suspectedChild = suspectedChild.superclass().get();
         }
@@ -111,7 +103,7 @@ public interface ScriptedClass {
 
     default boolean isChildOf(ScriptedClass suspectedParent) {
         return suspectedParent.isInterface() ?
-                Arrays.stream(this.interfaces()).anyMatch(reference -> reference.get().isParentOf(suspectedParent)) || this.superclass().get().isChildOf(suspectedParent)  :
+                Arrays.stream(this.interfaces()).anyMatch(reference -> reference.get().isParentOf(suspectedParent)) || this.superclass().get().isChildOf(suspectedParent) :
                 suspectedParent.isParentOf(this);
     }
 

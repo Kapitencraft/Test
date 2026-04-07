@@ -1,14 +1,14 @@
 package net.kapitencraft.lang.compiler.parser;
 
-import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
+    import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
+import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
+import net.kapitencraft.lang.holder.ast.SwitchKey;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
-import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
-import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
@@ -19,9 +19,10 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.exe.algebra.Operand;
 import net.kapitencraft.lang.exe.algebra.OperationType;
 import net.kapitencraft.lang.tool.Util;
+import net.kapitencraft.lang.oop.field.ScriptedField;
+import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -77,15 +78,21 @@ public class ExprParser extends AbstractParser {
             }
         }
         if (match(PRIMITIVE)) {
-            return new Expr.Literal(previous());
+            Expr.Literal expr = new Expr.Literal();
+            expr.literal = previous();
+            return expr;
         }
         ClassReference target = consumeVarType(generics).getReference();
         consume(DOT, "'.' expected");
         Token name = consumeIdentifier();
 
-        return new Expr.StaticGet(target, name);
+        Expr.StaticGet staticGet = new Expr.StaticGet();
+        staticGet.target = target;
+        staticGet.name = name;
+        return staticGet;
     }
 
+    //region annotation
     public Annotation parseAnnotation(Holder.AnnotationObj obj, VarTypeContainer varTypeContainer) {
         this.apply(obj.properties(), varTypeContainer);
         return parseAnnotationProperties(obj.type(), obj.type().getToken());
@@ -125,7 +132,8 @@ public class ExprParser extends AbstractParser {
                 Map<String, Expr> properties = new HashMap<>();
                 do {
                     Token propertyName = consumeIdentifier();
-                    if (properties.containsKey(propertyName.lexeme())) errorStorage.errorF(propertyName, "duplicate annotation property with name %s", propertyName.lexeme());
+                    if (properties.containsKey(propertyName.lexeme()))
+                        errorStorage.errorF(propertyName, "duplicate annotation property with name %s", propertyName.lexeme());
                     consume(ASSIGN, "'=' expected");
                     Expr property = literalOrReference();
                     properties.put(propertyName.lexeme(), property);
@@ -152,18 +160,19 @@ public class ExprParser extends AbstractParser {
     private void errorMissingProperties(Token errorPoint, List<String> propertyNames) {
         error(errorPoint, propertyNames.stream().map(s -> "'" + s + "'").collect(Collectors.joining(", ")) + " missing though required");
     }
+    //endregion
 
     private Expr when() {
         Expr expr = castCheck();
         if (match(QUESTION_MARK)) {
-            expectCondition(expr);
             Expr ifTrue = expression();
             consume(TokenType.COLON, "':' expected");
             Expr ifFalse = expression();
-            ClassReference ifTrueClass = finder.findRetType(ifTrue);
-            ClassReference ifFalseClass = finder.findRetType(ifFalse);
-            if (!(ifTrueClass.get().isParentOf(ifFalseClass.get()) || ifFalseClass.get().isParentOf(ifTrueClass.get()))) error(locFinder.find(ifTrue), "both expressions on when statement must return the same type");
-            expr = new Expr.When(expr, ifTrue, ifFalse);
+            Expr.When when = new Expr.When();
+            when.condition = expr;
+            when.ifTrue = ifTrue;
+            when.ifFalse = ifFalse;
+            expr = when;
         }
 
         return expr;
@@ -176,9 +185,12 @@ public class ExprParser extends AbstractParser {
             Token patternVar = null;
             if (match(IDENTIFIER)) {
                 patternVar = previous();
-                varAnalyser.add(patternVar.lexeme(), loxClass, true, false);
             }
-            return new Expr.CastCheck(expr, loxClass, patternVar);
+            Expr.CastCheck castCheck = new Expr.CastCheck();
+            castCheck.object = expr;
+            castCheck.targetType = loxClass;
+            castCheck.patternVarName = patternVar;
+            return castCheck;
         }
 
         return expr;
@@ -188,73 +200,74 @@ public class ExprParser extends AbstractParser {
         Expr expr = or();
 
         if (match(ASSIGN) || match(OPERATION_ASSIGN)) {
-            Token assign = previous();
+            Token assignKeyword = previous();
             Expr value = assignment();
 
-            if (expr instanceof Expr.VarRef(Token name, byte ordinal)) {
+            if (expr instanceof Expr.VarRef varRef) {
+                Token name = varRef.name;
+                byte ordinal = varRef.ordinal;
 
-                checkVarExistence(name, assign.type() != TokenType.ASSIGN,
-                        false);
-                checkVarType(name, value);
-                Executor executor;
-                if (assign.type() == TokenType.ASSIGN) {
-                    varAnalyser.setHasValue(ordinal);
-                    executor = Executor.UNKNOWN;
-                } else
-                    executor = getExecutor(varAnalyser.getType(name.lexeme()), assign, value);
-
-                return new Expr.Assign(name, value, assign, ordinal, executor.executor);
+                Expr.Assign assign = new Expr.Assign();
+                assign.name = name;
+                assign.type = assignKeyword;
+                assign.value = value;
+                assign.ordinal = ordinal;
+                return assign;
             } else if (expr instanceof Expr.Get get) {
-                ClassReference target = finder.findRetType(get.object());
-                ClassReference fieldType = target.get().getFieldType(get.name().lexeme());
-                expectType(get.name(), fieldType, finder.findRetType(value));
+                Expr.Set set = new Expr.Set();
+                set.object = get.object;
+                set.name = get.name;
+                set.value = value;
+                set.assignType = assignKeyword;
+                return set;
+            } else if (expr instanceof Expr.ArrayGet arrayGet) {
 
-                Executor executor;
-                if (assign.type() != ASSIGN) executor = getExecutor(fieldType, assign, value);
-                else executor = Executor.UNKNOWN;
-                return new Expr.Set(get.object(), get.name(), value, assign, executor.executor);
-            } else if (expr instanceof Expr.ArrayGet(Expr object, Expr index, ClassReference type)) {
-                Executor executor;
-                if (assign.type() != ASSIGN) executor = getExecutor(expr, assign, value);
-                else executor = Executor.UNKNOWN;
-                return new Expr.ArraySet(object, index, value, assign, executor.executor, type);
-            } else if (expr instanceof Expr.StaticGet(ClassReference target, Token name)) {
-                Executor executor;
-                if (assign.type() != ASSIGN) executor = getExecutor(expr, assign, value);
-                else executor = Executor.UNKNOWN;
-                return new Expr.StaticSet(target, name, value, assign, executor.executor);
+                Expr.ArraySet arraySet = new Expr.ArraySet();
+                arraySet.object = arrayGet.object;
+                arraySet.index = arrayGet.index;
+                arraySet.value = value;
+                arraySet.assignType = assignKeyword;
+                arraySet.componentType = arrayGet.type;
+                return arraySet;
+            } else if (expr instanceof Expr.StaticGet staticGet) {
+                Expr.StaticSet staticSet = new Expr.StaticSet();
+                staticSet.target = staticGet.target;
+                staticSet.name = staticGet.name;
+                staticSet.value = value;
+                staticSet.assignType = assignKeyword;
+                return staticSet;
             }
 
-            error(assign, "Invalid assignment target.");
+            error(assignKeyword, "Invalid assignment target.");
         }
 
         if (match(GROW, SHRINK)) {
 
             Token assign = previous();
 
-            if (expr instanceof Expr.VarRef(Token name, byte ordinal)) {
-
-                ClassReference type = checkVarExistence(name, true, false);
-                if (!type.get().isChildOf(VarTypeManager.NUMBER)) {
-                    errorStorage.errorF(name, "Operator '%s' can not be applied to '%s'", assign.lexeme(), type.absoluteName());
-                }
-                return new Expr.SpecialAssign(name, assign, ordinal, type);
+            if (expr instanceof Expr.VarRef varRef) {
+                Token name = varRef.name;
+                Expr.SpecialAssign specialAssign = new Expr.SpecialAssign();
+                specialAssign.name = name;
+                specialAssign.assignType = assign;
+                specialAssign.ordinal = varRef.ordinal;
+                return specialAssign;
             }
 
             if (expr instanceof Expr.Get get) {
-                ClassReference reference = finder.findRetType(get.object()).get().getFieldType(get.name().lexeme());
-                if (!reference.get().isChildOf(VarTypeManager.NUMBER)) {
-                    errorStorage.errorF(get.name(), "Operator '%s' can not be applied to '%s'", assign.lexeme(), reference.absoluteName());
-                }
-                return new Expr.SpecialSet(get.object(), get.name(), assign, reference);
+                Expr.SpecialSet specialSet = new Expr.SpecialSet();
+                specialSet.callee = get.object;
+                specialSet.name = get.name;
+                specialSet.assignType = assign;
+                return specialSet;
             }
 
             if (expr instanceof Expr.ArrayGet arrayGet) {
-                ClassReference reference = finder.findRetType(arrayGet.object()).get().getComponentType().reference();
-                if (!reference.get().isChildOf(VarTypeManager.NUMBER)) {
-                    errorStorage.errorF(locFinder.find(arrayGet.object()), "Operator '%s' can not be applied to '%s'", assign.lexeme(), reference.absoluteName());
-                }
-                return new Expr.ArraySpecial(arrayGet.object(), arrayGet.index(), assign, reference);
+                Expr.ArraySpecial special = new Expr.ArraySpecial();
+                special.object = arrayGet.object;
+                special.index = arrayGet.index;
+                special.assignType = assign;
+                return special;
             }
         }
 
@@ -267,9 +280,11 @@ public class ExprParser extends AbstractParser {
         while (match(OR)) {
             Token operator = previous();
             Expr right = and();
-            expectCondition(expr);
-            expectCondition(right);
-            expr = new Expr.Logical(expr, operator, right);
+            Expr.Logical logical = new Expr.Logical();
+            logical.left = expr;
+            logical.operator = operator;
+            logical.right = right;
+            expr = logical;
         }
 
         return expr;
@@ -281,58 +296,14 @@ public class ExprParser extends AbstractParser {
         while (match(AND, XOR)) {
             Token operator = previous();
             Expr right = equality();
-            expectCondition(expr);
-            expectCondition(right);
-            expr = new Expr.Logical(expr, operator, right);
+            Expr.Logical logical = new Expr.Logical();
+            logical.left = expr;
+            logical.operator = operator;
+            logical.right = right;
+            expr = logical;
         }
 
         return expr;
-    }
-
-    private Executor getExecutor(ClassReference left, Token operator, ClassReference right) {
-        OperationType operation = OperationType.of(operator.type());
-        assert operation != null;
-        ScriptedClass result = VarTypeManager.VOID;
-        Operand operand = Operand.LEFT;
-        if (left.get() instanceof PrimitiveClass || left.is(VarTypeManager.STRING.get()) || right.is(VarTypeManager.STRING.get())) {
-            result = left.get().checkOperation(operation, Operand.LEFT, right);
-            if (result == VarTypeManager.VOID) {
-                result = right.get().checkOperation(operation, Operand.RIGHT, left);
-                operand = Operand.RIGHT;
-            }
-        }
-        //search for overloads
-        if (result == VarTypeManager.VOID && operation.getMethodName() != null) {
-            String signature = operation.getMethodName() + "(" + VarTypeManager.getClassName(right) + ")";
-            ScriptedCallable method = left.get().getMethod(signature);
-            if (method != null) {
-                signature = VarTypeManager.getClassName(left) + signature;
-                return new Executor(left, Operand.LEFT, method.retType(), signature);
-            }
-            String signatureRight = operation.getMethodName() + "(" + VarTypeManager.getClassName(left) + ")";
-            method = right.get().getMethod(signatureRight);
-            if (method != null) {
-                signatureRight = VarTypeManager.getClassName(right) + signatureRight;
-                return new Executor(right, Operand.RIGHT, method.retType(), signatureRight);
-            }
-        }
-        if (result == VarTypeManager.VOID) {
-            errorStorage.errorF(operator, "operator '%s' not possible for argument types %s and %s", operator.lexeme(), left.absoluteName(), right.absoluteName());
-            return Executor.UNKNOWN;
-        }
-        return new Executor(left, operand, result.reference(), null);
-    }
-
-    private Executor getExecutor(Expr leftArg, Token operator, Expr rightArg) {
-        return getExecutor(finder.findRetType(leftArg), operator, finder.findRetType(rightArg));
-    }
-
-    private Executor getExecutor(ClassReference left, Token operator, Expr rightArg) {
-        return getExecutor(left, operator, finder.findRetType(rightArg));
-    }
-
-    private record Executor(ClassReference executor, Operand operand, ClassReference result, @Nullable String methodSignature) {
-        private static final Executor UNKNOWN = new Executor(WILDCARD, Operand.LEFT, VarTypeManager.VOID.reference(), null);
     }
 
     private Expr equality() {
@@ -367,7 +338,10 @@ public class ExprParser extends AbstractParser {
                     operators.add(previous());
                     values.add(term());
                 }
-                expr = new Expr.ComparisonChain(values.toArray(Expr[]::new), operators.toArray(Token[]::new), VarTypeManager.INTEGER.reference());
+                Expr.ComparisonChain chain = new Expr.ComparisonChain();
+                chain.entries = values.toArray(Expr[]::new);
+                chain.types = operators.toArray(Token[]::new);
+                expr = chain;
             } else {
                 expr = parseBinaryExpr(expr, operator, right);
             }
@@ -390,17 +364,11 @@ public class ExprParser extends AbstractParser {
     }
 
     private @NotNull Expr parseBinaryExpr(Expr expr, Token operator, Expr right) {
-        Executor executorInfo = getExecutor(expr, operator, right);
-        if (executorInfo.methodSignature != null) {
-            if (executorInfo.operand == Operand.RIGHT) {
-                return new Expr.InstCall(right, operator, new Expr[] {expr}, executorInfo.result, executorInfo.methodSignature);
-            }
-            return new Expr.InstCall(expr, operator, new Expr[] {right}, executorInfo.result, executorInfo.methodSignature);
-        }
-        if (executorInfo.operand == Operand.RIGHT)
-            expr = new Expr.Binary(right, expr, operator, executorInfo.executor, executorInfo.result);
-        else
-            expr = new Expr.Binary(expr, right, operator, executorInfo.executor, executorInfo.result);
+        Expr.Binary binary = new Expr.Binary();
+        binary.left = expr;
+        binary.right = right;
+        binary.operator = operator;
+        expr = binary;
         return expr;
     }
 
@@ -432,13 +400,11 @@ public class ExprParser extends AbstractParser {
         if (match(NOT, SUB)) {
             Token operator = previous();
             Expr right = unary();
-            ClassReference executor;
-            if (operator.type() == NOT) {
-                expectCondition(right);
-                executor = VarTypeManager.BOOLEAN.reference();
-            }
-            else executor = expectType(right, VarTypeManager.NUMBER.reference());
-            return new Expr.Unary(operator, right, executor);
+
+            Expr.Unary unary = new Expr.Unary();
+            unary.operator = operator;
+            unary.right = right;
+            return unary;
         }
 
         return call();
@@ -448,31 +414,33 @@ public class ExprParser extends AbstractParser {
         Token keyword = previous();
         consumeBracketOpen("switch");
 
-        expectType(VarTypeManager.ENUM, VarTypeManager.STRING, VarTypeManager.INTEGER.reference(), VarTypeManager.DOUBLE.reference(), VarTypeManager.FLOAT.reference(), VarTypeManager.CHAR.reference());
         Expr provider = expression();
-        popExpectation();
-
-        ClassReference type = finder.findRetType(provider);
-
-        if (type.get().isChildOf(VarTypeManager.ENUM.get())) {
-            //is enum, wrap in ordinal access
-            provider = new Expr.InstCall(provider, Token.createNative("ordinal"), new Expr[0], VarTypeManager.INTEGER.reference(), "Lscripted/lang/Enum;ordinal()I");
-        }
 
         consumeBracketClose("switch");
 
         consumeCurlyOpen("switch body");
-        Map<Integer, Expr> params = new LinkedHashMap<>();
+        List<SwitchKey> params = new ArrayList<>();
         Expr def = null;
 
         while (!check(C_BRACKET_C)) {
             if (match(CASE)) {
-                int key = literalOrEnum(type);
-                if (params.containsKey(key)) errorStorage.errorF(previous(), "Duplicate case key '%s'", previous().lexeme());
+                Token value = advance();
                 consume(LAMBDA, "not a statement");
                 Expr expr = expression();
                 consumeEndOfArg();
-                params.put(key, expr);
+                SwitchKey key;
+                if (!value.type().isCategory(SWITCH_KEYWORD)) {
+                    key = new SwitchKey.Illegal(value, expr);
+                    error(value, "number, string or identifier expected");
+                } else {
+                    key = switch (value.type()) {
+                        case NUM -> new SwitchKey.Number(value, expr);
+                        case STR -> new SwitchKey.String(value, expr);
+                        case IDENTIFIER -> new SwitchKey.Identifier(value, expr);
+                        default -> throw new IllegalStateException("illegal value type");
+                    };
+                }
+                params.add(key);
             } else if (match(DEFAULT)) {
                 if (def != null) error(previous(), "Duplicate default key");
                 consume(LAMBDA, "not a statement");
@@ -484,7 +452,12 @@ public class ExprParser extends AbstractParser {
         }
 
         consumeCurlyClose("switch body");
-        return new Expr.Switch(provider, params, def, keyword);
+        Expr.Switch aSwitch = new Expr.Switch();
+        aSwitch.provider = provider;
+        aSwitch.params = params.toArray(SwitchKey[]::new);
+        aSwitch.defaulted = def;
+        aSwitch.keyword = keyword;
+        return aSwitch;
     }
 
     private int literalOrEnum(ClassReference type) {
@@ -511,12 +484,21 @@ public class ExprParser extends AbstractParser {
     private Expr staticAssign(ClassReference target, Token name) {
         Token type = previous();
         Expr value = expression();
-        Executor executor = getExecutor(target.get().getFieldType(name.lexeme()), type, value);
-        return new Expr.StaticSet(target, name, value, type, executor.executor);
+        Expr.StaticSet set = new Expr.StaticSet();
+        set.target = target;
+        set.name = name;
+        set.value = value;
+        set.assignType = type;
+        return set;
     }
 
     private Expr staticSpecialAssign(ClassReference target, Token name) {
-        return new Expr.StaticSpecial(target, name, previous(), target.get().getFieldType(name.lexeme()));
+        Expr.StaticSpecial expr = new Expr.StaticSpecial();
+        expr.target = target;
+        expr.name = name;
+        expr.assignType = previous();
+        expr.executor = target.get().getFieldType(name.lexeme());
+        return expr;
     }
 
     public Expr[] args() {
@@ -529,10 +511,6 @@ public class ExprParser extends AbstractParser {
         }
 
         return arguments.toArray(new Expr[0]);
-    }
-
-    public ClassReference[] argTypes(Expr[] args) {
-        return Arrays.stream(args).map(this.finder::findRetType).toArray(ClassReference[]::new);
     }
 
     private Expr call() {
@@ -556,72 +534,35 @@ public class ExprParser extends AbstractParser {
                     consume(COLON, "':' expected");
                     Expr interval = check(S_BRACKET_C) ? null : expression();
                     consume(S_BRACKET_C, "']' expected");
-                    expr = new Expr.Slice(expr, index, end, interval);
+                    Expr.Slice slice = new Expr.Slice();
+                    slice.object = expr;
+                    slice.start = index;
+                    slice.end = end;
+                    slice.interval = interval;
+                    expr = slice;
                     continue;
                 }
                 consume(S_BRACKET_C, "']' expected");
-                ScriptedClass scriptedClass = finder.findRetType(expr).get();
-                if (!scriptedClass.isArray()) error(bracketO, "array type expected");
-                expr = new Expr.ArrayGet(expr, index, scriptedClass.getComponentType().reference());
+                Expr.ArrayGet get = new Expr.ArrayGet();
+                get.object = expr;
+                get.index = index;
+                expr = get;
             } else if (match(BRACKET_O)) {
                 if (expr instanceof Expr.Get get)
-                    expr = finishCall(get.name(), finder.findRetType(get.object()), get.object());
+                    expr = finishCall(get.name, null, get.object);
                 else error(locFinder.find(expr), "obj expected");
             } else if (match(DOT)) {
                 if (expr instanceof Expr.Literal && !check(IDENTIFIER)) continue;
                 Token name = consume(IDENTIFIER, "Expect property name after '.'");
-                ClassReference type = finder.findRetType(expr);
-                ScriptedClass targetType = type.get();
-                if (!check(BRACKET_O)) { //ensure not to check for field if it's a method
-                    if (
-                            !targetType.isArray() &&
-                            name.lexeme().equals("length") && //ensure array length can be used
-                            !targetType.hasField(name.lexeme())) error(name, "unknown symbol");
-                }
-                expr = new Expr.Get(expr, name, type);
+                Expr.Get get = new Expr.Get();
+                get.object = expr;
+                get.name = name;
+                expr = get;
             } else {
                 break;
             }
         }
         return expr;
-    }
-
-    public ClassReference checkArguments(Expr[] args, @Nullable ScriptedCallable target, @Nullable ClassReference obj, Token loc) {
-        ClassReference[] expectedTypes = target == null ? new ClassReference[0] : target.argTypes();
-        ClassReference[] givenTypes = argTypes(args);
-        if (expectedTypes.length != givenTypes.length) {
-            errorStorage.errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
-
-            errorStorage.logError("required: " + Util.getDescriptor(expectedTypes));
-            errorStorage.logError("found:    " + Util.getDescriptor(givenTypes));
-            errorStorage.logError("reason: actual and formal argument lists differ in length");
-        } else {
-            for (int i = 0; i < givenTypes.length; i++) {
-                expectType(locFinder.find(args[i]), givenTypes[i], expectedTypes[i]);
-            }
-        }
-
-        ClassReference type = target == null ? VarTypeManager.VOID.reference() : target.retType();
-        //TODO figure out how to extract gotten generics
-        if (type instanceof GenericClassReference genericClassReference) {
-            GenericStack genericStack = new GenericStack();
-            if (obj instanceof AppliedGenericsReference reference) {
-                reference.push(genericStack, errorStorage);
-            }
-
-            Map<String, ClassReference> types = new HashMap<>();
-            for (int i = 0; i < expectedTypes.length; i++) {
-                if (expectedTypes[i] instanceof GenericClassReference gCR) {
-                    types.put(gCR.getTypeName(), givenTypes[i]);
-                }
-            }
-            if (!types.isEmpty()) genericStack.push(types);
-
-
-            return genericClassReference.unwrap(genericStack);
-        }
-
-        return type;
     }
 
     private Object literal() {
@@ -652,7 +593,13 @@ public class ExprParser extends AbstractParser {
                     values = args();
                     consumeCurlyClose("array initialization");
                 }
-                return new Expr.ArrayConstructor(type.getToken(), type.getReference(), size, values);
+                Expr.ArrayConstructor constructor = new Expr.ArrayConstructor();
+                constructor.keyword = type.getToken();
+                constructor.compoundType = type.getReference();
+                constructor.size = size;
+                constructor.obj = values;
+
+                return constructor;
             }
             consumeBracketOpen("constructors");
             Expr[] args = args();
@@ -692,38 +639,19 @@ public class ExprParser extends AbstractParser {
                 error(type.getToken(), "can not instantiate abstract class " + type.absoluteName());
             }
 
-            String signature = null;
-            ScriptedCallable callable = tryGetConstructorMethod(args, type.getReference(), type.get(), type.getToken());
-
             ClassReference typeRef = type.getReference();
-            if (callable != null) {
-                signature = VarTypeManager.getMethodSignature(type.get(), "<init>", callable.argTypes());
-                checkArguments(args, callable, null, type.getToken());
 
-                Holder.Generics classGenerics = type.get().getGenerics();
-                if (classGenerics != null) {
-                    Map<String, ClassReference> types = new HashMap<>();
-                    for (int i = 0; i < callable.argTypes().length; i++) {
-                        if (callable.argTypes()[i] instanceof GenericClassReference genericClassReference) {
-                            types.put(
-                                    genericClassReference.getTypeName(),
-                                    finder.findRetType(args[i])
-                            );
-                        }
-                    }
-                    List<ClassReference> ordered = new ArrayList<>();
-                    for (int i = 0; i < classGenerics.variables().length; i++) {
-                        ordered.add(types.get(classGenerics.variables()[i].name().lexeme()));
-                    }
-                    typeRef = new AppliedGenericsReference(type.getReference(), new Holder.AppliedGenerics(type.getToken(), ordered.toArray(new ClassReference[0])));
-                }
-            }
-
-            return new Expr.Constructor(type.getToken(), typeRef, args, signature);
+            Expr.Constructor expr = new Expr.Constructor();
+            expr.keyword = type.getToken();
+            expr.target = typeRef;
+            expr.args = args;
+            return expr;
         }
 
         if (match(PRIMITIVE)) {
-            return new Expr.Literal(previous());
+            Expr.Literal literal = new Expr.Literal();
+            literal.literal = previous();
+            return literal;
         }
 
         if (match(SUPER)) {
@@ -739,136 +667,121 @@ public class ExprParser extends AbstractParser {
                     error(name, "can not access super class");
                 } else if (type.hasMethod(name.lexeme())) {
                     Expr[] arguments = args();
-                    ClassReference[] givenTypes = argTypes(arguments);
                     ScriptedClass targetClass = superclass.get();
                     if (!targetClass.hasMethod(name.lexeme())) {
                         error(name, "unknown method '" + name.lexeme() + "'");
                         consumeBracketClose("arguments");
-                        return new Expr.StaticCall(superclass, name, arguments, WILDCARD, "?");
+                        Expr.StaticCall call = new Expr.StaticCall();
+                        call.target = superclass;
+                        call.name = name;
+                        call.args = arguments;
+                        return call;
                     }
-                    ScriptedCallable callable = Util.getStaticMethod(targetClass, name.lexeme(), givenTypes);
-                    ClassReference retType = VarTypeManager.VOID.reference();
-                    String signature = null;
-                    if (callable != null) {
-                        retType = checkArguments(arguments, callable, superclass, name);
-                        signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), callable.argTypes());
-                    }
-
                     consumeBracketClose("arguments");
 
-                    return new Expr.SuperCall(new Expr.VarRef(reference, (byte) 0), superclass, name, arguments, retType, signature);
+                    Expr.SuperCall call = new Expr.SuperCall();
+
+                    Expr.VarRef callee = new Expr.VarRef();
+                    callee.name = reference;
+                    callee.ordinal = 0;
+                    call.callee = callee;
+                    call.type = superclass;
+                    call.name = name;
+                    call.args = arguments;
+                    return call;
                 }
             }
         }
 
         if (match(IDENTIFIER)) {
             Token previous = previous(); //the identifier just consumed
-            LocalVariableContainer.FetchResult result = varAnalyser.get(previous.lexeme()); //fetch variable under that name
-            if (result == LocalVariableContainer.FetchResult.FAIL) { //check if there exists a variable under that name
-                if (currentFallback().exists()) { //check if the parser has a class fallback available
-                    ClassReference fallbackReference = currentFallback();
-                    ScriptedClass fallback = fallbackReference.get(); //get said fallback
-                    String name = previous.lexeme(); //get the literal of the identifier
-                    if (match(BRACKET_O)) { //check if there's an attempt to call a method from the fallback class
-                        if (fallback.hasMethod(name)) {
-                            return finishCall(previous, fallbackReference, new Expr.VarRef(
-                                            Token.createNative("this"),
-                                            (byte) 0
-                                    )
-                            );
-                        }
-                    } else {
-                        if (fallback.hasField(name)) {
-                            ScriptedField field = fallback.getFields().get(name);
-                            if (field.isStatic())
-                                return new Expr.StaticGet(fallbackReference, previous);
-                            else
-                                return new Expr.Get(new Expr.VarRef(
-                                    Token.createNative("this"),
-                                    (byte) 0),
-                                    previous, fallbackReference
-                            );
+            if (currentFallback().exists()) { //check if the parser has a class fallback available
+                ClassReference fallbackReference = currentFallback();
+                ScriptedClass fallback = fallbackReference.get(); //get said fallback
+                String name = previous.lexeme(); //get the literal of the identifier
+                if (match(BRACKET_O)) { //check if there's an attempt to call a method from the fallback class
+                    if (fallback.hasMethod(name)) {
+                        Expr.VarRef ref = new Expr.VarRef();
+                        ref.name = Token.createNative("this");
+                        ref.ordinal = 0;
+                        return finishCall(previous, fallbackReference, ref);
+                    }
+                } else {
+                    if (fallback.hasField(name)) {
+                        ScriptedField field = fallback.getFields().get(name);
+                        if (field.isStatic()) {
+                            Expr.StaticGet get = new Expr.StaticGet();
+                            get.target = fallbackReference;
+                            get.name = previous;
+                            return get;
+                        } else {
+                            Expr.Get aThis = new Expr.Get();
+                            aThis.object = varRef(Token.createNative("this"), (byte) 0);
+                            aThis.name = previous;
+                            aThis.type = fallbackReference;
+                            return aThis;
                         }
                     }
                 }
-                current--; //un-consume the identifier for the statics to take over
-                return statics();
             }
-            checkVarExistence(previous, true, true);
-            return new Expr.VarRef(
+            current--; //un-consume the identifier for the statics to take over
+            Optional<SourceClassReference> reference = tryConsumeVarType(generics);
+            if (reference.isPresent()) {
+                ClassReference target = reference.get().getReference();
+                consume(DOT, "'.' expected");
+                Token name = consumeIdentifier();
+                if (match(BRACKET_O)) return finishCall(name, target, null);
+                if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
+                if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
+                Expr.StaticGet get = new Expr.StaticGet();
+                get.target = target;
+                get.name = name;
+                return get;
+            }
+            return varRef(
                     previous,
-                    result.ordinal()
+                    (byte) -1
             );
         }
 
-        if (match(THIS)) return new Expr.VarRef(
+        if (match(THIS)) return varRef(
                 previous(),
-                (byte)0
+                (byte) 0
         );
 
         if (match(BRACKET_O)) {
             Expr expr = expression();
             consumeBracketClose("expression");
-            return new Expr.Grouping(expr);
+            return expr; //the grouping expression mustn't exist as a real AST entry
         }
 
         throw error(peek(), "Illegal start of expression");
     }
 
-    private ScriptedCallable tryGetConstructorMethod(Expr[] args, ClassReference type, ScriptedClass scriptedClass, Token loc) {
-        DataMethodContainer container = scriptedClass.getMethods().get("<init>");
-        if (container == null) {
-            if (args.length > 0) {
-                errorStorage.errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
-
-                errorStorage.logError("required: ");
-                errorStorage.logError("found:    " + Util.getDescriptor(this.argTypes(args)));
-                errorStorage.logError("reason: actual and formal argument lists differ in length");
-            }
-            return null;
-        }
-
-        return Util.getVirtualMethod(scriptedClass, "<init>", this.argTypes(args));
+    private Expr varRef(Token previous, byte ordinal) {
+        Expr.VarRef ref = new Expr.VarRef();
+        ref.name = previous;
+        ref.ordinal = ordinal;
+        return ref;
     }
 
-    private Expr statics() {
-        ClassReference target = consumeVarType(generics).getReference();
-        consume(DOT, "'.' expected");
-        Token name = consumeIdentifier();
-        if (match(BRACKET_O)) return finishCall(name, target, null);
-        if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
-        if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
-        return new Expr.StaticGet(target, name);
-    }
-
-    private Expr finishCall(Token name, ClassReference objType, @Nullable Expr obj) {
+    private Expr finishCall(Token name, @Nullable ClassReference objType, @Nullable Expr obj) {
         Expr[] arguments = args();
-
-        ClassReference[] givenTypes = argTypes(arguments);
-        ScriptedClass targetClass = objType.get();
-
-        if (!targetClass.hasMethod(name.lexeme())) {
-            error(name, "unknown method '" + name.lexeme() + "'");
-            consumeBracketClose("arguments");
-            return new Expr.StaticCall(objType, name, arguments, WILDCARD, "?");
-        }
-        ScriptedCallable callable = Util.getVirtualMethod(targetClass, name.lexeme(), givenTypes);
-        ClassReference retType = VarTypeManager.VOID.reference();
-        String signature = null;
-        if (callable != null) {
-            retType = checkArguments(arguments, callable, objType, name);
-            signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), callable.argTypes());
-        }
 
         consumeBracketClose("arguments");
 
-        if (callable == null || callable.isStatic()) {
-            return new Expr.StaticCall(objType, name, arguments, retType, signature);
+        if (obj == null) {
+            Expr.StaticCall call = new Expr.StaticCall();
+            call.name = name;
+            call.target = objType;
+            call.args = arguments;
+            return call;
         } else {
-            if (obj == null) {
-                error(name, "Non-static method can not be referenced from a static context");
-            }
-            return new Expr.InstCall(obj, name, arguments, retType, signature);
+            Expr.InstCall call = new Expr.InstCall();
+            call.callee = obj;
+            call.name = name;
+            call.args = arguments;
+            return call;
         }
     }
 }

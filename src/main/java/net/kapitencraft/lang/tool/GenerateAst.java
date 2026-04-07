@@ -7,6 +7,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class GenerateAst {
     public static final String DIRECTORY = "src/main/java/net/kapitencraft/lang/holder/ast";
@@ -19,8 +20,10 @@ public class GenerateAst {
         Map<String, Map<String, JsonElement>> obj = createObj(object.get("values"));
         obj.forEach((astType, data) -> {
             Imports imports = Imports.fromJsonElement(data.get("imports"));
+            List<FieldDef> commonFields = new ArrayList<>();
+            data.getOrDefault("fields", new JsonObject()).getAsJsonObject().asMap().forEach((s, jsonElement) -> commonFields.add(FieldDef.fromJson(s, jsonElement)));
             Map<String, AstDef> valueData = createValues(data.get("values"));
-            defineAst(astType, valueData, imports, defaultImports);
+            defineAst(astType, valueData, imports, defaultImports, commonFields);
         });
     }
 
@@ -39,12 +42,12 @@ public class GenerateAst {
         return data;
     }
 
-    private static void defineAst(String baseName, Map<String, AstDef> data, Imports imports, Imports defaultImports) {
-        defineAstFile(baseName, data, imports, defaultImports);
+    private static void defineAst(String baseName, Map<String, AstDef> data, Imports imports, Imports defaultImports, List<FieldDef> commonFields) {
+        defineAstFile(baseName, data, imports, defaultImports, commonFields);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static void defineAstFile(String baseName, Map<String, AstDef> data, Imports imports, Imports defaultImports) {
+    private static void defineAstFile(String baseName, Map<String, AstDef> data, Imports imports, Imports defaultImports, List<FieldDef> commonFields) {
         String path = DIRECTORY + "/" + baseName + ".java";
         PrintWriter writer;
         try {
@@ -82,7 +85,7 @@ public class GenerateAst {
 
         // The AST classes.
         for (String typeId : data.keySet()) {
-            defineType(writer, baseName, baseName, typeId, data.get(typeId));
+            defineType(writer, baseName, baseName, typeId, data.get(typeId), commonFields);
         }
 
         writer.println("}");
@@ -100,17 +103,14 @@ public class GenerateAst {
         writer.println("    }");
     }
 
-    private static void defineType(PrintWriter writer, String baseName, String extendedName, String typeId, AstDef types) {
+    private static void defineType(PrintWriter writer, String baseName, String extendedName, String typeId, AstDef types, List<FieldDef> commonFields) {
         writer.println();
         FieldDef[] fields = types.get();
-        writer.println("    record " + typeId + "(");
+        writer.println("    class " + typeId + " implements " + extendedName + " {");
 
-        writer.println(Arrays.stream(fields)
-                .map(f -> "        " + f.type.get() + " " + f.name)
-                .collect(Collectors.joining(", \n")));
-
-        writer.println("    ) implements " + extendedName + " {");
-
+        writer.println(convertToJava(Arrays.stream(fields)));
+        if (!commonFields.isEmpty())
+            writer.println(convertToJava(commonFields.stream()));
         // Visitor pattern.
         writer.println();
         writer.println("        @Override");
@@ -121,6 +121,12 @@ public class GenerateAst {
 
         writer.println("    }");
 
+    }
+
+    private static String convertToJava(Stream<FieldDef> definitions) {
+        return definitions
+                .map(f -> "        public " + f.type.get() + " " + f.name)
+                .collect(Collectors.joining("; \n", "", ";"));
     }
 
     private record TypeDef(String compile) {

@@ -3,6 +3,7 @@ package net.kapitencraft.lang.compiler;
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
+import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
@@ -77,14 +78,14 @@ public class Holder {
             return Arrays.stream(interfaces).map(SourceReference::get).map(VarTypeManager::getClassName).toArray(String[]::new);
         }
 
-        public Compiler.ClassBuilder construct(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
+        public Compiler.ClassBuilder construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
             stmtParser.pushFallback(this.target);
             try {
                 return switch (this.type) {
-                    case ENUM -> constructEnum(stmtParser, parser, logger);
-                    case INTERFACE -> constructInterface(stmtParser, parser, logger);
-                    case CLASS -> constructClass(stmtParser, parser, logger);
-                    case ANNOTATION -> constructAnnotation(stmtParser, parser, logger);
+                    case ENUM -> constructEnum(stmtParser, analyser, parser, logger);
+                    case INTERFACE -> constructInterface(stmtParser, analyser, parser, logger);
+                    case CLASS -> constructClass(stmtParser, analyser, parser, logger);
+                    case ANNOTATION -> constructAnnotation(stmtParser, analyser, parser, logger);
                 };
             } finally {
                 stmtParser.popFallback();
@@ -94,7 +95,7 @@ public class Holder {
         /**
          * construct this enum to a baked class
          */
-        public BakedClass constructEnum(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
+        public BakedClass constructEnum(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
 
             List<Stmt> statics = new ArrayList<>();
 
@@ -104,8 +105,8 @@ public class Holder {
                 Expr[] args;
                 if (decl.arguments.length == 0) {
                     args = new Expr[] {
-                            new Expr.Literal(decl.name.lexemeAsLiteral()), //name
-                            new Expr.Literal(new Token(TokenType.STR, String.valueOf(decl.ordinal), new LiteralHolder(decl.ordinal, VarTypeManager.INTEGER), decl.name.line(), decl.name.lineStartIndex()))
+                            literal(decl.name.lexemeAsLiteral()), //name
+                            literal(new Token(TokenType.STR, String.valueOf(decl.ordinal), new LiteralHolder(decl.ordinal, VarTypeManager.INTEGER), decl.name.line(), decl.name.lineStartIndex()))
                     };
                     stmtParser.apply(new Token[0], parser);
                 } else {
@@ -113,52 +114,68 @@ public class Holder {
                     args = prefixEnumConstructorCallArgs(stmtParser.args(), decl);
                 }
 
-                ScriptedCallable callable = Util.getVirtualMethod(target.get(), "<init>", stmtParser.argTypes(args));
+                ClassReference[] arguments = analyser.args(args);
+                ScriptedCallable callable = Util.getVirtualMethod(target.get(), "<init>", arguments);
 
                 String signature;
                 if (args.length == 0 && callable.isNative())
                     signature = null;
                 else {
-                    signature = VarTypeManager.getMethodSignature(target.get(), "<init>", stmtParser.argTypes(args));
-                    stmtParser.checkArguments(args, callable, null, decl.name());
+                    signature = VarTypeManager.getMethodSignature(target.get(), "<init>", arguments);
+                    analyser.checkArguments(args, arguments, callable, null, decl.name());
                 }
-                statics.add(new Stmt.Expression(new Expr.StaticSet(
-                        target, decl.name,
-                        new Expr.Constructor(decl.name, target, args, signature),
-                        new Token(TokenType.ASSIGN, "=", LiteralHolder.EMPTY, -1, 0),
-                        target
-                )));
+                Stmt.Expression expression = new Stmt.Expression();
+                {
+                    Expr.Constructor constructor = new Expr.Constructor();
+                    constructor.keyword = decl.name;
+                    constructor.target = target;
+                    constructor.args = args;
+                    constructor.signature = signature;
+                    Expr.StaticSet staticSet = new Expr.StaticSet();
+                    staticSet.target = target;
+                    staticSet.name = decl.name;
+                    staticSet.value = constructor;
+                    staticSet.assignType = new Token(TokenType.ASSIGN, "=", LiteralHolder.EMPTY, -1, 0);
+                    staticSet.executor = target;
+                    expression.expression = staticSet;
+                }
+                statics.add(expression);
             }
 
             //region $VALUES
             int length = enumConstants().length;
-            Token values = this.name.asIdentifier("$VALUES");
+            Token keyword = this.name.asIdentifier("$VALUES");
             Expr[] constants = new Expr[length];
             for (int i = 0; i < enumConstants.length; i++) {
                 EnumConstant constant = enumConstants[i];
-                constants[i] = new Expr.StaticGet(target, constant.name); //getting statics to store into the array
+                Expr.StaticGet get = new Expr.StaticGet();
+                get.target = target;
+                get.name = constant.name;
+                constants[i] = get; //getting statics to store into the array
             }
-            Expr valuesInit = new Expr.StaticSet(
-                    target, values,
-                    new Expr.ArrayConstructor(
-                            this.name.asIdentifier("new"),
-                            target,
-                            new Expr.Literal(
-                                    new Token(
-                                            TokenType.NUM,
-                                            String.valueOf(length),
-                                            new LiteralHolder(length, VarTypeManager.INTEGER),
-                                            this.name.line(),
-                                            this.name.lineStartIndex()
-                                    )
-                            ),
-                            constants
-                    ),
-                    new Token(TokenType.ASSIGN, "=", LiteralHolder.EMPTY, this.name.line(), this.name.lineStartIndex()),
-                    target
-            );
-            fields.put(values, new CompileField(values, valuesInit, target.array(), Modifiers.pack(true, true, false), new Annotation[0]));
-            statics.add(new Stmt.Expression(valuesInit));
+            Stmt.Expression stmt = new Stmt.Expression();
+            Expr.StaticSet valuesInit = new Expr.StaticSet();
+            {
+                Expr.ArrayConstructor constructor = new Expr.ArrayConstructor();
+                constructor.keyword = this.name.asIdentifier("new");
+                constructor.compoundType = target;
+                constructor.size = literal(new Token(
+                        TokenType.NUM,
+                        String.valueOf(length),
+                        new LiteralHolder(length, VarTypeManager.INTEGER),
+                        this.name.line(),
+                        this.name.lineStartIndex()
+                ));
+                constructor.obj = constants;
+                valuesInit.target = target;
+                valuesInit.value = constructor;
+                valuesInit.assignType = new Token(TokenType.ASSIGN, "=", LiteralHolder.EMPTY, this.name.line(), this.name.lineStartIndex());
+                valuesInit.executor = target;
+                valuesInit.name = keyword;
+                stmt.expression = valuesInit;
+            }
+            fields.put(keyword, new CompileField(keyword, valuesInit, target.array(), Modifiers.pack(true, true, false), new Annotation[0]));
+            statics.add(stmt);
             //endregion
 
             List<String> finalFields = new ArrayList<>();
@@ -167,11 +184,7 @@ public class Holder {
                 short mods = field.modifiers;
                 Expr initializer = null;
                 if (field.body() != null) {
-                    stmtParser.apply(field.body(), parser);
-                    initializer = stmtParser.expression();
-                    if (Modifiers.isStatic(mods)) {
-                        statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target)));
-                    }
+                    initializer = getFieldBody(stmtParser, analyser, parser, logger, field, statics);
                 } else if (Modifiers.isFinal(mods)) finalFields.add(field.name().lexeme());
                 List<Annotation> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
@@ -193,8 +206,9 @@ public class Holder {
                     if (Modifiers.isStatic(method.modifiers))
                         stmtParser.applyStaticMethod(method.params, method.type.getReference(), method.generics);
                     else
-                        stmtParser.applyMethod(method.params(), target(), VarTypeManager.ENUM, method.generics);
+                        stmtParser.applyMethod(VarTypeManager.ENUM, method.generics);
                     body = stmtParser.parse();
+                    analyser.analyseBody(body, method.type.getReference(), method.params, target());
                     stmtParser.popMethod(method.closeBracket);
                 }
 
@@ -211,7 +225,9 @@ public class Holder {
                 methods.add(Pair.of(method.name(), methodDecl));
             }
 
-            statics.add(new Stmt.Return(this.name.asIdentifier("return"), null));
+            Stmt.Return aReturn = new Stmt.Return();
+            aReturn.keyword = this.name.asIdentifier("return");
+            statics.add(aReturn);
             methods.add(Pair.of(this.name.asIdentifier("<clinit>"),
                     new CompileCallable(VarTypeManager.VOID.reference(),
                             List.of(),
@@ -222,18 +238,18 @@ public class Holder {
             ));
 
             //region #values
+            Expr.StaticGet get = new Expr.StaticGet();
+            get.target = target;
+            get.name = keyword;
+            Stmt.Return aReturn1 = new Stmt.Return();
+            aReturn1.keyword = this.name.asIdentifier("return");
+            aReturn1.value = get;
             methods.add(Pair.of(this.name.asIdentifier("values"),
                     new CompileCallable(
                             target.array(),
                             List.of(),
                             new Stmt[]{
-                                    new Stmt.Return(
-                                            this.name.asIdentifier("return"),
-                                            new Expr.StaticGet(
-                                                    target,
-                                                    values
-                                            )
-                                    )
+                                    aReturn1
                             },
                             Modifiers.pack(false, true, false),
                             new Annotation[0]
@@ -244,8 +260,9 @@ public class Holder {
             List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
             for (Constructor enumConstructor : this.constructors()) {
                 stmtParser.apply(enumConstructor.body(), parser);
-                stmtParser.applyMethod(enumConstructor.params(), target(), ClassReference.of(VarTypeManager.VOID), enumConstructor.generics);
+                stmtParser.applyMethod(ClassReference.of(VarTypeManager.VOID), enumConstructor.generics);
                 Stmt[] body = prefixEnumConstructorCall(stmtParser.parse());
+                analyser.analyseBody(body, VarTypeManager.VOID.reference(), enumConstructor.params(), target());
                 this.checkFinalsPopulated(body, finalFields);
                 body = this.prefixFieldInitializers(body, initializedFields);
                 List<Annotation> annotations = new ArrayList<>();
@@ -274,6 +291,35 @@ public class Holder {
             );
         }
 
+        private @NotNull Expr getFieldBody(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeParser parser, Compiler.ErrorStorage logger, Field field, List<Stmt> statics) {
+            stmtParser.apply(field.body(), parser);
+            Expr initializer = stmtParser.expression();
+            ClassReference initType = analyser.analyseExpr(initializer);
+            if (!field.type.get().isParentOf(initType.get())) {
+                logger.errorF(initializer, "incompatible types: %s can not be converted to %s", initType.absoluteName(), field.type.absoluteName());
+            }
+            if (Modifiers.isStatic(field.modifiers)) {
+                Stmt.Expression stmt1 = new Stmt.Expression();
+                {
+                    Expr.StaticSet staticSet = new Expr.StaticSet();
+                    staticSet.target = target;
+                    staticSet.name = field.name;
+                    staticSet.value = initializer;
+                    staticSet.assignType = field.assign;
+                    staticSet.executor = target;
+                    stmt1.expression = staticSet;
+                }
+                statics.add(stmt1);
+            }
+            return initializer;
+        }
+
+        private static Expr literal(Token token) {
+            Expr.Literal literal = new Expr.Literal();
+            literal.literal = token;
+            return literal;
+        }
+
         /**
          * @param og the original's constructor's body code
          * @param fieldsWithInit the fields that are to be initialized
@@ -285,13 +331,17 @@ public class Holder {
             for (int i = 0; i < fieldsWithInit.size(); i++) {
                 CompileField field = fieldsWithInit.get(i);
                 Token fieldName = field.getName();
-                out[i] = new Stmt.Expression(new Expr.Set(
-                        new Expr.VarRef(fieldName, (byte) 0),
-                        fieldName,
-                        field.getInit(),
-                        new Token(TokenType.ASSIGN, "=", LiteralHolder.EMPTY, fieldName.line(), fieldName.lineStartIndex()),
-                        field.getType()
-                ));
+                Stmt.Expression expression = new Stmt.Expression();
+                {
+                    Expr.Set set = new Expr.Set();
+                    set.object = varRef(fieldName, (byte) 0);
+                    set.name = fieldName;
+                    set.value = field.getInit();
+                    set.assignType = new Token(TokenType.ASSIGN, "=", LiteralHolder.EMPTY, fieldName.line(), fieldName.lineStartIndex());
+                    set.executor = field.getType();
+                    expression.expression = set;
+                }
+                out[i] = expression;
             }
             return out;
         }
@@ -304,8 +354,14 @@ public class Holder {
         //region enum constructor prefix
         private Expr[] prefixEnumConstructorCallArgs(Expr[] args, EnumConstant decl) {
             Expr[] out = new Expr[args.length + 2];
-            out[0] = new Expr.Literal(decl.name.lexemeAsLiteral()); //name
-            out[1] = new Expr.Literal(new Token(TokenType.STR, String.valueOf(decl.ordinal), new LiteralHolder(decl.ordinal, VarTypeManager.INTEGER), decl.name.line(), decl.name.lineStartIndex()));
+            out[0] = literal(decl.name.lexemeAsLiteral()); //name
+            out[1] = literal(new Token(
+                    TokenType.STR,
+                    String.valueOf(decl.ordinal),
+                    new LiteralHolder(decl.ordinal, VarTypeManager.INTEGER),
+                    decl.name.line(),
+                    decl.name.lineStartIndex()
+            ));
             System.arraycopy(args, 0, out, 2, args.length);
             return out;
         }
@@ -319,20 +375,29 @@ public class Holder {
         private Stmt[] prefixEnumConstructorCall(Stmt[] original) {
             Stmt[] out = new Stmt[original.length + 1];
             System.arraycopy(original, 0, out, 1, original.length);
-            out[0] = new Stmt.Expression(
-                    new Expr.SuperCall(
-                            new Expr.VarRef(this.name,  (byte) 0),
-                            VarTypeManager.ENUM,
-                            this.name.asIdentifier("<init>"),
-                            new Expr[] {
-                                    new Expr.VarRef(this.name, (byte) 1),
-                                    new Expr.VarRef(this.name, (byte) 2)
-                            },
-                            VarTypeManager.VOID.reference(),
-                            "Lscripted/lang/Enum;<init>(Lscripted/lang/String;I)"
-                    )
-            );
+            Stmt.Expression expression = new Stmt.Expression();
+            {
+                Expr.SuperCall call = new Expr.SuperCall();
+                call.callee = varRef(this.name, (byte) 0);
+                call.name = this.name.asIdentifier("<init>");
+                call.args = new Expr[]{
+                        varRef(this.name, (byte) 1),
+                        varRef(this.name, (byte) 2)
+                };
+                call.type = VarTypeManager.ENUM;
+                call.retType = VarTypeManager.VOID.reference();
+                call.id = "Lscripted/lang/Enum;<init>(Lscripted/lang/String;I)";
+                expression.expression = call;
+            }
+            out[0] = expression;
             return out;
+        }
+
+        private Expr varRef(Token name, byte ordinal) {
+            Expr.VarRef ref = new Expr.VarRef();
+            ref.name = name;
+            ref.ordinal = ordinal;
+            return null;
         }
         //endregion
 
@@ -348,15 +413,13 @@ public class Holder {
 
         }
 
-        public BakedClass constructClass(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
+        public BakedClass constructClass(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
             Map<Token, CompileField> fields = new HashMap<>();
             List<Stmt> statics = new ArrayList<>();
             for (Field field : fields()) {
                 Expr initializer = null;
                 if (field.body() != null) {
-                    stmtParser.apply(field.body(), parser);
-                    initializer = stmtParser.expression();
-                    statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target)));
+                    initializer = getFieldBody(stmtParser, analyser, parser, logger, field, statics);
                 }
                 List<Annotation> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
@@ -376,9 +439,10 @@ public class Holder {
                     if (Modifiers.isStatic(method.modifiers))
                         stmtParser.applyStaticMethod(method.params, method.type().getReference(), method.generics);
                     else
-                        stmtParser.applyMethod(method.params(), target(), method.type().getReference(), method.generics);
+                        stmtParser.applyMethod(method.type().getReference(), method.generics);
                     body = stmtParser.parse();
                     stmtParser.popMethod(method.closeBracket);
+                    analyser.analyseBody(body, method.type().getReference(), method.params(), target());
                 }
                 List<Annotation> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
@@ -390,7 +454,9 @@ public class Holder {
             }
 
             if (!statics.isEmpty()) {
-                statics.add(new Stmt.Return(name.asIdentifier("return"), null));
+                Stmt.Return aReturn = new Stmt.Return();
+                aReturn.keyword = name.asIdentifier("return");
+                statics.add(aReturn);
                 methods.add(Pair.of( //add <clinit> method
                         name.asIdentifier("<clinit>"),
                         new CompileCallable(
@@ -406,9 +472,9 @@ public class Holder {
             List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
             for (Constructor constructor : this.constructors()) {
                 stmtParser.apply(constructor.body(), parser);
-                stmtParser.applyMethod(constructor.params(), target(), ClassReference.of(VarTypeManager.VOID), constructor.generics);
+                stmtParser.applyMethod(ClassReference.of(VarTypeManager.VOID), constructor.generics);
                 Stmt[] body = stmtParser.parse();
-
+                analyser.analyseBody(body, ClassReference.of(VarTypeManager.VOID), constructor.params(), target());
                 List<Annotation> annotations = new ArrayList<>();
                 for (AnnotationObj obj : constructor.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
@@ -448,15 +514,13 @@ public class Holder {
             return finalFields;
         }
 
-        public BakedInterface constructInterface(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
+        public BakedInterface constructInterface(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
             Map<String, CompileField> staticFields = new HashMap<>();
             List<Stmt> statics = new ArrayList<>();
             for (Field field : fields()) {
                 Expr initializer = null;
                 if (field.body() != null) {
-                    stmtParser.apply(field.body(), parser);
-                    initializer = stmtParser.expression();
-                    statics.add(new Stmt.Expression(new Expr.StaticSet(target, field.name, initializer, field.assign, target)));
+                    initializer = getFieldBody(stmtParser, analyser, parser, logger, field, statics);
                 }
                 List<Annotation> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
@@ -477,8 +541,9 @@ public class Holder {
                     if (Modifiers.isStatic(method.modifiers))
                         stmtParser.applyStaticMethod(method.params, method.type.getReference(), method.generics);
                     else
-                        stmtParser.applyMethod(method.params, target(), method.type().getReference(), method.generics);
+                        stmtParser.applyMethod(method.type().getReference(), method.generics);
                     body = stmtParser.parse();
+                    analyser.analyseBody(body, method.type().getReference(), method.params, target());
                     stmtParser.popMethod(method.closeBracket);
                 }
                 List<Annotation> annotations = new ArrayList<>();
@@ -491,7 +556,9 @@ public class Holder {
             }
 
             if (!statics.isEmpty()) {
-                statics.add(new Stmt.Return(Token.createNative("return"), null));
+                Stmt.Return aReturn = new Stmt.Return();
+                aReturn.keyword = Token.createNative("return");
+                statics.add(aReturn);
                 methods.add(Pair.of( //add <clinit> method
                         Token.createNative("<clinit>"),
                         new CompileCallable(
@@ -522,7 +589,7 @@ public class Holder {
 
         }
 
-        public BakedAnnotation constructAnnotation(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
+        public BakedAnnotation constructAnnotation(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
             ImmutableMap.Builder<String, MethodWrapper> methods = new ImmutableMap.Builder<>();
             for (Method method : methods()) {
                 Expr val = null;

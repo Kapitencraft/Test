@@ -21,7 +21,7 @@ public class LocalVariableContainer {
     }
 
     public byte add(String name, ClassReference type, boolean canAssign, boolean assigned) {
-        if (name.equals("?") || //add synthetic methods no questions asked
+        if (name.equals("?") || //add synthetic vars no questions asked
                 get(name) == FetchResult.FAIL) {
             locals[localCount] = new Local(name, scopeDepth, type, canAssign, assigned);
             return localCount++;
