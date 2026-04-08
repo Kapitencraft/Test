@@ -37,7 +37,7 @@ public class RemoveUnreachableOpcodesOptimization implements AdvancedOptimizatio
                     ExceptionHandlerInstruction handler = iterator.next();
                     if (handler.getHandlerStart() <= i && handler.getHandlerEnd() > i) {
                         ipQueue.add(handler.getHandlerIP());
-                        iterator.remove(); //handler no longer needs to be analysed
+                        iterator.remove(); //handler no longer needs to be analyzed
                     }
                 }
 
@@ -61,7 +61,6 @@ public class RemoveUnreachableOpcodesOptimization implements AdvancedOptimizatio
         }
         for (int i = flags.length - 1; i >= 0; i--) {
             if (!flags[i]) {
-                //TODO include exception handlers
                 instructions.remove(i); //remove from the back to the front to keep the order aligned
             }
         }
