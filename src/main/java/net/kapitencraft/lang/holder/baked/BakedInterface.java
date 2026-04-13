@@ -4,6 +4,7 @@ import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.*;
@@ -49,5 +50,17 @@ public record BakedInterface(Compiler.ErrorStorage logger, Holder.Generics gener
     @Override
     public ClassReference superclass() {
         return null;
+    }
+
+    @Override
+    public void analyse() {
+        SemanticAnalyser analyser = new SemanticAnalyser(logger);
+
+        for (Pair<Token, CompileCallable> method : this.methods) {
+            method.getSecond().analyseSemantics(analyser, this.target);
+        }
+        for (CompileField value : staticFields.values()) {
+            value.analyseSemantics(analyser);
+        }
     }
 }

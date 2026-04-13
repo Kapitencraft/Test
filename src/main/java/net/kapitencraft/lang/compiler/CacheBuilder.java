@@ -22,10 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -37,7 +34,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     //marks whether the expr result has already been ignored and therefore no POP must be emitted
     private boolean ignoredExprResult = false;
     private final Chunk.Builder builder = new Chunk.Builder();
-    private final Stack<Loop> loops = new Stack<>();
+    private final ArrayDeque<Loop> loops = new ArrayDeque<>();
 
     public CacheBuilder() {
     }
@@ -131,31 +128,38 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = true;
         TokenType operator = expr.operator.type();
         final ClassReference executor = expr.executor;
+
         cache(expr.left);
         cache(expr.right);
-        //convertToStringIfNecessary(operator, executor); TODO
 
-        if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
-            this.builder.changeLineIfNecessary(expr.operator);
-            Opcode opcode = switch (operator) {
-                case EQUAL -> Opcode.EQUAL;
-                case NEQUAL -> Opcode.NEQUAL;
-                case LEQUAL -> getLequal(executor);
-                case GEQUAL -> getGequal(executor);
-                case LESSER -> getLesser(executor);
-                case GREATER -> getGreater(executor);
-                case SUB -> getSub(executor);
-                case ADD -> getAdd(executor);
-                case MUL -> getMul(executor);
-                case DIV -> getDiv(executor);
-                case POW -> getPow(executor);
-                case MOD -> getMod(executor);
-                default -> throw new IllegalStateException("not an operator: " + operator);
-            };
-            builder.addCode(opcode);
+        if (expr.signature != null) {
+            builder.invokeVirtual(expr.signature);
         } else {
-            builder.addCode(Opcode.POP_2);
-            ignoredExprResult = true;
+
+            //convertToStringIfNecessary(operator, executor); TODO
+
+            if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
+                this.builder.changeLineIfNecessary(expr.operator);
+                Opcode opcode = switch (operator) {
+                    case EQUAL -> Opcode.EQUAL;
+                    case NEQUAL -> Opcode.NEQUAL;
+                    case LEQUAL -> getLequal(executor);
+                    case GEQUAL -> getGequal(executor);
+                    case LESSER -> getLesser(executor);
+                    case GREATER -> getGreater(executor);
+                    case SUB -> getSub(executor);
+                    case ADD -> getAdd(executor);
+                    case MUL -> getMul(executor);
+                    case DIV -> getDiv(executor);
+                    case POW -> getPow(executor);
+                    case MOD -> getMod(executor);
+                    default -> throw new IllegalStateException("not an operator: " + operator);
+                };
+                builder.addCode(opcode);
+            } else {
+                builder.addCode(Opcode.POP_2);
+                ignoredExprResult = true;
+            }
         }
         retainExprResult = hadRetain;
         return null;
@@ -215,36 +219,21 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitInstCallExpr(Expr.InstCall expr) {
-        boolean hadRetain = retainExprResult;
-        retainExprResult = true;
-        cache(expr.callee);
-        //object is NOT POPED from the stack. keep it before the args
-        this.builder.changeLineIfNecessary(expr.name);
-        saveArgs(expr.args);
-        retainExprResult = hadRetain;
-        builder.invokeVirtual(expr.id);
-        if (expr.retType.is(VarTypeManager.VOID))
-            ignoredExprResult = true;
-        return null;
-    }
+    public Void visitCallExpr(Expr.Call expr) {
+        if (expr.object != null) {
+            boolean hadRetain = retainExprResult;
+            retainExprResult = true;
+            cache(expr.object);
+            //object is NOT POPED from the stack. keep it before the args
+            this.builder.changeLineIfNecessary(expr.name);
+            retainExprResult = hadRetain;
+        }
 
-    @Override
-    public Void visitStaticCallExpr(Expr.StaticCall expr) {
-        builder.changeLineIfNecessary(expr.name);
         saveArgs(expr.args);
-        builder.invokeStatic(expr.id);
-        if (expr.retType.is(VarTypeManager.VOID))
-            ignoredExprResult = true;
-        return null;
-    }
-
-    @Override
-    public Void visitSuperCallExpr(Expr.SuperCall expr) {
-        getVar(0);
-        builder.changeLineIfNecessary(expr.name);
-        saveArgs(expr.args);
-        builder.invokeStatic(expr.id);
+        if (expr.declaring != null)
+            builder.invokeStatic(expr.signature);
+        else
+            builder.invokeVirtual(expr.signature);
         if (expr.retType.is(VarTypeManager.VOID))
             ignoredExprResult = true;
         return null;
@@ -316,7 +305,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(expr.index);
         cache(expr.object);
         if (hadRetain) {
-            builder.addCode(getArrayLoad(expr.type));
+            builder.addCode(getArrayLoad(expr.componentType));
         } else {
             builder.addCode(Opcode.POP_2);
             ignoredExprResult = true;
@@ -413,7 +402,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitSpecialSetExpr(Expr.SpecialSet expr) {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
-        cache(expr.callee);
+        cache(expr.object);
         retainExprResult = hadRetain;
         specialAssign(expr.retType, expr.assignType, Opcode.GET_FIELD, Opcode.PUT_FIELD, b -> b.injectString(expr.name.lexeme()));
         return null;
@@ -537,12 +526,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitCastCheckExpr(Expr.CastCheck expr) {
         //TODO
-        return null;
-    }
-
-    @Override
-    public Void visitGroupingExpr(Expr.Grouping expr) {
-        cache(expr.expression);
         return null;
     }
 
@@ -788,7 +771,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         builder.changeLineIfNecessary(stmt.keyword);
         cache(stmt.condition);
         int skip = builder.addJumpIfFalse();
-        loops.add(new Loop());
+        loops.push(new Loop());
         retainExprResult = false;
         cache(stmt.body);
         int returnIndex = builder.addJump();
@@ -820,7 +803,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         ignoredExprResult = false;
         cache(stmt.condition); //synthesise loop-condition
         int jump1 = builder.addJumpIfFalse();
-        loops.add(new Loop()); //push loop for continue & break entries
+        loops.push(new Loop()); //push loop for continue & break entries
         retainExprResult = false;
         ignoredExprResult = false;
         cache(stmt.body); //synthesize loop body
@@ -864,7 +847,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         builder.addCode(Opcode.I_LESSER); //check if iteration var is less than the length of the array
         int result = builder.addJumpIfFalse(); //create jump out of the loop if check fails
         //endregion
-        loops.add(new Loop()); //push loop
+        loops.push(new Loop());
 
         //region load iteration object
         getVar(baseVarIndex + 1); //load iteration var

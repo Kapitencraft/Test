@@ -15,6 +15,7 @@ import net.kapitencraft.tool.StringReader;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class VarTypeManager {
@@ -251,7 +252,7 @@ public class VarTypeManager {
             case 'L' -> {
                 String type = reader.readUntil(';');
                 reader.skip();
-                yield getClassForName(type.replaceAll("[/$]", "."));
+                yield getClassForName(replaceSourceChars(type));
             }
             default -> throw new IllegalArgumentException("unknown type start: '" + reader.peek(-1) + "'");
         };
@@ -277,6 +278,17 @@ public class VarTypeManager {
         };
     }
 
+    private static String replaceSourceChars(String in) {
+        StringBuilder s = new StringBuilder();
+        for (char c : in.toCharArray()) {
+            if (c == '/' || c == '$')
+                s.append('.');
+            else
+                s.append(c);
+        }
+        return s.toString();
+    }
+
     public static ClassReference directParseTypeCompiler(String name) {
         return switch (name) {
             case "N" -> VarTypeManager.NUMBER.reference();
@@ -290,7 +302,7 @@ public class VarTypeManager {
                 if (name.startsWith("[")) {
                     yield directParseTypeCompiler(name.substring(1));
                 } else if (name.startsWith("L")) {
-                    yield getClassForName(name.substring(1, name.length() - 1).replaceAll("[/$]", "."));
+                    yield getClassForName(replaceSourceChars(name.substring(1, name.length() - 1)));
                 }
                 throw new IllegalArgumentException("unknown type pattern: '" + name + "'");
             }

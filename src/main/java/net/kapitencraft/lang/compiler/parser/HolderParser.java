@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 import static net.kapitencraft.lang.holder.token.TokenType.DOT;
 
-@SuppressWarnings("ThrowableNotThrown")
 public class HolderParser extends AbstractParser {
     private GenericStack activeGenerics = new GenericStack();
     private final Deque<String> activePackages = new ArrayDeque<>();
@@ -44,7 +43,7 @@ public class HolderParser extends AbstractParser {
         consumeEndOfArg();
         SourceClassReference target = VarTypeManager.getOrCreateClass(packages);
         if (parser.hasClass(target.getReference(), nameOverride)) {
-            error(packages.get(packages.size() - 1), "unknown class '" + packages.stream().map(Token::lexeme).collect(Collectors.joining(".")) + "'");
+            error(packages.getLast(), "unknown class '" + packages.stream().map(Token::lexeme).collect(Collectors.joining(".")) + "'");
         }
         parser.addClass(target, nameOverride);
     }
@@ -151,17 +150,15 @@ public class HolderParser extends AbstractParser {
 
     public Holder.Class parseFile(String fileName) {
         List<Token> pck = new ArrayList<>();
-        try {
-            consume(PACKAGE, "package expected!");
+        consume(PACKAGE, "package expected!");
+        pck.add(consumeIdentifier());
+        while (!check(EOA)) {
+            consume(DOT, "unexpected token");
             pck.add(consumeIdentifier());
-            while (!check(EOA)) {
-                consume(DOT, "unexpected token");
-                pck.add(consumeIdentifier());
-            }
-            consumeEndOfArg();
-        } catch (ParseError error) {
-            synchronize();
         }
+        consumeEndOfArg();
+        if (panicMode)
+            synchronize();
 
         parseImports();
 
@@ -170,18 +167,16 @@ public class HolderParser extends AbstractParser {
         ModifiersParser parser = MODS_NO_GENERICS;
         parser.parse();
 
-        try {
-            return switch (advance().type()) {
-                case CLASS -> classDecl(parser, null, pckId, fileName);
-                case ENUM -> enumDecl(parser, null, pckId, fileName);
-                case ANNOTATION -> annotationDecl(parser, null, pckId, fileName);
-                case INTERFACE -> interfaceDecl(parser, null, pckId, fileName);
-                default -> throw error(peek(), "'interface', 'class', 'enum' or 'annotation' expected");
-            };
-        } catch (ParseError error) {
-            synchronize();
-            return null;
-        }
+        return switch (advance().type()) {
+            case CLASS -> classDecl(parser, null, pckId, fileName);
+            case ENUM -> enumDecl(parser, null, pckId, fileName);
+            case ANNOTATION -> annotationDecl(parser, null, pckId, fileName);
+            case INTERFACE -> interfaceDecl(parser, null, pckId, fileName);
+            default -> {
+                error(peek(), "'interface', 'class', 'enum' or 'annotation' expected");
+                yield null;
+            }
+        };
     }
 
     private static ClassReference getOrCreate(String name, String pck) {

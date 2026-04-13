@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
+import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
@@ -57,6 +58,21 @@ public record BakedClass(
                 this.modifiers(),
                 this.annotations()
         );
+    }
+
+    @Override
+    public void analyse() {
+        SemanticAnalyser analyser = new SemanticAnalyser(this.logger);
+
+        for (Pair<Token, CompileCallable> method : this.methods) {
+            method.getSecond().analyseSemantics(analyser, this.target);
+        }
+        for (Pair<Token, CompileCallable> constructor : this.constructors) {
+            constructor.getSecond().analyseSemantics(analyser, this.target);
+        }
+        for (CompileField value : this.fields.values()) {
+            value.analyseSemantics(analyser);
+        }
     }
 
     public static Map<String, CompileField> create(Map<Token, CompileField> fields) {

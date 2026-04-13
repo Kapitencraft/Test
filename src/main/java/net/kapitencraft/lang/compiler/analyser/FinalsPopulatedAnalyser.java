@@ -3,6 +3,7 @@ package net.kapitencraft.lang.compiler.analyser;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.holder.ast.SwitchKey;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
@@ -49,8 +50,9 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     }
 
     @Override
-    public Void visitInstCallExpr(Expr.InstCall expr) {
-        analyse(expr.callee);
+    public Void visitCallExpr(Expr.Call expr) {
+        if (expr.object != null)
+            analyse(expr.object);
         for (Expr arg : expr.args) {
             analyse(arg);
         }
@@ -61,15 +63,6 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     public Void visitLogicalExpr(Expr.Logical expr) {
         analyse(expr.left);
         analyse(expr.right);
-        return null;
-    }
-
-    @Override
-    public Void visitSuperCallExpr(Expr.SuperCall expr) {
-        analyse(expr.callee);
-        for (Expr arg : expr.args) {
-            analyse(arg);
-        }
         return null;
     }
 
@@ -118,7 +111,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitSpecialSetExpr(Expr.SpecialSet expr) {
-        analyse(expr.callee);
+        analyse(expr.object);
         return null;
     }
 
@@ -150,12 +143,6 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     }
 
     @Override
-    public Void visitGroupingExpr(Expr.Grouping expr) {
-        analyse(expr.expression);
-        return null;
-    }
-
-    @Override
     public Void visitUnaryExpr(Expr.Unary expr) {
         analyse(expr.right);
         return null;
@@ -177,7 +164,9 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     @Override
     public Void visitSwitchExpr(Expr.Switch expr) {
         analyse(expr.provider);
-        expr.params.values().forEach(this::analyse);
+        for (SwitchKey param : expr.params) {
+            analyse(param.expr);
+        }
         return null;
     }
 
@@ -202,14 +191,6 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     @Override
     public Void visitAssignExpr(Expr.Assign expr) {
         analyse(expr.value);
-        return null;
-    }
-
-    @Override
-    public Void visitStaticCallExpr(Expr.StaticCall expr) {
-        for (Expr arg : expr.args) {
-            analyse(arg);
-        }
         return null;
     }
 
@@ -298,8 +279,8 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
         analyse(stmt.condition);
         analyse(stmt.thenBranch);
         for (ElifBranch branch : stmt.elifs) {
-            analyse(branch.condition());
-            analyse(branch.body());
+            analyse(branch.condition);
+            analyse(branch.body);
         }
         if (stmt.elseBranch != null)
             analyse(stmt.elseBranch);

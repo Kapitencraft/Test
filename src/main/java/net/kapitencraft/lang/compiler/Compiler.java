@@ -13,7 +13,6 @@ import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.run.load.ClassLoader;
 import net.kapitencraft.lang.run.load.CompilerLoaderHolder;
 import net.kapitencraft.lang.tool.Util;
-import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +31,7 @@ import java.util.function.Consumer;
 
 public class Compiler {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    public static final LocationAnalyser LOCATION_ANALYSER = new LocationAnalyser();
 
     static int errorCount = 0;
     private static ClassLoader.PackageHolder<CompilerLoaderHolder> compileData;
@@ -74,27 +74,30 @@ public class Compiler {
         compileData = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
 
         ExecutorService executor = Executors.newFixedThreadPool(10, new CompilerThreadFactory());
-        for (Stage stage : Stage.values()) {
-            registers.forEach(ClassRegister::register);
-            registers.clear();
-            activeStage = stage;
-            System.out.printf("executing step %s\n", stage);
+        try {
+            for (Stage stage : Stage.values()) {
+                registers.forEach(ClassRegister::register);
+                registers.clear();
+                activeStage = stage;
+                System.out.printf("executing step %s\n", stage);
 
-            if (stage == Stage.CACHING && cache.exists())
-                Util.delete(cache);
+                if (stage == Stage.CACHING && cache.exists())
+                    Util.delete(cache);
 
-            ClassLoader.useHolders(compileData, stage.action, executor);
+                ClassLoader.useHolders(compileData, stage.action, executor);
 
-            if (errorCount > 0) {
-                printErrors(compileData);
+                if (errorCount > 0) {
+                    printErrors(compileData);
 
-                if (errorCount > 100) {
-                    System.err.println("only showing the first 100 errors out of " + errorCount + " total");
-                } else System.err.println(errorCount + " errors");
-                System.exit(65);
+                    if (errorCount > 100) {
+                        System.err.println("only showing the first 100 errors out of " + errorCount + " total");
+                    } else System.err.println(errorCount + " errors");
+                    System.exit(65);
+                }
             }
+        } finally {
+            executor.shutdownNow();
         }
-        executor.shutdownNow();
     }
 
     /**
@@ -124,6 +127,8 @@ public class Compiler {
         Pair<Token, CompileCallable>[] methods();
 
         ClassReference[] interfaces();
+
+        void analyse();
     }
 
     public static void cache(File cacheBase, CacheBuilder builder, String path, CacheableClass target, String name) throws IOException {
@@ -141,13 +146,11 @@ public class Compiler {
     public static class ErrorStorage {
         private final String[] lines;
         private final String fileLoc;
-        private final LocationAnalyser finder;
         private final List<Message> messages = new ArrayList<>();
 
         public ErrorStorage(String[] lines, String fileLoc) {
             this.lines = lines;
             this.fileLoc = fileLoc;
-            finder = new LocationAnalyser();
         }
 
         public void printAll() {
@@ -187,7 +190,7 @@ public class Compiler {
         }
 
         public void errorF(Expr loc, String format, Object... args) {
-            errorF(finder.find(loc), format, args);
+            errorF(LOCATION_ANALYSER.find(loc), format, args);
         }
 
         public void error(int lineIndex, int lineStartIndex, String msg) {
@@ -196,11 +199,11 @@ public class Compiler {
         }
 
         public void error(Stmt loc, String msg) {
-            error(finder.find(loc), msg);
+            error(LOCATION_ANALYSER.find(loc), msg);
         }
 
         public void error(Expr loc, String msg) {
-            error(finder.find(loc), msg);
+            error(LOCATION_ANALYSER.find(loc), msg);
         }
 
         public void logError(String s) {
@@ -216,12 +219,12 @@ public class Compiler {
         }
 
         public void warn(Stmt loc, String msg) {
-            warn(finder.find(loc), msg);
+            warn(LOCATION_ANALYSER.find(loc), msg);
         }
 
         @Override
         public String toString() {
-            return "ErrorStorage for '" + fileLoc + "' (errorCount: " + errorCount + ")";
+            return "ErrorStorage for '" + fileLoc + "' (errorCount: " + messages.size() + ")";
         }
 
         public boolean hadError() {
@@ -254,7 +257,8 @@ public class Compiler {
         PARSE_SOURCE(CompilerLoaderHolder::parseSource),
         CREATE_SKELETON(CompilerLoaderHolder::applySkeleton),
         VALIDATE(CompilerLoaderHolder::validate),
-        CONSTRUCT(CompilerLoaderHolder::construct),
+        SYNTAX_ANALYSIS(CompilerLoaderHolder::construct),
+        SEMANTIC_ANALYSIS(CompilerLoaderHolder::analyse),
         FINALIZE_LOAD(CompilerLoaderHolder::finalizeLoad),
         CACHING(CompilerLoaderHolder::cache);
 

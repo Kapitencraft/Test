@@ -220,7 +220,7 @@ public class ExprParser extends AbstractParser {
                 arraySet.index = arrayGet.index;
                 arraySet.value = value;
                 arraySet.assignType = assignKeyword;
-                arraySet.componentType = arrayGet.type;
+                arraySet.componentType = arrayGet.componentType;
                 return arraySet;
             } else if (expr instanceof Expr.StaticGet staticGet) {
                 Expr.StaticSet staticSet = new Expr.StaticSet();
@@ -249,7 +249,7 @@ public class ExprParser extends AbstractParser {
 
             if (expr instanceof Expr.Get get) {
                 Expr.SpecialSet specialSet = new Expr.SpecialSet();
-                specialSet.callee = get.object;
+                specialSet.object = get.object;
                 specialSet.name = get.name;
                 specialSet.assignType = assign;
                 return specialSet;
@@ -488,7 +488,7 @@ public class ExprParser extends AbstractParser {
     private Expr call() {
         Expr expr = primary();
 
-        while (true) {
+        while (check(S_BRACKET_O, BRACKET_O, DOT)) {
             if (match(S_BRACKET_O)) {
                 Token bracketO = previous();
                 if (match(COLON)) {
@@ -530,8 +530,6 @@ public class ExprParser extends AbstractParser {
                 get.object = expr;
                 get.name = name;
                 expr = get;
-            } else {
-                break;
             }
         }
         return expr;
@@ -546,7 +544,9 @@ public class ExprParser extends AbstractParser {
             return previous().literal();
         }
 
-        throw error(peek(), "Expected literal");
+        this.panicMode = true;
+        error(peek(), "Expected literal");
+        return null;
     }
 
     private Expr primary() {
@@ -643,21 +643,21 @@ public class ExprParser extends AbstractParser {
                     if (!targetClass.hasMethod(name.lexeme())) {
                         error(name, "unknown method '" + name.lexeme() + "'");
                         consumeBracketClose("arguments");
-                        Expr.StaticCall call = new Expr.StaticCall();
-                        call.target = superclass;
+                        Expr.Call call = new Expr.Call();
+                        call.declaring = superclass;
                         call.name = name;
                         call.args = arguments;
                         return call;
                     }
                     consumeBracketClose("arguments");
 
-                    Expr.SuperCall call = new Expr.SuperCall();
+                    Expr.Call call = new Expr.Call();
 
                     Expr.VarRef callee = new Expr.VarRef();
-                    callee.name = reference;
+                    callee.name = Objects.requireNonNull(reference);
                     callee.ordinal = 0;
-                    call.callee = callee;
-                    call.type = superclass;
+                    call.object = callee;
+                    call.declaring = superclass;
                     call.name = name;
                     call.args = arguments;
                     return call;
@@ -701,15 +701,9 @@ public class ExprParser extends AbstractParser {
             if (reference.isPresent()) {
                 ClassReference target = reference.get().getReference();
                 consume(DOT, "'.' expected");
-                Token name = consumeIdentifier();
-                if (match(BRACKET_O)) return finishCall(name, target, null);
-                if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
-                if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
-                Expr.StaticGet get = new Expr.StaticGet();
-                get.target = target;
-                get.name = name;
-                return get;
+                return parseObjAttributes(target);
             }
+            advance();
             return varRef(
                     previous,
                     (byte) -1
@@ -727,7 +721,20 @@ public class ExprParser extends AbstractParser {
             return expr; //the grouping expression mustn't exist as a real AST entry
         }
 
-        throw error(peek(), "Illegal start of expression");
+        error(peek(), "Illegal start of expression");
+        this.panicMode = true;
+        return varRef(Token.createNative("<unidentified>"), (byte) -1);
+    }
+
+    protected @NotNull Expr parseObjAttributes(ClassReference target) {
+        Token name = consumeIdentifier();
+        if (match(BRACKET_O)) return finishCall(name, target, null);
+        if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
+        if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
+        Expr.StaticGet get = new Expr.StaticGet();
+        get.target = target;
+        get.name = name;
+        return get;
     }
 
     private Expr varRef(Token previous, byte ordinal) {
@@ -742,18 +749,11 @@ public class ExprParser extends AbstractParser {
 
         consumeBracketClose("arguments");
 
-        if (obj == null) {
-            Expr.StaticCall call = new Expr.StaticCall();
-            call.name = name;
-            call.target = objType;
-            call.args = arguments;
-            return call;
-        } else {
-            Expr.InstCall call = new Expr.InstCall();
-            call.callee = obj;
-            call.name = name;
-            call.args = arguments;
-            return call;
-        }
+        Expr.Call call = new Expr.Call();
+        call.name = name;
+        call.object = obj;
+        call.declaring = objType;
+        call.args = arguments;
+        return call;
     }
 }

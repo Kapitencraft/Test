@@ -5,6 +5,7 @@ import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
@@ -49,5 +50,9 @@ public record BakedAnnotation(
     @Override
     public ClassReference[] interfaces() {
         return new ClassReference[0];
+    }
+
+    @Override
+    public void analyse() {
     }
 }

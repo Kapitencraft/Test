@@ -59,11 +59,11 @@ public class Package {
     }
 
     //use getOrCreatePackage instead
-    private void addPackage(String name, Package pck) {
+    private synchronized void addPackage(String name, Package pck) {
         packages.put(name, pck);
     }
 
-    public synchronized Package getOrCreatePackage(String name) {
+    public Package getOrCreatePackage(String name) {
         if (!hasPackage(name)) {
             addPackage(name, new Package(this.name.isEmpty() ? name : this.name + "." + name));
         }
