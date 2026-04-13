@@ -25,7 +25,7 @@ public class RemoveUnreachableOpcodesOptimization implements AdvancedOptimizatio
 
         ArrayDeque<Integer> ipQueue = new ArrayDeque<>();
         ipQueue.push(0);
-        boolean[] flags = new boolean[instructions.size()];
+        boolean[] flags = new boolean[instructions.size()]; //keep a list of all reachable instructions (value = true)
 
         while (!ipQueue.isEmpty()) {
             int i = ipQueue.pop();
@@ -47,7 +47,7 @@ public class RemoveUnreachableOpcodesOptimization implements AdvancedOptimizatio
                     }
                     if (cI instanceof JumpInstruction jI) {
                         ipQueue.add(jI.getTarget());
-                        if (cI.code() == Opcode.JUMP)
+                        if (cI.code() == Opcode.JUMP) //jump instructions have no way of continuing
                             break;
                     }
                     if (cI instanceof SwitchInstruction switchInstruction) {

@@ -12,7 +12,7 @@ import java.util.List;
  * removes pure (not modifying IO / calling other methods) instructions whose results will be removed from the stack due to {@code POP} or {@code POP_2} instructions
  * <br>does the same with instructions ending in a {@code RETURN} (not {@code RETURN_ARG}!)
  */
-public class RemoveSuperfluousInstructionsOptimization implements AdvancedOptimization {
+public class RemoveIgnoredResultInstructionsOptimization implements AdvancedOptimization {
 
     //1. remove non-pure Instructions before RETURN
     //2. remove non-pure Instructions before POP and POP_2 and remove these if finding a DUP instruction
