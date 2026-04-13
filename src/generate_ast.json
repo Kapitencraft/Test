@@ -29,21 +29,9 @@
           "ifTrue": "Expr",
           "ifFalse": "Expr"
         },
-        "InstCall": {
+        "Call": {
           "object": "Expr",
-          "name": "Token",
-          "args": "Expr[]",
-          "signature": "String"
-        },
-        "StaticCall": {
-          "target": "ClassReference",
-          "name": "Token",
-          "args": "Expr[]",
-          "signature": "String"
-        },
-        "SuperCall": {
-          "object": "Expr",
-          "type": "ClassReference",
+          "declaring": "ClassReference",
           "name": "Token",
           "args": "Expr[]",
           "signature": "String"

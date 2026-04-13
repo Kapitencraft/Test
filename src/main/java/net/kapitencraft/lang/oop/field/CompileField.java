@@ -4,7 +4,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
+import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
@@ -36,6 +38,15 @@ public class CompileField implements ScriptedField {
         object.addProperty("modifiers", this.modifiers);
         object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
         return object;
+    }
+
+    public void analyseSemantics(SemanticAnalyser analyser) {
+        if (this.init != null) {
+            ClassReference initType = analyser.analyseExpr(this.init);
+            if (!type.get().isParentOf(initType.get())) {
+                analyser.errorF(Compiler.LOCATION_ANALYSER.find(this.init), "incompatible types: %s can not be converted to %s", initType.absoluteName(), type.absoluteName());
+            }
+        }
     }
 
     @Override

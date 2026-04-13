@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.compiler;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
@@ -78,14 +79,14 @@ public class Holder {
             return Arrays.stream(interfaces).map(SourceReference::get).map(VarTypeManager::getClassName).toArray(String[]::new);
         }
 
-        public Compiler.ClassBuilder construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
+        public Compiler.ClassBuilder construct(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
             stmtParser.pushFallback(this.target);
             try {
                 return switch (this.type) {
-                    case ENUM -> constructEnum(stmtParser, analyser, parser, logger);
-                    case INTERFACE -> constructInterface(stmtParser, analyser, parser, logger);
-                    case CLASS -> constructClass(stmtParser, analyser, parser, logger);
-                    case ANNOTATION -> constructAnnotation(stmtParser, analyser, parser, logger);
+                    case ENUM -> constructEnum(stmtParser, parser, logger);
+                    case INTERFACE -> constructInterface(stmtParser, parser, logger);
+                    case CLASS -> constructClass(stmtParser, parser, logger);
+                    case ANNOTATION -> constructAnnotation(stmtParser, parser, logger);
                 };
             } finally {
                 stmtParser.popFallback();
@@ -114,23 +115,12 @@ public class Holder {
                     args = prefixEnumConstructorCallArgs(stmtParser.args(), decl);
                 }
 
-                ClassReference[] arguments = analyser.args(args);
-                ScriptedCallable callable = Util.getVirtualMethod(target.get(), "<init>", arguments);
-
-                String signature;
-                if (args.length == 0 && callable.isNative())
-                    signature = null;
-                else {
-                    signature = VarTypeManager.getMethodSignature(target.get(), "<init>", arguments);
-                    analyser.checkArguments(args, arguments, callable, null, decl.name());
-                }
                 Stmt.Expression expression = new Stmt.Expression();
                 {
                     Expr.Constructor constructor = new Expr.Constructor();
                     constructor.keyword = decl.name;
                     constructor.target = target;
                     constructor.args = args;
-                    constructor.signature = signature;
                     Expr.StaticSet staticSet = new Expr.StaticSet();
                     staticSet.target = target;
                     staticSet.name = decl.name;
@@ -184,7 +174,7 @@ public class Holder {
                 short mods = field.modifiers;
                 Expr initializer = null;
                 if (field.body() != null) {
-                    initializer = getFieldBody(stmtParser, analyser, parser, logger, field, statics);
+                    initializer = getFieldBody(stmtParser, parser, logger, field, statics);
                 } else if (Modifiers.isFinal(mods)) finalFields.add(field.name().lexeme());
                 List<Annotation> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
@@ -204,11 +194,10 @@ public class Holder {
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     if (Modifiers.isStatic(method.modifiers))
-                        stmtParser.applyStaticMethod(method.params, method.type.getReference(), method.generics);
+                        stmtParser.applyStaticMethod(method.type.getReference(), method.generics);
                     else
                         stmtParser.applyMethod(VarTypeManager.ENUM, method.generics);
                     body = stmtParser.parse();
-                    analyser.analyseBody(body, method.type.getReference(), method.params, target());
                     stmtParser.popMethod(method.closeBracket);
                 }
 
@@ -262,7 +251,6 @@ public class Holder {
                 stmtParser.apply(enumConstructor.body(), parser);
                 stmtParser.applyMethod(ClassReference.of(VarTypeManager.VOID), enumConstructor.generics);
                 Stmt[] body = prefixEnumConstructorCall(stmtParser.parse());
-                analyser.analyseBody(body, VarTypeManager.VOID.reference(), enumConstructor.params(), target());
                 this.checkFinalsPopulated(body, finalFields);
                 body = this.prefixFieldInitializers(body, initializedFields);
                 List<Annotation> annotations = new ArrayList<>();
@@ -270,7 +258,7 @@ public class Holder {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                CompileCallable constDecl = new CompileCallable(target, enumConstructor.extractParams(), body, (short) 0, annotations.toArray(Annotation[]::new));
+                CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), enumConstructor.extractParams(), body, (short) 0, annotations.toArray(Annotation[]::new));
                 stmtParser.popMethod(enumConstructor.closeBracket);
                 constructors.add(Pair.of(enumConstructor.name(), constDecl));
             }
@@ -291,13 +279,9 @@ public class Holder {
             );
         }
 
-        private @NotNull Expr getFieldBody(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeParser parser, Compiler.ErrorStorage logger, Field field, List<Stmt> statics) {
+        private @NotNull Expr getFieldBody(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorStorage logger, Field field, List<Stmt> statics) {
             stmtParser.apply(field.body(), parser);
             Expr initializer = stmtParser.expression();
-            ClassReference initType = analyser.analyseExpr(initializer);
-            if (!field.type.get().isParentOf(initType.get())) {
-                logger.errorF(initializer, "incompatible types: %s can not be converted to %s", initType.absoluteName(), field.type.absoluteName());
-            }
             if (Modifiers.isStatic(field.modifiers)) {
                 Stmt.Expression stmt1 = new Stmt.Expression();
                 {
@@ -377,16 +361,16 @@ public class Holder {
             System.arraycopy(original, 0, out, 1, original.length);
             Stmt.Expression expression = new Stmt.Expression();
             {
-                Expr.SuperCall call = new Expr.SuperCall();
-                call.callee = varRef(this.name, (byte) 0);
+                Expr.Call call = new Expr.Call();
+                call.object = varRef(Token.createNative("super"), (byte) 0);
                 call.name = this.name.asIdentifier("<init>");
                 call.args = new Expr[]{
-                        varRef(this.name, (byte) 1),
-                        varRef(this.name, (byte) 2)
+                        varRef(Token.createNative("$name"), (byte) 1),
+                        varRef(Token.createNative("$ordinal"), (byte) 2)
                 };
-                call.type = VarTypeManager.ENUM;
+                call.declaring = VarTypeManager.ENUM;
                 call.retType = VarTypeManager.VOID.reference();
-                call.id = "Lscripted/lang/Enum;<init>(Lscripted/lang/String;I)";
+                call.signature = "Lscripted/lang/Enum;<init>(Lscripted/lang/String;I)";
                 expression.expression = call;
             }
             out[0] = expression;
@@ -395,9 +379,9 @@ public class Holder {
 
         private Expr varRef(Token name, byte ordinal) {
             Expr.VarRef ref = new Expr.VarRef();
-            ref.name = name;
+            ref.name = Objects.requireNonNull(name);
             ref.ordinal = ordinal;
-            return null;
+            return ref;
         }
         //endregion
 
@@ -419,7 +403,7 @@ public class Holder {
             for (Field field : fields()) {
                 Expr initializer = null;
                 if (field.body() != null) {
-                    initializer = getFieldBody(stmtParser, analyser, parser, logger, field, statics);
+                    initializer = getFieldBody(stmtParser, parser, logger, field, statics);
                 }
                 List<Annotation> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
@@ -437,12 +421,11 @@ public class Holder {
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     if (Modifiers.isStatic(method.modifiers))
-                        stmtParser.applyStaticMethod(method.params, method.type().getReference(), method.generics);
+                        stmtParser.applyStaticMethod(method.type().getReference(), method.generics);
                     else
                         stmtParser.applyMethod(method.type().getReference(), method.generics);
                     body = stmtParser.parse();
                     stmtParser.popMethod(method.closeBracket);
-                    analyser.analyseBody(body, method.type().getReference(), method.params(), target());
                 }
                 List<Annotation> annotations = new ArrayList<>();
                 for (AnnotationObj obj : method.annotations()) {
@@ -474,13 +457,12 @@ public class Holder {
                 stmtParser.apply(constructor.body(), parser);
                 stmtParser.applyMethod(ClassReference.of(VarTypeManager.VOID), constructor.generics);
                 Stmt[] body = stmtParser.parse();
-                analyser.analyseBody(body, ClassReference.of(VarTypeManager.VOID), constructor.params(), target());
                 List<Annotation> annotations = new ArrayList<>();
                 for (AnnotationObj obj : constructor.annotations()) {
                     annotations.add(stmtParser.parseAnnotation(obj, parser));
                 }
 
-                CompileCallable constDecl = new CompileCallable(target, constructor.extractParams(), body, (short) 0, annotations.toArray(Annotation[]::new));
+                CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), constructor.extractParams(), body, (short) 0, annotations.toArray(Annotation[]::new));
                 stmtParser.popMethod(constructor.closeBracket);
                 constructors.add(Pair.of(constructor.name(), constDecl));
             }
@@ -520,7 +502,7 @@ public class Holder {
             for (Field field : fields()) {
                 Expr initializer = null;
                 if (field.body() != null) {
-                    initializer = getFieldBody(stmtParser, analyser, parser, logger, field, statics);
+                    initializer = getFieldBody(stmtParser, parser, logger, field, statics);
                 }
                 List<Annotation> annotations = new ArrayList<>();
                 for (AnnotationObj obj : field.annotations()) {
@@ -539,11 +521,10 @@ public class Holder {
                 if (!Modifiers.isAbstract(method.modifiers)) {
                     stmtParser.apply(method.body(), parser);
                     if (Modifiers.isStatic(method.modifiers))
-                        stmtParser.applyStaticMethod(method.params, method.type.getReference(), method.generics);
+                        stmtParser.applyStaticMethod(method.type.getReference(), method.generics);
                     else
                         stmtParser.applyMethod(method.type().getReference(), method.generics);
                     body = stmtParser.parse();
-                    analyser.analyseBody(body, method.type().getReference(), method.params, target());
                     stmtParser.popMethod(method.closeBracket);
                 }
                 List<Annotation> annotations = new ArrayList<>();
@@ -676,6 +657,15 @@ public class Holder {
                     finalFields.add(field.name());
             }
 
+            if (this.enumConstants != null) {
+                for (EnumConstant constant : this.enumConstants) {
+                    SkeletonField field = new SkeletonField(target, Modifiers.pack(true, true, false));
+                    fields.put(constant.name.lexeme(), field);
+                }
+
+                fields.put("$VALUES", new SkeletonField(target.array(), Modifiers.pack(true, true, false)));
+            }
+
             //methods
             Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
             for (Method method : this.methods()) {
@@ -756,8 +746,11 @@ public class Holder {
             params.forEach(p -> p.getFirst().validate(logger));
         }
 
-        public List<? extends Pair<ClassReference, String>> extractParams() {
-            return params.stream().map(p -> p.mapFirst(SourceReference::getReference)).toList();
+        public List<Pair<ClassReference, String>> extractParams() {
+            List<Pair<ClassReference, String>> params = new ArrayList<>(this.params.stream().map(p -> p.mapFirst(SourceReference::getReference)).toList());
+            params.addFirst(Pair.of(VarTypeManager.INTEGER.reference(), "$ordinal"));
+            params.addFirst(Pair.of(VarTypeManager.STRING, "$name"));
+            return ImmutableList.copyOf(params);
         }
     }
 
@@ -772,14 +765,14 @@ public class Holder {
         }
     }
 
-    public record Method(short modifiers, AnnotationObj[] annotations, Generics generics, SourceReference type, Token name, Token closeBracket, List<? extends Pair<SourceReference, String>> params, Token[] body) {
+    public record Method(short modifiers, AnnotationObj[] annotations, Generics generics, SourceReference type, Token name, Token closeBracket, List<Pair<SourceReference, String>> params, Token[] body) {
         public void validate(Compiler.ErrorStorage logger) {
             validateNullable(annotations, logger);
             type.validate(logger);
             params.forEach(p -> p.getFirst().validate(logger));
         }
 
-        public List<? extends Pair<ClassReference, String>> extractParams() {
+        public List<Pair<ClassReference, String>> extractParams() {
             return params.stream().map(p -> p.mapFirst(SourceReference::getReference)).toList();
         }
     }

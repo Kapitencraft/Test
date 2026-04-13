@@ -1,9 +1,6 @@
 package net.kapitencraft.lang.exe.load;
 
 import net.kapitencraft.lang.compiler.*;
-import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
-import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.parser.HolderParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
@@ -65,7 +62,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         String declPck = decl.pck();
         if (!Objects.equals(declPck, pck)) {
             storage.errorF(
-                    tokens.get(0),
+                    tokens.getFirst(),
                     "package path '%s' does not match file path '%s'", declPck, pck);
         }
 
@@ -75,9 +72,12 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
     public void construct() {
         if (!checkHolderCreated()) return;
         StmtParser stmtParser = new StmtParser(this.storage);
-        SemanticAnalyser analyser = new SemanticAnalyser(this.storage);
 
-        builder = holder.construct(stmtParser, analyser, this.varTypeContainer, this.storage);
+        builder = holder.construct(stmtParser, this.varTypeContainer, this.storage);
+    }
+
+    public void analyse() {
+        builder.analyse();
     }
 
     public void cache() {

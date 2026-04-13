@@ -26,10 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -41,7 +38,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     //marks whether the expr result has already been ignored and therefore no POP must be emitted
     private boolean ignoredExprResult = false;
     private final ByteCodeBuilder byteCodeBuilder;
-    private final Stack<Loop> loops = new Stack<>();
+    private final ArrayDeque<Loop> loops = new ArrayDeque<>();
 
     public CacheBuilder() {
         this.byteCodeBuilder = new ByteCodeBuilder();
@@ -156,31 +153,37 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = true;
         cache(expr.left);
         cache(expr.right);
-        //convertToStringIfNecessary(operator, executor); TODO
 
-        if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
-            final ClassReference executor = expr.executor;
+        if (expr.signature != null) {
+            builder.invokeVirtual(expr.signature);
+        } else {
+
+            //convertToStringIfNecessary(operator, executor); TODO
+
+            if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
+                final ClassReference executor = expr.executor;
             Token operator = expr.operator;
             byteCodeBuilder.changeLineIfNecessary(operator);
-            Opcode opcode = switch (operator.type()) {
-                case EQUAL -> Opcode.EQUAL;
-                case NEQUAL -> Opcode.NEQUAL;
-                case LEQUAL -> getLequal(executor);
-                case GEQUAL -> getGequal(executor);
-                case LESSER -> getLesser(executor);
-                case GREATER -> getGreater(executor);
-                case SUB -> getSub(executor);
-                case ADD -> getAdd(executor);
-                case MUL -> getMul(executor);
-                case DIV -> getDiv(executor);
-                case POW -> getPow(executor);
-                case MOD -> getMod(executor);
-                default -> throw new IllegalStateException("not an operator: " + operator);
-            };
-            byteCodeBuilder.addSimple(opcode);
-        } else {
-            byteCodeBuilder.addSimple(Opcode.POP_2);
-            ignoredExprResult = true;
+                Opcode opcode = switch (operator.type()) {
+                    case EQUAL -> Opcode.EQUAL;
+                    case NEQUAL -> Opcode.NEQUAL;
+                    case LEQUAL -> getLequal(executor);
+                    case GEQUAL -> getGequal(executor);
+                    case LESSER -> getLesser(executor);
+                    case GREATER -> getGreater(executor);
+                    case SUB -> getSub(executor);
+                    case ADD -> getAdd(executor);
+                    case MUL -> getMul(executor);
+                    case DIV -> getDiv(executor);
+                    case POW -> getPow(executor);
+                    case MOD -> getMod(executor);
+                    default -> throw new IllegalStateException("not an operator: " + operator);
+                };
+                byteCodeBuilder.addSimple(opcode);
+            } else {
+                byteCodeBuilder.addSimple(Opcode.POP_2);
+                ignoredExprResult = true;
+            }
         }
         retainExprResult = hadRetain;
         return null;
@@ -239,36 +242,21 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitInstCallExpr(Expr.InstCall expr) {
-        boolean hadRetain = retainExprResult;
-        retainExprResult = true;
-        cache(expr.callee);
-        retainExprResult = hadRetain; //object is NOT POPED from the stack. keep it before the args
-        byteCodeBuilder.changeLineIfNecessary(expr.name);
-        saveArgs(expr.args);
-        byteCodeBuilder.addStringInstruction(Opcode.INVOKE_VIRTUAL, expr.id);
-        if (expr.retType.is(VarTypeManager.VOID))
-            ignoredExprResult = true;
-        return null;
-    }
+    public Void visitCallExpr(Expr.Call expr) {
+        if (expr.object != null) {
+            boolean hadRetain = retainExprResult;
+            retainExprResult = true;
+            cache(expr.object);
+            //object is NOT POPED from the stack. keep it before the args
+            this.builder.changeLineIfNecessary(expr.name);
+            retainExprResult = hadRetain;
+        }
 
-    @Override
-    public Void visitStaticCallExpr(Expr.StaticCall expr) {
-        byteCodeBuilder.changeLineIfNecessary(expr.name);
         saveArgs(expr.args);
-        byteCodeBuilder.addStringInstruction(Opcode.INVOKE_STATIC, expr.id);
-        if (expr.retType.is(VarTypeManager.VOID))
-            ignoredExprResult = true;
-        return null;
-    }
-
-    //TODO merge?
-    @Override
-    public Void visitSuperCallExpr(Expr.SuperCall expr) {
-        getVar(0);
-        byteCodeBuilder.changeLineIfNecessary(expr.name);
-        saveArgs(expr.args);
-        byteCodeBuilder.addStringInstruction(Opcode.INVOKE_STATIC, expr.id);
+        if (expr.declaring != null)
+            byteCodeBuilder.invokeStatic(expr.signature);
+        else
+            builder.invokeVirtual(expr.signature);
         if (expr.retType.is(VarTypeManager.VOID))
             ignoredExprResult = true;
         return null;
@@ -339,7 +327,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(expr.index);
         cache(expr.object);
         if (hadRetain) {
-            Opcode opcode = getArrayLoad(expr.type);
+            Opcode opcode = getArrayLoad(expr.componentType);
             byteCodeBuilder.addSimple(opcode);
         } else {
             byteCodeBuilder.addSimple(Opcode.POP_2);
@@ -441,7 +429,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitSpecialSetExpr(Expr.SpecialSet expr) {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
-        cache(expr.callee);
+        cache(expr.object);
         retainExprResult = hadRetain;
         specialAssign(expr.retType, expr.assignType, Opcode.GET_FIELD, Opcode.PUT_FIELD,
                 b -> b.injectString(expr.name.lexeme()),
@@ -569,12 +557,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitCastCheckExpr(Expr.CastCheck expr) {
         //TODO
-        return null;
-    }
-
-    @Override
-    public Void visitGroupingExpr(Expr.Grouping expr) {
-        cache(expr.expression);
         return null;
     }
 
@@ -835,7 +817,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         byteCodeBuilder.changeLineIfNecessary(stmt.keyword);
         cache(stmt.condition);
         int skip = byteCodeBuilder.addJumpIfFalse();
-        loops.add(new Loop());
+        loops.push(new Loop());
         retainExprResult = false;
         cache(stmt.body);
         byteCodeBuilder.addJump(index);
@@ -866,7 +848,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         ignoredExprResult = false;
         cache(stmt.condition); //synthesise loop-condition
         int jump1 = byteCodeBuilder.addJumpIfFalse();
-        loops.add(new Loop()); //push loop for continue & break entries
+        loops.push(new Loop()); //push loop for continue & break entries
         retainExprResult = false;
         ignoredExprResult = false;
         cache(stmt.body); //synthesize loop body
@@ -911,7 +893,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         byteCodeBuilder.addSimple(Opcode.I_LESSER); //check if iteration var is less than the length of the array
         int result = byteCodeBuilder.addJumpIfFalse(); //create jump out of the loop if check fails
         //endregion
-        loops.add(new Loop()); //push loop
+        loops.push(new Loop());
 
         //region load iteration object
         getVar(baseVarIndex + 1); //load iteration var

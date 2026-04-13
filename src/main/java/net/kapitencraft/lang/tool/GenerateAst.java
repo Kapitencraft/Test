@@ -126,7 +126,7 @@ public class GenerateAst {
     private static String convertToJava(Stream<FieldDef> definitions) {
         return definitions
                 .map(f -> "        public " + f.type.get() + " " + f.name)
-                .collect(Collectors.joining("; \n", "", ";"));
+                .collect(Collectors.joining(";\n", "", ";"));
     }
 
     private record TypeDef(String compile) {

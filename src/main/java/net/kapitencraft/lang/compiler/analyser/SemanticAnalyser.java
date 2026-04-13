@@ -6,8 +6,8 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.holder.ast.SwitchKey;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
@@ -30,7 +30,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     private final ArrayDeque<Set<ClassReference>> activeArgs = new ArrayDeque<>();
     private ClassReference methodReturnType = VarTypeManager.VOID.reference();
 
-    private boolean checkActive(ClassReference reference) {
+    private boolean isExpected(ClassReference reference) {
         return !activeArgs.isEmpty() && activeArgs.peek().contains(reference);
     }
 
@@ -49,7 +49,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     protected ClassReference expectType(Token errorLoc, ClassReference gotten, ClassReference expected) {
         if (expected == VarTypeManager.OBJECT) return gotten;
         if (!gotten.get().isChildOf(expected.get()))
-            errorStorage.errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
+            errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
         if (gotten instanceof AppliedGenericsReference reference) {
             if (expected instanceof AppliedGenericsReference reference1) {
                 Holder.AppliedGenerics gottenAppliedGenerics = reference.getApplied();
@@ -58,12 +58,12 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                 ClassReference[] gottenGenerics = gottenAppliedGenerics.references();
 
                 if (expectedGenerics.length != gottenGenerics.length) {
-                    errorStorage.errorF(gottenAppliedGenerics.reference(), "Wrong number of type arguments: %s; required: %s", gottenGenerics.length, expectedGenerics.length);
+                    errorF(gottenAppliedGenerics.reference(), "Wrong number of type arguments: %s; required: %s", gottenGenerics.length, expectedGenerics.length);
                 } else {
                     for (int i = 0; i < expectedGenerics.length; i++) {
                         if (!expectedGenerics[i].get().isChildOf(gottenGenerics[i].get())) {
                             String name = reference1.getGenerics().variables()[i].name().lexeme();
-                            errorStorage.errorF(reference.getApplied().reference(), "incompatible types: inference variable %s has incompatible bounds", name);
+                            errorF(reference.getApplied().reference(), "incompatible types: inference variable %s has incompatible bounds", name);
 
                             errorStorage.logError("gotten: " + gottenGenerics[i].name());
                             errorStorage.logError("lower bounds: " + expectedGenerics[i].name());
@@ -71,7 +71,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                     }
                 }
             } else {
-                errorStorage.errorF(reference.getApplied().reference(), "Type '%s' does not have type parameters", expected.absoluteName());
+                errorF(reference.getApplied().reference(), "Type '%s' does not have type parameters", expected.absoluteName());
             }
         }
         return gotten;
@@ -97,7 +97,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             }
         }
         if (result == VarTypeManager.VOID) {
-            errorStorage.errorF(operator, "operator '%s' not possible for argument types %s and %s", operator.lexeme(), left.absoluteName(), right.absoluteName());
+            errorF(operator, "operator '%s' not possible for argument types %s and %s", operator.lexeme(), left.absoluteName(), right.absoluteName());
             return OperationInfo.UNKNOWN;
         }
         return new OperationInfo(left, result.reference(), null);
@@ -128,39 +128,46 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         return OperationInfo.UNKNOWN;
     }
 
-    public void analyseBody(Stmt[] body, ClassReference retType, List<? extends Pair<SourceClassReference, String>> params, @Nullable ClassReference targetClass) {
+    public void analyseBody(Stmt[] body, ClassReference retType, List<Pair<ClassReference, String>> params, @Nullable ClassReference selfClass) {
         this.methodReturnType = retType;
-        if (targetClass != null) this.varAnalyser.add("this", targetClass, false, true);
-        for (Pair<SourceClassReference, String> param : params) {
-            varAnalyser.add(param.getSecond(), param.getFirst().getReference(), true, true);
+        this.varAnalyser.clear();
+        if (selfClass != null) this.varAnalyser.add("this", selfClass, false, true);
+        for (Pair<ClassReference, String> param : params) {
+            varAnalyser.add(param.getSecond(), param.getFirst(), true, true);
         }
         for (Stmt stmt : body) {
-            this.analyseStmt(stmt);
+            if (stmt != null)
+                this.analyseStmt(stmt);
         }
     }
 
-    private void analyseCall(Token name, ClassReference objType, @Nullable Expr obj, Expr[] args) {
+    private MethodData analyseCall(Token name, ClassReference objType, Expr[] args) {
         ClassReference[] argTypes = args(args);
         ScriptedClass targetClass = objType.get();
 
+        ScriptedCallable callable;
         if (!targetClass.hasMethod(name.lexeme())) {
             errorF(name, "unknown method '%s' in class %s", name.lexeme(), objType.absoluteName());
-        }
-        ScriptedCallable callable = Util.getVirtualMethod(targetClass, name.lexeme(), argTypes);
+            callable = null;
+        } else
+            callable = Util.getVirtualMethod(targetClass, name.lexeme(), argTypes);
         ClassReference retType = VarTypeManager.VOID.reference();
         String signature = null;
         if (callable != null) {
             retType = checkArguments(args, argTypes, callable, objType, name);
             signature = VarTypeManager.getMethodSignature(targetClass, name.lexeme(), callable.argTypes());
         }
+        return new MethodData(signature, retType, targetClass.reference(), callable == null || callable.isStatic());
     }
+
+    private record MethodData(String signature, ClassReference retType, ClassReference declaring, boolean isStatic) {}
 
     private ScriptedCallable tryGetConstructorMethod(Expr[] args, ClassReference type, ScriptedClass scriptedClass, Token loc) {
         DataMethodContainer container = scriptedClass.getMethods().get("<init>");
         ClassReference[] argTypes = this.args(args);
         if (container == null) {
             if (args.length > 0) {
-                errorStorage.errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
+                errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
 
                 errorStorage.logError("required: ");
                 errorStorage.logError("found:    " + Util.getDescriptor(argTypes));
@@ -183,7 +190,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     protected byte tryCreateVar(Token name, ClassReference type, boolean hasValue, boolean isFinal) {
         byte ordinal = varAnalyser.add(name.lexeme(), type, !isFinal, hasValue);
         if (ordinal == -1)
-            errorStorage.errorF(name, "Variable '%s' already defined in current scope", name.lexeme());
+            errorF(name, "Variable '%s' already defined in current scope", name.lexeme());
         return ordinal;
     }
 
@@ -204,26 +211,31 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         varAnalyser.push();
     }
 
-    private int popScope() {
-        return varAnalyser.pop();
-    }
-
     private final BytecodeVars varAnalyser = new BytecodeVars();
     //endregion
 
-    private final LocationAnalyser locFinder = new LocationAnalyser();
-
     //region error
+    private boolean panicMode = false;
+
     private void errorIncompatibleTypes(Expr expr, ClassReference expected, ClassReference gotten) {
-        errorStorage.errorF(expr, "incompatible types: %s cannot be converted to %s", gotten, expected);
+        errorIncompatibleTypes(Compiler.LOCATION_ANALYSER.find(expr), expected, gotten);
+    }
+
+    private void errorIncompatibleTypes(Token loc, ClassReference expected, ClassReference gotten) {
+        errorF(loc, "incompatible types: %s cannot be converted to %s", gotten, expected);
+
     }
 
     private void error(Token loc, String msg) {
-        errorStorage.error(loc, msg);
+        if (!panicMode)
+            errorStorage.error(loc, msg);
+        panicMode = true;
     }
 
-    private void errorF(Token loc, String formatMsg, Object... args) {
-        errorStorage.errorF(loc, formatMsg, args);
+    public void errorF(Token loc, String formatMsg, Object... args) {
+        if (!panicMode)
+            errorStorage.errorF(loc, formatMsg, args);
+        panicMode = true;
     }
 
     private final Compiler.ErrorStorage errorStorage;
@@ -244,14 +256,14 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     public ClassReference checkArguments(Expr[] args, ClassReference[] argTypes, @Nullable ScriptedCallable target, @Nullable ClassReference obj, Token loc) {
         ClassReference[] expectedTypes = target == null ? new ClassReference[0] : target.argTypes();
         if (expectedTypes.length != argTypes.length) {
-            errorStorage.errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
+            errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
 
             errorStorage.logError("required: " + Util.getDescriptor(expectedTypes));
             errorStorage.logError("found:    " + Util.getDescriptor(argTypes));
             errorStorage.logError("reason: actual and formal argument lists differ in length");
         } else {
             for (int i = 0; i < argTypes.length; i++) {
-                expectType(locFinder.find(args[i]), argTypes[i], expectedTypes[i]);
+                expectType(Compiler.LOCATION_ANALYSER.find(args[i]), argTypes[i], expectedTypes[i]);
             }
         }
 
@@ -278,19 +290,29 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         return type;
     }
 
-
     private void analyseStmt(Stmt stmt) {
+        panicMode = false;
         stmt.accept(this);
     }
 
     @Override
     public ClassReference visitVarRefExpr(Expr.VarRef expr) {
-        BytecodeVars.FetchResult fetchResult = varAnalyser.get(expr.name.lexeme());
-        if (fetchResult == BytecodeVars.FetchResult.FAIL)
-            errorStorage.error(expr.name, "unknown local variable: " + expr.name.lexeme());
-        expr.retType = fetchResult.type();
+        String varName = expr.name.lexeme();
+        if ("this".equals(varName) || "super".equals(varName)) {
+            BytecodeVars.FetchResult fetchResult = varAnalyser.get("this");
+            if (fetchResult == BytecodeVars.FetchResult.FAIL)
+                errorF(expr.name, "'%s' can not be accessed from a static context", varName);
+            expr.ordinal = 0;
+            return expr.retType = fetchResult.type();
+        }
 
-        return fetchResult.type();
+        BytecodeVars.FetchResult fetchResult = varAnalyser.get(varName);
+
+        if (fetchResult == BytecodeVars.FetchResult.FAIL)
+            error(expr.name, "unknown local variable: " + expr.name.lexeme());
+        expr.ordinal = fetchResult.ordinal();
+
+        return expr.retType = fetchResult.type();
     }
 
     @Override
@@ -315,7 +337,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         if (expr.assignType.type() == TokenType.ASSIGN) {
             operationInfo = OperationInfo.UNKNOWN;
         } else
-            operationInfo = getOperationInfo(varAnalyser.getType(expr.name.lexeme()), expr.assignType, expr.value);
+            operationInfo = getOperationInfo(fieldType, expr.assignType, expr.value);
         expr.executor = operationInfo.executor;
 
         expr.retType = fieldType;
@@ -328,7 +350,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ClassReference reference = analyseExpr(expr.object);
 
         if (!reference.get().isArray())
-            errorF(locFinder.find(expr), "Array type expected; found '%s'", reference.absoluteName());
+            errorF(Compiler.LOCATION_ANALYSER.find(expr), "Array type expected; found '%s'", reference.absoluteName());
 
         ScriptedClass component = reference.get().getComponentType();
 
@@ -340,13 +362,17 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     @Override
-    public ClassReference visitInstCallExpr(Expr.InstCall expr) {
-        return null;
-    }
+    public ClassReference visitCallExpr(Expr.Call expr) {
+        //declaring
+        ClassReference objType = expr.declaring != null ? expr.declaring : analyseExpr(expr.object);
+        MethodData methodData = analyseCall(expr.name, objType, expr.args);
 
-    @Override
-    public ClassReference visitSuperCallExpr(Expr.SuperCall expr) {
-        return null;
+        if (!methodData.isStatic && expr.declaring != null && expr.object != null)
+            analyseExpr(expr.object);
+        if (methodData.isStatic)
+            expr.declaring = methodData.declaring;
+        expr.signature = methodData.signature;
+        return expr.retType = methodData.retType;
     }
 
     @Override
@@ -363,7 +389,14 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     public ClassReference visitComparisonChainExpr(Expr.ComparisonChain expr) {
         expr.dataType = analyseExpr(expr.entries[0]);
         if (!expr.dataType.get().isChildOf(VarTypeManager.NUMBER)) {
-            error(locFinder.find(expr.entries[0]), "number expected");
+            error(Compiler.LOCATION_ANALYSER.find(expr.entries[0]), "number expected");
+        }
+
+        for (int i = 1; i < expr.entries.length; i++) {
+            ClassReference reference = analyseExpr(expr.entries[i]);
+            if (!expr.dataType.is(reference)) {
+                errorIncompatibleTypes(expr.entries[i], expr.dataType, reference);
+            }
         }
 
         return expr.retType = VarTypeManager.BOOLEAN.reference();
@@ -383,15 +416,16 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ClassReference reference = analyseExpr(expr.object);
 
         if (!reference.get().isArray())
-            errorF(locFinder.find(expr), "Array type expected; found '%s'", reference.absoluteName());
+            errorF(Compiler.LOCATION_ANALYSER.find(expr), "Array type expected; found '%s'", reference.absoluteName());
 
         ScriptedClass component = reference.get().getComponentType();
 
         ClassReference indexType = analyseExpr(expr.index);
         if (!indexType.is(VarTypeManager.INTEGER)) {
-            errorF(locFinder.find(expr.index), "integer expected; found '%s'", indexType.absoluteName());
+            errorF(Compiler.LOCATION_ANALYSER.find(expr.index), "integer expected; found '%s'", indexType.absoluteName());
         }
 
+        expr.componentType = component.reference();
         return expr.retType = component.reference();
     }
 
@@ -404,7 +438,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public ClassReference visitArrayConstructorExpr(Expr.ArrayConstructor expr) {
         pushExpected(VarTypeManager.INTEGER.reference());
-        analyseExpr(expr.size);
+        if (expr.size != null)
+            analyseExpr(expr.size);
         popExpected();
 
         if (expr.obj != null) {
@@ -440,7 +475,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitSpecialSetExpr(Expr.SpecialSet expr) {
-        ClassReference objType = analyseExpr(expr.callee);
+        ClassReference objType = analyseExpr(expr.object);
 
         String fieldName = expr.name.lexeme();
         ClassReference fieldType = VarTypeManager.VOID.reference();
@@ -462,19 +497,23 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ClassReference reference = analyseExpr(expr.object);
 
         if (!reference.get().isArray())
-            errorF(locFinder.find(expr), "Array type expected; found '%s'", reference.absoluteName());
+            errorF(Compiler.LOCATION_ANALYSER.find(expr), "Array type expected; found '%s'", reference.absoluteName());
 
         ScriptedClass component = reference.get().getComponentType();
 
         ClassReference indexType = analyseExpr(expr.index);
         if (!indexType.is(VarTypeManager.INTEGER)) {
-            errorF(locFinder.find(expr.index), "integer expected; found '%s'", indexType.absoluteName());
+            errorF(Compiler.LOCATION_ANALYSER.find(expr.index), "integer expected; found '%s'", indexType.absoluteName());
         }
 
         ClassReference valType = analyseExpr(expr.value);
-        OperationInfo info = getOperationInfo(component.reference(), expr.assignType, valType);
+        if (expr.assignType.type() != TokenType.ASSIGN) {
+            OperationInfo info = getOperationInfo(component.reference(), expr.assignType, valType);
 
-        expr.executor = info.executor;
+            expr.executor = info.executor;
+        }
+
+        expr.componentType = component.reference();
 
         return expr.retType = component.reference();
     }
@@ -491,7 +530,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitConstructorExpr(Expr.Constructor expr) {
-        return null;
+
+
+        return expr.retType = expr.target;
     }
 
     @Override
@@ -508,17 +549,12 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         ClassReference valType = analyseExpr(expr.value);
 
-        OperationInfo info = getOperationInfo(fieldType, expr.assignType, valType);
-
-        expr.executor = info.executor;
+        if (expr.assignType.type() != TokenType.ASSIGN) {
+            OperationInfo info = getOperationInfo(fieldType, expr.assignType, valType);
+            expr.executor = info.executor;
+        }
 
         return expr.retType = fieldType;
-    }
-
-    @Override
-    public ClassReference visitGroupingExpr(Expr.Grouping expr) {
-        //no need to analyse this, it's no longer used
-        return null;
     }
 
     @Override
@@ -539,8 +575,10 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         popExpected();
 
         ClassReference ifTrueType = analyseExpr(expr.ifTrue);
-        ClassReference ifFalseClass = analyseExpr(expr.ifFalse);
-        return null;
+        ClassReference ifFalseType = analyseExpr(expr.ifFalse);
+        if (!ifTrueType.is(ifFalseType))
+            errorF(Compiler.LOCATION_ANALYSER.find(expr.ifFalse), "ternary operator must return same type. found %s and %s", ifTrueType.absoluteName(), ifFalseType.absoluteName());
+        return expr.retType = ifTrueType;
     }
 
     @Override
@@ -561,6 +599,22 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public ClassReference visitSwitchExpr(Expr.Switch expr) {
         pushExpected(VarTypeManager.ENUM, VarTypeManager.STRING, VarTypeManager.INTEGER.reference(), VarTypeManager.DOUBLE.reference(), VarTypeManager.FLOAT.reference(), VarTypeManager.CHAR.reference());
+        ClassReference reference = analyseExpr(expr.provider);
+        popExpected();
+
+        Map<Integer, Expr> entries = new HashMap<>();
+        for (SwitchKey param : expr.params) {
+            if (!param.canMatch(reference)) {
+                errorIncompatibleTypes(param.getSource(), reference, param.getType());
+            }
+
+            ClassReference retType = analyseExpr(param.expr);
+            if (!isExpected(reference)) {
+                //errorIncompatibleTypes();
+            }
+
+        }
+
         return null;
     }
 
@@ -569,25 +623,25 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ClassReference objType = analyseExpr(expr.object);
 
         if (!objType.get().isArray()) {
-            errorF(locFinder.find(expr), "Array type expected; found '%s'", objType.absoluteName());
+            errorF(Compiler.LOCATION_ANALYSER.find(expr), "Array type expected; found '%s'", objType.absoluteName());
         }
 
         if (expr.start != null) {
             ClassReference reference = analyseExpr(expr.start);
             if (!reference.is(VarTypeManager.INTEGER)) {
-                errorF(locFinder.find(expr.start), "integer expected; found '%s'" + reference.absoluteName());
+                errorF(Compiler.LOCATION_ANALYSER.find(expr.start), "integer expected; found '%s'" + reference.absoluteName());
             }
         }
         if (expr.end != null) {
             ClassReference reference = analyseExpr(expr.end);
             if (!reference.is(VarTypeManager.INTEGER)) {
-                errorF(locFinder.find(expr.end), "integer expected; found '%s'" + reference.absoluteName());
+                errorF(Compiler.LOCATION_ANALYSER.find(expr.end), "integer expected; found '%s'" + reference.absoluteName());
             }
         }
         if (expr.interval != null) {
             ClassReference reference = analyseExpr(expr.interval);
             if (!reference.is(VarTypeManager.INTEGER)) {
-                errorF(locFinder.find(expr.interval), "integer expected; found '%s'" + reference.absoluteName());
+                errorF(Compiler.LOCATION_ANALYSER.find(expr.interval), "integer expected; found '%s'" + reference.absoluteName());
             }
         }
 
@@ -597,10 +651,11 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public ClassReference visitGetExpr(Expr.Get expr) {
         ClassReference objType = analyseExpr(expr.object);
+        expr.type = objType;
 
         String fieldName = expr.name.lexeme();
 
-        if (objType.get().isArray() && "values".equals(fieldName)) {
+        if (objType.get().isArray() && "length".equals(fieldName)) {
             return expr.retType = VarTypeManager.INTEGER.reference();
         }
 
@@ -633,11 +688,6 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     @Override
-    public ClassReference visitStaticCallExpr(Expr.StaticCall expr) {
-        return null;
-    }
-
-    @Override
     public ClassReference visitBinaryExpr(Expr.Binary expr) {
 
         ClassReference leftType = analyseExpr(expr.left);
@@ -645,7 +695,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         OperationInfo info = getOperationInfo(leftType, expr.operator, rightType);
 
-        expr.executor = info.executor;
+        expr.executor = Objects.requireNonNull(info.executor);
+        expr.signature = info.methodSignature;
 
         return expr.retType = info.result;
     }
@@ -672,13 +723,20 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public Void visitForStmt(Stmt.For stmt) {
+        pushScope();
+        analyseStmt(stmt.init);
+
         pushExpected(VarTypeManager.BOOLEAN.reference());
         analyseExpr(stmt.condition);
         popExpected();
 
+        analyseExpr(stmt.increment);
+
         pushScope();
+
         analyseStmt(stmt.body);
-        popScope();
+
+        stmt.popVarCount = this.varAnalyser.pop();
 
         return null;
     }
@@ -691,7 +749,6 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         pushScope();
         analyseStmt(stmt.body);
-        popScope();
         return null;
     }
 
@@ -699,7 +756,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     public Void visitForEachStmt(Stmt.ForEach stmt) {
         ClassReference arrayType = stmt.type.array();
         pushExpected(arrayType);
-        analyseExpr(stmt.initializer);
+        ClassReference reference = analyseExpr(stmt.initializer);
+        if (!reference.is(arrayType))
+            errorIncompatibleTypes(stmt.initializer, arrayType, reference);
         popExpected();
 
         pushScope();
@@ -710,8 +769,6 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         varAnalyser.add(stmt.name.lexeme(), stmt.type, true, true); //named variable from sourcecode
 
         analyseStmt(stmt.body);
-        popScope();
-
         stmt.baseVar = baseVar;
 
         return null;
@@ -743,6 +800,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public Void visitVarDeclStmt(Stmt.VarDecl stmt) {
+        varAnalyser.add(stmt.name.lexeme(), stmt.type, !stmt.isFinal, stmt.initializer != null);
+        analyseExpr(stmt.initializer);
         return null;
     }
 
@@ -766,19 +825,16 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     public Void visitTryStmt(Stmt.Try stmt) {
         pushScope();
         analyseStmt(stmt.body);
-        popScope();
 
         for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches) {
             pushScope();
             tryCreateVar(aCatch.getFirst().getSecond(), VarTypeManager.THROWABLE, true, false);
             analyseStmt(aCatch.getSecond());
-            popScope();
         }
 
         if (stmt.finale != null) {
             pushScope();
             analyseStmt(stmt.finale);
-            popScope();
         }
 
         return null;
@@ -799,7 +855,6 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         pushScope();
         analyseStmt(stmt.thenBranch);
-        popScope();
         for (ElifBranch branch : stmt.elifs) {
             pushExpected(VarTypeManager.BOOLEAN.reference());
             analyseExpr(branch.condition);
@@ -807,12 +862,10 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
             pushScope();
             analyseStmt(branch.body);
-            popScope();
         }
         if (stmt.elseBranch != null) {
             pushScope();
             analyseStmt(stmt.elseBranch);
-            popScope();
         }
 
         return null;

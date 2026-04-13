@@ -17,6 +17,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -191,12 +192,22 @@ public class ClassLoader {
         List<CompletableFuture<?>> futures = new ArrayList<>();
         List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
+        AtomicInteger completed = new AtomicInteger(0);
+        int total = root.size();
         while (!packageData.isEmpty()) {
             Pair<PackageHolder<T>, Package> data = packageData.getFirst();
             PackageHolder<T> holder = data.getFirst();
             Package pck = data.getSecond();
             holder.classes.forEach((n, o) ->
-                    futures.add(CompletableFuture.runAsync(() -> consumer.accept(o), executor))
+                    futures.add(CompletableFuture.runAsync(() -> consumer.accept(o), executor)
+                            .whenComplete((v, ex) -> {
+                                if (ex != null) {
+                                    System.err.printf("error in thread: %s: %s\n", o.toString(), ex.getMessage());
+                                    System.exit(1);
+                                }
+                                int done = completed.incrementAndGet();
+                                printProgress(done, total);
+                            }))
             );
             holder.packages.forEach((name, holder1) ->
                     packageData.add(Pair.of(holder1, pck.getOrCreatePackage(name))) //adding all packages back to the queue
@@ -204,6 +215,22 @@ public class ClassLoader {
             packageData.removeFirst();
         }
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+        printProgress(total, total);
+        System.out.println();
+    }
+
+    static void printProgress(int done, int total) {
+        int width = 40; // bar width
+        int progress = (int) ((done / (double) total) * width);
+
+        String bar = "[" +
+                "=".repeat(progress) +
+                " ".repeat(width - progress) +
+                "]";
+
+        int percent = (int) ((done / (double) total) * 100);
+
+        System.out.print("\r" + bar + " " + percent + "% (" + done + "/" + total + ")");
     }
 
     public static ClassReference loadClassReference(JsonObject object, String elementName) {
@@ -234,6 +261,14 @@ public class ClassLoader {
         public void forEach(Consumer<T> sink) {
             classes.values().forEach(sink);
             packages.values().forEach(h -> h.forEach(sink));
+        }
+
+        public int size() {
+            int size = this.classes.size();
+            for (PackageHolder<T> value : this.packages.values()) {
+                size += value.size();
+            }
+            return size;
         }
     }
 

@@ -1,11 +1,8 @@
 package net.kapitencraft.lang.compiler.analyser;
 
-import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.exe.VarTypeManager;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class LocalVariableContainer {
@@ -15,9 +12,15 @@ public class LocalVariableContainer {
     public FetchResult get(String name) {
         for (int i = localCount - 1; i >= 0; i--) {
             Local local = locals[i];
-            if (Objects.equals(local.name, name)) return new FetchResult((byte) i, local.canAssign, local.assigned, local.type);
+            if (Objects.equals(local.name, name))
+                return new FetchResult((byte) i, local.canAssign, local.assigned, local.type);
         }
         return FetchResult.FAIL;
+    }
+
+    public void clear() {
+        localCount = 0;
+        scopeDepth = 0;
     }
 
     public byte add(String name, ClassReference type, boolean canAssign, boolean assigned) {
@@ -52,22 +55,6 @@ public class LocalVariableContainer {
 
     public void setHasValue(byte ordinal) {
         locals[ordinal & 255].assigned = true;
-    }
-
-    public List<String> dumpNames() {
-        List<String> names = new ArrayList<>();
-        for (int i = 0; i < localCount; i++) {
-            names.add(locals[i].name);
-        }
-        return names;
-    }
-
-    public byte[] gatherLocalIndexes(List<String> locals) {
-        byte[] indexes = new byte[locals.size()];
-        for (int i = 0; i < locals.size(); i++) {
-            indexes[i] = this.get(locals.get(i)).ordinal;
-        }
-        return indexes;
     }
 
     private static final class Local {

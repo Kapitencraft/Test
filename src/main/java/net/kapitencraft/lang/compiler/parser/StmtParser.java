@@ -10,15 +10,14 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
-import static net.kapitencraft.lang.holder.token.TokenType.C_BRACKET_C;
 
-@SuppressWarnings("ThrowableNotThrown")
 public class StmtParser extends ExprParser {
 
     public StmtParser(Compiler.ErrorStorage errorStorage) {
@@ -26,7 +25,7 @@ public class StmtParser extends ExprParser {
     }
 
     private ClassReference funcRetType = VarTypeManager.VOID.reference();
-    private final Stack<Boolean> seenReturn = new Stack<>();
+    private final List<Boolean> seenReturn = new ArrayList<>();
     private int loopIndex = 0;
 
     @Override
@@ -37,7 +36,7 @@ public class StmtParser extends ExprParser {
     }
 
     private void seenReturn() {
-        seenReturn.set(seenReturn.size()-1, true);
+        seenReturn.set(seenReturn.size() - 1, true);
     }
 
     private void pushScope() {
@@ -45,7 +44,7 @@ public class StmtParser extends ExprParser {
     }
 
     private void popScope() {
-        seenReturn.pop();
+        seenReturn.removeLast();
     }
 
     private Stmt popScopeStmt() {
@@ -54,18 +53,24 @@ public class StmtParser extends ExprParser {
     }
 
     private Stmt declaration() {
-        if (seenReturn.peek()) {
+        if (seenReturn.getLast()) {
             error(peek(), "unreachable statement");
         }
-        try {
-            if (match(FINAL)) return varDeclaration(true, consumeVarType(generics).getReference());
+        if (match(FINAL)) return varDeclaration(true, consumeVarType(generics).getReference());
 
-            Optional<SourceReference> type = tryConsumeVarType(generics);
-            return type.map(sourceClassReference -> varDeclaration(false, sourceClassReference.getReference())).orElseGet(this::statement);
-        } catch (ParseError error) {
+        Optional<SourceReference> type = tryConsumeVarType(generics);
+        Stmt stmt = type.map(sourceClassReference -> {
+            if (match(DOT)) {
+                Stmt.Expression expression = new Stmt.Expression();
+                expression.expression = parseObjAttributes(sourceClassReference.getReference());
+                consumeEndOfArg();
+                return expression;
+            } else
+                return varDeclaration(false, sourceClassReference.getReference());
+        }).orElseGet(this::statement);
+        if (panicMode)
             synchronize();
-            return null;
-        }
+        return stmt;
     }
 
     private Stmt.VarDecl varDecl(boolean isFinal, ClassReference type, Token name) {
@@ -74,12 +79,6 @@ public class StmtParser extends ExprParser {
         if (match(ASSIGN)) {
             initializer = expression();
         }
-
-        //byte index = createVar(name, type, initializer != null, isFinal);
-//
-        //if (initializer != null) {
-        //    checkVarType(name, initializer);
-        //}
 
         consumeEndOfArg();
         Stmt.VarDecl varDecl = new Stmt.VarDecl();
@@ -96,26 +95,26 @@ public class StmtParser extends ExprParser {
     }
 
     private Stmt statement() {
-        try {
-            if (match(C_BRACKET_O)) {
-                Stmt.Block block = new Stmt.Block();
-                block.statements = block("block");
-                return block;
-            }
-            if (match(RETURN)) return returnStatement();
-            if (match(TRY)) return tryStatement();
-            if (match(THROW)) return thrStatement();
-            if (match(CONTINUE, BREAK)) return loopInterruptionStatement();
-            if (match(FOR)) return forStatement();
-            if (match(IF)) return ifStatement();
-            if (match(WHILE)) return whileStatement();
-            if (match(TRACE)) return debugTrace();
-
-            return expressionStatement();
-        } catch (ParseError error) {
-            synchronize();
-            return null;
+        Stmt stmt;
+        if (match(C_BRACKET_O)) {
+            Stmt.Block block = new Stmt.Block();
+            block.statements = block("block");
+            stmt = block;
         }
+        else if (match(RETURN)) stmt = returnStatement();
+        else if (match(TRY)) stmt = tryStatement();
+        else if (match(THROW)) stmt = thrStatement();
+        else if (match(CONTINUE, BREAK)) stmt = loopInterruptionStatement();
+        else if (match(FOR)) stmt = forStatement();
+        else if (match(IF)) stmt = ifStatement();
+        else if (match(WHILE)) stmt = whileStatement();
+        else if (match(TRACE)) stmt = debugTrace();
+        else stmt = expressionStatement();
+
+        if (panicMode) {
+            synchronize();
+        }
+        return stmt;
     }
 
     private Stmt debugTrace() {
@@ -140,7 +139,7 @@ public class StmtParser extends ExprParser {
         tryBlock.statements = block("try statement");
         Token brClose = previous();
 
-        List<Pair<Pair<ClassReference[],Token>, Stmt.Block>> catches = new ArrayList<>(); //what an insane varType
+        List<Pair<Pair<ClassReference[], Token>, Stmt.Block>> catches = new ArrayList<>(); //what an insane varType
         while (match(CATCH)) {
             List<ClassReference> targets = new ArrayList<>();
             consumeBracketOpen("catch");
@@ -152,7 +151,7 @@ public class StmtParser extends ExprParser {
             consumeBracketClose("catch");
             consumeCurlyOpen("catch statement");
             Stmt.Block body = new Stmt.Block();
-            body.statements =  block("catch statement");
+            body.statements = block("catch statement");
             body.statements.add(popScopeStmt());
             catches.add(Pair.of(
                     Pair.of(
@@ -288,7 +287,12 @@ public class StmtParser extends ExprParser {
         Expr condition = expression();
         consumeBracketClose("if condition");
 
+        boolean allSeenReturn = true;
+
+        pushScope();
         Stmt thenBranch = statement();
+        if (!this.seenReturn.getLast())
+            allSeenReturn = false;
         thenBranch = mergeBody(thenBranch, popScopeStmt());
         Stmt elseBranch = null;
         List<ElifBranch> elifs = new ArrayList<>();
@@ -296,16 +300,27 @@ public class StmtParser extends ExprParser {
             consumeBracketOpen("elif");
             Expr elifCondition = expression();
             consumeBracketClose("elif condition");
+            pushScope();
             Stmt elifStmt = statement();
             elifStmt = mergeBody(elifStmt, popScopeStmt());
-            elifs.add(new ElifBranch(elifCondition, elifStmt, false));
+            boolean seenReturn = this.seenReturn.getLast();
+            elifs.add(new ElifBranch(elifCondition, elifStmt, seenReturn));
+            if (!seenReturn && allSeenReturn)
+                allSeenReturn = false;
         }
 
         boolean elseBranchSeenReturn = false;
         if (match(ELSE)) {
+            pushScope();
             elseBranch = statement();
+            if (!this.seenReturn.getLast() && allSeenReturn)
+                allSeenReturn = false;
             elseBranch = mergeBody(elseBranch, popScopeStmt());
-        }
+        } else
+            allSeenReturn = false;
+
+        if (allSeenReturn)
+            seenReturn();
 
         Stmt.If anIf = new Stmt.If();
         anIf.condition = condition;
@@ -320,7 +335,7 @@ public class StmtParser extends ExprParser {
         if (first instanceof Stmt.Block block) {
             block.statements.add(second);
             return block;
-        } else  if (second instanceof Stmt.Block block) {
+        } else if (second instanceof Stmt.Block block) {
             block.statements.addFirst(first);
             return block;
         }
@@ -329,6 +344,8 @@ public class StmtParser extends ExprParser {
         stmt.statements.add(first);
         stmt.statements.add(second);
         return stmt;
+    }
+
     private Stmt whileStatement() {
         Token keyword = previous();
         consumeBracketOpen("while");
@@ -366,11 +383,17 @@ public class StmtParser extends ExprParser {
     }
 
     public Stmt[] parse() {
-        if (tokens.length == 0) return new Stmt[] {new Stmt.Return()};
+        if (tokens.length == 0) return new Stmt[]{returnStmt(Token.createNative("return"))};
         List<Stmt> stmts = new ArrayList<>();
         while (!isAtEnd()) stmts.add(declaration());
-        if (!seenReturn.peek()) stmts.add(new Stmt.Return());
+        if (!seenReturn.getLast()) stmts.add(returnStmt(Token.createNative("return")));
         return stmts.toArray(Stmt[]::new);
+    }
+
+    private Stmt returnStmt(Token aReturn) {
+        Stmt.Return stmt = new Stmt.Return();
+        stmt.keyword = aReturn;
+        return stmt;
     }
 
     public void applyMethod(ClassReference funcRetType, @Nullable Holder.Generics generics) {
@@ -381,14 +404,14 @@ public class StmtParser extends ExprParser {
     }
 
     public void popMethod(Token methodEnd) {
-        if (!funcRetType.is(VarTypeManager.VOID) && !seenReturn.peek())
+        if (!funcRetType.is(VarTypeManager.VOID) && !seenReturn.getLast())
             error(methodEnd, "missing return statement");
         this.popScope(); //ignore return value; methods that end get their locals removed either way
         this.generics.pop();
         funcRetType = VarTypeManager.VOID.reference();
     }
 
-    public void applyStaticMethod(List<? extends Pair<SourceReference, String>> params, ClassReference funcRetType, @Nullable Holder.Generics generics) {
+    public void applyStaticMethod(ClassReference funcRetType, @Nullable Holder.Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (generics != null) generics.pushToStack(this.generics);

@@ -28,7 +28,6 @@ public interface Stmt {
     class Return implements Stmt {
         public Token keyword;
         public Expr value;
-;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -43,7 +42,6 @@ public interface Stmt {
         public Stmt body;
         public Token keyword;
         public int popVarCount;
-;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -55,7 +53,6 @@ public interface Stmt {
         public Expr condition;
         public Stmt body;
         public Token keyword;
-;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -77,8 +74,8 @@ public interface Stmt {
     }
 
     class DebugTrace implements Stmt {
-        public Token keyword;
-        public Token[] localNames;
+        public Token keyword; 
+        public Token[] localNames; 
         public byte[] localOrdinals;
 
         @Override
@@ -89,7 +86,6 @@ public interface Stmt {
 
     class Expression implements Stmt {
         public Expr expression;
-;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -113,7 +109,6 @@ public interface Stmt {
     class Throw implements Stmt {
         public Token keyword;
         public Expr value;
-;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -123,7 +118,6 @@ public interface Stmt {
 
     class Block implements Stmt {
         public List<Stmt> statements;
-;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -135,7 +129,6 @@ public interface Stmt {
         public Block body;
         public Pair<Pair<ClassReference[],Token>,Block>[] catches;
         public Block finale;
-;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -145,7 +138,6 @@ public interface Stmt {
 
     class ClearLocals implements Stmt {
         public int amount;
-;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -161,7 +153,6 @@ public interface Stmt {
         public boolean elseBranchSeenReturn
         public ElifBranch[] elifs;
         public Token keyword;
-;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -171,7 +162,6 @@ public interface Stmt {
 
     class LoopInterruption implements Stmt {
         public Token type;
-;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {

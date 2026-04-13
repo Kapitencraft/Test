@@ -35,12 +35,7 @@ public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token
     }
 
     @Override
-    public Token visitInstCallExpr(Expr.InstCall expr) {
-        return expr.name;
-    }
-
-    @Override
-    public Token visitStaticCallExpr(Expr.StaticCall expr) {
+    public Token visitCallExpr(Expr.Call expr) {
         return expr.name;
     }
 
@@ -105,11 +100,6 @@ public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token
     }
 
     @Override
-    public Token visitGroupingExpr(Expr.Grouping expr) {
-        return find(expr.expression);
-    }
-
-    @Override
     public Token visitLiteralExpr(Expr.Literal expr) {
         return expr.literal;
     }
@@ -122,11 +112,6 @@ public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token
     @Override
     public Token visitLogicalExpr(Expr.Logical expr) {
         return expr.operator;
-    }
-
-    @Override
-    public Token visitSuperCallExpr(Expr.SuperCall expr) {
-        return expr.name;
     }
 
     @Override

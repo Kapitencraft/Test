@@ -1,6 +1,8 @@
 package net.kapitencraft.lang.holder.ast;
 
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.run.VarTypeManager;
 
 public abstract class SwitchKey {
     private final Token source;
@@ -12,9 +14,27 @@ public abstract class SwitchKey {
         this.expr = expr;
     }
 
+    public abstract boolean canMatch(ClassReference type);
+
+    public Token getSource() {
+        return source;
+    }
+
+    public abstract ClassReference getType();
+
     public static class Number extends SwitchKey {
         public Number(Token source, Expr expr) {
             super(source, expr);
+        }
+
+        @Override
+        public boolean canMatch(ClassReference type) {
+            return type.get().isChildOf(VarTypeManager.NUMBER);
+        }
+
+        @Override
+        public ClassReference getType() {
+            return this.getSource().literal().type().reference();
         }
     }
 
@@ -22,11 +42,31 @@ public abstract class SwitchKey {
         public String(Token source, Expr expr) {
             super(source, expr);
         }
+
+        @Override
+        public boolean canMatch(ClassReference type) {
+            return type.is(VarTypeManager.STRING);
+        }
+
+        @Override
+        public ClassReference getType() {
+            return VarTypeManager.STRING;
+        }
     }
 
     public static class Identifier extends SwitchKey {
         public Identifier(Token source, Expr expr) {
             super(source, expr);
+        }
+
+        @Override
+        public boolean canMatch(ClassReference type) {
+            return type.get().isChildOf(VarTypeManager.ENUM.get());
+        }
+
+        @Override
+        public ClassReference getType() {
+            return VarTypeManager.ENUM;
         }
     }
 
@@ -34,6 +74,16 @@ public abstract class SwitchKey {
 
         public Illegal(Token source, Expr expr) {
             super(source, expr);
+        }
+
+        @Override
+        public boolean canMatch(ClassReference type) {
+            return false;
+        }
+
+        @Override
+        public ClassReference getType() {
+            return null;
         }
     }
 }

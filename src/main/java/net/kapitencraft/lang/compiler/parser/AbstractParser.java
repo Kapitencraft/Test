@@ -28,7 +28,7 @@ import java.util.*;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
-@SuppressWarnings({"ThrowableNotThrown", "UnusedReturnValue"})
+@SuppressWarnings({"UnusedReturnValue"})
 public class AbstractParser {
 
     private static final Map<TokenTypeCategory, TokenType[]> categoryLookup = createCategoryLookup();
@@ -46,7 +46,7 @@ public class AbstractParser {
     protected VarTypeContainer parser;
     protected final LocationAnalyser locFinder = new LocationAnalyser();
     protected final Compiler.ErrorStorage errorStorage;
-
+    protected boolean panicMode = false;
 
     public AbstractParser(Compiler.ErrorStorage errorStorage) {
         this.errorStorage = errorStorage;
@@ -144,14 +144,15 @@ public class AbstractParser {
         return tokens[current - 1];
     }
 
-
     protected Token consume(TokenType type, String message) {
         if (check(type)) return advance();
 
         if (isAtEnd()) {
-            throw error(previous().after(), message);
-        } else
-            throw error(peek(), message);
+            error(previous().after(), message);
+        } else {
+            error(peek(), message);
+        }
+        return Token.createNative("<unidentified>");
     }
 
     protected Token consumeNoThrow(TokenType type, String msg) {
@@ -189,12 +190,18 @@ public class AbstractParser {
         Optional<ClassReference> optional = generics.getValue(peek().lexeme());
         if (optional.isPresent()) return Optional.of(SourceReference.from(advance(), optional.get()));
         if (VarTypeManager.hasPackage(peek().lexeme()) && varAnalyser.get(peek().lexeme()) == LocalVariableContainer.FetchResult.FAIL) {
-            advance();
-            if (check(DOT)) {
-                current--;
-                return Optional.of(consumeVarType(generics));
+            Package p = VarTypeManager.getPackage(peek().lexeme());
+            List<Token> consumed = new ArrayList<>();
+            consumed.add(advance());
+            while (match(DOT)) {
+                Token t = advance();
+                consumed.add(t);
+                if (p.hasClass(t.lexeme())) {
+                    return Optional.of(SourceClassReference.from(consumed.getFirst(), p.getClass(t.lexeme())));
+                } else if (!p.hasPackage(t.lexeme()))
+                    break; //can not find class here
             }
-            current--;
+            current -= consumed.size() * 2 - 1;
         }
         Token t = advance();
         ClassReference reference = parser.getClass(t.lexeme());
@@ -202,7 +209,9 @@ public class AbstractParser {
             Holder.AppliedGenerics declared = appliedGenerics(generics);
             if (declared != null) reference = new AppliedGenericsReference(reference, declared);
             return Optional.of(SourceReference.from(t, reference));
-        } else
+        } else if (reference != null)
+            return Optional.of(SourceClassReference.from(t, reference));
+        else
             current--;
         return Optional.empty();
     }
@@ -293,12 +302,9 @@ public class AbstractParser {
         return this.consumeNoThrow(EOA, "';' expected");
     }
 
-    protected static class ParseError extends RuntimeException {
-    }
-
-    protected ParseError error(Token token, String message) {
-        errorStorage.error(token, message);
-        return new ParseError();
+    protected void error(Token token, String message) {
+        if (!this.panicMode)
+            errorStorage.error(token, message);
     }
 
     protected void warn(Token token, String message) {
