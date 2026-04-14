@@ -535,7 +535,6 @@ public class ExprParser extends AbstractParser {
         return Arrays.stream(args).map(this.finder::findRetType).toArray(ClassReference[]::new);
     }
 
-
     private Expr call() {
         Expr expr = primary();
 

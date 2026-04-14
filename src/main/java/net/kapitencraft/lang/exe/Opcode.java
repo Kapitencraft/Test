@@ -34,7 +34,7 @@ public enum Opcode {
     I_DIV(-1), D_DIV(-1), F_DIV(-1),
     I_POW(-1), D_POW(-1), F_POW(-1),
     I_MOD(-1), D_MOD(-1), F_MOD(-1),
-    JUMP, JUMP_IF_FALSE(-1), SWITCH(-1),
+    JUMP(false, 0), JUMP_IF_FALSE(false, -1), SWITCH(-1),
     GET_FIELD, GET_STATIC(1), PUT_FIELD(false, -2), PUT_STATIC(false, -2), NEW(false, 1);
 
     /**
