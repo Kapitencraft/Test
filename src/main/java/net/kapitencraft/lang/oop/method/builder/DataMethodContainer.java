@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;

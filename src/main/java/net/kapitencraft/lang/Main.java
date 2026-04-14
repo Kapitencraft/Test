@@ -1,8 +1,7 @@
 package net.kapitencraft.lang;
 
-import net.kapitencraft.lang.bytecode.exe.VirtualMachine;
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.run.load.ClassLoader;
+import net.kapitencraft.lang.exe.load.ClassLoader;
 
 import java.io.IOException;
 import java.util.Scanner;

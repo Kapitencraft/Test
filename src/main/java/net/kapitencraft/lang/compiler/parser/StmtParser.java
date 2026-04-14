@@ -2,14 +2,13 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
-import net.kapitencraft.lang.compiler.VarTypeParser;
-import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
+import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -31,7 +30,7 @@ public class StmtParser extends ExprParser {
     private int loopIndex = 0;
 
     @Override
-    public void apply(Token[] toParse, VarTypeParser targetAnalyser) {
+    public void apply(Token[] toParse, VarTypeContainer targetAnalyser) {
         super.apply(toParse, targetAnalyser);
         seenReturn.clear(); //reset entire return stack
         seenReturn.add(false);
@@ -62,7 +61,7 @@ public class StmtParser extends ExprParser {
         try {
             if (match(FINAL)) return varDeclaration(true, consumeVarType(generics).getReference());
 
-            Optional<SourceClassReference> type = tryConsumeVarType(generics);
+            Optional<SourceReference> type = tryConsumeVarType(generics);
             return type.map(sourceClassReference -> varDeclaration(false, sourceClassReference.getReference())).orElseGet(this::statement);
         } catch (ParseError error) {
             synchronize();
@@ -117,7 +116,7 @@ public class StmtParser extends ExprParser {
         if (match(S_BRACKET_O)) {
             do {
                 Token token = consumeIdentifier();
-                if (this.varAnalyser.get(token.lexeme()) == BytecodeVars.FetchResult.FAIL) {
+                if (this.varAnalyser.get(token.lexeme()) == LocalVariableContainer.FetchResult.FAIL) {
                     error(token, "no local variable named '" + token.lexeme() + "'");
                 }
                 locals.add(token.lexeme());
@@ -209,7 +208,7 @@ public class StmtParser extends ExprParser {
 
         consumeBracketOpen("for");
 
-        Optional<SourceClassReference> type = tryConsumeVarType(generics);
+        Optional<SourceReference> type = tryConsumeVarType(generics);
 
         Stmt initializer;
         if (type.isPresent()) {
@@ -294,7 +293,8 @@ public class StmtParser extends ExprParser {
 
         this.pushScope();
         Stmt thenBranch = statement();
-        boolean branchSeenReturn = seenReturn.peek();
+        boolean seenReturn = this.seenReturn.peek();
+        boolean branchSeenReturn = seenReturn;
         thenBranch = new Stmt.Block(
                 new Stmt[] {
                         thenBranch,
@@ -310,19 +310,21 @@ public class StmtParser extends ExprParser {
             consumeBracketClose("elif condition");
             this.pushScope();
             Stmt elifStmt = statement();
-            boolean seenReturn = this.seenReturn.peek();
-            branchSeenReturn &= seenReturn;
+            boolean elifSeenReturn = this.seenReturn.peek();
+            seenReturn &= elifSeenReturn;
             elifStmt = new Stmt.Block(new Stmt[] {
                     elifStmt,
                     popScopeStmt()
             });
-            elifs.add(new ElifBranch(elifCondition, elifStmt, seenReturn));
+            elifs.add(new ElifBranch(elifCondition, elifStmt, elifSeenReturn));
         }
 
+        boolean elseBranchSeenReturn = false;
         if (match(ELSE)) {
             this.pushScope();
             elseBranch = statement();
-            branchSeenReturn &= seenReturn.peek();
+            elseBranchSeenReturn = this.seenReturn.peek();
+            branchSeenReturn &= elseBranchSeenReturn;
             elseBranch = new Stmt.Block(
                     new Stmt[] {
                             elseBranch,
@@ -333,9 +335,9 @@ public class StmtParser extends ExprParser {
             branchSeenReturn = false;
 
         if (branchSeenReturn)
-            seenReturn(); //current scope has seen return only if all branches have seen return and there exists an else branch
+            seenReturn(); //current scope has seen return only if all branches have seen return AND there exists an else branch
 
-        return new Stmt.If(condition, thenBranch, elseBranch, elifs.toArray(ElifBranch[]::new), statement);
+        return new Stmt.If(condition, thenBranch, seenReturn, elseBranch, elseBranchSeenReturn, elifs.toArray(ElifBranch[]::new), statement);
     }
 
     private Stmt whileStatement() {
@@ -381,13 +383,13 @@ public class StmtParser extends ExprParser {
         return stmts.toArray(Stmt[]::new);
     }
 
-    public void applyMethod(List<? extends Pair<SourceClassReference, String>> params, ClassReference targetClass, ClassReference funcRetType, @Nullable Holder.Generics generics) {
+    public void applyMethod(List<? extends Pair<SourceReference, String>> params, ClassReference targetClass, ClassReference funcRetType, @Nullable Holder.Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
         if (targetClass != null) this.varAnalyser.add("this", targetClass, false, true);
-        for (Pair<SourceClassReference, String> param : params) {
+        for (Pair<SourceReference, String> param : params) {
             varAnalyser.add(param.getSecond(), param.getFirst().getReference(), true, true);
         }
     }
@@ -400,13 +402,13 @@ public class StmtParser extends ExprParser {
         funcRetType = VarTypeManager.VOID.reference();
     }
 
-    public void applyStaticMethod(List<? extends Pair<SourceClassReference, String>> params, ClassReference funcRetType, @Nullable Holder.Generics generics) {
+    public void applyStaticMethod(List<? extends Pair<SourceReference, String>> params, ClassReference funcRetType, @Nullable Holder.Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
 
-        for (Pair<SourceClassReference, String> param : params) {
+        for (Pair<SourceReference, String> param : params) {
             varAnalyser.add(param.getSecond(), param.getFirst().getReference(), true, true);
         }
     }

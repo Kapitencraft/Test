@@ -2,8 +2,7 @@ package net.kapitencraft.lang.holder.class_ref.generic;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.run.VarTypeManager;
-import org.checkerframework.checker.units.qual.K;
+import net.kapitencraft.lang.exe.VarTypeManager;
 
 public class GenericClassReference extends ClassReference {
     private final ClassReference lowerBound, upperBound;

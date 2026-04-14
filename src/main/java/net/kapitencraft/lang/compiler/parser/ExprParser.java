@@ -1,27 +1,26 @@
 package net.kapitencraft.lang.compiler.parser;
 
-import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Holder;
-import net.kapitencraft.lang.compiler.VarTypeParser;
-import net.kapitencraft.lang.compiler.analyser.BytecodeVars;
+import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.run.algebra.Operand;
-import net.kapitencraft.lang.run.algebra.OperationType;
+import net.kapitencraft.lang.exe.algebra.Operand;
+import net.kapitencraft.lang.exe.algebra.OperationType;
 import net.kapitencraft.lang.tool.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -71,7 +70,7 @@ public class ExprParser extends AbstractParser {
 
     public Expr literalOrReference() {
         if (match(AT)) {
-            SourceClassReference reference = consumeVarType(generics);
+            SourceReference reference = consumeVarType(generics);
             Token errorPoint = previous();
             if (match(BRACKET_O)) {
                 parseAnnotationProperties(reference, errorPoint);
@@ -87,12 +86,12 @@ public class ExprParser extends AbstractParser {
         return new Expr.StaticGet(target, name);
     }
 
-    public Annotation parseAnnotation(Holder.AnnotationObj obj, VarTypeParser varTypeParser) {
-        this.apply(obj.properties(), varTypeParser);
+    public Annotation parseAnnotation(Holder.AnnotationObj obj, VarTypeContainer varTypeContainer) {
+        this.apply(obj.properties(), varTypeContainer);
         return parseAnnotationProperties(obj.type(), obj.type().getToken());
     }
 
-    public Annotation parseAnnotationProperties(SourceClassReference typeRef, Token errorPoint) {
+    public Annotation parseAnnotationProperties(SourceReference typeRef, Token errorPoint) {
         ScriptedClass type = typeRef.getReference().get();
 
         if (!type.isAnnotation()) {
@@ -491,6 +490,7 @@ public class ExprParser extends AbstractParser {
     private int literalOrEnum(ClassReference type) {
         if (check(PRIMITIVE)) {
             if (type.get().isChildOf(VarTypeManager.ENUM.get())) {
+                error(previous(), "enum constant expected");
                 //error wrong type
             }
             return (int) literal();
@@ -534,7 +534,6 @@ public class ExprParser extends AbstractParser {
     public ClassReference[] argTypes(Expr[] args) {
         return Arrays.stream(args).map(this.finder::findRetType).toArray(ClassReference[]::new);
     }
-
 
     private Expr call() {
         Expr expr = primary();
@@ -639,7 +638,7 @@ public class ExprParser extends AbstractParser {
 
     private Expr primary() {
         if (match(NEW)) {
-            SourceClassReference type = consumeVarTypeNoArray(generics);
+            SourceReference type = consumeVarTypeNoArray(generics);
             if (match(S_BRACKET_O)) {
                 Expr size = null;
                 //array creation
@@ -670,8 +669,8 @@ public class ExprParser extends AbstractParser {
                 String outName = this.currentFallback().name() + "$" + nameLiteral;
                 ClassReference typeTarget = VarTypeManager.getOrCreateClass(outName, pck);
                 Token name = new Token(IDENTIFIER, outName, LiteralHolder.EMPTY, type.getToken().line(), type.getToken().lineStartIndex());
-                SourceClassReference original = type;
-                type = SourceClassReference.from(name, typeTarget);
+                SourceReference original = type;
+                type = SourceReference.from(name, typeTarget);
                 if (original.get().isInterface()) {
                     Compiler.queueRegister(
                             hParser.parseInterface(typeTarget, pck, name, null, null, null, List.of(original)),
@@ -764,8 +763,8 @@ public class ExprParser extends AbstractParser {
 
         if (match(IDENTIFIER)) {
             Token previous = previous(); //the identifier just consumed
-            BytecodeVars.FetchResult result = varAnalyser.get(previous.lexeme()); //fetch variable under that name
-            if (result == BytecodeVars.FetchResult.FAIL) { //check if there exists a variable under that name
+            LocalVariableContainer.FetchResult result = varAnalyser.get(previous.lexeme()); //fetch variable under that name
+            if (result == LocalVariableContainer.FetchResult.FAIL) { //check if there exists a variable under that name
                 if (currentFallback().exists()) { //check if the parser has a class fallback available
                     ClassReference fallbackReference = currentFallback();
                     ScriptedClass fallback = fallbackReference.get(); //get said fallback

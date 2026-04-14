@@ -4,16 +4,17 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
+import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.method.CompileCallable;
-import net.kapitencraft.lang.run.load.ClassLoader;
-import net.kapitencraft.lang.run.load.CompilerLoaderHolder;
+import net.kapitencraft.lang.exe.load.ClassLoader;
+import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
 import net.kapitencraft.lang.tool.Util;
-import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,6 +34,7 @@ import java.util.function.Consumer;
 public class Compiler {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
+    public static boolean optimize = false;
     static int errorCount = 0;
     private static ClassLoader.PackageHolder<CompilerLoaderHolder> compileData;
     private static final List<ClassRegister> registers = new ArrayList<>();
@@ -48,7 +50,7 @@ public class Compiler {
         }
     }
 
-    public static void queueRegister(Holder.Class aClass, ErrorStorage errorStorage, VarTypeParser parser, @Nullable String namePrefix) {
+    public static void queueRegister(Holder.Class aClass, ErrorStorage errorStorage, VarTypeContainer parser, @Nullable String namePrefix) {
         String name = aClass.name().lexeme();
         ClassRegister e = ClassRegister.create(aClass, errorStorage, parser, name);
         registers.add(e);
@@ -56,7 +58,7 @@ public class Compiler {
     }
 
     private record ClassRegister(CompilerLoaderHolder holder, String pck, @Nullable String name) {
-        public static ClassRegister create(Holder.Class entry, ErrorStorage logger, VarTypeParser parser, @Nullable String name) {
+        public static ClassRegister create(Holder.Class entry, ErrorStorage logger, VarTypeContainer parser, @Nullable String name) {
             return new ClassRegister(new CompilerLoaderHolder(entry, logger, parser), entry.pck(), name);
         }
 
@@ -66,6 +68,10 @@ public class Compiler {
     }
 
     public static void main(String[] args) {
+        if (args.length > 0 && "-o".equals(args[0])) {
+            optimize = true;
+        }
+
         File root = new File("./run/src");
         File cache = ClassLoader.cacheLoc;
 
@@ -156,6 +162,7 @@ public class Compiler {
             }
         }
 
+        //region message
         private interface Message {
 
             void print(String[] lines, String fileLoc);
@@ -177,6 +184,7 @@ public class Compiler {
                 Compiler.warn(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
             }
         }
+        //endregion
 
         public void error(Token loc, String msg) {
             error(loc.line(), loc.lineStartIndex(), msg);

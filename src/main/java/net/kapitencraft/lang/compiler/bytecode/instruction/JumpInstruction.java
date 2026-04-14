@@ -1,0 +1,33 @@
+package net.kapitencraft.lang.compiler.bytecode.instruction;
+
+import net.kapitencraft.lang.exe.Opcode;
+import net.kapitencraft.lang.holder.bytecode.Chunk;
+import net.kapitencraft.lang.compiler.bytecode.ByteCodeBuilder;
+
+public class JumpInstruction extends CodeInstruction implements JumpableInstruction {
+    private int index = -1;
+
+    public JumpInstruction(Opcode opcode) {
+        super(opcode);
+    }
+
+    public void setTarget(int index) {
+        this.index = index;
+    }
+
+    @Override
+    public int getTarget() {
+        return index;
+    }
+
+    @Override
+    public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
+        super.save(builder, ips);
+        builder.add2bArg(ips.getIp(index)); //index is into instruction array, not bytecode array
+    }
+
+    @Override
+    public int length() {
+        return 3;
+    }
+}

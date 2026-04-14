@@ -4,15 +4,17 @@ import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
+import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsSourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.ClassType;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.tool.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -42,9 +44,9 @@ public class HolderParser extends AbstractParser {
         String nameOverride = null;
         if (match(AS)) nameOverride = consumeIdentifier().lexeme();
         consumeEndOfArg();
-        SourceClassReference target = VarTypeManager.getOrCreateClass(packages);
+        SourceReference target = VarTypeManager.getOrCreateClass(packages);
         if (parser.hasClass(target.getReference(), nameOverride)) {
-            error(packages.get(packages.size() - 1), "unknown class '" + packages.stream().map(Token::lexeme).collect(Collectors.joining(".")) + "'");
+            error(packages.getLast(), "unknown class '" + packages.stream().map(Token::lexeme).collect(Collectors.joining(".")) + "'");
         }
         parser.addClass(target, nameOverride);
     }
@@ -68,7 +70,7 @@ public class HolderParser extends AbstractParser {
     }
 
     private Holder.AnnotationObj parseAnnotationObject() {
-        SourceClassReference cInst = consumeVarType();
+        SourceReference cInst = consumeVarTypeNoArray(GenericStack.EMPTY);
         Token[] properties = new Token[0];
         if (match(BRACKET_O)) {
             properties = getBracketEnclosedCode();
@@ -95,48 +97,6 @@ public class HolderParser extends AbstractParser {
             tokens.add(advance);
         } while ((sBracket > 0 || cBracket > 0 || bracket > 0) || !check(EOA));
         return tokens.toArray(Token[]::new);
-    }
-
-    protected SourceClassReference consumeVarType() {
-        StringBuilder typeName = new StringBuilder();
-        Token token = consumeIdentifier();
-        typeName.append(token.lexeme());
-        if (activeGenerics != null) {
-            Optional<ClassReference> generic = activeGenerics.getValue(token.lexeme());
-            if (generic.isPresent()) {
-                return SourceClassReference.from(token, generic.get());
-            }
-        }
-        ClassReference reference = parser.getClass(token.lexeme());
-        if (reference == null) {
-            if (!check(DOT)) {
-                String pckId = this.activePackages.peek();
-                if (pckId != null) {
-                    Package p = VarTypeManager.getOrCreatePackage(pckId);
-                    reference = p.getOrCreateClass(token.lexeme());
-                }
-            } else {
-                Package p = VarTypeManager.getPackage(token.lexeme());
-                while (match(DOT) && p != null) {
-                    String id = consumeIdentifier().lexeme();
-                    typeName.append(".").append(id);
-                    if (check(DOT)) p = p.getPackage(id);
-                    else reference = p.getOrCreateClass(id);
-                }
-            }
-        }
-
-        if (reference == null) {
-            reference = VarTypeManager.getOrCreateClass(typeName.toString(), activePackages.getLast());
-        }
-        Holder.AppliedGenerics generics = appliedGenerics();
-        while (match(S_BRACKET_O)) {
-            consume(S_BRACKET_C, "']' expected");
-            if (reference != null) reference = reference.array();
-        }
-        if (reference == null) return null;
-        if (generics != null) reference = new AppliedGenericsReference(reference, generics);
-        return SourceClassReference.from(token, reference);
     }
 
     private Token[] getBracketEnclosedCode() {
@@ -202,8 +162,8 @@ public class HolderParser extends AbstractParser {
                     Holder.Constructor decl = constructorDecl(annotations, modifiers.getGenerics(), constName, asEnum);
                     constructors.add(decl);
                 } else {
-                    current--; //reset after advancing in the `if`
-                    SourceClassReference type = consumeVarType();
+                    current--; //reset after advancing in line 199
+                    SourceReference type = consumeVarType(activeGenerics);
                     Token elementName = consumeIdentifier();
                     if (match(BRACKET_O)) {
                         scope.method.check(this, modifiers);
@@ -223,15 +183,15 @@ public class HolderParser extends AbstractParser {
         }
     }
 
-    public List<Pair<SourceClassReference, String>> parseParams() {
-        List<Pair<SourceClassReference, String>> parameters = new ArrayList<>();
+    public List<Pair<SourceReference, String>> parseParams() {
+        List<Pair<SourceReference, String>> parameters = new ArrayList<>();
         if (!check(BRACKET_C)) {
             do {
                 if (parameters.size() >= 255) {
                     error(peek(), "Can't have more than 255 params.");
                 }
 
-                SourceClassReference pType = consumeVarType();
+                SourceReference pType = consumeVarType(activeGenerics);
                 Token pName = consume(IDENTIFIER, "Expected parameter name.");
                 parameters.add(Pair.of(pType, pName.lexeme()));
             } while (match(COMMA));
@@ -241,10 +201,10 @@ public class HolderParser extends AbstractParser {
 
 
     private Holder.Constructor constructorDecl(Holder.AnnotationObj[] annotation, Holder.Generics generics, Token origin, boolean asEnum) {
-        List<Pair<SourceClassReference, String>> parameters = parseParams();
+        List<Pair<SourceReference, String>> parameters = parseParams();
         if (asEnum) { //add name and ordinal access
-            parameters.add(0, Pair.of(SourceClassReference.from(origin, VarTypeManager.STRING), "?"));
-            parameters.add(1, Pair.of(SourceClassReference.from(origin, VarTypeManager.INTEGER.reference()), "?"));
+            parameters.add(0, Pair.of(SourceReference.from(origin, VarTypeManager.STRING), "?"));
+            parameters.add(1, Pair.of(SourceReference.from(origin, VarTypeManager.INTEGER.reference()), "?"));
         }
 
         consumeBracketClose("params");
@@ -258,8 +218,8 @@ public class HolderParser extends AbstractParser {
         return new Holder.Constructor(annotation, generics, origin, endToken, parameters, code);
     }
 
-    private Holder.Method funcDecl(SourceClassReference type, ModifiersParser modifiers, Token name) {
-        List<Pair<SourceClassReference, String>> parameters = parseParams();
+    private Holder.Method funcDecl(SourceReference type, ModifiersParser modifiers, Token name) {
+        List<Pair<SourceReference, String>> parameters = parseParams();
         consumeBracketClose("params");
 
         short mods = modifiers.packModifiers();
@@ -285,7 +245,7 @@ public class HolderParser extends AbstractParser {
         return new Holder.Method(modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), type, name, endClose, parameters, code);
     }
 
-    private List<Holder.Field> fieldDecl(SourceClassReference type, Holder.AnnotationObj[] annotations, Token name, short modifiers) {
+    private List<Holder.Field> fieldDecl(SourceReference type, Holder.AnnotationObj[] annotations, Token name, short modifiers) {
         Token[] code = null;
         Token assign = null;
 
@@ -334,8 +294,8 @@ public class HolderParser extends AbstractParser {
 
         ClassReference target = getOrCreate(name.lexeme(), pckID);
 
-        parser.addClass(SourceClassReference.from(name, target), originalName);
-        SourceClassReference superClass = SourceClassReference.from(null, VarTypeManager.OBJECT);
+        parser.addClass(SourceReference.from(name, target), originalName);
+        SourceReference superClass = SourceReference.from(null, VarTypeManager.OBJECT);
         Holder.Generics classGenerics = generics();
 
         GenericStack stack = null;
@@ -347,17 +307,17 @@ public class HolderParser extends AbstractParser {
             classGenerics.pushToStack(activeGenerics);
         }
 
-        if (match(EXTENDS)) superClass = consumeVarType();
+        if (match(EXTENDS)) superClass = consumeVarTypeNoArray();
 
-        List<SourceClassReference> implemented = new ArrayList<>();
+        List<SourceReference> implemented = new ArrayList<>();
 
         if (match(IMPLEMENTS)) {
             do {
-                implemented.add(consumeVarType());
+                implemented.add(consumeVarTypeNoArray());
             } while (match(COMMA));
         }
 
-        consumeCurlyOpen("class");
+        consumeCurlyOpen("class head");
 
         activePackages.push(pckID + "." + name.lexeme());
 
@@ -367,7 +327,7 @@ public class HolderParser extends AbstractParser {
         return h;
     }
 
-    public Holder.Class parseClass(ClassReference target, @Nullable ModifiersParser mods, @Nullable GenericStack stack, @Nullable Holder.Generics classGenerics, String pckID, Token name, SourceClassReference superClass, List<SourceClassReference> implemented) {
+    public Holder.Class parseClass(ClassReference target, @Nullable ModifiersParser mods, @Nullable GenericStack stack, @Nullable Holder.Generics classGenerics, String pckID, Token name, SourceReference superClass, List<SourceReference> implemented) {
         List<Holder.Method> methods = new ArrayList<>();
         List<Holder.Constructor> constructors = new ArrayList<>();
         List<Holder.Field> fields = new ArrayList<>();
@@ -385,7 +345,7 @@ public class HolderParser extends AbstractParser {
                 classGenerics,
                 pckID, name,
                 superClass,
-                implemented.toArray(new SourceClassReference[0]),
+                implemented.toArray(new SourceReference[0]),
                 constructors.toArray(new Holder.Constructor[0]),
                 methods.toArray(new Holder.Method[0]),
                 fields.toArray(new Holder.Field[0]),
@@ -420,11 +380,11 @@ public class HolderParser extends AbstractParser {
 
     private Holder.Generic generic() {
         Token name = consumeIdentifier();
-        SourceClassReference lowerBound = null, upperBound = null;
+        SourceReference lowerBound = null, upperBound = null;
         if (match(EXTENDS)) {
-            lowerBound = consumeVarType();
+            lowerBound = consumeVarTypeNoArray();
         } else if (match(SUPER)) {
-            upperBound = consumeVarType();
+            upperBound = consumeVarTypeNoArray();
         }
 
         return new Holder.Generic(name, lowerBound, upperBound);
@@ -440,13 +400,13 @@ public class HolderParser extends AbstractParser {
 
         ClassReference target = getOrCreate(name.lexeme(), pckID);
 
-        parser.addClass(SourceClassReference.from(name, target), originalName);
+        parser.addClass(SourceReference.from(name, target), originalName);
 
-        List<SourceClassReference> interfaces = new ArrayList<>();
+        List<SourceReference> interfaces = new ArrayList<>();
 
         if (match(IMPLEMENTS)) {
             do {
-                interfaces.add(consumeVarType());
+                interfaces.add(consumeVarTypeNoArray());
             } while (match(COMMA));
         }
 
@@ -481,8 +441,8 @@ public class HolderParser extends AbstractParser {
 
         return new Holder.Class(ClassType.ENUM,
                 target, modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), pckID, name,
-                SourceClassReference.from(name.asIdentifier("Enum"), VarTypeManager.ENUM),
-                interfaces.toArray(new SourceClassReference[0]),
+                SourceReference.from(name.asIdentifier("Enum"), VarTypeManager.ENUM),
+                interfaces.toArray(new SourceReference[0]),
                 constructors.toArray(new Holder.Constructor[0]),
                 methods.toArray(new Holder.Method[0]),
                 fields.toArray(new Holder.Field[0]),
@@ -500,7 +460,7 @@ public class HolderParser extends AbstractParser {
 
         ClassReference target = getOrCreate(name.lexeme(), pckId);
 
-        parser.addClass(SourceClassReference.from(name, target), originalName);
+        parser.addClass(SourceReference.from(name, target), originalName);
 
         consumeCurlyOpen("annotation");
         activePackages.push(pckId + "." + name.lexeme());
@@ -513,7 +473,7 @@ public class HolderParser extends AbstractParser {
             Holder.AnnotationObj[] annotations = modifiers.getAnnotations();
             if (readClass(pckId, name.lexeme(), modifiers)) {
                 ModifierScope.ANNOTATION.check(this, modifiers);
-                SourceClassReference type = consumeVarType();
+                SourceReference type = consumeVarType();
                 Token elementName = consumeIdentifier();
                 if (match(BRACKET_O)) {
                     Holder.Method decl = annotationMethodDecl(type, annotations, elementName);
@@ -532,7 +492,7 @@ public class HolderParser extends AbstractParser {
         );
     }
 
-    private Holder.Method annotationMethodDecl(SourceClassReference type, Holder.AnnotationObj[] annotations, Token elementName) {
+    private Holder.Method annotationMethodDecl(SourceReference type, Holder.AnnotationObj[] annotations, Token elementName) {
         consumeBracketClose("annotation");
         Token[] defaultCode = new Token[0];
         boolean defaulted = false;
@@ -554,7 +514,7 @@ public class HolderParser extends AbstractParser {
 
         ClassReference target = getOrCreate(name.lexeme(), pckID);
 
-        parser.addClass(SourceClassReference.from(name, target), originalName);
+        parser.addClass(SourceReference.from(name, target), originalName);
 
         Holder.Generics classGenerics = generics();
 
@@ -566,11 +526,11 @@ public class HolderParser extends AbstractParser {
             } else classGenerics.pushToStack(activeGenerics);
         }
 
-        List<SourceClassReference> parentInterfaces = new ArrayList<>();
+        List<SourceReference> parentInterfaces = new ArrayList<>();
 
         if (match(EXTENDS)) {
             do {
-                parentInterfaces.add(consumeVarType());
+                parentInterfaces.add(consumeVarTypeNoArray());
             } while (match(COMMA));
         }
 
@@ -581,7 +541,7 @@ public class HolderParser extends AbstractParser {
        return parseInterface(target, pckID, name, stack, classGenerics, mods, parentInterfaces);
     }
 
-    public Holder.Class parseInterface(ClassReference target, String pckID, Token name, @Nullable GenericStack stack, @Nullable Holder.Generics classGenerics, @Nullable ModifiersParser mods, List<SourceClassReference> parentInterfaces) {
+    public Holder.Class parseInterface(ClassReference target, String pckID, Token name, @Nullable GenericStack stack, @Nullable Holder.Generics classGenerics, @Nullable ModifiersParser mods, List<SourceReference> parentInterfaces) {
         List<Holder.Method> methods = new ArrayList<>();
         List<Holder.Field> fields = new ArrayList<>();
 
@@ -596,7 +556,7 @@ public class HolderParser extends AbstractParser {
         Holder.AnnotationObj[] annotations = mods != null ? mods.getAnnotations() : new Holder.AnnotationObj[0];
         return new Holder.Class(ClassType.INTERFACE, target, modifiers,
                 annotations, classGenerics, pckID, name, null,
-                parentInterfaces.toArray(new SourceClassReference[0]),
+                parentInterfaces.toArray(new SourceReference[0]),
                 null,
                 methods.toArray(new Holder.Method[0]),
                 fields.toArray(new Holder.Field[0]),
@@ -756,4 +716,68 @@ public class HolderParser extends AbstractParser {
             }
         }
     }
+
+    @NotNull
+    protected SourceReference consumeVarType() {
+        SourceReference sourceReference = consumeVarTypeNoArray(activeGenerics);
+        ClassReference reference = sourceReference.getReference();
+        Token last = sourceReference.getToken();
+        Holder.AppliedGenerics appliedGenerics = appliedGenerics(activeGenerics);
+        if (appliedGenerics != null) {
+            return AppliedGenericsSourceReference.create(last, reference, appliedGenerics);
+        }
+        while (match(S_BRACKET_O)) {
+            consume(S_BRACKET_C, "']' expected");
+            reference = reference.array();
+            last = previous();
+        }
+        if (last != sourceReference.getToken()) {
+            return SourceReference.from(last, reference);
+        }
+        return sourceReference;
+    }
+
+    protected SourceReference consumeVarTypeNoArray() {
+        Token token = consumeIdentifier();
+        ClassReference reference = parser.getClass(token.lexeme());
+        if (reference == null) {
+            Optional<ClassReference> optional = activeGenerics.getValue(token.lexeme());
+            if (optional.isPresent()) return SourceReference.from(token, optional.get());
+        }
+        if (reference == null) {
+            Package p = VarTypeManager.getPackage(token.lexeme());
+
+            while (match(DOT) && p != null) {
+                String id = consumeIdentifier().lexeme();
+                if (p.hasClass(id)) {
+                    reference = p.getClass(id);
+                    break;
+                }
+                p = p.getPackage(id);
+            }
+        }
+
+        Token last = previous();
+        int index = current;
+        while (match(DOT) && reference != null) {
+            String enclosingName = consumeIdentifier().lexeme(); //needs to stay here for the mean-time to ensure the compiler doesn't break
+            ClassReference name = VarTypeManager.getClassForName(reference.absoluteName() + "." + enclosingName);
+            if (name == null) {
+                current = index;
+                break;
+            }
+            reference = name;
+            index = current;
+        }
+
+        if (reference == null) {
+            reference = VarTypeManager.getOrCreateClass(token.lexeme(), activePackages.getLast());
+            SourceReference sourceReference = SourceReference.from(token, reference); //skip rest
+            parser.addClass(sourceReference, null);
+        }
+        Holder.AppliedGenerics declared = appliedGenerics(activeGenerics);
+        if (declared != null) return SourceReference.from(last, new AppliedGenericsReference(reference, declared));
+        return SourceReference.from(last, reference);
+    }
+
 }

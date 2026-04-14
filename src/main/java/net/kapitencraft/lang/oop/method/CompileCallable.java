@@ -2,14 +2,14 @@ package net.kapitencraft.lang.oop.method;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.bytecode.storage.Chunk;
-import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
-import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.holder.bytecode.Chunk;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 
 import java.util.List;
@@ -38,19 +38,21 @@ public class CompileCallable implements ScriptedCallable {
             object.add("params", array);
         }
         if (!isAbstract()) {
-            Chunk.Builder chunk = builder.setup();
+            Chunk.Builder chunk = new Chunk.Builder();
+            builder.reset();
             int rIndex = 0;
             if (!isStatic()) {
-                chunk.addLocal(0, 0, VarTypeManager.VOID.reference(), "this");
+                chunk.addLocal(0, VarTypeManager.VOID.reference(), "this");
                 rIndex++;
             }
             for (int i = 0; i < this.params.size(); i++) {
                 Pair<? extends ClassReference, String> param = this.params.get(i);
-                chunk.addLocal(0, rIndex + i, param.getFirst(), param.getSecond());
+                chunk.addLocal(rIndex + i, param.getFirst(), param.getSecond());
             }
             for (Stmt compileStmt : body) {
                 builder.cache(compileStmt);
             }
+            builder.build(chunk);
             object.add("body", chunk.build().save());
         }
         if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);

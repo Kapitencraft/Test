@@ -175,7 +175,9 @@
         "If": {
           "condition": "Expr",
           "thenBranch": "Stmt",
+          "branchSeenReturn": "boolean",
           "elseBranch": "Stmt",
+          "elseBranchSeenReturn": "boolean",
           "elifs": "ElifBranch[]",
           "keyword": "Token"
         },

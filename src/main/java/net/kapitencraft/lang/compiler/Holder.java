@@ -1,7 +1,8 @@
 package net.kapitencraft.lang.compiler;
 
 import com.google.common.collect.ImmutableMap;
-import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
+import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
@@ -12,7 +13,7 @@ import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.baked.BakedInterface;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
@@ -28,7 +29,7 @@ import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -45,15 +46,15 @@ public class Holder {
         void validate(Compiler.ErrorStorage logger);
     }
 
-    public record AnnotationObj(SourceClassReference type, Token[] properties) implements Validateable {
+    public record AnnotationObj(SourceReference type, Token[] properties) implements Validateable {
         public void validate(Compiler.ErrorStorage logger) {
             this.type.validate(logger);
         }
     }
 
     public record Class(ClassType type, ClassReference target, short modifiers,
-                        AnnotationObj[] annotations, Generics generics, String pck, Token name, SourceClassReference parent,
-                        SourceClassReference[] interfaces,
+                        AnnotationObj[] annotations, Generics generics, String pck, Token name, SourceReference parent,
+                        SourceReference[] interfaces,
                         Constructor[] constructors,
                         Method[] methods,
                         Field[] fields,
@@ -69,14 +70,14 @@ public class Holder {
         }
 
         private ClassReference[] extractInterfaces() {
-            return Arrays.stream(interfaces).map(SourceClassReference::getReference).toArray(ClassReference[]::new);
+            return Arrays.stream(interfaces).map(SourceReference::getReference).toArray(ClassReference[]::new);
         }
 
         private String[] extractInterfacesToString() {
-            return Arrays.stream(interfaces).map(SourceClassReference::get).map(VarTypeManager::getClassName).toArray(String[]::new);
+            return Arrays.stream(interfaces).map(SourceReference::get).map(VarTypeManager::getClassName).toArray(String[]::new);
         }
 
-        public Compiler.ClassBuilder construct(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorStorage logger) {
+        public Compiler.ClassBuilder construct(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
             stmtParser.pushFallback(this.target);
             try {
                 return switch (this.type) {
@@ -93,7 +94,7 @@ public class Holder {
         /**
          * construct this enum to a baked class
          */
-        public BakedClass constructEnum(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorStorage logger) {
+        public BakedClass constructEnum(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
 
             List<Stmt> statics = new ArrayList<>();
 
@@ -335,7 +336,7 @@ public class Holder {
         }
         //endregion
 
-        private Annotation[] parseAnnotations(StmtParser stmtParser, VarTypeParser parser) {
+        private Annotation[] parseAnnotations(StmtParser stmtParser, VarTypeContainer parser) {
             List<Annotation> annotations = new ArrayList<>();
             for (AnnotationObj obj : this.annotations()) {
                 annotations.add(stmtParser.parseAnnotation(obj, parser));
@@ -347,7 +348,7 @@ public class Holder {
 
         }
 
-        public BakedClass constructClass(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorStorage logger) {
+        public BakedClass constructClass(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
             Map<Token, CompileField> fields = new HashMap<>();
             List<Stmt> statics = new ArrayList<>();
             for (Field field : fields()) {
@@ -447,7 +448,7 @@ public class Holder {
             return finalFields;
         }
 
-        public BakedInterface constructInterface(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorStorage logger) {
+        public BakedInterface constructInterface(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
             Map<String, CompileField> staticFields = new HashMap<>();
             List<Stmt> statics = new ArrayList<>();
             for (Field field : fields()) {
@@ -521,7 +522,7 @@ public class Holder {
 
         }
 
-        public BakedAnnotation constructAnnotation(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorStorage logger) {
+        public BakedAnnotation constructAnnotation(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
             ImmutableMap.Builder<String, MethodWrapper> methods = new ImmutableMap.Builder<>();
             for (Method method : methods()) {
                 Expr val = null;
@@ -633,7 +634,7 @@ public class Holder {
                     this.enumConstants,
                     DataMethodContainer.bakeBuilders(methods),
                     this.modifiers,
-                    Arrays.stream(this.interfaces).map(SourceClassReference::getReference).map(VarTypeManager::getClassName).toArray(String[]::new)
+                    Arrays.stream(this.interfaces).map(SourceReference::getReference).map(VarTypeManager::getClassName).toArray(String[]::new)
             );
         }
 
@@ -681,7 +682,7 @@ public class Holder {
         }
     }
 
-    public record Constructor(AnnotationObj[] annotations, Generics generics, Token name, Token closeBracket, List<Pair<SourceClassReference, String>> params, Token[] body) implements Validateable {
+    public record Constructor(AnnotationObj[] annotations, Generics generics, Token name, Token closeBracket, List<Pair<SourceReference, String>> params, Token[] body) implements Validateable {
         public void validate(Compiler.ErrorStorage logger) {
             validateNullable(annotations, logger);
             if (annotations != null) for (AnnotationObj obj : annotations) obj.validate(logger);
@@ -689,14 +690,14 @@ public class Holder {
         }
 
         public List<? extends Pair<ClassReference, String>> extractParams() {
-            return params.stream().map(p -> p.mapFirst(SourceClassReference::getReference)).toList();
+            return params.stream().map(p -> p.mapFirst(SourceReference::getReference)).toList();
         }
     }
 
     public record EnumConstant(Token name, int ordinal, Token[] arguments) {
     }
 
-    public record Field(short modifiers, AnnotationObj[] annotations, SourceClassReference type, Token name, Token assign, Token[] body) implements Validateable {
+    public record Field(short modifiers, AnnotationObj[] annotations, SourceReference type, Token name, Token assign, Token[] body) implements Validateable {
         @Override
         public void validate(Compiler.ErrorStorage logger) {
             validateNullable(annotations, logger);
@@ -704,7 +705,7 @@ public class Holder {
         }
     }
 
-    public record Method(short modifiers, AnnotationObj[] annotations, Generics generics, SourceClassReference type, Token name, Token closeBracket, List<? extends Pair<SourceClassReference, String>> params, Token[] body) {
+    public record Method(short modifiers, AnnotationObj[] annotations, Generics generics, SourceReference type, Token name, Token closeBracket, List<? extends Pair<SourceReference, String>> params, Token[] body) {
         public void validate(Compiler.ErrorStorage logger) {
             validateNullable(annotations, logger);
             type.validate(logger);
@@ -712,7 +713,7 @@ public class Holder {
         }
 
         public List<? extends Pair<ClassReference, String>> extractParams() {
-            return params.stream().map(p -> p.mapFirst(SourceClassReference::getReference)).toList();
+            return params.stream().map(p -> p.mapFirst(SourceReference::getReference)).toList();
         }
     }
 
@@ -741,13 +742,13 @@ public class Holder {
         }
     }
 
-    public record Generic(Token name, SourceClassReference lowerBound, SourceClassReference upperBound, GenericClassReference reference) implements Validateable {
+    public record Generic(Token name, SourceReference lowerBound, SourceReference upperBound, GenericClassReference reference) implements Validateable {
 
-        public Generic(Token name, SourceClassReference lowerBound, SourceClassReference upperBound) {
+        public Generic(Token name, SourceReference lowerBound, SourceReference upperBound) {
             this(name, lowerBound, upperBound,
                     new GenericClassReference(name.lexeme(),
-                            Optional.ofNullable(lowerBound).map(SourceClassReference::getReference).orElse(null),
-                            Optional.ofNullable(upperBound).map(SourceClassReference::getReference).orElse(null)
+                            Optional.ofNullable(lowerBound).map(SourceReference::getReference).orElse(null),
+                            Optional.ofNullable(upperBound).map(SourceReference::getReference).orElse(null)
                     )
             );
         }

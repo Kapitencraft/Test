@@ -1,9 +1,9 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.CacheBuilder;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exe.VarTypeManager;
 
 public interface CacheableClass {
 

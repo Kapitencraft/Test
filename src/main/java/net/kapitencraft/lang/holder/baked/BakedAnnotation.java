@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.holder.baked;
 
 import com.google.common.collect.ImmutableMap;
-import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
@@ -12,7 +12,7 @@ import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.annotation.CompileAnnotationCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 
 import java.util.Map;
