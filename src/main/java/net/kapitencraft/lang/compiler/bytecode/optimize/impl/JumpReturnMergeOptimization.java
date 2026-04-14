@@ -11,10 +11,10 @@ import net.kapitencraft.lang.exe.Opcode;
  */
 public class JumpReturnMergeOptimization implements SimpleOptimization {
     @Override
-    public void tryExecute(BytecodeOptimizer.Executor executor, int index) {
-        if (executor.getInstruction(index) instanceof JumpInstruction jI && jI.code() == Opcode.JUMP &&
-                executor.getInstruction(jI.getTarget()) instanceof CodeInstruction cI && (cI.code() == Opcode.RETURN || cI.code() == Opcode.RETURN_ARG)) {
-            executor.replaceInstruction(index, new CodeInstruction(cI.code()));
+    public void tryExecute(BytecodeOptimizer.OptimizationStorage optimizationStorage, int index) {
+        if (optimizationStorage.getInstruction(index) instanceof JumpInstruction jI && jI.code() == Opcode.JUMP &&
+                optimizationStorage.getInstruction(jI.getTarget()) instanceof CodeInstruction cI && (cI.code() == Opcode.RETURN || cI.code() == Opcode.RETURN_ARG)) {
+            optimizationStorage.replaceInstruction(index, new CodeInstruction(cI.code()));
         }
     }
 }

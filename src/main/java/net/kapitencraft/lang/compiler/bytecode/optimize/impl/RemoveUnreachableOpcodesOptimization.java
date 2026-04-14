@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.bytecode.optimize.impl;
 
 import net.kapitencraft.lang.compiler.bytecode.instruction.*;
 import net.kapitencraft.lang.compiler.bytecode.optimize.AdvancedOptimization;
+import net.kapitencraft.lang.compiler.bytecode.optimize.BytecodeOptimizer;
 import net.kapitencraft.lang.exe.Opcode;
 
 import java.util.ArrayDeque;
@@ -15,7 +16,7 @@ import java.util.List;
 public class RemoveUnreachableOpcodesOptimization implements AdvancedOptimization {
 
     @Override
-    public void optimize(List<Instruction> instructions) {
+    public void optimize(BytecodeOptimizer.OptimizationStorage instructions) {
         List<ExceptionHandlerInstruction> handlers = new ArrayList<>();
         for (Instruction instruction : instructions) {
             if (instruction instanceof ExceptionHandlerInstruction handlerInstruction) {
@@ -41,7 +42,7 @@ public class RemoveUnreachableOpcodesOptimization implements AdvancedOptimizatio
                     }
                 }
 
-                if (instructions.get(i) instanceof CodeInstruction cI) {
+                if (instructions.getInstruction(i) instanceof CodeInstruction cI) {
                     if (cI.code() == Opcode.RETURN || cI.code() == Opcode.RETURN_ARG) {
                         break;
                     }
@@ -61,7 +62,7 @@ public class RemoveUnreachableOpcodesOptimization implements AdvancedOptimizatio
         }
         for (int i = flags.length - 1; i >= 0; i--) {
             if (!flags[i]) {
-                instructions.remove(i); //remove from the back to the front to keep the order aligned
+                instructions.removeInstruction(i); //remove from the back to the front to keep the order aligned
             }
         }
     }

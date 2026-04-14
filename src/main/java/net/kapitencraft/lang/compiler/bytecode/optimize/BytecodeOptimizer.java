@@ -1,11 +1,10 @@
 package net.kapitencraft.lang.compiler.bytecode.optimize;
 
 import net.kapitencraft.lang.compiler.bytecode.instruction.Instruction;
-import net.kapitencraft.lang.compiler.bytecode.optimize.impl.JumpIfFalseAfterFalseOptimization;
-import net.kapitencraft.lang.compiler.bytecode.optimize.impl.JumpMergeOptimization;
-import net.kapitencraft.lang.compiler.bytecode.optimize.impl.JumpReturnMergeOptimization;
-import net.kapitencraft.lang.compiler.bytecode.optimize.impl.RemoveUnreachableOpcodesOptimization;
+import net.kapitencraft.lang.compiler.bytecode.instruction.JumpInstruction;
+import net.kapitencraft.lang.compiler.bytecode.optimize.impl.*;
 
+import java.util.Iterator;
 import java.util.List;
 
 public class BytecodeOptimizer {
@@ -20,25 +19,26 @@ public class BytecodeOptimizer {
 
     private final List<AdvancedOptimization> advancedOptimizations = List.of(
             //backtrack unused pure instructions before POP or POP2
-            new RemoveUnreachableOpcodesOptimization() //remove unreachable opcodes caused by other optimizations
+            new RemoveUnreachableOpcodesOptimization(), //remove unreachable opcodes caused by other optimizations
+            new RemoveIgnoredResultInstructionsOptimization()
     );
 
     public void optimize(List<Instruction> instructions) {
-        Executor executor = new Executor(instructions);
+        OptimizationStorage optimizationStorage = new OptimizationStorage(instructions);
         for (SimpleOptimization optimization : simpleOptimizations) {
             for (int i = 0; i < instructions.size(); i++) {
-                optimization.tryExecute(executor, i);
+                optimization.tryExecute(optimizationStorage, i);
             }
         }
         for (AdvancedOptimization optimization : advancedOptimizations) {
-            optimization.optimize(instructions);
+            optimization.optimize(optimizationStorage);
         }
     }
 
-    public static class Executor {
+    public static class OptimizationStorage implements Iterable<Instruction> {
         private final List<Instruction> instructions;
 
-        private Executor(List<Instruction> instructions) {
+        private OptimizationStorage(List<Instruction> instructions) {
             this.instructions = instructions;
         }
 
@@ -48,6 +48,26 @@ public class BytecodeOptimizer {
 
         public void replaceInstruction(int index, Instruction instruction) {
             this.instructions.set(index, instruction);
+        }
+
+        public void removeInstruction(int index) {
+            for (Instruction instruction : this.instructions) {
+                if (instruction instanceof JumpInstruction jI) {
+                    if (jI.getTarget() > index) {
+                        jI.setTarget(jI.getTarget() - 1);
+                    }
+                }
+            }
+            this.instructions.remove(index);
+        }
+
+        public int size() {
+            return this.instructions.size();
+        }
+
+        @Override
+        public Iterator<Instruction> iterator() {
+            return instructions.iterator();
         }
     }
 }

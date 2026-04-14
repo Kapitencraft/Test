@@ -3,6 +3,7 @@ package net.kapitencraft.lang.compiler.bytecode.optimize.impl;
 import net.kapitencraft.lang.compiler.bytecode.instruction.CodeInstruction;
 import net.kapitencraft.lang.compiler.bytecode.instruction.Instruction;
 import net.kapitencraft.lang.compiler.bytecode.optimize.AdvancedOptimization;
+import net.kapitencraft.lang.compiler.bytecode.optimize.BytecodeOptimizer;
 import net.kapitencraft.lang.exe.Opcode;
 
 import java.util.ArrayList;
@@ -17,21 +18,21 @@ public class RemoveIgnoredResultInstructionsOptimization implements AdvancedOpti
     //1. remove non-pure Instructions before RETURN
     //2. remove non-pure Instructions before POP and POP_2 and remove these if finding a DUP instruction
     @Override
-    public void optimize(List<Instruction> instructions) {
+    public void optimize(BytecodeOptimizer.OptimizationStorage instructions) {
         int i = instructions.size() - 1;
         while (i >= 0) {
-            if (instructions.get(i) instanceof CodeInstruction cI) {
+            if (instructions.getInstruction(i) instanceof CodeInstruction cI) {
                 if (cI.code() == Opcode.RETURN) {
                     i--;
-                    while (i >= 0 && instructions.get(i) instanceof CodeInstruction cI1 && cI1.code().isPure()) {
-                        instructions.remove(i);
+                    while (i >= 0 && instructions.getInstruction(i) instanceof CodeInstruction cI1 && cI1.code().isPure()) {
+                        instructions.removeInstruction(i);
                         i--;
                     }
                 } else if (cI.code() == Opcode.POP || cI.code() == Opcode.POP_2) {
                     List<Integer> popLocations = new ArrayList<>();
                     popLocations.add(i);
                     i--;
-                    while (i >= 0 && !popLocations.isEmpty() && (instructions.get(i) instanceof CodeInstruction cI1 && cI1.code().isPure())) {
+                    while (i >= 0 && !popLocations.isEmpty() && (instructions.getInstruction(i) instanceof CodeInstruction cI1 && cI1.code().isPure())) {
                         switch (cI1.code()) {
                             case POP, POP_2 -> {
                                 popLocations.add(i);
@@ -40,21 +41,21 @@ public class RemoveIgnoredResultInstructionsOptimization implements AdvancedOpti
                             }
                             case DUP -> {
                                 Integer last = popLocations.getLast();
-                                CodeInstruction instruction = (CodeInstruction) instructions.get(last);
+                                CodeInstruction instruction = (CodeInstruction) instructions.getInstruction(last);
                                 if (instruction.code() == Opcode.POP_2) {
-                                    instructions.set(last, CodeInstruction.POP);
+                                    instructions.replaceInstruction(last, CodeInstruction.POP);
                                 } else {
-                                    instructions.remove(i);
+                                    instructions.removeInstruction(i);
                                     popLocations.removeLast();
                                     popLocations.replaceAll(integer -> integer - 1);
                                 }
                             }
                         }
-                        instructions.remove(i);
-                        i--;
+                        instructions.removeInstruction(i);
                     }
                 }
             }
+            i--;
         }
     }
 }
