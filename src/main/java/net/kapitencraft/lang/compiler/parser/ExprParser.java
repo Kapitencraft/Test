@@ -460,27 +460,6 @@ public class ExprParser extends AbstractParser {
         return aSwitch;
     }
 
-    private int literalOrEnum(ClassReference type) {
-        if (check(PRIMITIVE)) {
-            if (type.get().isChildOf(VarTypeManager.ENUM.get())) {
-                error(previous(), "enum constant expected");
-                //error wrong type
-            }
-            return (int) literal();
-        } else {
-            if (type.get().isChildOf(VarTypeManager.ENUM.get())) {
-                Token identifier = consumeIdentifier();
-                Holder.EnumConstant constant = type.get().getEnumConstant(identifier.lexeme());
-                if (constant != null) {
-                    return constant.ordinal();
-                }
-                return identifier.lexeme().hashCode(); //return hashcode to ensure objects are not equal
-            }
-            error(peek(), "unknown symbol");
-        }
-        return -1;
-    }
-
     private Expr staticAssign(ClassReference target, Token name) {
         Token type = previous();
         Expr value = expression();

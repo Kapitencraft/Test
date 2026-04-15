@@ -80,6 +80,10 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         builder.analyse();
     }
 
+    public void analyse() {
+        builder.analyse();
+    }
+
     public void cache() {
         try {
             Compiler.cache(

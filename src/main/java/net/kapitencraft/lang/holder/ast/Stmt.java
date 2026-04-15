@@ -74,8 +74,8 @@ public interface Stmt {
     }
 
     class DebugTrace implements Stmt {
-        public Token keyword; 
-        public Token[] localNames; 
+        public Token keyword;
+        public Token[] localNames;
         public byte[] localOrdinals;
 
         @Override

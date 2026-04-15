@@ -68,6 +68,6 @@ Change:
 <br>**ForEach**
 
 Change:
-<br>outsourced compiling into multi-threated executor service
+<br>outsourced compiling into multi-threated operationInfo service
 <br>Affected Expressions:
 <br>**All**

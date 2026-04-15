@@ -7,6 +7,7 @@ import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsSourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
@@ -210,6 +211,8 @@ public class AbstractParser {
             if (declared != null) reference = new AppliedGenericsReference(reference, declared);
             return Optional.of(SourceReference.from(t, reference));
         } else if (reference != null)
+            return Optional.of(SourceClassReference.from(t, reference));
+        else if (reference != null)
             return Optional.of(SourceClassReference.from(t, reference));
         else
             current--;

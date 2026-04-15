@@ -107,9 +107,9 @@ public interface Expr {
     }
 
     class SpecialAssign implements Expr {
-        public Token name; 
-        public Token assignType; 
-        public int ordinal; 
+        public Token name;
+        public Token assignType;
+        public int ordinal;
         public ClassReference executor;
         public String signature;
         public ClassReference retType;
