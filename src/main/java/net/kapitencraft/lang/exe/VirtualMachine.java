@@ -190,7 +190,7 @@ public class VirtualMachine {
             try {
                 Opcode o = Opcode.byId(readByte());
                 if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s Executing %s\n", visualStackSize(), o);
-                else if (DEBUG == DebugType.STACK) System.out.printf("[DEBUG]: %10s %s|", o, " ".repeat(stackIndex));
+                else if (DEBUG == DebugType.STACK) System.out.printf("[DEBUG]: %10s %s|\n", o, " ".repeat(stackIndex));
                 switch (o) {
                     //region control-flow
                     case POP -> stackIndex--; //pops the highest stack element

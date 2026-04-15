@@ -34,7 +34,8 @@
           "declaring": "ClassReference",
           "name": "Token",
           "args": "Expr[]",
-          "signature": "String"
+          "signature": "String",
+          "virtual": "Boolean"
         },
         "Get": {
           "object": "Expr",

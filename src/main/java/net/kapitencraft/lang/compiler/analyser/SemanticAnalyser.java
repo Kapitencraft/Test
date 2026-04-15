@@ -366,11 +366,21 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         //declaring
         ClassReference objType = expr.declaring != null ? expr.declaring : analyseExpr(expr.object);
         MethodData methodData = analyseCall(expr.name, objType, expr.args);
+        if (expr.virtual == null) {
+            expr.virtual = !methodData.isStatic;
+            if (expr.virtual) {
+                if (expr.object == null)
+                    error(expr.name, "instance method can not be accessed from static context");
+            } else {
+                expr.object = null; //remove object so it isn't accidentally saved
+            }
+        }
 
         if (!methodData.isStatic && expr.declaring != null && expr.object != null)
             analyseExpr(expr.object);
-        if (methodData.isStatic)
+        if (methodData.isStatic) {
             expr.declaring = methodData.declaring;
+        }
         expr.signature = methodData.signature;
         return expr.retType = methodData.retType;
     }
@@ -763,9 +773,11 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         popExpected();
 
         pushScope();
-        //add 2 synthetic vars
         int baseVar = varAnalyser.add("?", arrayType, false, true); //array variable
         varAnalyser.add("?", VarTypeManager.INTEGER.reference(), false, true); //iteration variable
+
+        pushScope();
+        //add 2 synthetic vars
 
         varAnalyser.add(stmt.name.lexeme(), stmt.type, true, true); //named variable from sourcecode
 

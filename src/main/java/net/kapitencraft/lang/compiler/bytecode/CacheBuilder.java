@@ -253,10 +253,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
 
         saveArgs(expr.args);
-        if (expr.declaring != null)
-            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_STATIC, expr.signature);
-        else
+        if (expr.virtual) {
             byteCodeBuilder.addStringInstruction(Opcode.INVOKE_VIRTUAL, expr.signature);
+        } else {
+            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_STATIC, expr.signature);
+        }
         if (expr.retType.is(VarTypeManager.VOID))
             ignoredExprResult = true;
         return null;
@@ -915,6 +916,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         byteCodeBuilder.addJump(curIndex);
         loops.pop().patchBoth(increase);
         byteCodeBuilder.patchJump(result);
+        byteCodeBuilder.addSimple(Opcode.POP_2); //remove iteration and array variable
         return null;
     }
 

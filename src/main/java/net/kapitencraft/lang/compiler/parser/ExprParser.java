@@ -646,6 +646,7 @@ public class ExprParser extends AbstractParser {
                         call.declaring = superclass;
                         call.name = name;
                         call.args = arguments;
+                        call.virtual = false;
                         return call;
                     }
                     consumeBracketClose("arguments");
@@ -659,6 +660,7 @@ public class ExprParser extends AbstractParser {
                     call.declaring = superclass;
                     call.name = name;
                     call.args = arguments;
+                    call.virtual = false;
                     return call;
                 }
             }

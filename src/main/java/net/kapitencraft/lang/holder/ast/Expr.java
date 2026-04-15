@@ -2,7 +2,6 @@ package net.kapitencraft.lang.holder.ast;
 
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-
 import java.util.Map;
 
 public interface Expr {
@@ -53,6 +52,7 @@ public interface Expr {
         public Token name;
         public Expr[] args;
         public String signature;
+        public Boolean virtual;
         public ClassReference retType;
 
         @Override
