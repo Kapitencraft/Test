@@ -1,28 +1,20 @@
 package net.kapitencraft.lang.compiler.parser;
 
-    import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
-import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
+import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.SwitchKey;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
-import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
-import net.kapitencraft.lang.oop.field.ScriptedField;
-import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.exe.algebra.OperationType;
-import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.lang.oop.field.ScriptedField;
-import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -704,7 +696,7 @@ public class ExprParser extends AbstractParser {
                 }
             }
             current--; //un-consume the identifier for the statics to take over
-            Optional<SourceClassReference> reference = tryConsumeVarType(generics);
+            Optional<SourceReference> reference = tryConsumeVarType(generics);
             if (reference.isPresent()) {
                 ClassReference target = reference.get().getReference();
                 consume(DOT, "'.' expected");

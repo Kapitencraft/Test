@@ -24,4 +24,9 @@ public class StaticFieldAccessInstruction extends CodeInstruction {
     public int length() {
         return 5;
     }
+
+    @Override
+    public String toString() {
+        return "StaticFieldAccess{" + super.toString() + ", className = " + className + ", fieldName = " + fieldName + "}";
+    }
 }

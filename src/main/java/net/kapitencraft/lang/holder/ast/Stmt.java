@@ -150,7 +150,7 @@ public interface Stmt {
         public Stmt thenBranch;
         public boolean branchSeenReturn;
         public Stmt elseBranch;
-        public boolean elseBranchSeenReturn
+        public boolean elseBranchSeenReturn;
         public ElifBranch[] elifs;
         public Token keyword;
 

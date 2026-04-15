@@ -16,8 +16,8 @@ import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.run.VarTypeManager;
-import net.kapitencraft.lang.run.algebra.OperationType;
+import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.exe.algebra.OperationType;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -194,10 +194,10 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         return ordinal;
     }
 
-    protected BytecodeVars.FetchResult checkVarExistence(Token name, boolean requireValue, boolean mayBeFinal) {
+    protected LocalVariableContainer.FetchResult checkVarExistence(Token name, boolean requireValue, boolean mayBeFinal) {
         String varName = name.lexeme();
-        BytecodeVars.FetchResult result = varAnalyser.get(varName);
-        if (result == BytecodeVars.FetchResult.FAIL) {
+        LocalVariableContainer.FetchResult result = varAnalyser.get(varName);
+        if (result == LocalVariableContainer.FetchResult.FAIL) {
             error(name, "cannot find symbol");
         } else if (requireValue && !result.assigned()) {
             error(name, "Variable '" + name.lexeme() + "' might not have been initialized");
@@ -211,7 +211,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         varAnalyser.push();
     }
 
-    private final BytecodeVars varAnalyser = new BytecodeVars();
+    private final LocalVariableContainer varAnalyser = new LocalVariableContainer();
     //endregion
 
     //region error
@@ -299,16 +299,16 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     public ClassReference visitVarRefExpr(Expr.VarRef expr) {
         String varName = expr.name.lexeme();
         if ("this".equals(varName) || "super".equals(varName)) {
-            BytecodeVars.FetchResult fetchResult = varAnalyser.get("this");
-            if (fetchResult == BytecodeVars.FetchResult.FAIL)
+            LocalVariableContainer.FetchResult fetchResult = varAnalyser.get("this");
+            if (fetchResult == LocalVariableContainer.FetchResult.FAIL)
                 errorF(expr.name, "'%s' can not be accessed from a static context", varName);
             expr.ordinal = 0;
             return expr.retType = fetchResult.type();
         }
 
-        BytecodeVars.FetchResult fetchResult = varAnalyser.get(varName);
+        LocalVariableContainer.FetchResult fetchResult = varAnalyser.get(varName);
 
-        if (fetchResult == BytecodeVars.FetchResult.FAIL)
+        if (fetchResult == LocalVariableContainer.FetchResult.FAIL)
             error(expr.name, "unknown local variable: " + expr.name.lexeme());
         expr.ordinal = fetchResult.ordinal();
 
@@ -520,10 +520,11 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitSpecialAssignExpr(Expr.SpecialAssign expr) {
-        BytecodeVars.FetchResult result = checkVarExistence(expr.name, true, false);
-        if (result != BytecodeVars.FetchResult.FAIL) {
+        LocalVariableContainer.FetchResult result = checkVarExistence(expr.name, true, false);
+        if (result != LocalVariableContainer.FetchResult.FAIL) {
             OperationInfo info = getOperationInfo(expr.assignType, result.type());
             expr.executor = info.executor;
+            expr.ordinal = result.ordinal();
         }
         return expr.retType = result.type();
     }
@@ -671,8 +672,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitAssignExpr(Expr.Assign expr) {
-        BytecodeVars.FetchResult result = checkVarExistence(expr.name, expr.type.type() != TokenType.ASSIGN, false);
-        if (result != BytecodeVars.FetchResult.FAIL) {
+        LocalVariableContainer.FetchResult result = checkVarExistence(expr.name, expr.type.type() != TokenType.ASSIGN, false);
+        if (result != LocalVariableContainer.FetchResult.FAIL) {
             ClassReference type = analyseExpr(expr.value);
             if (type.is(result.type())) {
                 OperationInfo operationInfo;
@@ -781,8 +782,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         for (int i = 0; i < localNames.length; i++) {
             Token localName = localNames[i];
-            BytecodeVars.FetchResult fetchResult = varAnalyser.get(localName.lexeme());
-            if (fetchResult == BytecodeVars.FetchResult.FAIL) {
+            LocalVariableContainer.FetchResult fetchResult = varAnalyser.get(localName.lexeme());
+            if (fetchResult == LocalVariableContainer.FetchResult.FAIL) {
                 errorF(localName, "unknown local variable '%s'", localName.lexeme());
             }
             localOrdinals[i] = fetchResult.ordinal();

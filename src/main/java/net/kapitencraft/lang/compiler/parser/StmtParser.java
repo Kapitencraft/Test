@@ -2,19 +2,20 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
-import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
-import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
@@ -100,8 +101,7 @@ public class StmtParser extends ExprParser {
             Stmt.Block block = new Stmt.Block();
             block.statements = block("block");
             stmt = block;
-        }
-        else if (match(RETURN)) stmt = returnStatement();
+        } else if (match(RETURN)) stmt = returnStatement();
         else if (match(TRY)) stmt = tryStatement();
         else if (match(THROW)) stmt = thrStatement();
         else if (match(CONTINUE, BREAK)) stmt = loopInterruptionStatement();
@@ -288,10 +288,11 @@ public class StmtParser extends ExprParser {
         consumeBracketClose("if condition");
 
         boolean allSeenReturn = true;
+        boolean branchSeenReturn;
 
         pushScope();
         Stmt thenBranch = statement();
-        if (!this.seenReturn.getLast())
+        if (!(branchSeenReturn = this.seenReturn.getLast()))
             allSeenReturn = false;
         thenBranch = mergeBody(thenBranch, popScopeStmt());
         Stmt elseBranch = null;
@@ -325,7 +326,9 @@ public class StmtParser extends ExprParser {
         Stmt.If anIf = new Stmt.If();
         anIf.condition = condition;
         anIf.thenBranch = thenBranch;
+        anIf.branchSeenReturn = branchSeenReturn;
         anIf.elseBranch = elseBranch;
+        anIf.elseBranchSeenReturn = elseBranchSeenReturn;
         anIf.elifs = elifs.toArray(ElifBranch[]::new);
         anIf.keyword = keyword;
         return anIf;

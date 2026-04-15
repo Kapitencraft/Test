@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.compiler;
+package net.kapitencraft.lang.compiler.bytecode;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -155,7 +155,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(expr.right);
 
         if (expr.signature != null) {
-            builder.invokeVirtual(expr.signature);
+            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_VIRTUAL, expr.signature);
         } else {
 
             //convertToStringIfNecessary(operator, executor); TODO
@@ -248,15 +248,15 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             retainExprResult = true;
             cache(expr.object);
             //object is NOT POPED from the stack. keep it before the args
-            this.builder.changeLineIfNecessary(expr.name);
+            byteCodeBuilder.changeLineIfNecessary(expr.name);
             retainExprResult = hadRetain;
         }
 
         saveArgs(expr.args);
         if (expr.declaring != null)
-            byteCodeBuilder.invokeStatic(expr.signature);
+            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_STATIC, expr.signature);
         else
-            builder.invokeVirtual(expr.signature);
+            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_VIRTUAL, expr.signature);
         if (expr.retType.is(VarTypeManager.VOID))
             ignoredExprResult = true;
         return null;
@@ -433,7 +433,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = hadRetain;
         specialAssign(expr.retType, expr.assignType, Opcode.GET_FIELD, Opcode.PUT_FIELD,
                 b -> b.injectString(expr.name.lexeme()),
-                o -> byteCodeBuilder.addStringInstruction(o, expr.name().lexeme())
+                o -> byteCodeBuilder.addStringInstruction(o, expr.name.lexeme())
         );
         return null;
     }
@@ -532,7 +532,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             entries.add(new SwitchEntry(key, expr1));
             instEntries.add(new SwitchInstruction.Entry(key));
         }
-        byteCodeBuilder.addSwitch(expr.params().size(), instEntries);
+        byteCodeBuilder.addSwitch(expr.params.length, instEntries);
         List<Integer> continueJumpInstructions = new ArrayList<>();
 
         //cache entries
@@ -540,7 +540,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             SwitchEntry entry = entries.get(i);
             instEntries.get(i).setIdx(byteCodeBuilder.size());
             cache(entry.entry);
-            if (expr.defaulted() != null || i < entriesSize - 1) {
+            if (expr.defaulted != null || i < entriesSize - 1) {
                 continueJumpInstructions.add(byteCodeBuilder.addJump());
             }
         }
@@ -754,7 +754,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(stmt.thenBranch);
         if (stmt.elifs.length > 0 || stmt.elseBranch != null) {
             List<Integer> instBranches = new ArrayList<>();
-            if (!stmt.branchSeenReturn())
+            if (!stmt.branchSeenReturn)
                 instBranches.add(byteCodeBuilder.addJump()); //jump over else-ifs & else
             for (int i = 0; i < stmt.elifs.length; i++) {
                 byteCodeBuilder.patchJump(instPatch);
@@ -878,9 +878,9 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = true;
         byteCodeBuilder.changeLineIfNecessary(stmt.name);
         cache(stmt.initializer); //create array variable
-        byteCodeBuilder.registerLocal(stmt.baseVar(), stmt.type().array(), "$array");
+        byteCodeBuilder.registerLocal(stmt.baseVar, stmt.type.array(), "$array");
         byteCodeBuilder.addSimple(Opcode.I_0);//create iteration variable
-        byteCodeBuilder.registerLocal(stmt.baseVar() + 1, VarTypeManager.INTEGER.reference(), "$i");
+        byteCodeBuilder.registerLocal(stmt.baseVar + 1, VarTypeManager.INTEGER.reference(), "$i");
         int baseVarIndex = stmt.baseVar;
 
 
@@ -899,7 +899,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         getVar(baseVarIndex + 1); //load iteration var
         getVar(baseVarIndex); //load array var
         byteCodeBuilder.addSimple(getArrayLoad(stmt.type));  //create entry var by loading array element
-        byteCodeBuilder.registerLocal(stmt.baseVar() + 2, stmt.type(), stmt.name().lexeme());
+        byteCodeBuilder.registerLocal(stmt.baseVar + 2, stmt.type, stmt.name.lexeme());
         //endregion
 
         retainExprResult = false;

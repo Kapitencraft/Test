@@ -2,26 +2,18 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Holder;
-import net.kapitencraft.lang.compiler.VarTypeParser;
-import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
-import net.kapitencraft.lang.holder.ast.Expr;
+import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsSourceReference;
-import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
-import net.kapitencraft.lang.oop.Package;
-import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
-import net.kapitencraft.lang.compiler.analyser.RetTypeAnalyser;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.Package;
-import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -190,7 +182,7 @@ public class AbstractParser {
     protected Optional<SourceReference> tryConsumeVarType(GenericStack generics) {
         Optional<ClassReference> optional = generics.getValue(peek().lexeme());
         if (optional.isPresent()) return Optional.of(SourceReference.from(advance(), optional.get()));
-        if (VarTypeManager.hasPackage(peek().lexeme()) && varAnalyser.get(peek().lexeme()) == LocalVariableContainer.FetchResult.FAIL) {
+        if (VarTypeManager.hasPackage(peek().lexeme())) {
             Package p = VarTypeManager.getPackage(peek().lexeme());
             List<Token> consumed = new ArrayList<>();
             consumed.add(advance());
@@ -198,7 +190,7 @@ public class AbstractParser {
                 Token t = advance();
                 consumed.add(t);
                 if (p.hasClass(t.lexeme())) {
-                    return Optional.of(SourceClassReference.from(consumed.getFirst(), p.getClass(t.lexeme())));
+                    return Optional.of(SourceReference.from(consumed.getFirst(), p.getClass(t.lexeme())));
                 } else if (!p.hasPackage(t.lexeme()))
                     break; //can not find class here
             }
@@ -211,9 +203,7 @@ public class AbstractParser {
             if (declared != null) reference = new AppliedGenericsReference(reference, declared);
             return Optional.of(SourceReference.from(t, reference));
         } else if (reference != null)
-            return Optional.of(SourceClassReference.from(t, reference));
-        else if (reference != null)
-            return Optional.of(SourceClassReference.from(t, reference));
+            return Optional.of(SourceReference.from(t, reference));
         else
             current--;
         return Optional.empty();

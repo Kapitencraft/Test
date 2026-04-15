@@ -2,7 +2,7 @@ package net.kapitencraft.lang.holder.ast;
 
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.run.VarTypeManager;
+import net.kapitencraft.lang.exe.VarTypeManager;
 
 public abstract class SwitchKey {
     private final Token source;

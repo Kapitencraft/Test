@@ -1,10 +1,10 @@
 package net.kapitencraft.lang.oop.clazz.primitive;
 
+import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.exe.algebra.OperationType;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
-import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.exe.algebra.Operand;
-import net.kapitencraft.lang.exe.algebra.OperationType;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 public class IntegerClass extends PrimitiveClass {
     public IntegerClass() {

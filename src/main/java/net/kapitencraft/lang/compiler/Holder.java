@@ -79,14 +79,14 @@ public class Holder {
             return Arrays.stream(interfaces).map(SourceReference::get).map(VarTypeManager::getClassName).toArray(String[]::new);
         }
 
-        public Compiler.ClassBuilder construct(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
+        public Compiler.ClassBuilder construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
             stmtParser.pushFallback(this.target);
             try {
                 return switch (this.type) {
-                    case ENUM -> constructEnum(stmtParser, parser, logger);
-                    case INTERFACE -> constructInterface(stmtParser, parser, logger);
-                    case CLASS -> constructClass(stmtParser, parser, logger);
-                    case ANNOTATION -> constructAnnotation(stmtParser, parser, logger);
+                    case ENUM -> constructEnum(stmtParser, analyser, parser, logger);
+                    case INTERFACE -> constructInterface(stmtParser, analyser, parser, logger);
+                    case CLASS -> constructClass(stmtParser, analyser, parser, logger);
+                    case ANNOTATION -> constructAnnotation(stmtParser, analyser, parser, logger);
                 };
             } finally {
                 stmtParser.popFallback();
@@ -279,7 +279,7 @@ public class Holder {
             );
         }
 
-        private @NotNull Expr getFieldBody(StmtParser stmtParser, VarTypeParser parser, Compiler.ErrorStorage logger, Field field, List<Stmt> statics) {
+        private @NotNull Expr getFieldBody(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger, Field field, List<Stmt> statics) {
             stmtParser.apply(field.body(), parser);
             Expr initializer = stmtParser.expression();
             if (Modifiers.isStatic(field.modifiers)) {

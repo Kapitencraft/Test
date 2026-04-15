@@ -1,6 +1,11 @@
 package net.kapitencraft.lang.exe.load;
 
-import net.kapitencraft.lang.compiler.*;
+import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.Holder;
+import net.kapitencraft.lang.compiler.Lexer;
+import net.kapitencraft.lang.compiler.MethodLookup;
+import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.parser.HolderParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
@@ -72,12 +77,9 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
     public void construct() {
         if (!checkHolderCreated()) return;
         StmtParser stmtParser = new StmtParser(this.storage);
+        SemanticAnalyser analyser = new SemanticAnalyser(this.storage);
 
-        builder = holder.construct(stmtParser, this.varTypeContainer, this.storage);
-    }
-
-    public void analyse() {
-        builder.analyse();
+        builder = holder.construct(stmtParser, analyser, this.varTypeContainer, this.storage);
     }
 
     public void analyse() {

@@ -22,4 +22,9 @@ public class FloatConstantInstruction extends CodeInstruction {
     public int length() {
         return 3;
     }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
+    }
 }

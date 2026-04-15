@@ -22,4 +22,9 @@ public class LocalInstruction extends CodeInstruction {
     public int length() {
         return 2;
     }
+
+    @Override
+    public String toString() {
+        return "Local{" + super.toString() + ", ordinal = " + id + "}";
+    }
 }
