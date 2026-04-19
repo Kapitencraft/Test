@@ -6,14 +6,15 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
+import net.kapitencraft.lang.exe.load.ClassLoader;
+import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.method.CompileCallable;
-import net.kapitencraft.lang.exe.load.ClassLoader;
-import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,7 @@ public class Compiler {
         }
     }
 
-    public static void queueRegister(Holder.Class aClass, ErrorStorage errorStorage, VarTypeContainer parser, @Nullable String namePrefix) {
+    public static void queueRegister(ClassConstructor aClass, ErrorStorage errorStorage, VarTypeContainer parser, @Nullable String namePrefix) {
         String name = aClass.name().lexeme();
         ClassRegister e = ClassRegister.create(aClass, errorStorage, parser, name);
         registers.add(e);
@@ -59,7 +60,7 @@ public class Compiler {
     }
 
     private record ClassRegister(CompilerLoaderHolder holder, String pck, @Nullable String name) {
-        public static ClassRegister create(Holder.Class entry, ErrorStorage logger, VarTypeContainer parser, @Nullable String name) {
+        public static ClassRegister create(ClassConstructor entry, ErrorStorage logger, VarTypeContainer parser, @Nullable String name) {
             return new ClassRegister(new CompilerLoaderHolder(entry, logger, parser), entry.pck(), name);
         }
 
@@ -174,7 +175,6 @@ public class Compiler {
 
         private record Error(int lineIndex, int lineStartIndex, String msg, String line) implements Message {
 
-
             @Override
             public void print(String[] lines, String fileLoc) {
                 Compiler.error(lineIndex, lineStartIndex, msg, fileLoc, line);
@@ -186,6 +186,14 @@ public class Compiler {
             @Override
             public void print(String[] lines, String fileLoc) {
                 Compiler.warn(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
+            }
+        }
+
+        private record Log(String message) implements Message {
+
+            @Override
+            public void print(String[] lines, String fileLoc) {
+                System.err.println(message);
             }
         }
         //endregion
@@ -216,7 +224,7 @@ public class Compiler {
         }
 
         public void logError(String s) {
-            System.err.println(s);
+            this.messages.add(new Log(s));
         }
 
         public void warn(int lineIndex, int lineStartIndex, String msg) {

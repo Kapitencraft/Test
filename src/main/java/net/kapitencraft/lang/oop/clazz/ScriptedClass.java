@@ -1,15 +1,16 @@
 package net.kapitencraft.lang.oop.clazz;
 
-import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
-import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.exe.algebra.OperationType;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.oop.attribute.EnumConstantHolder;
+import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
-import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.exe.algebra.OperationType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -157,13 +158,13 @@ public interface ScriptedClass {
         return (getModifiers() & Modifiers.ANNOTATION) != 0;
     }
 
-    default @Nullable Holder.Generics getGenerics() {
+    default @Nullable Generics getGenerics() {
         return null;
     }
 
     boolean isNative();
 
-    default Holder.EnumConstant getEnumConstant(String lexeme) {
+    default EnumConstantHolder getEnumConstant(String lexeme) {
         return null;
     }
 

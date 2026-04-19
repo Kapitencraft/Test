@@ -1,12 +1,12 @@
 package net.kapitencraft.lang.holder.class_ref;
 
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
+import net.kapitencraft.lang.holder.oop.Validatable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
-public class SourceReference implements Holder.Validateable {
+public class SourceReference implements Validatable {
     private final Token nameToken;
     private final ClassReference reference;
     private final String name;

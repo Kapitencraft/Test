@@ -2,22 +2,25 @@ package net.kapitencraft.lang.oop.clazz.skeleton;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
-import net.kapitencraft.lang.compiler.Holder;
-import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.field.SkeletonField;
-import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
-import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.load.ClassLoader;
+import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.oop.attribute.EnumConstantHolder;
+import net.kapitencraft.lang.holder.oop.generic.Generics;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.field.SkeletonField;
+import net.kapitencraft.lang.oop.method.SkeletonMethod;
+import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.tool.GsonHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
 
 public class SkeletonClass implements ScriptedClass {
     private final String name;
@@ -25,9 +28,9 @@ public class SkeletonClass implements ScriptedClass {
 
     private final String superclass;
     private final Map<String, SkeletonField> fields;
-    private final Holder.EnumConstant[] constants;
+    private final EnumConstantHolder[] constants;
 
-    private final Holder.Generics generics;
+    private final Generics generics;
 
     private final GeneratedMethodMap methods;
 
@@ -35,9 +38,9 @@ public class SkeletonClass implements ScriptedClass {
     private final String[] interfaces;
     private final boolean isCompiler; //this is necessary in order to use the correct mapper from string -> ClassReference
 
-    public SkeletonClass(Holder.Generics generics,
+    public SkeletonClass(Generics generics,
                          String name, String pck, String superclass,
-                         Map<String, SkeletonField> fields, Holder.EnumConstant[] constants,
+                         Map<String, SkeletonField> fields, EnumConstantHolder[] constants,
                          Map<String, DataMethodContainer> methods,
                          short modifiers, String[] interfaces) {
         this.name = name;
@@ -106,7 +109,7 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public @Nullable Holder.Generics getGenerics() {
+    public @Nullable Generics getGenerics() {
         return generics;
     }
 
@@ -176,9 +179,9 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public Holder.EnumConstant getEnumConstant(String lexeme) {
+    public EnumConstantHolder getEnumConstant(String lexeme) {
         if (this.constants != null) {
-            for (Holder.EnumConstant constant : this.constants) {
+            for (EnumConstantHolder constant : this.constants) {
                 if (constant.name().lexeme().equals(lexeme))
                     return constant;
             }

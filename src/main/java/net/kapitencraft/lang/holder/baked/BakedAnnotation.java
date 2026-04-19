@@ -1,19 +1,18 @@
 package net.kapitencraft.lang.holder.baked;
 
 import com.google.common.collect.ImmutableMap;
-import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.oop.clazz.AnnotationHolder;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.annotation.CompileAnnotationCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 
 import java.util.Map;
@@ -21,7 +20,7 @@ import java.util.Map;
 public record BakedAnnotation(
         ClassReference target,
         Token name, String pck,
-        Map<String, Holder.Class.MethodWrapper> methodWrappers,
+        Map<String, AnnotationHolder.MethodWrapper> methodWrappers,
         Annotation[] annotations
 ) implements Compiler.ClassBuilder {
 

@@ -1,21 +1,20 @@
 package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
+import net.kapitencraft.lang.holder.oop.AnnotationObj;
+import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
@@ -399,7 +398,7 @@ public class StmtParser extends ExprParser {
         return stmt;
     }
 
-    public void applyMethod(ClassReference funcRetType, @Nullable Holder.Generics generics) {
+    public void applyMethod(ClassReference funcRetType, @Nullable Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (generics != null) generics.pushToStack(this.generics);
@@ -414,11 +413,15 @@ public class StmtParser extends ExprParser {
         funcRetType = VarTypeManager.VOID.reference();
     }
 
-    public void applyStaticMethod(ClassReference funcRetType, @Nullable Holder.Generics generics) {
+    public void applyStaticMethod(ClassReference funcRetType, @Nullable Generics generics) {
         this.pushScope();
         this.funcRetType = funcRetType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
 
+    }
+
+    public Annotation[] parseAnnotations(AnnotationObj[] annotations, VarTypeContainer container) {
+        return Arrays.stream(annotations).map(annotationObj -> this.parseAnnotation(annotationObj, container)).toArray(Annotation[]::new);
     }
 }

@@ -1,8 +1,6 @@
 package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Holder;
-import net.kapitencraft.lang.compiler.analyser.LocalVariableContainer;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -10,6 +8,9 @@ import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsSourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
+import net.kapitencraft.lang.holder.oop.generic.AppliedGenerics;
+import net.kapitencraft.lang.holder.oop.generic.Generic;
+import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
@@ -51,7 +52,7 @@ public class AbstractParser {
         this.parser = targetAnalyser;
     }
 
-    protected @Nullable Holder.AppliedGenerics appliedGenerics(GenericStack stack) {
+    protected @Nullable AppliedGenerics appliedGenerics(GenericStack stack) {
         if (match(LESSER)) {
             Token r = previous();
             List<ClassReference> references = new ArrayList<>();
@@ -59,24 +60,24 @@ public class AbstractParser {
                 references.add(consumeVarType(stack).getReference());
             } while (match(COMMA));
             consume(GREATER, "unclosed generic declaration");
-            return new Holder.AppliedGenerics(r, references.toArray(new ClassReference[0]));
+            return new AppliedGenerics(r, references.toArray(new ClassReference[0]));
         }
         return null;
     }
 
-    protected @Nullable Holder.Generics generics(GenericStack genericStack) {
+    protected @Nullable Generics generics(GenericStack genericStack) {
         if (match(LESSER)) {
-            List<Holder.Generic> generics = new ArrayList<>();
+            List<Generic> generics = new ArrayList<>();
             do {
                 generics.add(generic(genericStack));
             } while (match(COMMA));
             consume(GREATER, "unclosed generic declaration");
-            return new Holder.Generics(generics.toArray(new Holder.Generic[0]));
+            return new Generics(generics.toArray(new Generic[0]));
         }
         return null;
     }
 
-    private Holder.Generic generic(GenericStack genericStack) {
+    private Generic generic(GenericStack genericStack) {
         Token name = consumeIdentifier();
         SourceReference lowerBound = null, upperBound = null;
         if (match(EXTENDS)) {
@@ -85,7 +86,7 @@ public class AbstractParser {
             upperBound = consumeVarType(genericStack);
         }
 
-        return new Holder.Generic(name, lowerBound, upperBound);
+        return new Generic(name, lowerBound, upperBound);
     }
 
     protected boolean check(TokenType type) {
@@ -199,7 +200,7 @@ public class AbstractParser {
         Token t = advance();
         ClassReference reference = parser.getClass(t.lexeme());
         if (reference != null && !check(DOT)) {
-            Holder.AppliedGenerics declared = appliedGenerics(generics);
+            AppliedGenerics declared = appliedGenerics(generics);
             if (declared != null) reference = new AppliedGenericsReference(reference, declared);
             return Optional.of(SourceReference.from(t, reference));
         } else if (reference != null)
@@ -214,7 +215,7 @@ public class AbstractParser {
         SourceReference sourceReference = consumeVarTypeNoArray(generics);
         ClassReference reference = sourceReference.getReference();
         Token last = sourceReference.getToken();
-        Holder.AppliedGenerics appliedGenerics = appliedGenerics(generics);
+        AppliedGenerics appliedGenerics = appliedGenerics(generics);
         if (appliedGenerics != null) {
             return AppliedGenericsSourceReference.create(last, reference, appliedGenerics);
         }
@@ -266,7 +267,7 @@ public class AbstractParser {
             error(token, "unknown symbol");
             return SourceReference.from(token, VarTypeManager.VOID.reference()); //skip rest
         }
-        Holder.AppliedGenerics declared = appliedGenerics(stack);
+        AppliedGenerics declared = appliedGenerics(stack);
         if (declared != null) return SourceReference.from(last, new AppliedGenericsReference(reference, declared));
         return SourceReference.from(last, reference);
     }

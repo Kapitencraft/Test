@@ -1,7 +1,8 @@
 package net.kapitencraft.lang.compiler.analyser;
 
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Holder;
+import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.exe.algebra.OperationType;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -11,13 +12,12 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
+import net.kapitencraft.lang.holder.oop.generic.AppliedGenerics;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.exe.algebra.OperationType;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -52,8 +52,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
         if (gotten instanceof AppliedGenericsReference reference) {
             if (expected instanceof AppliedGenericsReference reference1) {
-                Holder.AppliedGenerics gottenAppliedGenerics = reference.getApplied();
-                Holder.AppliedGenerics expectedAppliedGenerics = reference1.getApplied();
+                AppliedGenerics gottenAppliedGenerics = reference.getApplied();
+                AppliedGenerics expectedAppliedGenerics = reference1.getApplied();
                 ClassReference[] expectedGenerics = expectedAppliedGenerics.references();
                 ClassReference[] gottenGenerics = gottenAppliedGenerics.references();
 
@@ -160,14 +160,14 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         return new MethodData(signature, retType, targetClass.reference(), callable == null || callable.isStatic());
     }
 
-    private record MethodData(String signature, ClassReference retType, ClassReference declaring, boolean isStatic) {}
+    private record MethodData(String signature, ClassReference retType, ClassReference declaring, boolean isStatic) {
+    }
 
-    private ScriptedCallable tryGetConstructorMethod(Expr[] args, ClassReference type, ScriptedClass scriptedClass, Token loc) {
+    private ScriptedCallable tryGetConstructorMethod(ClassReference[] argTypes, ScriptedClass scriptedClass, Token loc) {
         DataMethodContainer container = scriptedClass.getMethods().get("<init>");
-        ClassReference[] argTypes = this.args(args);
         if (container == null) {
-            if (args.length > 0) {
-                errorF(loc, "method for %s cannot be applied to given types;", loc.lexeme());
+            if (argTypes.length > 0) {
+                errorF(loc, "constructor for %s cannot be applied to given types;", loc.lexeme());
 
                 errorStorage.logError("required: ");
                 errorStorage.logError("found:    " + Util.getDescriptor(argTypes));
@@ -541,7 +541,11 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitConstructorExpr(Expr.Constructor expr) {
+        ClassReference[] argTypes = args(expr.args);
+        ScriptedCallable callable = tryGetConstructorMethod(argTypes, expr.target.get(), expr.keyword);
 
+        if (callable != null)
+            expr.signature = VarTypeManager.getClassName(expr.target) + VarTypeManager.getMethodSignatureNoTarget("<init>", callable.argTypes());
 
         return expr.retType = expr.target;
     }

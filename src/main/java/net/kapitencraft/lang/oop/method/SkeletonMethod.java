@@ -3,13 +3,14 @@ package net.kapitencraft.lang.oop.method;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
+import net.kapitencraft.lang.holder.oop.attribute.ConstructorHolder;
+import net.kapitencraft.lang.holder.oop.attribute.MethodHolder;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 import net.kapitencraft.tool.StringReader;
@@ -27,7 +28,7 @@ public class SkeletonMethod implements ScriptedCallable {
         this.modifiers = modifiers;
     }
 
-    public static SkeletonMethod create(Holder.Method decl) {
+    public static SkeletonMethod create(MethodHolder decl) {
         return create(decl.params(), decl.type().getReference(), decl.modifiers());
     }
 
@@ -35,9 +36,14 @@ public class SkeletonMethod implements ScriptedCallable {
         return new SkeletonMethod(params.stream().map(Pair::getFirst).map(SourceReference::getReference).toArray(ClassReference[]::new), type, modifiers);
     }
 
-    public static SkeletonMethod create(Holder.Constructor decl, ClassReference type) {
+    public static SkeletonMethod create(ConstructorHolder decl, ClassReference type) {
         return create(decl.params(), type, (short) 0);
     }
+
+    public static SkeletonMethod createNative(ClassReference[] args, ClassReference retType, short modifiers) {
+        return new SkeletonMethod(args, retType, modifiers);
+    }
+
 
     public static SkeletonMethod fromJson(JsonObject object) {
         ClassReference retType = VarTypeManager.parseType(new StringReader(GsonHelper.getAsString(object, "retType")));

@@ -1,7 +1,6 @@
 package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
@@ -11,6 +10,8 @@ import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
+import net.kapitencraft.lang.holder.oop.AnnotationObj;
+import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
@@ -40,7 +41,7 @@ public class ExprParser extends AbstractParser {
         return fallback.getLast();
     }
 
-    public void pushGenerics(Holder.Generics generics) {
+    public void pushGenerics(Generics generics) {
         generics.pushToStack(this.generics);
     }
 
@@ -85,7 +86,7 @@ public class ExprParser extends AbstractParser {
     }
 
     //region annotation
-    public Annotation parseAnnotation(Holder.AnnotationObj obj, VarTypeContainer varTypeContainer) {
+    public Annotation parseAnnotation(AnnotationObj obj, VarTypeContainer varTypeContainer) {
         this.apply(obj.properties(), varTypeContainer);
         return parseAnnotationProperties(obj.type(), obj.type().getToken());
     }

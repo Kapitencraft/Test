@@ -1,7 +1,6 @@
 package net.kapitencraft.lang.exe.load;
 
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Holder;
 import net.kapitencraft.lang.compiler.Lexer;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
@@ -10,6 +9,7 @@ import net.kapitencraft.lang.compiler.parser.HolderParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.holder.baked.BakedClass;
+import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
@@ -23,7 +23,7 @@ import java.util.Objects;
 public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder> {
     private final String content;
     private final Compiler.ErrorStorage storage;
-    private Holder.Class holder;
+    private ClassConstructor holder;
     private Compiler.ClassBuilder builder;
     private CacheableClass target;
     private final VarTypeContainer varTypeContainer;
@@ -42,7 +42,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         this.varTypeContainer = new VarTypeContainer();
     }
 
-    public CompilerLoaderHolder(Holder.Class holder, Compiler.ErrorStorage storage, VarTypeContainer parser) {
+    public CompilerLoaderHolder(ClassConstructor holder, Compiler.ErrorStorage storage, VarTypeContainer parser) {
         super(null);
         this.content = null; //not necessary with the holder already present
         this.storage = storage;
@@ -58,7 +58,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         HolderParser parser = new HolderParser(storage);
         parser.apply(tokens.toArray(new Token[0]), varTypeContainer);
 
-        Holder.Class decl = parser.parseFile(fileName);
+        ClassConstructor decl = parser.parseFile(fileName);
 
         if (decl == null) return;
 
@@ -79,7 +79,9 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         StmtParser stmtParser = new StmtParser(this.storage);
         SemanticAnalyser analyser = new SemanticAnalyser(this.storage);
 
+        stmtParser.pushFallback(this.holder.target());
         builder = holder.construct(stmtParser, analyser, this.varTypeContainer, this.storage);
+        stmtParser.popFallback();
     }
 
     public void analyse() {
