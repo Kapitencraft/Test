@@ -18,6 +18,8 @@ public enum Opcode {
     D_M1(1), D_1(1),
     F_M1(1), F_1(1),
     I_CONST(1), D_CONST(1), S_CONST(1), F_CONST(1),
+    I_SH_L(-1), I_SH_R(-1),
+    IIRC,
     INVOKE_VIRTUAL(false, -1), INVOKE_STATIC(false, -1),
     CONCENTRATION(-1), D2F,
     NOT,

@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.bytecode;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.bytecode.instruction.IncrementIntVarInstruction;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.exe.Opcode;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
@@ -136,6 +137,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitSpecialAssignExpr(Expr.SpecialAssign expr) {
         int ordinal = expr.ordinal();
         AssignOperators operators = getAssignOperators(ordinal);
+        if (expr.executor().is(VarTypeManager.INTEGER) && !retainExprResult) {
+            byteCodeBuilder.add(new IncrementIntVarInstruction(ordinal, expr.assignType().type() == TokenType.GROW ? 1 : -1));
+            ignoredExprResult = true;
+            return null;
+        }
         specialAssign(expr.executor(), expr.assignType(), operators.get(), operators.assign(), b -> {
             if (ordinal > 2) b.addArg(ordinal);
         }, o -> {
@@ -151,6 +157,16 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitBinaryExpr(Expr.Binary expr) {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
+        if (expr.operator().type() == TokenType.MUL && expr.retType().is(VarTypeManager.INTEGER) && expr.right() instanceof Expr.Literal literal) {
+            int val = ((int) literal.literal().literal().value());
+            int exponent = 31 - Integer.numberOfLeadingZeros(val);
+            if (exponent == 32 - Integer.numberOfLeadingZeros(val - 1)) { //number is power of 2
+                cache(expr.left());
+                byteCodeBuilder.addIntConstant(exponent);
+                byteCodeBuilder.addSimple(Opcode.I_SH_L);
+                return null;
+            }
+        }
         cache(expr.left());
         cache(expr.right());
         //convertToStringIfNecessary(operator, executor); TODO
@@ -593,7 +609,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             }
         } else if (scriptedClass == VarTypeManager.INTEGER) {
             int v = (int) value;
-            byteCodeBuilder.addInt(v);
+            byteCodeBuilder.addIntConstant(v);
         } else if (VarTypeManager.STRING.is(scriptedClass)) {
             byteCodeBuilder.addStringInstruction(Opcode.S_CONST, ((String) value));
         } else if (VarTypeManager.FLOAT.is(scriptedClass)) {
@@ -624,7 +640,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (expr.size() != null) {
             cache(expr.size());
         } else {
-            byteCodeBuilder.addInt(expr.obj().length);
+            byteCodeBuilder.addIntConstant(expr.obj().length);
         }
         byteCodeBuilder.changeLineIfNecessary(expr.keyword());
         Opcode opcode = getArrayNew(expr.compoundType());
@@ -635,7 +651,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (objects != null) {
             for (int i = 0; i < objects.length; i++) {
                 byteCodeBuilder.addSimple(Opcode.DUP);
-                byteCodeBuilder.addInt(i);
+                byteCodeBuilder.addIntConstant(i);
                 cache(objects[i]);
                 byteCodeBuilder.addSimple(store);
             }

@@ -88,7 +88,7 @@ public class ByteCodeBuilder {
         this.instructions.add(instruction);
     }
 
-    public void addInt(int v) {
+    public void addIntConstant(int v) {
         add(switch (v) {
             case -1 -> new CodeInstruction(Opcode.I_M1);
             case 0 -> new CodeInstruction(Opcode.I_0);

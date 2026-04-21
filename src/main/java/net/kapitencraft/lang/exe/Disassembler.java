@@ -38,6 +38,7 @@ public class Disassembler {
                  I_M1, I_0, I_1, I_2, I_3, I_4, I_5,
                  D_M1, D_1,
                  F_M1, F_1,
+                 I_SH_L, I_SH_R,
                  D2F, ARRAY_LENGTH,
                  EQUAL, NEQUAL,
                  I_LESSER, D_LESSER, F_LESSER,
@@ -61,8 +62,16 @@ public class Disassembler {
             case SWITCH -> switchInstruction(opcode, chunk, offset);
             case GET_FIELD, PUT_FIELD -> fieldOp(opcode, chunk, offset);
             case GET_STATIC, PUT_STATIC -> staticFieldOp(opcode, chunk, offset);
+            case IIRC -> intIncrement(opcode, chunk, offset);
             //case RA_NEW -> newArray(opcode, chunk, offset);
         };
+    }
+
+    private static int intIncrement(Opcode opcode, Chunk chunk, int offset) {
+        int ordinal = chunk.code()[offset + 1];
+        int val = chunk.code()[offset + 2];
+        System.out.printf("%-16s idx=%3d, val=%3d\n", opcode, ordinal, val);
+        return offset + 3;
     }
 
     private static int switchInstruction(Opcode opcode, Chunk chunk, int offset) {
