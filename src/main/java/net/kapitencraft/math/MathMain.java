@@ -1,6 +1,8 @@
 package net.kapitencraft.math;
 
+import java.io.PrintStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MathMain {
     static Map<Integer, List<Integer>> cache = new HashMap<>();
@@ -57,11 +59,20 @@ public class MathMain {
         //    else primzahlen.forEach((integer, integer2) -> System.out.println(integer + "->" + integer2));
         //    System.out.println();
         //}
-        int[] numbers = new int[] {
-                51, 95, 66, 72, 42, 38, 39, 41, 15
-        };
-        sortArray(numbers);
-        System.out.println(Arrays.toString(numbers));
+        //int[] numbers = new int[] {
+        //        51, 95, 66, 72, 42, 38, 39, 41, 15
+        //};
+        //sortArray(numbers);
+        //System.out.println(Arrays.toString(numbers));
+        List<BezierPoint> points = getBezierAtmospherePressure(1024);
+
+        PrintStream output = System.out;
+
+        output.println("[");
+        output.println(
+                points.stream().map(BezierPoint::toJson).collect(Collectors.joining(","))
+        );
+        output.println("]");
     }
 
     private static int invertColor(int i) {
@@ -90,5 +101,55 @@ public class MathMain {
         int c = numbers[i1];
         numbers[i1] = numbers[i2];
         numbers[i2] = c;
+    }
+
+    private static List<BezierPoint> getBezierAtmospherePressure(int maxAltitude) {
+        double currentAltitude = -64;
+        int seaLevel = 64;
+
+        final double baseSlope = -0.004;
+        final double maxPressure = 1.5;
+        final double maxStep = 200;
+
+        final double smoothingAltitude = maxAltitude - 40;
+
+        // clamps the bottom most point to have a pressure of 1.5 or less
+        currentAltitude = Math.max(currentAltitude, Math.log(maxPressure) / baseSlope + seaLevel);
+
+        final List<BezierPoint> pressureFunction = new ArrayList<>();
+
+        while (true) {
+            final double currentPressure = Math.exp(baseSlope * (currentAltitude - seaLevel));
+            final double currentSlope = currentPressure * baseSlope;
+            pressureFunction.add(new BezierPoint(currentAltitude, currentPressure, currentSlope));
+
+            if (currentAltitude < seaLevel && currentAltitude + maxStep >= seaLevel) {
+                currentAltitude = seaLevel;
+            } else if (currentAltitude < smoothingAltitude && currentAltitude + maxStep >= smoothingAltitude) {
+                currentAltitude = smoothingAltitude;
+            } else if (currentAltitude >= smoothingAltitude) {
+                break;
+            } else {
+                currentAltitude += maxStep;
+            }
+        }
+
+        final double smoothingPressure = pressureFunction.getLast().value();
+        final double finalSlope = -2 * smoothingPressure / (maxAltitude - smoothingAltitude);
+        pressureFunction.add(new BezierPoint(maxAltitude, 0, finalSlope));
+        return pressureFunction;
+    }
+
+    private record BezierPoint(double altitude, double value, double slope) {
+
+        public String toJson() {
+            return """
+                    {
+                        "altitude": %s,
+                        "value": %-4s,
+                        "slope": %-4s
+                    }
+                    """.formatted(altitude, value, slope);
+        }
     }
 }
