@@ -157,16 +157,49 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitBinaryExpr(Expr.Binary expr) {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
-        if (expr.operator().type() == TokenType.MUL && expr.retType().is(VarTypeManager.INTEGER) && expr.right() instanceof Expr.Literal literal) {
-            int val = ((int) literal.literal().literal().value());
-            int exponent = 31 - Integer.numberOfLeadingZeros(val);
-            if (exponent == 32 - Integer.numberOfLeadingZeros(val - 1)) { //number is power of 2
-                cache(expr.left());
-                byteCodeBuilder.addIntConstant(exponent);
-                byteCodeBuilder.addSimple(Opcode.I_SH_L);
-                return null;
+        TokenType type = expr.operator().type();
+        //if (expr.left() instanceof Expr.Literal(Token leftLiteral) && expr.right() instanceof Expr.Literal(Token rightLiteral)) {
+        //    ClassReference reference = expr.retType();
+        //    Object leftValue = leftLiteral.literal().value();
+        //    Object rightValue = rightLiteral.literal().value();
+        //    switch (type) {
+        //        case EQUAL, NEQUAL -> {
+        //            if (leftValue.equals(rightValue) && type == TokenType.EQUAL) {
+        //                byteCodeBuilder.addSimple(Opcode.TRUE);
+        //            } else
+        //                byteCodeBuilder.addSimple(Opcode.FALSE);
+        //        }
+        //        case LEQUAL -> {
+        //        }
+        //    }
+        //}
+        if (expr.retType().is(VarTypeManager.INTEGER)) {
+            if (type == TokenType.MUL && expr.right() instanceof Expr.Literal(Token literal)) {
+                int val = ((int) literal.literal().value());
+                int exponent = 31 - Integer.numberOfLeadingZeros(val);
+                if (exponent == 32 - Integer.numberOfLeadingZeros(val - 1)) { //number is power of 2
+                    cache(expr.left());
+                    byteCodeBuilder.addIntConstant(exponent);
+                    byteCodeBuilder.addSimple(Opcode.I_SH_L);
+                    return null;
+                }
+            } else if (type == TokenType.POW && expr.left() instanceof Expr.Literal(Token literal)) {
+                int val = ((int) literal.literal().value());
+                int exponent = 31 - Integer.numberOfLeadingZeros(val);
+                if (exponent == 32 - Integer.numberOfLeadingZeros(val - 1)) { //number is power of 2
+                    byteCodeBuilder.addSimple(Opcode.I_1);
+                    if (exponent > 1) {
+                        byteCodeBuilder.addIntConstant(exponent / 2);
+                        cache(expr.right());
+                        byteCodeBuilder.addSimple(Opcode.I_MUL);
+                    }
+                    byteCodeBuilder.addSimple(Opcode.I_SH_L);
+                    return null;
+                }
             }
         }
+
+        //normal binary behavior
         cache(expr.left());
         cache(expr.right());
         //convertToStringIfNecessary(operator, executor); TODO
@@ -175,7 +208,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             final ClassReference executor = expr.executor();
             Token operator = expr.operator();
             byteCodeBuilder.changeLineIfNecessary(operator);
-            Opcode opcode = switch (operator.type()) {
+            Opcode opcode = switch (type) {
                 case EQUAL -> Opcode.EQUAL;
                 case NEQUAL -> Opcode.NEQUAL;
                 case LEQUAL -> getLequal(executor);
@@ -188,7 +221,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 case DIV -> getDiv(executor);
                 case POW -> getPow(executor);
                 case MOD -> getMod(executor);
-                default -> throw new IllegalStateException("not a operator: " + operator.type());
+                default -> throw new IllegalStateException("not a operator: " + type);
             };
             byteCodeBuilder.addSimple(opcode);
         } else {

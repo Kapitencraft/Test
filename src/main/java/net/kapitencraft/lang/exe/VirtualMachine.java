@@ -359,13 +359,13 @@ public class VirtualMachine {
                         stack[stackBottom + idx] = ((int) stack[stackBottom + idx]) +  val;
                     }
                     case I_SH_L -> {
-                        int val1 = (int) pop();
                         int val2 = (int) pop();
+                        int val1 = (int) pop();
                         push(val1 << val2);
                     }
                     case I_SH_R -> {
-                        int val1 = (int) pop();
                         int val2 = (int) pop();
+                        int val1 = (int) pop();
                         push(val1 >> val2);
                     }
                     case I_NEGATION -> push(-(int) pop());
