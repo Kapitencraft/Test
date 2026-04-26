@@ -192,7 +192,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                         byteCodeBuilder.addIntConstant(exponent / 2);
                         cache(expr.right());
                         byteCodeBuilder.addSimple(Opcode.I_MUL);
-                    }
+                    } else
+                        cache(expr.right());
                     byteCodeBuilder.addSimple(Opcode.I_SH_L);
                     return null;
                 }
