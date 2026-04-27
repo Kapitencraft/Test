@@ -111,11 +111,11 @@ public class ByteCodeBuilder {
 
     public void build(Chunk.Builder builder) {
         if (Compiler.optimize) {
-            int size = this.size();
+            //int size = this.size();
             this.optimize();
-            if (this.size() < size) {
-                System.out.println("Optimization removed " + (size - this.size()) + " (" + (size - this.size()) * 100 / size + "%) instructions");
-            }
+            //if (this.size() < size) {
+            //    System.out.println("Optimization removed " + (size - this.size()) + " (" + (size - this.size()) * 100 / size + "%) instructions");
+            //}
         }
         IpContainer container = gatherStartIndexes();
         this.instructions.forEach(instruction -> instruction.save(builder, container));

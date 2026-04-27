@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
 
-@SuppressWarnings("ThrowableNotThrown")
 public class ExprParser extends AbstractParser {
     private final List<ClassReference> fallback;
     protected GenericStack generics = new GenericStack();
