@@ -14,4 +14,15 @@ public class CacheBuffer {
         buffer.add((byte) ((i >> 8) & 255));
         buffer.add((byte) (i & 255));
     }
+
+    public void writeInt(int i) {
+        buffer.add((byte) ((i >> 24) & 255));
+        buffer.add((byte) ((i >> 16) & 255));
+        buffer.add((byte) ((i >> 8) & 255));
+        buffer.add((byte) (i & 255));
+    }
+
+    public void writeByte(byte b) {
+        buffer.add(b);
+    }
 }
