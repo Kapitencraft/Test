@@ -296,7 +296,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     @Override
-    public ClassReference visitVarRefExpr(Expr.VarRef expr) {
+    public ClassReference visitSingleIdentifierExpr(Expr.SingleIdentifier expr) {
         String varName = expr.name.lexeme();
         if ("this".equals(varName) || "super".equals(varName)) {
             LocalVariableContainer.FetchResult fetchResult = varAnalyser.get("this");

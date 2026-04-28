@@ -30,7 +30,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     }
 
     @Override
-    public Void visitVarRefExpr(Expr.VarRef expr) {
+    public Void visitSingleIdentifierExpr(Expr.SingleIdentifier expr) {
         return null;
     }
 

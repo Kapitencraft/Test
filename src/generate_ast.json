@@ -126,9 +126,11 @@
           "right": "Expr",
           "executor": "ClassReference"
         },
-        "VarRef": {
+        "SingleIdentifier": {
           "name": "Token",
-          "ordinal": "byte"
+          "ordinal": "byte",
+          "type": "ClassReference",
+          "static": "boolean"
         },
         "ArrayConstructor": {
           "keyword": "Token",

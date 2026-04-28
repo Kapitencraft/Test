@@ -696,10 +696,16 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitVarRefExpr(Expr.VarRef expr) {
+    public Void visitSingleIdentifierExpr(Expr.SingleIdentifier expr) {
         if (retainExprResult) {
             byteCodeBuilder.changeLineIfNecessary(expr.name);
-            getVar(expr.ordinal);
+            if (expr.type != null) {
+                if (true) {
+                    byteCodeBuilder.addSimple(Opcode.GET_0);
+                    byteCodeBuilder.addStringInstruction(Opcode.GET_FIELD, expr.name.lexeme());
+                }
+            } else
+                getVar(expr.ordinal);
         } else
             ignoredExprResult = true;
         return null;

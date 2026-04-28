@@ -7,11 +7,11 @@ import java.util.Map;
 public interface Expr {
 
     interface Visitor<R> {
-        R visitVarRefExpr(VarRef expr);
         R visitCallExpr(Call expr);
         R visitSetExpr(Set expr);
         R visitArraySetExpr(ArraySet expr);
         R visitArraySpecialExpr(ArraySpecial expr);
+        R visitSingleIdentifierExpr(SingleIdentifier expr);
         R visitSpecialAssignExpr(SpecialAssign expr);
         R visitConstructorExpr(Constructor expr);
         R visitStaticSetExpr(StaticSet expr);
@@ -34,17 +34,6 @@ public interface Expr {
     }
 
     <R> R accept(Visitor<R> visitor);
-
-    class VarRef implements Expr {
-        public Token name;
-        public byte ordinal;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitVarRefExpr(this);
-        }
-    }
 
     class Call implements Expr {
         public Expr object;
@@ -103,6 +92,18 @@ public interface Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitArraySpecialExpr(this);
+        }
+    }
+
+    class SingleIdentifier implements Expr {
+        public Token name;
+        public byte ordinal;
+        public ClassReference type;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitSingleIdentifierExpr(this);
         }
     }
 
