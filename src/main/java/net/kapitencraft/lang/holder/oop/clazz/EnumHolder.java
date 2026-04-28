@@ -377,7 +377,7 @@ public record EnumHolder(ClassReference target, short modifiers,
     }
 
     private Expr varRef(Token name, byte ordinal) {
-        Expr.VarRef ref = new Expr.VarRef();
+        Expr.SingleIdentifier ref = new Expr.SingleIdentifier();
         ref.name = Objects.requireNonNull(name);
         ref.ordinal = ordinal;
         return ref;

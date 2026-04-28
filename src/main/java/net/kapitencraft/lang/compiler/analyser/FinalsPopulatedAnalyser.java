@@ -124,7 +124,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     }
 
     @Override
-    public Void visitSpecialAssignExpr(Expr.SpecialAssign expr) {
+    public Void visitIdentifierSpecialAssignExpr(Expr.IdentifierSpecialAssign expr) {
         return null;
     }
 

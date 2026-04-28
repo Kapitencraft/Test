@@ -12,10 +12,10 @@ public interface Expr {
         R visitArraySetExpr(ArraySet expr);
         R visitArraySpecialExpr(ArraySpecial expr);
         R visitSingleIdentifierExpr(SingleIdentifier expr);
-        R visitSpecialAssignExpr(SpecialAssign expr);
         R visitConstructorExpr(Constructor expr);
         R visitStaticSetExpr(StaticSet expr);
         R visitLogicalExpr(Logical expr);
+        R visitIdentifierSpecialAssignExpr(IdentifierSpecialAssign expr);
         R visitUnaryExpr(Unary expr);
         R visitComparisonChainExpr(ComparisonChain expr);
         R visitWhenExpr(When expr);
@@ -99,25 +99,12 @@ public interface Expr {
         public Token name;
         public byte ordinal;
         public ClassReference type;
+        public boolean isStatic;
         public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSingleIdentifierExpr(this);
-        }
-    }
-
-    class SpecialAssign implements Expr {
-        public Token name;
-        public Token assignType;
-        public int ordinal;
-        public ClassReference executor;
-        public String signature;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitSpecialAssignExpr(this);
         }
     }
 
@@ -158,6 +145,22 @@ public interface Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLogicalExpr(this);
+        }
+    }
+
+    class IdentifierSpecialAssign implements Expr {
+        public Token name;
+        public Token assignType;
+        public int ordinal;
+        public ClassReference executor;
+        public String signature;
+        public ClassReference type;
+        public boolean isStatic;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitIdentifierSpecialAssignExpr(this);
         }
     }
 

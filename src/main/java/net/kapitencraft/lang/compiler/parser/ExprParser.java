@@ -195,7 +195,7 @@ public class ExprParser extends AbstractParser {
             Token assignKeyword = previous();
             Expr value = assignment();
 
-            if (expr instanceof Expr.VarRef varRef) {
+            if (expr instanceof Expr.SingleIdentifier varRef) {
                 Token name = varRef.name;
                 byte ordinal = varRef.ordinal;
 
@@ -237,12 +237,14 @@ public class ExprParser extends AbstractParser {
 
             Token assign = previous();
 
-            if (expr instanceof Expr.VarRef varRef) {
+            if (expr instanceof Expr.SingleIdentifier varRef) {
                 Token name = varRef.name;
-                Expr.SpecialAssign specialAssign = new Expr.SpecialAssign();
+                Expr.IdentifierSpecialAssign specialAssign = new Expr.IdentifierSpecialAssign();
                 specialAssign.name = name;
                 specialAssign.assignType = assign;
                 specialAssign.ordinal = varRef.ordinal;
+                specialAssign.type = varRef.type;
+                specialAssign.isStatic = varRef.isStatic;
                 return specialAssign;
             }
 
@@ -653,7 +655,7 @@ public class ExprParser extends AbstractParser {
 
                     Expr.Call call = new Expr.Call();
 
-                    Expr.VarRef callee = new Expr.VarRef();
+                    Expr.SingleIdentifier callee = new Expr.SingleIdentifier();
                     callee.name = Objects.requireNonNull(reference);
                     callee.ordinal = 0;
                     call.object = callee;
@@ -674,7 +676,7 @@ public class ExprParser extends AbstractParser {
                 String name = previous.lexeme(); //get the literal of the identifier
                 if (match(BRACKET_O)) { //check if there's an attempt to call a method from the fallback class
                     if (fallback.hasMethod(name)) {
-                        Expr.VarRef ref = new Expr.VarRef();
+                        Expr.SingleIdentifier ref = new Expr.SingleIdentifier();
                         ref.name = Token.createNative("this");
                         ref.ordinal = 0;
                         return finishCall(previous, fallbackReference, ref);
@@ -739,7 +741,7 @@ public class ExprParser extends AbstractParser {
     }
 
     private Expr varRef(Token previous, byte ordinal) {
-        Expr.VarRef ref = new Expr.VarRef();
+        Expr.SingleIdentifier ref = new Expr.SingleIdentifier();
         ref.name = previous;
         ref.ordinal = ordinal;
         return ref;

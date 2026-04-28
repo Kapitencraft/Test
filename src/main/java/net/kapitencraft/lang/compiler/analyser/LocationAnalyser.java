@@ -20,7 +20,7 @@ public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token
     }
 
     @Override
-    public Token visitSpecialAssignExpr(Expr.SpecialAssign expr) {
+    public Token visitIdentifierSpecialAssignExpr(Expr.IdentifierSpecialAssign expr) {
         return expr.name;
     }
 
@@ -125,7 +125,7 @@ public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token
     }
 
     @Override
-    public Token visitVarRefExpr(Expr.VarRef expr) {
+    public Token visitSingleIdentifierExpr(Expr.SingleIdentifier expr) {
         return expr.name;
     }
 

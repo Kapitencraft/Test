@@ -133,17 +133,28 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     //TODO enable DUP if `Assign` / `VarDecl` is directly followed by a `Get`
     @Override
-    public Void visitSpecialAssignExpr(Expr.SpecialAssign expr) {
-        int ordinal = expr.ordinal;
-        AssignOperators operators = getAssignOperators(ordinal);
-        specialAssign(expr.executor, expr.assignType, operators.get(), operators.assign(), b -> {
-            if (ordinal > 2) b.addArg(ordinal);
-        }, o -> {
-            if (ordinal > 2)
-                byteCodeBuilder.addLocalAccess(o, ordinal);
-            else
-                byteCodeBuilder.addSimple(o);
-        });
+    public Void visitIdentifierSpecialAssignExpr(Expr.IdentifierSpecialAssign expr) {
+        if (expr.type == null) {
+            int ordinal = expr.ordinal;
+            AssignOperators operators = getAssignOperators(ordinal);
+            specialAssign(expr.executor, expr.assignType, operators.get(), operators.assign(), o -> {
+                if (ordinal > 2)
+                    byteCodeBuilder.addLocalAccess(o, ordinal);
+                else
+                    byteCodeBuilder.addSimple(o);
+            });
+        } else {
+            if (expr.isStatic) {
+                specialAssign(expr.retType, expr.assignType, Opcode.GET_STATIC, Opcode.PUT_STATIC,
+                        o -> byteCodeBuilder.addStringInstruction(o, expr.name.lexeme())
+                );
+            } else {
+                byteCodeBuilder.addSimple(Opcode.GET_0);
+                specialAssign(expr.retType, expr.assignType, Opcode.GET_FIELD, Opcode.PUT_FIELD,
+                        o -> byteCodeBuilder.addStringInstruction(o, expr.name.lexeme())
+                );
+            }
+        }
         return null;
     }
 
@@ -433,7 +444,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(expr.object);
         retainExprResult = hadRetain;
         specialAssign(expr.retType, expr.assignType, Opcode.GET_FIELD, Opcode.PUT_FIELD,
-                b -> b.injectString(expr.name.lexeme()),
                 o -> byteCodeBuilder.addStringInstruction(o, expr.name.lexeme())
         );
         return null;
@@ -448,7 +458,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 getPlusOne(reference) : getMinusOne(reference));
 
         specialAssign(expr.executor, expr.assignType, Opcode.GET_STATIC, Opcode.PUT_STATIC,
-                b -> b.injectString(id),
                 o -> byteCodeBuilder.addStringInstruction(o, id)
         );
         return null;
@@ -469,7 +478,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         return null;
     }
 
-    private void specialAssign(ClassReference reference, Token token, Opcode get, Opcode set, Consumer<Chunk.Builder> meta, Consumer<Opcode> instructionSink) {
+    private void specialAssign(ClassReference reference, Token token, Opcode get, Opcode set, Consumer<Opcode> instructionSink) {
         instructionSink.accept(get);
         byteCodeBuilder.changeLineIfNecessary(token);
         Opcode o = token.type() == TokenType.GROW ?

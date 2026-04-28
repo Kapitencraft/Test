@@ -308,8 +308,18 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         LocalVariableContainer.FetchResult fetchResult = varAnalyser.get(varName);
 
-        if (fetchResult == LocalVariableContainer.FetchResult.FAIL)
-            error(expr.name, "unknown local variable: " + expr.name.lexeme());
+        if (fetchResult == LocalVariableContainer.FetchResult.FAIL) {
+            if (expr.type != null) {
+                ScriptedClass scriptedClass = expr.type.get();
+                if (scriptedClass.hasField(expr.name.lexeme())) {
+                    ClassReference fieldType = scriptedClass.getFieldType(expr.name.lexeme());
+
+                    return expr.retType = fieldType;
+                }
+            }
+
+            errorF(expr.name, "unknown symbol: '%s'", expr.name.lexeme());
+        }
         expr.ordinal = fetchResult.ordinal();
 
         return expr.retType = fetchResult.type();
@@ -529,13 +539,27 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     @Override
-    public ClassReference visitSpecialAssignExpr(Expr.SpecialAssign expr) {
+    public ClassReference visitIdentifierSpecialAssignExpr(Expr.IdentifierSpecialAssign expr) {
         LocalVariableContainer.FetchResult result = checkVarExistence(expr.name, true, false);
         if (result != LocalVariableContainer.FetchResult.FAIL) {
             OperationInfo info = getOperationInfo(expr.assignType, result.type());
             expr.executor = info.executor;
             expr.ordinal = result.ordinal();
-        }
+        } else {
+            if (expr.type != null) {
+                ScriptedClass scriptedClass = expr.type.get();
+                if (scriptedClass.hasField(expr.name.lexeme())) {
+                    ClassReference fieldType = scriptedClass.getFieldType(expr.name.lexeme());
+
+                    OperationInfo info = getOperationInfo(expr.assignType, fieldType);
+                    expr.executor = info.executor;
+                    expr.ordinal = result.ordinal();
+
+                    return expr.retType = fieldType;
+                }
+            }
+
+            errorF(expr.name, "unknown symbol: '%s'", expr.name.lexeme());        }
         return expr.retType = result.type();
     }
 

@@ -10,12 +10,14 @@
           "executor": "ClassReference",
           "signature": "String"
         },
-        "SpecialAssign": {
+        "IdentifierSpecialAssign": {
           "name": "Token",
           "assignType": "Token",
           "ordinal": "int",
           "executor": "ClassReference",
-          "signature": "String"
+          "signature": "String",
+          "type": "ClassReference",
+          "isStatic": "boolean"
         },
         "Binary": {
           "left": "Expr",
@@ -130,7 +132,7 @@
           "name": "Token",
           "ordinal": "byte",
           "type": "ClassReference",
-          "static": "boolean"
+          "isStatic": "boolean"
         },
         "ArrayConstructor": {
           "keyword": "Token",
