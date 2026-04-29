@@ -303,6 +303,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             if (fetchResult == LocalVariableContainer.FetchResult.FAIL)
                 errorF(expr.name, "'%s' can not be accessed from a static context", varName);
             expr.ordinal = 0;
+            expr.type = null;
             return expr.retType = fetchResult.type();
         }
 
@@ -313,7 +314,6 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                 ScriptedClass scriptedClass = expr.type.get();
                 if (scriptedClass.hasField(expr.name.lexeme())) {
                     ClassReference fieldType = scriptedClass.getFieldType(expr.name.lexeme());
-
                     return expr.retType = fieldType;
                 }
             }
@@ -321,6 +321,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             errorF(expr.name, "unknown symbol: '%s'", expr.name.lexeme());
         }
         expr.ordinal = fetchResult.ordinal();
+        expr.type = null;
 
         return expr.retType = fetchResult.type();
     }

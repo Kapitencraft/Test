@@ -707,6 +707,13 @@ public class ExprParser extends AbstractParser {
                 return parseObjAttributes(target);
             }
             advance();
+            if (currentFallback().exists()) {
+                Expr.SingleIdentifier identifier = new Expr.SingleIdentifier();
+                identifier.name = previous();
+                identifier.ordinal = 0;
+                identifier.type = currentFallback();
+                return identifier;
+            }
             return varRef(
                     previous,
                     (byte) -1
