@@ -88,15 +88,23 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitAssignExpr(Expr.Assign expr) {
-        byte ordinal = expr.ordinal;
-        AssignOperators result = getAssignOperators(ordinal);
-        assign(expr.executor, expr.value, expr.type, result.get(), result.assign(), opcode -> {
-            if (ordinal > 2)
-                byteCodeBuilder.addLocalAccess(opcode, ordinal);
-            else
-                byteCodeBuilder.addSimple(opcode);
-        });
+    public Void visitIdentifierAssignExpr(Expr.IdentifierAssign expr) {
+        if (expr.fieldOwner == null) {
+            byte ordinal = expr.ordinal;
+            AssignOperators result = getAssignOperators(ordinal);
+            assign(expr.executor, expr.value, expr.type, result.get(), result.assign(), opcode -> {
+                if (ordinal > 2)
+                    byteCodeBuilder.addLocalAccess(opcode, ordinal);
+                else
+                    byteCodeBuilder.addSimple(opcode);
+            });
+        } else {
+            if (expr.isStatic) {
+                assign(expr.executor, expr.value, expr.type, Opcode.GET_STATIC, Opcode.PUT_STATIC, opcode -> {
+                    byteCodeBuilder.addStringInstruction(opcode, expr.name.lexeme());
+                });
+            }
+        }
         return null;
     }
 

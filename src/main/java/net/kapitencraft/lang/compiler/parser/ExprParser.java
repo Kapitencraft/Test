@@ -199,11 +199,12 @@ public class ExprParser extends AbstractParser {
                 Token name = varRef.name;
                 byte ordinal = varRef.ordinal;
 
-                Expr.Assign assign = new Expr.Assign();
+                Expr.IdentifierAssign assign = new Expr.IdentifierAssign();
                 assign.name = name;
                 assign.type = assignKeyword;
                 assign.value = value;
                 assign.ordinal = ordinal;
+                assign.fieldOwner = varRef.type;
                 return assign;
             } else if (expr instanceof Expr.Get get) {
                 Expr.Set set = new Expr.Set();
@@ -684,18 +685,11 @@ public class ExprParser extends AbstractParser {
                 } else {
                     if (fallback.hasField(name)) {
                         ScriptedField field = fallback.getFields().get(name);
-                        if (field.isStatic()) {
-                            Expr.StaticGet get = new Expr.StaticGet();
-                            get.target = fallbackReference;
-                            get.name = previous;
-                            return get;
-                        } else {
-                            Expr.Get aThis = new Expr.Get();
-                            aThis.object = varRef(Token.createNative("this"), (byte) 0);
-                            aThis.name = previous;
-                            aThis.type = fallbackReference;
-                            return aThis;
-                        }
+                        Expr.SingleIdentifier identifier = new Expr.SingleIdentifier();
+                        identifier.type = fallbackReference;
+                        identifier.name = previous;
+                        identifier.isStatic = field.isStatic();
+                        return identifier;
                     }
                 }
             }
@@ -707,13 +701,6 @@ public class ExprParser extends AbstractParser {
                 return parseObjAttributes(target);
             }
             advance();
-            if (currentFallback().exists()) {
-                Expr.SingleIdentifier identifier = new Expr.SingleIdentifier();
-                identifier.name = previous();
-                identifier.ordinal = 0;
-                identifier.type = currentFallback();
-                return identifier;
-            }
             return varRef(
                     previous,
                     (byte) -1

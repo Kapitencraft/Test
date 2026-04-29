@@ -80,7 +80,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     //endregion
 
     //region executor
-    private OperationInfo getOperationInfo(ClassReference left, Token operator, ClassReference right) {
+    private OperationInfo getOperationInfo(Token operator, ClassReference left, ClassReference right) {
         OperationType operation = OperationType.of(operator.type());
         assert operation != null;
         ScriptedClass result = VarTypeManager.VOID;
@@ -104,11 +104,11 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     private OperationInfo getOperationInfo(Expr leftArg, Token operator, Expr rightArg) {
-        return getOperationInfo(analyseExpr(leftArg), operator, analyseExpr(rightArg));
+        return getOperationInfo(operator, analyseExpr(leftArg), analyseExpr(rightArg));
     }
 
     private OperationInfo getOperationInfo(ClassReference left, Token operator, Expr rightArg) {
-        return getOperationInfo(left, operator, analyseExpr(rightArg));
+        return getOperationInfo(operator, left, analyseExpr(rightArg));
     }
 
     private OperationInfo getOperationInfo(Token operator, ClassReference reference) {
@@ -194,15 +194,15 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         return ordinal;
     }
 
-    protected LocalVariableContainer.FetchResult checkVarExistence(Token name, boolean requireValue, boolean mayBeFinal) {
+    protected LocalVariableContainer.FetchResult checkVarExistence(Token name, boolean requireValue, boolean mayBeFinal, boolean mustExist) {
         String varName = name.lexeme();
         LocalVariableContainer.FetchResult result = varAnalyser.get(varName);
-        if (result == LocalVariableContainer.FetchResult.FAIL) {
-            error(name, "cannot find symbol");
-        } else if (requireValue && !result.assigned()) {
-            error(name, "Variable '" + name.lexeme() + "' might not have been initialized");
-        } else if (!mayBeFinal && !result.canAssign()) {
-            error(name, "Can not assign to final variable");
+        if (result != LocalVariableContainer.FetchResult.FAIL) {
+            if (requireValue && !result.assigned()) {
+                error(name, "Variable '" + name.lexeme() + "' might not have been initialized");
+            } else if (!mayBeFinal && !result.canAssign()) {
+                error(name, "Can not assign to final variable");
+            }
         }
         return result;
     }
@@ -529,7 +529,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         ClassReference valType = analyseExpr(expr.value);
         if (expr.assignType.type() != TokenType.ASSIGN) {
-            OperationInfo info = getOperationInfo(component.reference(), expr.assignType, valType);
+            OperationInfo info = getOperationInfo(expr.assignType, component.reference(), valType);
 
             expr.executor = info.executor;
         }
@@ -541,7 +541,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitIdentifierSpecialAssignExpr(Expr.IdentifierSpecialAssign expr) {
-        LocalVariableContainer.FetchResult result = checkVarExistence(expr.name, true, false);
+        LocalVariableContainer.FetchResult result = checkVarExistence(expr.name, true, false, false);
         if (result != LocalVariableContainer.FetchResult.FAIL) {
             OperationInfo info = getOperationInfo(expr.assignType, result.type());
             expr.executor = info.executor;
@@ -590,7 +590,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ClassReference valType = analyseExpr(expr.value);
 
         if (expr.assignType.type() != TokenType.ASSIGN) {
-            OperationInfo info = getOperationInfo(fieldType, expr.assignType, valType);
+            OperationInfo info = getOperationInfo(expr.assignType, fieldType, valType);
             expr.executor = info.executor;
         }
 
@@ -642,6 +642,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ClassReference reference = analyseExpr(expr.provider);
         popExpected();
 
+        //TODO
         Map<Integer, Expr> entries = new HashMap<>();
         for (SwitchKey param : expr.params) {
             if (!param.canMatch(reference)) {
@@ -710,8 +711,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     @Override
-    public ClassReference visitAssignExpr(Expr.Assign expr) {
-        LocalVariableContainer.FetchResult result = checkVarExistence(expr.name, expr.type.type() != TokenType.ASSIGN, false);
+    public ClassReference visitIdentifierAssignExpr(Expr.IdentifierAssign expr) {
+        LocalVariableContainer.FetchResult result = checkVarExistence(expr.name, expr.type.type() != TokenType.ASSIGN, false, false);
         if (result != LocalVariableContainer.FetchResult.FAIL) {
             ClassReference type = analyseExpr(expr.value);
             if (type.is(result.type())) {
@@ -723,6 +724,23 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                     operationInfo = getOperationInfo(varAnalyser.getType(expr.name.lexeme()), expr.type, expr.value);
                 expr.executor = operationInfo.executor;
             }
+        } else {
+            if (expr.fieldOwner != null) {
+                ScriptedClass scriptedClass = expr.fieldOwner.get();
+                if (scriptedClass.hasField(expr.name.lexeme())) {
+                    ClassReference fieldType = scriptedClass.getFieldType(expr.name.lexeme());
+
+                    if (expr.type.type() != TokenType.ASSIGN) {
+                        OperationInfo info = getOperationInfo(expr.type, fieldType, fieldType);
+                        expr.executor = info.executor;
+                        if (!info.result.is(fieldType))
+                            errorIncompatibleTypes(expr.type, fieldType, info.result);
+                    }
+
+                    return expr.retType = fieldType;
+                }
+            }
+            errorF(expr.name, "unknown symbol: '%s'", expr.name.lexeme());
         }
         return expr.retType = result.type();
     }
@@ -733,7 +751,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ClassReference leftType = analyseExpr(expr.left);
         ClassReference rightType = analyseExpr(expr.right);
 
-        OperationInfo info = getOperationInfo(leftType, expr.operator, rightType);
+        OperationInfo info = getOperationInfo(expr.operator, leftType, rightType);
 
         expr.executor = Objects.requireNonNull(info.executor);
         expr.signature = info.methodSignature;

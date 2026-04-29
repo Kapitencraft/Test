@@ -15,7 +15,7 @@ public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token
     }
 
     @Override
-    public Token visitAssignExpr(Expr.Assign expr) {
+    public Token visitIdentifierAssignExpr(Expr.IdentifierAssign expr) {
         return expr.name;
     }
 

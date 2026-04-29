@@ -35,7 +35,7 @@ public enum Opcode {
     I_POW(-1), D_POW(-1), F_POW(-1),
     I_MOD(-1), D_MOD(-1), F_MOD(-1),
     JUMP(false, 0), JUMP_IF_FALSE(false, -1), SWITCH(-1),
-    GET_FIELD, GET_STATIC(1), PUT_FIELD(false, -2), PUT_STATIC(false, -2), NEW(false, 1);
+    GET_FIELD, GET_STATIC(1), PUT_FIELD(false, -2), PUT_STATIC(false, -1), NEW(false, 1);
 
     /**
      * determines whether the given Opcode is pure. pure operations are free of side effects, like changing class attributes

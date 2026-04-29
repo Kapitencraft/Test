@@ -22,11 +22,11 @@ public interface Expr {
         R visitCastCheckExpr(CastCheck expr);
         R visitStaticGetExpr(StaticGet expr);
         R visitSwitchExpr(Switch expr);
+        R visitIdentifierAssignExpr(IdentifierAssign expr);
         R visitSliceExpr(Slice expr);
         R visitGetExpr(Get expr);
         R visitArrayGetExpr(ArrayGet expr);
         R visitLiteralExpr(Literal expr);
-        R visitAssignExpr(Assign expr);
         R visitArrayConstructorExpr(ArrayConstructor expr);
         R visitBinaryExpr(Binary expr);
         R visitStaticSpecialExpr(StaticSpecial expr);
@@ -236,6 +236,23 @@ public interface Expr {
         }
     }
 
+    class IdentifierAssign implements Expr {
+        public Token name;
+        public Expr value;
+        public Token type;
+        public byte ordinal;
+        public ClassReference executor;
+        public String signature;
+        public ClassReference fieldOwner;
+        public boolean isStatic;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitIdentifierAssignExpr(this);
+        }
+    }
+
     class Slice implements Expr {
         public Expr object;
         public Expr start;
@@ -280,21 +297,6 @@ public interface Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLiteralExpr(this);
-        }
-    }
-
-    class Assign implements Expr {
-        public Token name;
-        public Expr value;
-        public Token type;
-        public byte ordinal;
-        public ClassReference executor;
-        public String signature;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitAssignExpr(this);
         }
     }
 

@@ -2,13 +2,15 @@
   "values": {
     "Expr": {
       "values": {
-        "Assign": {
+        "IdentifierAssign": {
           "name": "Token",
           "value": "Expr",
           "type": "Token",
           "ordinal": "byte",
           "executor": "ClassReference",
-          "signature": "String"
+          "signature": "String",
+          "fieldOwner": "ClassReference",
+          "isStatic": "boolean"
         },
         "IdentifierSpecialAssign": {
           "name": "Token",
