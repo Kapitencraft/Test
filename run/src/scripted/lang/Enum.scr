@@ -8,4 +8,8 @@ class Enum {
         this.name = name;
         this.ordinal = ordinal;
     }
+
+    final int ordinal() {
+        return this.ordinal;
+    }
 }

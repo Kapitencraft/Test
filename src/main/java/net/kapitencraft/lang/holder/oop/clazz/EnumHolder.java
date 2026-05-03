@@ -214,10 +214,12 @@ public record EnumHolder(ClassReference target, short modifiers,
             body.name = Token.createNative("<init>");
             Stmt.Expression stmt1 = new Stmt.Expression();
             stmt1.expression = body;
+            Stmt.Return ret = new Stmt.Return();
+            ret.keyword = Token.createNative("return");
             constructors.add(Pair.of(this.name, new CompileCallable(VarTypeManager.VOID.reference(), List.of(
                     Pair.of(VarTypeManager.STRING, "$name"),
                     Pair.of(VarTypeManager.INTEGER.reference(), "$ordinal")
-            ), new Stmt[]{stmt1}, (short) 0, new Annotation[0])));
+            ), new Stmt[]{stmt1, ret}, (short) 0, new Annotation[0])));
         }
 
         return new BakedClass(

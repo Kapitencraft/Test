@@ -225,6 +225,7 @@ public interface Expr {
 
     class Switch implements Expr {
         public Expr provider;
+        public boolean isEnum;
         public SwitchKey[] params;
         public Expr defaulted;
         public Token keyword;

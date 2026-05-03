@@ -93,5 +93,11 @@
   {
     "target": "test.NumberFormatTest",
     "output": ["255", "3", "14", "0.25", "-24"]
+  },
+  {
+    "target": "test.SwitchTest",
+    "output": [
+      "Ag", "Ba", "Cn", "Db", "Er", "Fm", "Ge", "Hg"
+    ]
   }
 ]

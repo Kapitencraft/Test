@@ -7,18 +7,20 @@ enum SwitchTest {
     D,
     E,
     F,
-    G;
+    G,
+    H;
 
     static void main(String[] args) {
         for (SwitchTest st : SwitchTest.values()) {
             switch (st) {
-                case A -> System.print("aaaa");
-                case B -> System.print("bbbb");
-                case C -> System.print("cccc");
-                case D -> System.print("dddd");
-                case E -> System.print("E");
-                case F -> System.print("F in the Chat");
-                case G -> System.print("GG");
+                case A -> System.print("Ag");
+                case B -> System.print("Ba");
+                case C -> System.print("Cn");
+                case D -> System.print("Db");
+                case E -> System.print("Er");
+                case F -> System.print("Fm");
+                case G -> System.print("Ge");
+                case H -> System.print("Hg");
             };
         }
     }

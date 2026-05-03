@@ -531,6 +531,9 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitSwitchExpr(Expr.Switch expr) {
         cache(expr.provider);
+        if (expr.isEnum) {
+            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_VIRTUAL, "Lscripted/lang/Enum;ordinal()");
+        }
         int instDefaultPatch = byteCodeBuilder.size();
 
         //compile entries to add sorted

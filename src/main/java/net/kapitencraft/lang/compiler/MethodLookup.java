@@ -18,6 +18,8 @@ public class MethodLookup {
     private final List<Pair<ScriptedClass, AbstractMethodMap>> lookup;
     private final Map<String, ScriptedCallable> exposed;
 
+    //TODO need to evaluate parent classes before being able to store classes
+
     public MethodLookup(List<Pair<ScriptedClass, AbstractMethodMap>> lookup) {
         this.lookup = lookup;
         exposed = this.createExposed();

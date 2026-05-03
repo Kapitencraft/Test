@@ -108,6 +108,7 @@
         },
         "Switch": {
           "provider": "Expr",
+          "isEnum": "boolean",
           "params": "SwitchKey[]",
           "defaulted": "Expr",
           "keyword": "Token"

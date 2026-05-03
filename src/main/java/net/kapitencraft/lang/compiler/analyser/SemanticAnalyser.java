@@ -12,6 +12,7 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
+import net.kapitencraft.lang.holder.oop.attribute.EnumConstantHolder;
 import net.kapitencraft.lang.holder.oop.generic.AppliedGenerics;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
@@ -23,6 +24,7 @@ import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassReference> {
 
@@ -31,7 +33,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     private ClassReference methodReturnType = VarTypeManager.VOID.reference();
 
     private boolean isExpected(ClassReference reference) {
-        return !activeArgs.isEmpty() && activeArgs.peek().contains(reference);
+        return activeArgs.isEmpty() || activeArgs.peek().contains(reference);
     }
 
     private void pushExpected(Set<ClassReference> references) {
@@ -223,7 +225,12 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     private void errorIncompatibleTypes(Token loc, ClassReference expected, ClassReference gotten) {
         errorF(loc, "incompatible types: %s cannot be converted to %s", gotten, expected);
+    }
 
+    private void errorIncompatibleTypes(Token loc, ClassReference got) {
+        errorF(loc, "incompatible types.");
+        errorStorage.logError("expected: " + activeArgs.peek().stream().map(ClassReference::absoluteName).collect(Collectors.joining(", ")));
+        errorStorage.logError("got: " + got.absoluteName());
     }
 
     private void error(Token loc, String msg) {
@@ -640,23 +647,42 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     public ClassReference visitSwitchExpr(Expr.Switch expr) {
         pushExpected(VarTypeManager.ENUM, VarTypeManager.STRING, VarTypeManager.INTEGER.reference(), VarTypeManager.DOUBLE.reference(), VarTypeManager.FLOAT.reference(), VarTypeManager.CHAR.reference());
         ClassReference reference = analyseExpr(expr.provider);
+        if (reference.get().isChildOf(VarTypeManager.ENUM.get())) {
+            expr.isEnum = true;
+        }
         popExpected();
 
-        //TODO
-        Map<Integer, Expr> entries = new HashMap<>();
+        ClassReference returnType = expr.defaulted != null ? analyseExpr(expr.defaulted) : null;
+
+        if (returnType != null && !isExpected(returnType)) {
+            errorIncompatibleTypes(Compiler.LOCATION_ANALYSER.find(expr.defaulted), returnType);
+        }
+
         for (SwitchKey param : expr.params) {
             if (!param.canMatch(reference)) {
                 errorIncompatibleTypes(param.getSource(), reference, param.getType());
             }
+            param.index = switch (param) {
+                case SwitchKey.Number number -> ((int) number.getSource().literal().value());
+                case SwitchKey.String string -> string.getSource().literal().value().hashCode();
+                case SwitchKey.Identifier identifier -> {
+                    EnumConstantHolder constant = reference.get().getEnumConstant(identifier.getSource().lexeme());
+                    if (constant == null)
+                        errorF(identifier.getSource(), "Cannot resolve symbol '%s'", identifier.getSource().lexeme());
+                    yield constant != null ? constant.ordinal() : 0;
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + param);
+            };
 
             ClassReference retType = analyseExpr(param.expr);
-            if (!isExpected(reference)) {
-                //errorIncompatibleTypes();
-            }
 
+            //TODO
+            if (!isExpected(retType)) {
+                errorIncompatibleTypes(Compiler.LOCATION_ANALYSER.find(param.expr), retType);
+            }
         }
 
-        return null;
+        return expr.retType = returnType;
     }
 
     @Override

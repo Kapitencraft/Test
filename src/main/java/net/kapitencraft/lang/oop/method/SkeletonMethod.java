@@ -79,7 +79,7 @@ public class SkeletonMethod implements ScriptedCallable {
 
     @Override
     public Object call(Object[] arguments) {
-        return null;
+        throw new IllegalAccessError("can not call skeleton method");
     }
 
     @Override
