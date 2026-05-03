@@ -61,8 +61,15 @@ public class Disassembler {
             case SWITCH -> switchInstruction(opcode, chunk, offset);
             case GET_FIELD, PUT_FIELD -> fieldOp(opcode, chunk, offset);
             case GET_STATIC, PUT_STATIC -> staticFieldOp(opcode, chunk, offset);
+            case INSTANCEOF -> instanceOf(opcode, chunk, offset);
             //case RA_NEW -> newArray(opcode, chunk, offset);
         };
+    }
+
+    private static int instanceOf(Opcode opcode, Chunk chunk, int offset) {
+        String value = VirtualMachine.constString(chunk.constants(), offset + 1);
+        System.out.printf("%-16s value = %s\n", opcode, value);
+        return offset + 3;
     }
 
     private static int switchInstruction(Opcode opcode, Chunk chunk, int offset) {

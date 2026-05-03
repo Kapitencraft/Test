@@ -432,6 +432,11 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitCastCheckExpr(Expr.CastCheck expr) {
+        ClassReference reference = analyseExpr(expr.object);
+        if (!expr.targetType.get().isChildOf(reference.get())) {
+            errorF(Compiler.LOCATION_ANALYSER.find(expr.object), "inconvertible types; %s cannot be cast to %s", reference.absoluteName(), expr.targetType.absoluteName());
+        }
+
         if (expr.patternVarName != null) {
             tryCreateVar(expr.patternVarName, expr.targetType, true, true);
         }

@@ -20,6 +20,7 @@ public enum Opcode {
     I_CONST(1), D_CONST(1), S_CONST(1), F_CONST(1),
     INVOKE_VIRTUAL(false, -1), INVOKE_STATIC(false, -1),
     CONCENTRATION(-1), D2F,
+    INSTANCEOF,
     NOT,
     EQUAL(-1),
     NEQUAL(-1),

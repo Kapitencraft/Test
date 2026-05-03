@@ -290,6 +290,11 @@ public class VirtualMachine {
                         } else
                             pushCall(new CallFrame(execute, callable, callableStackTop));
                     }
+                    case INSTANCEOF -> {
+                        ScriptedClass reference = VarTypeManager.directFlatParse(constString(constants, read2Byte()));
+                        ClassInstance value = (ClassInstance) pop();
+                        push(reference.isChildOf(value.getType()));
+                    }
                     case THROW -> {
                         if (!handleException((ClassInstance) pop())) return;
                     }

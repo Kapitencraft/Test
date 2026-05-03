@@ -28,8 +28,21 @@ class InheritanceTest {
         }
     }
 
+    class TestB extends InheritanceTest {
+
+        int f() {
+            return 5;
+        }
+    }
+
     static void main(String[] args) {
         TestA a = new TestA();
         a.test(6);
+        InheritanceTest test = new TestB();
+        if (test instanceof TestB testB) {
+            System.print(testB.f());
+        } else {
+            System.print("4");
+        }
     }
 }

@@ -577,7 +577,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitCastCheckExpr(Expr.CastCheck expr) {
-        //TODO
+        cache(expr.object);
+        if (expr.patternVarName != null)
+            byteCodeBuilder.addSimple(Opcode.DUP);
+        byteCodeBuilder.addStringInstruction(Opcode.INSTANCEOF, VarTypeManager.getClassName(expr.targetType));
         return null;
     }
 

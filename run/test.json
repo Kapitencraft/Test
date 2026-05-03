@@ -33,7 +33,7 @@
   {
     "target": "test.InheritanceTest",
     "output": [
-      "10", "5", "YAY"
+      "10", "5", "YAY", "5"
     ]
   },
   {

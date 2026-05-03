@@ -68,7 +68,6 @@ public interface ScriptedClass {
         return pck() + "." + name();
     }
 
-    //TODO branch from runtime class implementations and compile class implementations
     @Contract(pure = true)
     @Nullable
     ClassReference superclass();
