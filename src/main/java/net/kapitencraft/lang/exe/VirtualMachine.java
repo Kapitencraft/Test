@@ -149,7 +149,7 @@ public class VirtualMachine {
     }
 
     private static int read2ByteWithOffset(int i) {
-        return ((((code[ip + i] & 255) << 8) | (code[ip + i + 1] & 255)) << 8);
+        return (((code[ip + i] & 255) << 8) | (code[ip + i + 1] & 255));
     }
 
     public static void runMainMethod(ScriptedClass target, String data, boolean profiling, boolean output) {
@@ -334,6 +334,7 @@ public class VirtualMachine {
                     case ASSIGN_0 -> assign(0);
                     case ASSIGN_1 -> assign(1);
                     case ASSIGN_2 -> assign(2);
+                    //region const
                     case NULL -> push(null);
                     case TRUE -> push(true);
                     case FALSE -> push(false);
@@ -352,12 +353,14 @@ public class VirtualMachine {
                     case D_CONST -> push(constDouble(constants, read2Byte()));
                     case F_CONST -> push(constFloat(constants, read2Byte()));
                     case S_CONST -> push(NativeClassLoader.wrapString(constString(constants, read2Byte())));
+                    //endregion
                     case CONCENTRATION -> {
                         String obj = (String) ((NativeClassInstance) pop()).getObject();
                         Object object = pop();
 
                         push(NativeClassLoader.wrapString(object + obj));
                     }
+                    //region algebra
                     case I_NEGATION -> push(-(int) pop());
                     case D_NEGATION -> push(-(double) pop());
                     case F_NEGATION -> push(-(float) pop());
@@ -451,6 +454,7 @@ public class VirtualMachine {
                         float value1 = (float) pop();
                         push(value1 - value2);
                     }
+                    //endregion
                     case IA_LOAD -> push(((int[]) pop())[(int) pop()]);
                     case DA_LOAD -> push(((double[]) pop())[(int) pop()]);
                     case CA_LOAD -> push(((char[]) pop())[(int) pop()]);
@@ -481,6 +485,7 @@ public class VirtualMachine {
                         int idx = (int) pop();
                         ((Object[]) pop())[idx] = val;
                     }
+                    //region compare
                     case EQUAL -> push(pop() == pop());
                     case NEQUAL -> push(pop() != pop());
                     case I_GEQUAL -> {
@@ -544,6 +549,7 @@ public class VirtualMachine {
                         push(value1 < value2);
                     }
                     case NOT -> push(!(boolean) pop());
+                    //endregion
                     case D2F -> push((float) (double) pop());
                     case SWITCH -> {
                         int entry = (int) pop();
@@ -557,16 +563,18 @@ public class VirtualMachine {
                             int obj = read4bWithOffset(idx * 6);
                             if (obj == entry) {
                                 ip = read2ByteWithOffset(idx * 6 + 4);
+                                if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s Switch Branch %s\n", visualStackSize(), obj);
                                 break;
                             }
                             if (obj < entry)
                                 lLoc = idx;
                             else
                                 uLoc = idx;
-                            idx = (uLoc - lLoc) / 2;
+                            idx = lLoc + (uLoc - lLoc) / 2;
                         }
                         if (lLoc >= uLoc) {
                             ip = defaultPos;
+                            if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s Default Switch Branch\n", visualStackSize());
                         }
                     }
                     case GET_FIELD -> {

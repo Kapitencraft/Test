@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.bytecode;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.bytecode.instruction.StaticFieldAccessInstruction;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.exe.Opcode;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
@@ -46,6 +47,13 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     public void cache(Expr expr) {
         expr.accept(this);
+    }
+
+    private void cacheRetained(Expr value) {
+        boolean hadRetain = retainExprResult;
+        retainExprResult = true;
+        cache(value);
+        retainExprResult = hadRetain;
     }
 
     private void cacheOrNull(@Nullable Expr expr) {
@@ -263,12 +271,9 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitCallExpr(Expr.Call expr) {
         if (expr.object != null) {
-            boolean hadRetain = retainExprResult;
-            retainExprResult = true;
-            cache(expr.object);
             //object is NOT POPED from the stack. keep it before the args
             byteCodeBuilder.changeLineIfNecessary(expr.name);
-            retainExprResult = hadRetain;
+            cacheRetained(expr.object);
         }
 
         saveArgs(expr.args);
@@ -312,10 +317,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitGetExpr(Expr.Get expr) {
-        boolean hadRetain = retainExprResult;
-        retainExprResult = true;
-        cache(expr.object);
-        if (hadRetain) {
+        cacheRetained(expr.object);
+        if (retainExprResult) {
             byteCodeBuilder.changeLineIfNecessary(expr.name);
             if (expr.type.get().isArray()) { //only `.length` exists on arrays, so we can be sure
                 byteCodeBuilder.addSimple(Opcode.ARRAY_LENGTH);
@@ -361,14 +364,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
         ClassReference retType = expr.executor;
         TokenType type = expr.assignType.type();
-        boolean hadRetain = retainExprResult;
-        retainExprResult = true;
-        cache(expr.object);
+        cacheRetained(expr.object);
         if (type != TokenType.ASSIGN) {
             byteCodeBuilder.addSimple(Opcode.DUP);
             byteCodeBuilder.changeLineIfNecessary(expr.name);
             byteCodeBuilder.addStringInstruction(Opcode.GET_FIELD, expr.name.lexeme());
-            cache(expr.value);
+            cacheRetained(expr.value);
             byteCodeBuilder.changeLineIfNecessary(expr.assignType);
             Opcode opcode = switch (type) {
                 case ADD_ASSIGN -> getAdd(retType);
@@ -381,15 +382,14 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             };
             byteCodeBuilder.addSimple(opcode);
         } else {
-            cache(expr.value);
+            cacheRetained(expr.value);
             byteCodeBuilder.changeLineIfNecessary(expr.assignType);
         }
-        if (hadRetain) {
+        if (retainExprResult) {
             byteCodeBuilder.addSimple(Opcode.DUP_X1); //duplicate to keep value on the stack
         } else {
             ignoredExprResult = true;
         }
-        retainExprResult = hadRetain;
         byteCodeBuilder.changeLineIfNecessary(expr.name);
         byteCodeBuilder.addStringInstruction(Opcode.PUT_FIELD, expr.name.lexeme());
         return null;
@@ -447,10 +447,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitSpecialSetExpr(Expr.SpecialSet expr) {
-        boolean hadRetain = retainExprResult;
-        retainExprResult = true;
-        cache(expr.object);
-        retainExprResult = hadRetain;
+        cacheRetained(expr.object);
         specialAssign(expr.retType, expr.assignType, Opcode.GET_FIELD, Opcode.PUT_FIELD,
                 o -> byteCodeBuilder.addStringInstruction(o, expr.name.lexeme())
         );
@@ -530,7 +527,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitSwitchExpr(Expr.Switch expr) {
-        cache(expr.provider);
+        cacheRetained(expr.provider);
         if (expr.isEnum) {
             byteCodeBuilder.addStringInstruction(Opcode.INVOKE_VIRTUAL, "Lscripted/lang/Enum;ordinal()");
         }
@@ -577,7 +574,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitCastCheckExpr(Expr.CastCheck expr) {
-        cache(expr.object);
+        cacheRetained(expr.object);
         if (expr.patternVarName != null)
             byteCodeBuilder.addSimple(Opcode.DUP);
         byteCodeBuilder.addStringInstruction(Opcode.INSTANCEOF, VarTypeManager.getClassName(expr.targetType));
@@ -723,7 +720,9 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (retainExprResult) {
             byteCodeBuilder.changeLineIfNecessary(expr.name);
             if (expr.type != null) {
-                if (true) {
+                if (expr.isStatic) {
+                    byteCodeBuilder.add(new StaticFieldAccessInstruction(Opcode.GET_STATIC, VarTypeManager.getClassName(expr.type), expr.name.lexeme()));
+                } else {
                     byteCodeBuilder.addSimple(Opcode.GET_0);
                     byteCodeBuilder.addStringInstruction(Opcode.GET_FIELD, expr.name.lexeme());
                 }
@@ -1006,14 +1005,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void getVar(int i) {
-
         switch (i) {
             case 0 -> byteCodeBuilder.addSimple(Opcode.GET_0);
             case 1 -> byteCodeBuilder.addSimple(Opcode.GET_1);
             case 2 -> byteCodeBuilder.addSimple(Opcode.GET_2);
             default -> byteCodeBuilder.addLocalAccess(Opcode.GET, i);
         }
-
     }
 
     //order: idx, arr -> val

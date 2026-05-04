@@ -174,17 +174,21 @@ public class ClassLoader {
 
         useClasses(root, (classes, pck) -> classes.forEach((name, holder1) -> entries.add(new Entry(holder1, name, pck))));
 
+        //elements are sorted so that the first elements have only native or no parent to ensure classes
+        // with in-code parents loading after their parent and its methods
         Comparator<Entry> sortFunction = (o1, o2) -> {
             ScriptedClass o1Class = o1.holder.reference.get();
             ScriptedClass o2Class = o2.holder.reference.get();
-            return o1Class.isChildOf(o2Class) ? -1 : o2Class.isChildOf(o1Class) ? 1 : 0;
+            return o1Class.isChildOf(o2Class) ? 1 : o2Class.isChildOf(o1Class) ? -1 : o1.name.compareTo(o2.name);
         };
 
-        //first elements must have no parent
-        entries.sort(sortFunction);
+        Entry[] values = entries.toArray(new Entry[0]);
+        Arrays.sort(values, sortFunction);
 
-        entries.forEach(entry -> entry.pck.addNullableClass(entry.name, entry.holder.loadClass()));
+        for (Entry entry : values) {
+            entry.pck.addNullableClass(entry.name, entry.holder.loadClass());
         }
+    }
 
     //how should I name this...
     public static <T extends ClassLoaderHolder<T>> void useClasses(PackageHolder<T> root, BiConsumer<Map<String, T>, Package> consumer) {

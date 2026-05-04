@@ -49,11 +49,7 @@ public class Package {
     }
 
     public void addClass(String name, ClassReference reference) {
-        if (name.contains("$")) {
-            String[] split = name.split("\\$");
-            this.classes.put(split[split.length - 1], reference);
-        } else
-            this.classes.put(name, reference);
+        this.classes.put(name, reference);
     }
 
     //use getOrCreatePackage instead

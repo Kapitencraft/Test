@@ -46,7 +46,7 @@ public interface ScriptedClass {
      * @param other the other type
      * @return the resulting type or {@link VarTypeManager#VOID}, if this operation is not possible (must return {@link VarTypeManager#BOOLEAN} or {@link VarTypeManager#VOID} for comparators)
      * <br><br>API note: it's recommended to call {@code super.checkOperation(...)} due to the given equality check
-     * @deprecated create a overload method for it instead
+     * @deprecated create an overload method for it instead
      */
     @Deprecated
     default ScriptedClass checkOperation(OperationType type, ClassReference other) {
@@ -104,7 +104,8 @@ public interface ScriptedClass {
 
     default boolean isChildOf(ScriptedClass suspectedParent) {
         return suspectedParent.isInterface() ?
-                Arrays.stream(this.interfaces()).anyMatch(reference -> reference.get().isParentOf(suspectedParent)) || this.superclass().get().isChildOf(suspectedParent) :
+                Arrays.stream(this.interfaces()).anyMatch(reference -> reference.get().isParentOf(suspectedParent))
+                        || (this.superclass() != null && this.superclass().get().isChildOf(suspectedParent)) :
                 suspectedParent.isParentOf(this);
     }
 
