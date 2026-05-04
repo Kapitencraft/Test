@@ -168,9 +168,23 @@ public class ClassLoader {
     }
 
     public static void generateClasses(PackageHolder<VMLoaderHolder> root) {
-        useClasses(root, (classes, pck) -> classes.forEach((name, holder1) -> pck.addNullableClass(name, holder1.loadClass())));
-    }
+        record Entry(VMLoaderHolder holder, String name, Package pck) {}
 
+        List<Entry> entries = new ArrayList<>();
+
+        useClasses(root, (classes, pck) -> classes.forEach((name, holder1) -> entries.add(new Entry(holder1, name, pck))));
+
+        Comparator<Entry> sortFunction = (o1, o2) -> {
+            ScriptedClass o1Class = o1.holder.reference.get();
+            ScriptedClass o2Class = o2.holder.reference.get();
+            return o1Class.isChildOf(o2Class) ? -1 : o2Class.isChildOf(o1Class) ? 1 : 0;
+        };
+
+        //first elements must have no parent
+        entries.sort(sortFunction);
+
+        entries.forEach(entry -> entry.pck.addNullableClass(entry.name, entry.holder.loadClass()));
+        }
 
     //how should I name this...
     public static <T extends ClassLoaderHolder<T>> void useClasses(PackageHolder<T> root, BiConsumer<Map<String, T>, Package> consumer) {
