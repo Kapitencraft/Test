@@ -268,7 +268,11 @@ public class Lexer {
 
     //TODO add formatted strings
     private void string() {
+        //{}
+
+
         while (peek() != '"' && !isAtEnd() && peek() != '\n') {
+
             advance();
         }
 
