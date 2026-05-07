@@ -355,10 +355,10 @@ public class VirtualMachine {
                     case S_CONST -> push(NativeClassLoader.wrapString(constString(constants, read2Byte())));
                     //endregion
                     case CONCENTRATION -> {
-                        String obj = (String) ((NativeClassInstance) pop()).getObject();
                         Object object = pop();
+                        String obj = (String) ((NativeClassInstance) pop()).getObject();
 
-                        push(NativeClassLoader.wrapString(object + obj));
+                        push(NativeClassLoader.wrapString(obj + object));
                     }
                     //region algebra
                     case I_NEGATION -> push(-(int) pop());

@@ -34,6 +34,7 @@ public interface Expr {
     }
 
     <R> R accept(Visitor<R> visitor);
+    ClassReference retType();
 
     class Call implements Expr {
         public Expr object;
@@ -48,6 +49,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitCallExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class Set implements Expr {
@@ -63,6 +68,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSetExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class ArraySet implements Expr {
@@ -79,6 +88,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitArraySetExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class ArraySpecial implements Expr {
@@ -93,6 +106,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitArraySpecialExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class SingleIdentifier implements Expr {
@@ -106,6 +123,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSingleIdentifierExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class Constructor implements Expr {
@@ -119,6 +140,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitConstructorExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class StaticSet implements Expr {
@@ -134,6 +159,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitStaticSetExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class Logical implements Expr {
@@ -146,6 +175,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLogicalExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class IdentifierSpecialAssign implements Expr {
@@ -162,6 +195,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitIdentifierSpecialAssignExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class Unary implements Expr {
@@ -174,6 +211,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitUnaryExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class ComparisonChain implements Expr {
@@ -186,6 +227,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitComparisonChainExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class When implements Expr {
@@ -198,6 +243,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitWhenExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class CastCheck implements Expr {
@@ -210,6 +259,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitCastCheckExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class StaticGet implements Expr {
@@ -221,6 +274,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitStaticGetExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class Switch implements Expr {
@@ -235,6 +292,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSwitchExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class IdentifierAssign implements Expr {
@@ -252,6 +313,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitIdentifierAssignExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class Slice implements Expr {
@@ -265,6 +330,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSliceExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class Get implements Expr {
@@ -277,6 +346,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitGetExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class ArrayGet implements Expr {
@@ -289,6 +362,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitArrayGetExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class Literal implements Expr {
@@ -299,6 +376,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLiteralExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class ArrayConstructor implements Expr {
@@ -312,6 +393,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitArrayConstructorExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class Binary implements Expr {
@@ -326,6 +411,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitBinaryExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class StaticSpecial implements Expr {
@@ -340,6 +429,10 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitStaticSpecialExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 
     class SpecialSet implements Expr {
@@ -353,5 +446,9 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSpecialSetExpr(this);
         }
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+}
     }
 }

@@ -160,6 +160,15 @@
       ],
       "fields": {
         "retType": "ClassReference"
+      },
+      "methods": {
+        "retType": {
+          "params": [],
+          "retType": "ClassReference",
+          "body": [
+            "return this.retType;"
+          ]
+        }
       }
     },
     "Stmt": {

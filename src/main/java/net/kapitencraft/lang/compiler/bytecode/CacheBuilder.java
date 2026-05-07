@@ -179,17 +179,19 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
         cache(expr.left);
+        Token operator = expr.operator;
+        if (operator.type() == TokenType.ADD && expr.executor.is(VarTypeManager.STRING) && !expr.left.retType().is(VarTypeManager.STRING)) {
+            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_STATIC, "Lscripted/lang/String;valueOf(Lscripted/lang/Object)");
+        }
+
         cache(expr.right);
+
 
         if (expr.signature != null) {
             byteCodeBuilder.addStringInstruction(Opcode.INVOKE_VIRTUAL, expr.signature);
         } else {
-
-            //convertToStringIfNecessary(operator, executor); TODO
-
             if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
                 final ClassReference executor = expr.executor;
-            Token operator = expr.operator;
             byteCodeBuilder.changeLineIfNecessary(operator);
                 Opcode opcode = switch (operator.type()) {
                     case EQUAL -> Opcode.EQUAL;
@@ -217,9 +219,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void convertToStringIfNecessary(TokenType operator, ClassReference executor) {
-        if (operator == TokenType.ADD && executor.is(VarTypeManager.STRING)) {
-            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_STATIC, "Lscripted/lang/String;valueOf(Lscripted/lang/Object)");
-        }
+
     }
 
     //region comparison
@@ -289,9 +289,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitComparisonChainExpr(Expr.ComparisonChain expr) {
-        //l && r -> l ? r : false
-        //i < j && j < k
-        //1. i, j -> bool
 
         List<Integer> jumps = new ArrayList<>();
         cache(expr.entries[0]);
@@ -911,7 +908,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         byteCodeBuilder.addSimple(Opcode.I_0);//create iteration variable
         byteCodeBuilder.registerLocal(stmt.baseVar + 1, VarTypeManager.INTEGER.reference(), "$i");
         int baseVarIndex = stmt.baseVar;
-
 
         int curIndex = byteCodeBuilder.size(); //link to jump back when loop is completed
 

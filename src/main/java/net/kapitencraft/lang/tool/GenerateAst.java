@@ -22,8 +22,10 @@ public class GenerateAst {
             Imports imports = Imports.fromJsonElement(data.get("imports"));
             List<FieldDef> commonFields = new ArrayList<>();
             data.getOrDefault("fields", new JsonObject()).getAsJsonObject().asMap().forEach((s, jsonElement) -> commonFields.add(FieldDef.fromJson(s, jsonElement)));
+            List<MethodDef> commonMethods = new ArrayList<>();
+            data.getOrDefault("methods", new JsonObject()).getAsJsonObject().asMap().forEach((s, jsonElement) -> commonMethods.add(MethodDef.fromJson(s, jsonElement)));
             Map<String, AstDef> valueData = createValues(data.get("values"));
-            defineAst(astType, valueData, imports, defaultImports, commonFields);
+            defineAstFile(astType, valueData, imports, defaultImports, commonFields, commonMethods);
         });
     }
 
@@ -42,12 +44,8 @@ public class GenerateAst {
         return data;
     }
 
-    private static void defineAst(String baseName, Map<String, AstDef> data, Imports imports, Imports defaultImports, List<FieldDef> commonFields) {
-        defineAstFile(baseName, data, imports, defaultImports, commonFields);
-    }
-
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static void defineAstFile(String baseName, Map<String, AstDef> data, Imports imports, Imports defaultImports, List<FieldDef> commonFields) {
+    private static void defineAstFile(String baseName, Map<String, AstDef> data, Imports imports, Imports defaultImports, List<FieldDef> commonFields, List<MethodDef> methods) {
         String path = DIRECTORY + "/" + baseName + ".java";
         PrintWriter writer;
         try {
@@ -83,9 +81,17 @@ public class GenerateAst {
         writer.println();
         writer.println("    <R> R accept(Visitor<R> visitor);");
 
+        for (MethodDef method : methods) {
+            writer.print("    " + method.retType + " " + method.name + "(");
+            for (String param : method.params) {
+                writer.print(param);
+            }
+            writer.println(");");
+        }
+
         // The AST classes.
         for (String typeId : data.keySet()) {
-            defineType(writer, baseName, baseName, typeId, data.get(typeId), commonFields);
+            defineType(writer, baseName, baseName, typeId, data.get(typeId), commonFields, methods);
         }
 
         writer.println("}");
@@ -103,7 +109,7 @@ public class GenerateAst {
         writer.println("    }");
     }
 
-    private static void defineType(PrintWriter writer, String baseName, String extendedName, String typeId, AstDef types, List<FieldDef> commonFields) {
+    private static void defineType(PrintWriter writer, String baseName, String extendedName, String typeId, AstDef types, List<FieldDef> commonFields, List<MethodDef> methods) {
         writer.println();
         FieldDef[] fields = types.get();
         writer.println("    class " + typeId + " implements " + extendedName + " {");
@@ -118,6 +124,20 @@ public class GenerateAst {
         writer.println("            return visitor.visit" +
                 typeId + baseName + "(this);");
         writer.println("        }");
+
+        for (MethodDef method : methods) {
+            writer.println("        ");
+            writer.println("        @Override");
+            writer.print("        public " + method.retType + " " + method.name + "(");
+            for (String param : method.params) {
+                writer.print(param);
+            }
+            writer.println(") {");
+            for (String s : method.body) {
+                writer.println("            " + s);
+            }
+            writer.println("        }");
+        }
 
         writer.println("    }");
 
@@ -194,6 +214,17 @@ public class GenerateAst {
             return new AstDef(
                     compile.toArray(new FieldDef[0])
             );
+        }
+    }
+
+    private record MethodDef(String name, String retType, String[] params, String[] body) {
+        public static MethodDef fromJson(String name, JsonElement jsonElement) {
+            JsonObject object = jsonElement.getAsJsonObject();
+            JsonArray paramStorage = object.getAsJsonArray("params");
+            String[] params = paramStorage.asList().stream().map(JsonElement::getAsString).toArray(String[]::new);
+            String retType = GsonHelper.getAsString(object, "retType");
+            String[] body = object.getAsJsonArray("body").asList().stream().map(JsonElement::getAsString).toArray(String[]::new);
+            return new MethodDef(name, retType, params, body);
         }
     }
 }
