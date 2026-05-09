@@ -16,6 +16,8 @@ public class BytecodeOptimizer {
             new JumpReturnMergeOptimization() //replace jump with return if jump points at return
     );
 
+    //TODO enable DUP if `Assign` / `VarDecl` is directly followed by a `Get`
+
     private final List<AdvancedOptimization> advancedOptimizations = List.of(
             //backtrack unused pure instructions before POP or POP2
             new RemoveUnreachableOpcodesOptimization(), //remove unreachable opcodes caused by other optimizations
