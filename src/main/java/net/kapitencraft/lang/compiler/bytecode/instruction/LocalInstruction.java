@@ -1,8 +1,8 @@
 package net.kapitencraft.lang.compiler.bytecode.instruction;
 
+import net.kapitencraft.lang.compiler.bytecode.ByteCodeBuilder;
 import net.kapitencraft.lang.exe.Opcode;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
-import net.kapitencraft.lang.compiler.bytecode.ByteCodeBuilder;
 
 public class LocalInstruction extends CodeInstruction {
     private final int id;
@@ -16,6 +16,10 @@ public class LocalInstruction extends CodeInstruction {
     public void save(Chunk.Builder builder, ByteCodeBuilder.IpContainer ips) {
         super.save(builder, ips);
         builder.addArg(id);
+    }
+
+    public int getId() {
+        return id;
     }
 
     @Override

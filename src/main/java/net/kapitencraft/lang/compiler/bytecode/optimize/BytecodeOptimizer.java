@@ -12,6 +12,7 @@ public class BytecodeOptimizer {
 
     private final List<SimpleOptimization> simpleOptimizations = List.of(
             //TODO add
+            new MergeLocalInvokeOptimization(),
             new JumpMergeOptimization(), //merge jumps pointing to jumps
             new JumpIfFalseAfterFalseOptimization(), //merge jump_if_false directly after false
             new JumpReturnMergeOptimization() //replace jump with return if jump points at return
