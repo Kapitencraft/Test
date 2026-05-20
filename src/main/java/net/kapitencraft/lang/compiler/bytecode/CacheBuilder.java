@@ -3,6 +3,7 @@ package net.kapitencraft.lang.compiler.bytecode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.bytecode.instruction.IncrementIntVarInstruction;
+import net.kapitencraft.lang.compiler.bytecode.instruction.StaticFieldAccessInstruction;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.exe.Opcode;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
@@ -152,8 +153,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (expr.type == null) {
             int ordinal = expr.ordinal;
             AssignOperators operators = getAssignOperators(ordinal);
-            if (expr.executor().is(VarTypeManager.INTEGER) && !retainExprResult) {
-            byteCodeBuilder.add(new IncrementIntVarInstruction(ordinal, expr.assignType().type() == TokenType.GROW ? 1 : -1));
+            if (expr.executor.is(VarTypeManager.INTEGER) && !retainExprResult) {
+            byteCodeBuilder.add(new IncrementIntVarInstruction(ordinal, expr.assignType.type() == TokenType.GROW ? 1 : -1));
             ignoredExprResult = true;
             return null;
         }
@@ -182,7 +183,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitBinaryExpr(Expr.Binary expr) {
         boolean hadRetain = retainExprResult;
         retainExprResult = true;
-        TokenType type = expr.operator().type();
+        TokenType type = expr.operator.type();
         //if (expr.left() instanceof Expr.Literal(Token leftLiteral) && expr.right() instanceof Expr.Literal(Token rightLiteral)) {
         //    ClassReference reference = expr.retType();
         //    Object leftValue = leftLiteral.literal().value();
@@ -199,26 +200,26 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         //    }
         //}
         if (expr.retType().is(VarTypeManager.INTEGER)) {
-            if (type == TokenType.MUL && expr.right() instanceof Expr.Literal(Token literal)) {
-                int val = ((int) literal.literal().value());
+            if (type == TokenType.MUL && expr.right instanceof Expr.Literal litExpr) {
+                int val = ((int) litExpr.literal.literal().value());
                 int exponent = 31 - Integer.numberOfLeadingZeros(val);
                 if (exponent == 32 - Integer.numberOfLeadingZeros(val - 1)) { //number is power of 2
-                    cache(expr.left());
+                    cache(expr.left);
                     byteCodeBuilder.addIntConstant(exponent);
                     byteCodeBuilder.addSimple(Opcode.I_SH_L);
                     return null;
                 }
-            } else if (type == TokenType.POW && expr.left() instanceof Expr.Literal(Token literal)) {
-                int val = ((int) literal.literal().value());
+            } else if (type == TokenType.POW && expr.left instanceof Expr.Literal litExpr) {
+                int val = ((int) litExpr.literal.literal().value());
                 int exponent = 31 - Integer.numberOfLeadingZeros(val);
                 if (exponent == 32 - Integer.numberOfLeadingZeros(val - 1)) { //number is power of 2
                     byteCodeBuilder.addSimple(Opcode.I_1);
                     if (exponent > 1) {
                         byteCodeBuilder.addIntConstant(exponent / 2);
-                        cache(expr.right());
+                        cache(expr.right);
                         byteCodeBuilder.addSimple(Opcode.I_MUL);
                     } else
-                        cache(expr.right());
+                        cache(expr.right);
                     byteCodeBuilder.addSimple(Opcode.I_SH_L);
                     return null;
                 }

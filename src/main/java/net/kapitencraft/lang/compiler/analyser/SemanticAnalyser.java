@@ -901,7 +901,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public Void visitVarDeclStmt(Stmt.VarDecl stmt) {
-        varAnalyser.add(stmt.name.lexeme(), stmt.type, !stmt.isFinal, stmt.initializer != null);
+        stmt.localId = varAnalyser.add(stmt.name.lexeme(), stmt.type, !stmt.isFinal, stmt.initializer != null);
         analyseExpr(stmt.initializer);
         return null;
     }
