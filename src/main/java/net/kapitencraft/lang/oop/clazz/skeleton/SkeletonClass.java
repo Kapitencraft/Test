@@ -124,8 +124,8 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public boolean hasField(String name) {
-        return this.fields.containsKey(name) || ScriptedClass.super.hasField(name);
+    public ScriptedClass getFieldDeclaring(String name) {
+        return this.fields.containsKey(name) ? this : ScriptedClass.super.getFieldDeclaring(name);
     }
 
     @Override

@@ -23,8 +23,8 @@ public interface ScriptedInterface extends ScriptedClass {
     }
 
     @Override
-    default boolean hasField(String name) {
-        return false;
+    default ScriptedClass getFieldDeclaring(String name) {
+        return null;
     }
 
     @Override

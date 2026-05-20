@@ -81,8 +81,14 @@ public interface ScriptedClass {
         return superclass() != null ? superclass().get().getFieldType(name) : VarTypeManager.VOID.reference();
     }
 
-    default boolean hasField(String name) {
-        return superclass() != null && superclass().get().hasField(name);
+    /**
+     * gets the (nullable) (super)class that declares a field of this name in this inheritance tree.
+     */
+    default @Nullable ScriptedClass getFieldDeclaring(String name) {
+        if (superclass() != null) {
+            return superclass().get().getFieldDeclaring(name);
+        }
+        return null;
     }
 
     default Map<String, ? extends ScriptedField> getFields() {

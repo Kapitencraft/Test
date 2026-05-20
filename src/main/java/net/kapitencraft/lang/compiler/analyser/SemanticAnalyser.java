@@ -23,6 +23,7 @@ import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -319,8 +320,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         if (fetchResult == LocalVariableContainer.FetchResult.FAIL) {
             if (expr.type != null) {
                 ScriptedClass scriptedClass = expr.type.get();
-                if (scriptedClass.hasField(expr.name.lexeme())) {
-                    ClassReference fieldType = scriptedClass.getFieldType(expr.name.lexeme());
+                ScriptedClass declaring = scriptedClass.getFieldDeclaring(expr.name.lexeme());
+                if (declaring != null) {
+                    ClassReference fieldType = declaring.getFieldType(expr.name.lexeme());
                     return expr.retType = fieldType;
                 }
             }
@@ -339,8 +341,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         String fieldName = expr.name.lexeme();
         ClassReference fieldType = VarTypeManager.VOID.reference();
-        if (objType.get().hasField(fieldName)) {
-            fieldType = objType.get().getFieldType(expr.name.lexeme());
+        ScriptedClass declaring = objType.get().getFieldDeclaring(fieldName);
+        if (declaring != null) {
+            fieldType = declaring.getFieldType(expr.name.lexeme());
         } else {
             errorF(expr.name, "unknown field in class %s: %s", objType.absoluteName(), fieldName);
         }
@@ -492,8 +495,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         String fieldName = expr.name.lexeme();
 
         ClassReference fieldType = VarTypeManager.VOID.reference();
-        if (expr.target.get().hasField(fieldName)) {
-            fieldType = expr.target.get().getFieldType(fieldName);
+        ScriptedClass declaring = expr.target.get().getFieldDeclaring(fieldName);
+        if (declaring != null) {
+            fieldType = declaring.getFieldType(fieldName);
 
         } else {
             errorF(expr.name, "unknown static field in class %s: %s", expr.target.absoluteName(), fieldName);
@@ -512,8 +516,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         String fieldName = expr.name.lexeme();
         ClassReference fieldType = VarTypeManager.VOID.reference();
-        if (objType.get().hasField(fieldName)) {
-            fieldType = objType.get().getFieldType(expr.name.lexeme());
+        ScriptedClass declaring = objType.get().getFieldDeclaring(fieldName);
+        if (declaring != null) {
+            fieldType = declaring.getFieldType(expr.name.lexeme());
         } else {
             errorF(expr.name, "unknown field in class %s: %s", objType.absoluteName(), fieldName);
         }
@@ -561,8 +566,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         } else {
             if (expr.type != null) {
                 ScriptedClass scriptedClass = expr.type.get();
-                if (scriptedClass.hasField(expr.name.lexeme())) {
-                    ClassReference fieldType = scriptedClass.getFieldType(expr.name.lexeme());
+                ScriptedClass declaring = scriptedClass.getFieldDeclaring(expr.name.lexeme());
+                if (declaring != null) {
+                    ClassReference fieldType = declaring.getFieldType(expr.name.lexeme());
 
                     OperationInfo info = getOperationInfo(expr.assignType, fieldType);
                     expr.executor = info.executor;
@@ -592,8 +598,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         String fieldName = expr.name.lexeme();
 
         ClassReference fieldType = VarTypeManager.VOID.reference();
-        if (expr.target.get().hasField(fieldName)) {
-            fieldType = expr.target.get().getFieldType(fieldName);
+        ScriptedClass declaring = expr.target.get().getFieldDeclaring(fieldName);
+        if (declaring != null) {
+            fieldType = declaring.getFieldType(fieldName);
 
         } else {
             errorF(expr.name, "unknown static field in class %s: %s", expr.target.absoluteName(), fieldName);
@@ -638,8 +645,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         String fieldName = expr.name.lexeme();
 
         ClassReference fieldType = VarTypeManager.VOID.reference();
-        if (expr.target.get().hasField(fieldName)) {
-            fieldType = expr.target.get().getFieldType(fieldName);
+        ScriptedClass declaring = expr.target.get().getFieldDeclaring(fieldName);
+        if (declaring != null) {
+            fieldType = declaring.getFieldType(fieldName);
 
         } else {
             errorF(expr.name, "unknown static field in class %s: %s", expr.target.absoluteName(), fieldName);
@@ -732,8 +740,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         }
 
         ClassReference fieldType = VarTypeManager.VOID.reference();
-        if (objType.get().hasField(fieldName)) {
-            fieldType = objType.get().getFieldType(fieldName);
+        ScriptedClass declaring = objType.get().getFieldDeclaring(fieldName);
+        if (declaring != null) {
+            fieldType = declaring.getFieldType(fieldName);
         } else {
             errorF(expr.name, "unknown field in class %s: %s", objType.absoluteName(), fieldName);
         }
@@ -758,8 +767,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         } else {
             if (expr.fieldOwner != null) {
                 ScriptedClass scriptedClass = expr.fieldOwner.get();
-                if (scriptedClass.hasField(expr.name.lexeme())) {
-                    ClassReference fieldType = scriptedClass.getFieldType(expr.name.lexeme());
+                ScriptedClass declared = scriptedClass.getFieldDeclaring(expr.name.lexeme());
+                if (declared != null) {
+                    ClassReference fieldType = declared.getFieldType(expr.name.lexeme());
 
                     if (expr.type.type() != TokenType.ASSIGN) {
                         OperationInfo info = getOperationInfo(expr.type, fieldType, fieldType);

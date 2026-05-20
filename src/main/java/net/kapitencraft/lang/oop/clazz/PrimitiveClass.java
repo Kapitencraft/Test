@@ -67,8 +67,8 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public boolean hasField(String name) {
-        return false;
+    public @Nullable ScriptedClass getFieldDeclaring(String name) {
+        return null;
     }
 
     @Override

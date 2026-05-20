@@ -683,8 +683,9 @@ public class ExprParser extends AbstractParser {
                         return finishCall(previous, fallbackReference, ref);
                     }
                 } else {
-                    if (fallback.hasField(name)) {
-                        ScriptedField field = fallback.getFields().get(name);
+                    ScriptedClass declaring = fallback.getFieldDeclaring(name);
+                    if (declaring != null) {
+                        ScriptedField field = declaring.getFields().get(name);
                         Expr.SingleIdentifier identifier = new Expr.SingleIdentifier();
                         identifier.type = fallbackReference;
                         identifier.name = previous;

@@ -84,8 +84,8 @@ public final class RuntimeClass implements ScriptedClass {
     }
 
     @Override
-    public boolean hasField(String name) {
-        return allFields.containsKey(name) || ScriptedClass.super.hasField(name);
+    public ScriptedClass getFieldDeclaring(String name) {
+        return allFields.containsKey(name) ? this : ScriptedClass.super.getFieldDeclaring(name);
     }
 
     @Override
