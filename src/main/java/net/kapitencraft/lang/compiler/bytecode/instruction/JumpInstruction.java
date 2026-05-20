@@ -30,4 +30,9 @@ public class JumpInstruction extends CodeInstruction implements JumpableInstruct
     public int length() {
         return 3;
     }
+
+    @Override
+    public String toString() {
+        return "JumpInstruction{" + super.toString() + ", target = " + index + "}";
+    }
 }

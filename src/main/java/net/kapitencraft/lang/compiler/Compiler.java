@@ -6,14 +6,15 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
+import net.kapitencraft.lang.exe.load.ClassLoader;
+import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.method.CompileCallable;
-import net.kapitencraft.lang.exe.load.ClassLoader;
-import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -33,6 +34,7 @@ import java.util.function.Consumer;
 
 public class Compiler {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    public static final LocationAnalyser LOCATION_ANALYSER = new LocationAnalyser();
 
     public static boolean optimize = false;
     static int errorCount = 0;
@@ -50,7 +52,7 @@ public class Compiler {
         }
     }
 
-    public static void queueRegister(Holder.Class aClass, ErrorStorage errorStorage, VarTypeContainer parser, @Nullable String namePrefix) {
+    public static void queueRegister(ClassConstructor aClass, ErrorStorage errorStorage, VarTypeContainer parser, @Nullable String namePrefix) {
         String name = aClass.name().lexeme();
         ClassRegister e = ClassRegister.create(aClass, errorStorage, parser, name);
         registers.add(e);
@@ -58,7 +60,7 @@ public class Compiler {
     }
 
     private record ClassRegister(CompilerLoaderHolder holder, String pck, @Nullable String name) {
-        public static ClassRegister create(Holder.Class entry, ErrorStorage logger, VarTypeContainer parser, @Nullable String name) {
+        public static ClassRegister create(ClassConstructor entry, ErrorStorage logger, VarTypeContainer parser, @Nullable String name) {
             return new ClassRegister(new CompilerLoaderHolder(entry, logger, parser), entry.pck(), name);
         }
 
@@ -80,27 +82,30 @@ public class Compiler {
         compileData = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
 
         ExecutorService executor = Executors.newFixedThreadPool(10, new CompilerThreadFactory());
-        for (Stage stage : Stage.values()) {
-            registers.forEach(ClassRegister::register);
-            registers.clear();
-            activeStage = stage;
-            System.out.printf("executing step %s\n", stage);
+        try {
+            for (Stage stage : Stage.values()) {
+                registers.forEach(ClassRegister::register);
+                registers.clear();
+                activeStage = stage;
+                System.out.printf("executing step %s\n", stage);
 
-            if (stage == Stage.CACHING && cache.exists())
-                Util.delete(cache);
+                if (stage == Stage.CACHING && cache.exists())
+                    Util.delete(cache);
 
-            ClassLoader.useHolders(compileData, stage.action, executor);
+                ClassLoader.useHolders(compileData, stage.action, executor);
 
-            if (errorCount > 0) {
-                printErrors(compileData);
+                if (errorCount > 0) {
+                    printErrors(compileData);
 
-                if (errorCount > 100) {
-                    System.err.println("only showing the first 100 errors out of " + errorCount + " total");
-                } else System.err.println(errorCount + " errors");
-                System.exit(65);
+                    if (errorCount > 100) {
+                        System.err.println("only showing the first 100 errors out of " + errorCount + " total");
+                    } else System.err.println(errorCount + " errors");
+                    System.exit(65);
+                }
             }
+        } finally {
+            executor.shutdownNow();
         }
-        executor.shutdownNow();
     }
 
     /**
@@ -130,6 +135,8 @@ public class Compiler {
         Pair<Token, CompileCallable>[] methods();
 
         ClassReference[] interfaces();
+
+        void analyse();
     }
 
     public static void cache(File cacheBase, CacheBuilder builder, String path, CacheableClass target, String name) throws IOException {
@@ -147,13 +154,11 @@ public class Compiler {
     public static class ErrorStorage {
         private final String[] lines;
         private final String fileLoc;
-        private final LocationAnalyser finder;
         private final List<Message> messages = new ArrayList<>();
 
         public ErrorStorage(String[] lines, String fileLoc) {
             this.lines = lines;
             this.fileLoc = fileLoc;
-            finder = new LocationAnalyser();
         }
 
         public void printAll() {
@@ -170,7 +175,6 @@ public class Compiler {
 
         private record Error(int lineIndex, int lineStartIndex, String msg, String line) implements Message {
 
-
             @Override
             public void print(String[] lines, String fileLoc) {
                 Compiler.error(lineIndex, lineStartIndex, msg, fileLoc, line);
@@ -184,6 +188,14 @@ public class Compiler {
                 Compiler.warn(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
             }
         }
+
+        private record Log(String message) implements Message {
+
+            @Override
+            public void print(String[] lines, String fileLoc) {
+                System.err.println(message);
+            }
+        }
         //endregion
 
         public void error(Token loc, String msg) {
@@ -194,21 +206,25 @@ public class Compiler {
             error(loc, String.format(format, args));
         }
 
+        public void errorF(Expr loc, String format, Object... args) {
+            errorF(LOCATION_ANALYSER.find(loc), format, args);
+        }
+
         public void error(int lineIndex, int lineStartIndex, String msg) {
             if (errorCount++ < 100)
                 messages.add(new Error(lineIndex, lineStartIndex, msg, lines[lineIndex - 1]));
         }
 
         public void error(Stmt loc, String msg) {
-            error(finder.find(loc), msg);
+            error(LOCATION_ANALYSER.find(loc), msg);
         }
 
         public void error(Expr loc, String msg) {
-            error(finder.find(loc), msg);
+            error(LOCATION_ANALYSER.find(loc), msg);
         }
 
         public void logError(String s) {
-            System.err.println(s);
+            this.messages.add(new Log(s));
         }
 
         public void warn(int lineIndex, int lineStartIndex, String msg) {
@@ -220,12 +236,12 @@ public class Compiler {
         }
 
         public void warn(Stmt loc, String msg) {
-            warn(finder.find(loc), msg);
+            warn(LOCATION_ANALYSER.find(loc), msg);
         }
 
         @Override
         public String toString() {
-            return "ErrorStorage for '" + fileLoc + "' (errorCount: " + errorCount + ")";
+            return "ErrorStorage for '" + fileLoc + "' (errorCount: " + messages.size() + ")";
         }
 
         public boolean hadError() {
@@ -258,7 +274,8 @@ public class Compiler {
         PARSE_SOURCE(CompilerLoaderHolder::parseSource),
         CREATE_SKELETON(CompilerLoaderHolder::applySkeleton),
         VALIDATE(CompilerLoaderHolder::validate),
-        CONSTRUCT(CompilerLoaderHolder::construct),
+        SYNTAX_ANALYSIS(CompilerLoaderHolder::construct),
+        SEMANTIC_ANALYSIS(CompilerLoaderHolder::analyse),
         FINALIZE_LOAD(CompilerLoaderHolder::finalizeLoad),
         CACHING(CompilerLoaderHolder::cache);
 

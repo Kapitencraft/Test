@@ -1,10 +1,11 @@
 package net.kapitencraft.lang.holder.baked;
 
 import com.google.common.collect.ImmutableMap;
-import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Holder;
+import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.lang.oop.field.CompileField;
@@ -12,11 +13,14 @@ import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public record BakedClass(
         Compiler.ErrorStorage logger,
-        Holder.Generics generics,
+        Generics generics,
         ClassReference target,
         Pair<Token, CompileCallable>[] methods,
         Pair<Token, CompileCallable>[] constructors,
@@ -57,6 +61,21 @@ public record BakedClass(
                 this.modifiers(),
                 this.annotations()
         );
+    }
+
+    @Override
+    public void analyse() {
+        SemanticAnalyser analyser = new SemanticAnalyser(this.logger);
+
+        for (Pair<Token, CompileCallable> method : this.methods) {
+            method.getSecond().analyseSemantics(analyser, this.target);
+        }
+        for (Pair<Token, CompileCallable> constructor : this.constructors) {
+            constructor.getSecond().analyseSemantics(analyser, this.target);
+        }
+        for (CompileField value : this.fields.values()) {
+            value.analyseSemantics(analyser);
+        }
     }
 
     public static Map<String, CompileField> create(Map<Token, CompileField> fields) {

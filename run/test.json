@@ -33,7 +33,7 @@
   {
     "target": "test.InheritanceTest",
     "output": [
-      "10", "5", "YAY"
+      "10", "5", "YAY", "5"
     ]
   },
   {
@@ -55,7 +55,7 @@
   {
     "target": "test.StringTest",
     "args": "0123456789",
-    "output": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    "output": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a5"]
   },
   {
     "target": "test.LoopTest",
@@ -93,5 +93,11 @@
   {
     "target": "test.NumberFormatTest",
     "output": ["255", "3", "14", "0.25", "-24"]
+  },
+  {
+    "target": "test.SwitchTest",
+    "output": [
+      "Ag", "Ba", "Cn", "Db", "Er", "Fm", "Ge", "Hg"
+    ]
   }
 ]

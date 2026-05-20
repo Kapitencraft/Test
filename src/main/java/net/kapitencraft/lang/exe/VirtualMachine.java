@@ -149,7 +149,7 @@ public class VirtualMachine {
     }
 
     private static int read2ByteWithOffset(int i) {
-        return ((((code[ip + i] & 255) << 8) | (code[ip + i + 1] & 255)) << 8);
+        return (((code[ip + i] & 255) << 8) | (code[ip + i + 1] & 255));
     }
 
     public static void runMainMethod(ScriptedClass target, String data, boolean profiling, boolean output) {
@@ -190,7 +190,7 @@ public class VirtualMachine {
             try {
                 Opcode o = Opcode.byId(readByte());
                 if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s Executing %s\n", visualStackSize(), o);
-                else if (DEBUG == DebugType.STACK) System.out.printf("[DEBUG]: %10s %s|", o, " ".repeat(stackIndex));
+                else if (DEBUG == DebugType.STACK) System.out.printf("[DEBUG]: %10s %s|\n", o, " ".repeat(stackIndex));
                 switch (o) {
                     //region control-flow
                     case POP -> stackIndex--; //pops the highest stack element
@@ -290,6 +290,11 @@ public class VirtualMachine {
                         } else
                             pushCall(new CallFrame(execute, callable, callableStackTop));
                     }
+                    case INSTANCEOF -> {
+                        ScriptedClass reference = VarTypeManager.directFlatParse(constString(constants, read2Byte()));
+                        ClassInstance value = (ClassInstance) pop();
+                        push(reference.isChildOf(value.getType()));
+                    }
                     case THROW -> {
                         if (!handleException((ClassInstance) pop())) return;
                     }
@@ -329,6 +334,7 @@ public class VirtualMachine {
                     case ASSIGN_0 -> assign(0);
                     case ASSIGN_1 -> assign(1);
                     case ASSIGN_2 -> assign(2);
+                    //region const
                     case NULL -> push(null);
                     case TRUE -> push(true);
                     case FALSE -> push(false);
@@ -347,12 +353,14 @@ public class VirtualMachine {
                     case D_CONST -> push(constDouble(constants, read2Byte()));
                     case F_CONST -> push(constFloat(constants, read2Byte()));
                     case S_CONST -> push(NativeClassLoader.wrapString(constString(constants, read2Byte())));
+                    //endregion
                     case CONCENTRATION -> {
-                        String obj = (String) ((NativeClassInstance) pop()).getObject();
                         Object object = pop();
+                        String obj = (String) ((NativeClassInstance) pop()).getObject();
 
-                        push(NativeClassLoader.wrapString(object + obj));
+                        push(NativeClassLoader.wrapString(obj + object));
                     }
+                    //region algebra
                     case IIRC -> { //index, const
                         int idx = readByte();
                         int val = readByte();
@@ -461,6 +469,7 @@ public class VirtualMachine {
                         float value1 = (float) pop();
                         push(value1 - value2);
                     }
+                    //endregion
                     case IA_LOAD -> push(((int[]) pop())[(int) pop()]);
                     case DA_LOAD -> push(((double[]) pop())[(int) pop()]);
                     case CA_LOAD -> push(((char[]) pop())[(int) pop()]);
@@ -491,6 +500,7 @@ public class VirtualMachine {
                         int idx = (int) pop();
                         ((Object[]) pop())[idx] = val;
                     }
+                    //region compare
                     case EQUAL -> push(pop() == pop());
                     case NEQUAL -> push(pop() != pop());
                     case I_GEQUAL -> {
@@ -554,6 +564,7 @@ public class VirtualMachine {
                         push(value1 < value2);
                     }
                     case NOT -> push(!(boolean) pop());
+                    //endregion
                     case D2F -> push((float) (double) pop());
                     case SWITCH -> {
                         int entry = (int) pop();
@@ -567,16 +578,18 @@ public class VirtualMachine {
                             int obj = read4bWithOffset(idx * 6);
                             if (obj == entry) {
                                 ip = read2ByteWithOffset(idx * 6 + 4);
+                                if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s Switch Branch %s\n", visualStackSize(), obj);
                                 break;
                             }
                             if (obj < entry)
                                 lLoc = idx;
                             else
                                 uLoc = idx;
-                            idx = (uLoc - lLoc) / 2;
+                            idx = lLoc + (uLoc - lLoc) / 2;
                         }
                         if (lLoc >= uLoc) {
                             ip = defaultPos;
+                            if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s Default Switch Branch\n", visualStackSize());
                         }
                     }
                     case GET_FIELD -> {

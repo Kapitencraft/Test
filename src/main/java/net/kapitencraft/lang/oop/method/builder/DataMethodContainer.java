@@ -92,6 +92,10 @@ public record DataMethodContainer(ScriptedCallable[] methods) implements MethodC
         public DataMethodContainer create() {
             return new DataMethodContainer(methods.toArray(new ScriptedCallable[0]));
         }
+
+        public boolean isEmpty() {
+            return this.methods.isEmpty();
+        }
     }
 
     public static Map<String, DataMethodContainer> bakeBuilders(Map<String, Builder> builders) {

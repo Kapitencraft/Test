@@ -1,10 +1,10 @@
 package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Holder;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
-import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.holder.oop.Validatable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class VarTypeContainer implements Holder.Validateable {
+public class VarTypeContainer implements Validatable {
     private final Map<String, SourceReference> implemented = new HashMap<>();
 
     public VarTypeContainer() {

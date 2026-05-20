@@ -22,4 +22,9 @@ public class StringArgInstruction extends CodeInstruction {
     public int length() {
         return 3;
     }
+
+    @Override
+    public String toString() {
+        return "StringArg{" + super.toString() + ", arg = " + value + "}";
+    }
 }

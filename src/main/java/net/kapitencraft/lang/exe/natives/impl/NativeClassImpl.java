@@ -61,8 +61,8 @@ public class NativeClassImpl implements ScriptedClass {
     }
 
     @Override
-    public boolean hasField(String name) {
-        return fields.containsKey(name);
+    public @Nullable ScriptedClass getFieldDeclaring(String name) {
+        return fields.containsKey(name) ? this : ScriptedClass.super.getFieldDeclaring(name);
     }
 
     @Override

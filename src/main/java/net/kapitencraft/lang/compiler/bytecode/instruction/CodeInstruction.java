@@ -28,4 +28,9 @@ public class CodeInstruction implements Instruction {
     public Opcode code() {
         return opcode;
     }
+
+    @Override
+    public String toString() {
+        return opcode.toString();
+    }
 }

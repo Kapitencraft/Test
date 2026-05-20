@@ -6,6 +6,7 @@ import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -16,12 +17,12 @@ import java.util.List;
 
 public class CompileCallable implements ScriptedCallable {
     private final ClassReference retType;
-    private final List<? extends Pair<? extends ClassReference, String>> params;
+    private final List<Pair<ClassReference, String>> params;
     private final Stmt[] body;
     private final short modifiers;
     private final Annotation[] annotations;
 
-    public CompileCallable(ClassReference retType, List<? extends Pair<? extends ClassReference, String>> params, Stmt[] body, short modifiers, Annotation[] annotations) {
+    public CompileCallable(ClassReference retType, List<Pair<ClassReference, String>> params, Stmt[] body, short modifiers, Annotation[] annotations) {
         this.retType = retType;
         this.params = params;
         this.body = body;
@@ -59,6 +60,11 @@ public class CompileCallable implements ScriptedCallable {
 
         object.add("annotations", builder.cacheAnnotations(this.annotations));
         return object;
+    }
+
+    public void analyseSemantics(SemanticAnalyser analyser, ClassReference declaring) {
+        if (!isAbstract())
+            analyser.analyseBody(body, this.retType, params, isStatic() ? null : declaring);
     }
 
     @Override

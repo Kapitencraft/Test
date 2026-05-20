@@ -63,6 +63,7 @@ public class Disassembler {
             case GET_FIELD, PUT_FIELD -> fieldOp(opcode, chunk, offset);
             case GET_STATIC, PUT_STATIC -> staticFieldOp(opcode, chunk, offset);
             case IIRC -> intIncrement(opcode, chunk, offset);
+            case INSTANCEOF -> instanceOf(opcode, chunk, offset);
             //case RA_NEW -> newArray(opcode, chunk, offset);
         };
     }
@@ -71,6 +72,12 @@ public class Disassembler {
         int ordinal = chunk.code()[offset + 1];
         int val = chunk.code()[offset + 2];
         System.out.printf("%-16s idx=%3d, val=%3d\n", opcode, ordinal, val);
+        return offset + 3;
+    }
+
+    private static int instanceOf(Opcode opcode, Chunk chunk, int offset) {
+        String value = VirtualMachine.constString(chunk.constants(), offset + 1);
+        System.out.printf("%-16s value = %s\n", opcode, value);
         return offset + 3;
     }
 

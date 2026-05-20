@@ -2,6 +2,8 @@ package test;
 
 //this is not a political statement
 class InheritanceTest {
+    final int a = 5;
+
     int e(int a) {
         return a == 0 ? 1 : this.e(a-1)*2;
     }
@@ -24,6 +26,13 @@ class InheritanceTest {
             System.print(this.u(5));
             if (super.e(i) == this.e(i)) System.print("YAY");
             else System.print("HM");
+            return this.a;
+        }
+    }
+
+    class TestB extends InheritanceTest {
+
+        int f() {
             return 5;
         }
     }
@@ -31,5 +40,11 @@ class InheritanceTest {
     static void main(String[] args) {
         TestA a = new TestA();
         a.test(6);
+        InheritanceTest test = new TestB();
+        if (test instanceof TestB testB) {
+            System.print(testB.f());
+        } else {
+            System.print("4");
+        }
     }
 }
