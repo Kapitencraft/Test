@@ -197,7 +197,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         return ordinal;
     }
 
-    protected LocalVariableContainer.FetchResult checkVarExistence(Token name, boolean requireValue, boolean mayBeFinal, boolean mustExist) {
+    @SuppressWarnings("SameParameterValue")
+    protected LocalVariableContainer.FetchResult checkVarExistence(Token name, boolean requireValue, boolean mayBeFinal) {
         String varName = name.lexeme();
         LocalVariableContainer.FetchResult result = varAnalyser.get(varName);
         if (result != LocalVariableContainer.FetchResult.FAIL) {
@@ -558,7 +559,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitIdentifierSpecialAssignExpr(Expr.IdentifierSpecialAssign expr) {
-        LocalVariableContainer.FetchResult result = checkVarExistence(expr.name, true, false, false);
+        LocalVariableContainer.FetchResult result = checkVarExistence(expr.name, true, false);
         if (result != LocalVariableContainer.FetchResult.FAIL) {
             OperationInfo info = getOperationInfo(expr.assignType, result.type());
             expr.executor = info.executor;
@@ -752,7 +753,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitIdentifierAssignExpr(Expr.IdentifierAssign expr) {
-        LocalVariableContainer.FetchResult result = checkVarExistence(expr.name, expr.type.type() != TokenType.ASSIGN, false, false);
+        LocalVariableContainer.FetchResult result = checkVarExistence(expr.name, expr.type.type() != TokenType.ASSIGN, false);
         if (result != LocalVariableContainer.FetchResult.FAIL) {
             ClassReference type = analyseExpr(expr.value);
             if (type.is(result.type())) {

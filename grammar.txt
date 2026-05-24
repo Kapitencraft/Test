@@ -30,11 +30,11 @@ returnStmt  -> "return" expression? ";"
 whileStmt   -> "while" "(" expression ")" statement
 block       -> "{" statement* "}"
 
-expression  -> switch | when;
+expression  -> switch | when | cast_check;
 
 switch      -> "switch" "(" expression ")" "{" ( "case" primary "->" expression ";")* ("default" "->" expression ";")? "}"
 
-when        -> cast_check ( "?" expression ":" expression )?
+when        -> "if" expression "then" expression "else" expression
 
 cast_check  -> assignment ( "instanceof" VAR_TYPE IDENTIFIER? )?
 

@@ -57,8 +57,11 @@ public class ExprParser extends AbstractParser {
         if (match(SWITCH)) {
             return switchExpr();
         }
+        if (match(IF)) {
+            return when();
+        }
 
-        return when();
+        return castCheck();
     }
 
     public Expr literalOrReference() {
@@ -155,19 +158,16 @@ public class ExprParser extends AbstractParser {
     //endregion
 
     private Expr when() {
-        Expr expr = castCheck();
-        if (match(QUESTION_MARK)) {
-            Expr ifTrue = expression();
-            consume(TokenType.COLON, "':' expected");
-            Expr ifFalse = expression();
-            Expr.When when = new Expr.When();
-            when.condition = expr;
-            when.ifTrue = ifTrue;
-            when.ifFalse = ifFalse;
-            expr = when;
-        }
-
-        return expr;
+        Expr expr = expression();
+        consume(THEN, "'then' expected");
+        Expr ifTrue = expression();
+        consume(ELSE, "'else' expected");
+        Expr ifFalse = expression();
+        Expr.When when = new Expr.When();
+        when.condition = expr;
+        when.ifTrue = ifTrue;
+        when.ifFalse = ifFalse;
+        return when;
     }
 
     private Expr castCheck() {

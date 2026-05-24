@@ -270,7 +270,6 @@ public class Lexer {
     private void string() {
         //{}
 
-
         while (peek() != '"' && !isAtEnd() && peek() != '\n') {
 
             advance();
