@@ -2,20 +2,19 @@ package net.kapitencraft.lang.holder.bytecode.const_pool;
 
 import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
 
-public class ConstantMethodHandle implements ConstantPoolEntry {
-    private byte kind;
-    private ConstantObjRefInfo obj;
+public class ConstantDoubleInfo implements ConstantPoolEntry {
+    private double value;
 
     @Override
     public byte getTag() {
-        return 15;
+        return 6;
     }
 
     @Override
     public void write(CacheBuffer buffer) {
-        short c = buffer.writeEntry(obj);
         buffer.writeByte(getTag());
-        buffer.writeByte(kind);
-        buffer.writeShort(c);
+        long l = Double.doubleToLongBits(value);
+        buffer.writeInt((int) (l >> 32));
+        buffer.writeInt((int) l);
     }
 }

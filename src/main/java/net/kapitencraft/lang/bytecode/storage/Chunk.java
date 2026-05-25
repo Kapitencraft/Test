@@ -1,62 +1,17 @@
 package net.kapitencraft.lang.bytecode.storage;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.compiler.ConstantPoolBuilder;
 import net.kapitencraft.lang.compiler.Synthesizer;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.tool.GsonHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable lineNumberTable, LocalVariableTable localVariableTable) {
-
-    public JsonObject save() {
-        JsonObject object = new JsonObject();
-        object.addProperty("code", encode(this.code));
-        object.add("handlers", saveHandlers());
-        object.add("line_numbers", this.lineNumberTable.save());
-        object.add("locals", this.localVariableTable.save());
-        return object;
-    }
-
-    private JsonElement saveHandlers() {
-        JsonArray array = new JsonArray();
-        for (ExceptionHandler handler : this.handlers) {
-            array.add(handler.toJson());
-        }
-        return array;
-    }
-
-    private static String encode(byte[] in) {
-        char[] chars = new char[in.length];
-        for (int i = 0; i < in.length; i++) {
-            chars[i] = (char) in[i];
-        }
-        return new String(chars);
-    }
-
-    private static byte[] decode(String in) {
-        char[] chars = in.toCharArray();
-        byte[] bytes = new byte[chars.length];
-        for (int i = 0; i < chars.length; i++) {
-            bytes[i] = (byte) (chars[i] & 255);
-        }
-        return bytes;
-    }
-
-    public static Chunk load(JsonObject object) {
-        byte[] code = decode(GsonHelper.getAsString(object, "code"));
-        JsonArray array = object.getAsJsonArray("handlers");
-        ExceptionHandler[] handlers = array.asList().stream().map(JsonElement::getAsJsonObject).map(ExceptionHandler::fromJson).toArray(ExceptionHandler[]::new);
-        LineNumberTable lineNumbers = LineNumberTable.read(object.getAsJsonArray("line_numbers"));
-        LocalVariableTable localVariables = LocalVariableTable.read(object.getAsJsonArray("locals"));
-        return new Chunk(code, handlers, lineNumbers, localVariables);
-    }
+public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable lineNumberTable,
+                    LocalVariableTable localVariableTable) {
 
     /**
      * a builder for the chunk, used inside {@link Synthesizer CacheBuilder} to create json format of the chunk
@@ -85,7 +40,7 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
             patchJump(falsePatch, (short) currentCodeIndex());
         }
 
-        public void addLocal(int position, int index, ClassReference type, String  name) {
+        public void addLocal(int position, int index, ClassReference type, String name) {
             this.locals.addLocal(position, index, type, name);
         }
 
@@ -248,29 +203,18 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
     }
 
     /**
-     * @param startOp the start ip
-     * @param endOp the end ip
+     * @param startOp   the start ip
+     * @param endOp     the end ip
      * @param handlerOp the code executed when this handler matches the thrown exception
      * @param catchType the type of error to be caught
      */
     public record ExceptionHandler(int startOp, int endOp, int handlerOp, int catchType) {
 
-        public JsonElement toJson() {
-            JsonObject object = new JsonObject();
-            object.addProperty("startOp", startOp);
-            object.addProperty("endOp", endOp);
-            object.addProperty("handlerOp", handlerOp);
-            object.addProperty("catchType", catchType);
-            return object;
-        }
-
-        public static ExceptionHandler fromJson(JsonObject object) {
-            return new ExceptionHandler(
-                    GsonHelper.getAsInt(object, "startOp"),
-                    GsonHelper.getAsInt(object, "endOp"),
-                    GsonHelper.getAsInt(object, "handlerOp"),
-                    GsonHelper.getAsInt(object, "catchType")
-            );
+        public void toStream(CacheBuffer buffer) {
+            buffer.writeShort(startOp);
+            buffer.writeShort(endOp);
+            buffer.writeShort(handlerOp);
+            buffer.writeShort(catchType);
         }
     }
 }
