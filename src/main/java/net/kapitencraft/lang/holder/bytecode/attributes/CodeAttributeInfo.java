@@ -15,7 +15,7 @@ public class CodeAttributeInfo implements AttributeInfo {
 
     @Override
     public int length() {
-        return 0;
+        return 4 + chunk.code().length + chunk.handlers().length * 8;
     }
 
     @Override
