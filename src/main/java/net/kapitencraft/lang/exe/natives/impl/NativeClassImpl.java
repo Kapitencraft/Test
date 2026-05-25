@@ -1,15 +1,14 @@
 package net.kapitencraft.lang.exe.natives.impl;
 
-import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
-import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.token.TokenType;
-import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.field.NativeField;
-import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
-import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.natives.NativeClassLoader;
+import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.field.NativeField;
+import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +18,7 @@ import java.util.Map;
 @ApiStatus.Internal
 public class NativeClassImpl implements ScriptedClass {
     private final GeneratedMethodMap methods;
-    private final Map<String, NativeField> fields, staticFields;
+    private final Map<String, NativeField> fields;
     private final ClassReference superclass;
     private final ClassReference[] interfaces;
     private final short modifiers;
@@ -27,14 +26,12 @@ public class NativeClassImpl implements ScriptedClass {
 
     @ApiStatus.Internal
     public NativeClassImpl(String name, String pck,
-                           Map<String, NativeField> staticFields,
                            Map<String, DataMethodContainer> methods, Map<String, NativeField> fields,
                            ClassReference superclass, ClassReference[] interfaces, short modifiers) {
         this.name = name;
         this.pck = pck;
         this.methods = new GeneratedMethodMap(methods);
         this.fields = fields;
-        this.staticFields = staticFields;
         this.superclass = superclass;
         this.interfaces = interfaces;
         this.modifiers = modifiers;
@@ -102,12 +99,12 @@ public class NativeClassImpl implements ScriptedClass {
 
     @Override
     public Object getStaticField(String name) {
-        return staticFields.get(name).get(null);
+        return fields.get(name).get(null);
     }
 
     @Override
     public Object setStaticField(String name, Object val) {
-        staticFields.get(name).set(null, NativeClassLoader.extractNative(val));
+        fields.get(name).set(null, NativeClassLoader.extractNative(val));
         return val;
     }
 

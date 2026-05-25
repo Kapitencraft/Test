@@ -83,7 +83,6 @@ public class NativeClassLoader {
         } catch (NoSuchMethodException ignored) {} catch (InvocationTargetException | IllegalAccessException e) {
             System.out.println("unable to execute plugin method 'registerClasses': " + e.getMessage());
         }
-
     }
 
     private static synchronized void setupLookup(Class<?> clazz, String name, String pck) {
@@ -121,7 +120,6 @@ public class NativeClassLoader {
 
 
             Map<String, NativeField> fields = new HashMap<>();
-            Map<String, NativeField> staticFields = new HashMap<>();
             for (Field declaredField : clazz.getDeclaredFields()) {
                 try {
                     String fieldName = declaredField.isAnnotationPresent(Rename.class) ? declaredField.getAnnotation(Rename.class).value() : declaredField.getName();
@@ -131,10 +129,7 @@ public class NativeClassLoader {
                                 Modifiers.fromJavaMods(declaredField.getModifiers()),
                                 declaredField
                         );
-                        if (Modifier.isStatic(declaredField.getModifiers()))
-                            staticFields.put(fieldName, impl);
-                        else
-                            fields.put(fieldName, impl);
+                        fields.put(fieldName, impl);
                     }
                 } catch (RuntimeException ignored) {
                 }
@@ -155,7 +150,6 @@ public class NativeClassLoader {
             }
 
             NativeClassImpl target = new NativeClassImpl(className, pck,
-                    staticFields,
                     bakeMethods(methods), fields,
                     getClassOrThrow(clazz.getSuperclass()),
                     extractInterfaces(clazz.getInterfaces()),

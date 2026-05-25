@@ -183,7 +183,6 @@ public class VirtualMachine {
                 }, () -> System.err.printf("could not find executable main method inside class '%s'", target.absoluteName()));
     }
 
-    @SuppressWarnings("ExpressionComparedToItself")
     public static void run() {
         func:
         while (ip < code.length) {
@@ -676,8 +675,16 @@ public class VirtualMachine {
         for (int i = callStackTop - 1; i > -1; i--) {
             CallFrame callFrame = callStack[i];
             int lineAt = callFrame.callable.getChunk().lineNumberTable().getLineAt(callFrame.ip);
-            String readableSignature = callFrame.signature.substring(1, callFrame.signature.indexOf('(') == -1 ? callFrame.signature.length() : callFrame.signature.indexOf('(')).replaceAll("[;/]", ".");
-            stackTrace.add(String.format("\tat %s(%s.scr:%s)", readableSignature, VarTypeManager.flatParse(new StringReader(callFrame.signature)).name(), lineAt));
+            String readableSignature = callFrame.signature.substring(1, callFrame.signature.indexOf('(') == -1 ?
+                    callFrame.signature.length() :
+                    callFrame.signature.indexOf('(')).replaceAll("[;/]", ".");
+            stackTrace.add(
+                    String.format("\tat %s(%s.scr:%s)",
+                            readableSignature,
+                            VarTypeManager.flatParse(new StringReader(callFrame.signature)).name(),
+                            lineAt
+                    )
+            );
         }
 
         while (callStackTop > 0) {
@@ -788,6 +795,7 @@ public class VirtualMachine {
         if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s PUSH (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(o));
     }
 
+    @Contract(pure = false)
     private static Object pop() {
         if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s POP  (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(stack[stackIndex - 1]));
         return stack[--stackIndex];
