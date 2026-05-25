@@ -2,12 +2,11 @@ package net.kapitencraft.lang.holder.bytecode.const_pool;
 
 import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
 
-public class ConstantInteger implements ConstantPoolEntry {
-    private int value;
+public class ConstantInvokeDynamicInfo implements ConstantPoolEntry {
 
     @Override
     public byte getTag() {
-        return 3;
+        return 18;
     }
 
     @Override
