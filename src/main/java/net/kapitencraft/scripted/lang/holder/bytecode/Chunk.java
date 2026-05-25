@@ -1,8 +1,6 @@
 package net.kapitencraft.scripted.lang.holder.bytecode;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
 import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.scripted.lang.exe.Opcode;
 import net.kapitencraft.lang.compiler.ConstantPoolBuilder;
@@ -46,7 +44,7 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
             patchJump(falsePatch, (short) currentCodeIndex());
         }
 
-        public void addLocal(int index, ClassReference type, String  name) {
+        public void addLocal(int index, ClassReference type, String name) {
             this.locals.addLocal(currentCodeIndex(), index, VarTypeManager.getClassName(type), name);
         }
 
