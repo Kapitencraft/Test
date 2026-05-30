@@ -26,6 +26,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collector;
 import javax.annotation.Nullable;
+
+import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import org.jetbrains.annotations.Contract;
 
 public class GsonHelper {
@@ -645,5 +648,15 @@ public class GsonHelper {
             list.sort(Entry.comparingByKey(pSorter));
             return list;
         }
+    }
+
+    public static List<ClassReference> getAsClassReferenceList(JsonObject data, String paramName) {
+        JsonArray paramData = GsonHelper.getAsJsonArray(data, paramName);
+
+        return paramData.asList().stream()
+                .map(JsonElement::getAsString)
+                .map(net.kapitencraft.tool.StringReader::new)
+                .map(VarTypeManager::parseType)
+                .toList();
     }
 }

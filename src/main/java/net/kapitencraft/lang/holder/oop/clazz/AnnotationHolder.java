@@ -95,5 +95,10 @@ public record AnnotationHolder(ClassReference target, short modifiers,
         public boolean isStatic() {
             return Modifiers.isStatic(this.modifiers);
         }
+
+        @Override
+        public ClassReference[] thrown() {
+            return new ClassReference[0];
+        }
     }
 }

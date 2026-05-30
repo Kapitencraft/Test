@@ -14,13 +14,15 @@ import java.lang.reflect.Method;
 public class NativeMethod implements ScriptedCallable {
     private final ClassReference type;
     private final ClassReference[] args;
+    private final ClassReference[] thrown;
     private final Method method;
     private final boolean instance;
     private final short modifiers;
 
-    public NativeMethod(ClassReference type, ClassReference[] args, Method method, boolean instance, short modifiers) {
+    public NativeMethod(ClassReference type, ClassReference[] args, ClassReference[] thrown, Method method, boolean instance, short modifiers) {
         this.type = type;
         this.args = args;
+        this.thrown = thrown;
         this.method = method;
         this.instance = instance;
         this.modifiers = modifiers;
@@ -61,5 +63,10 @@ public class NativeMethod implements ScriptedCallable {
     @Override
     public boolean isStatic() {
         return Modifiers.isStatic(modifiers);
+    }
+
+    @Override
+    public ClassReference[] thrown() {
+        return thrown;
     }
 }

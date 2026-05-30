@@ -17,13 +17,15 @@ import java.util.List;
 public class RuntimeCallable implements ScriptedCallable {
     private final ClassReference retType;
     private final ClassReference[] params;
+    private final ClassReference[] thrown;
     private final Chunk body;
     private final short modifiers;
     private final Annotation[] annotations;
 
-    public RuntimeCallable(ClassReference retType, List<ClassReference> params, Chunk body, short modifiers, Annotation[] annotations) {
+    public RuntimeCallable(ClassReference retType, List<ClassReference> params, List<ClassReference> thrown, Chunk body, short modifiers, Annotation[] annotations) {
         this.retType = retType;
         this.params = params.toArray(ClassReference[]::new);
+        this.thrown = thrown.toArray(ClassReference[]::new);
         this.body = body;
         this.modifiers = modifiers;
         this.annotations = annotations;
@@ -31,9 +33,10 @@ public class RuntimeCallable implements ScriptedCallable {
 
     public static RuntimeCallable load(JsonObject data) {
         ClassReference retType = VarTypeManager.parseType(new StringReader(GsonHelper.getAsString(data, "retType")));
-        JsonArray paramData = GsonHelper.getAsJsonArray(data, "params");
 
-        List<ClassReference> params = paramData.asList().stream().map(JsonElement::getAsString).map(StringReader::new).map(VarTypeManager::parseType).toList();
+        List<ClassReference> params = GsonHelper.getAsClassReferenceList(data, "params");
+
+        List<ClassReference> thrown = GsonHelper.getAsClassReferenceList(data, "thrown");
 
         short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
 
@@ -43,7 +46,7 @@ public class RuntimeCallable implements ScriptedCallable {
 
         Annotation[] annotations = Annotation.readAnnotations(data);
 
-        return new RuntimeCallable(retType, params, b, modifiers, annotations);
+        return new RuntimeCallable(retType, params, thrown, b, modifiers, annotations);
     }
 
     @Override
@@ -84,5 +87,10 @@ public class RuntimeCallable implements ScriptedCallable {
     @Override
     public ClassReference[] argTypes() {
         return params;
+    }
+
+    @Override
+    public ClassReference[] thrown() {
+        return thrown;
     }
 }

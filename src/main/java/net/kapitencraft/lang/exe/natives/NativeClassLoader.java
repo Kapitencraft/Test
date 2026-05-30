@@ -108,6 +108,7 @@ public class NativeClassLoader {
                         NativeMethod method = new NativeMethod(
                                 getClassOrThrow(declaredMethod.getReturnType()),
                                 Arrays.stream(declaredMethod.getParameterTypes()).map(NativeClassLoader::getClassOrThrow).toArray(ClassReference[]::new),
+                                Arrays.stream(declaredMethod.getExceptionTypes()).map(NativeClassLoader::getClassOrThrow).toArray(ClassReference[]::new),
                                 declaredMethod,
                                 !isStatic,
                                 Modifiers.fromJavaMods(modifiers)
@@ -141,6 +142,7 @@ public class NativeClassLoader {
                         NativeConstructor method = new NativeConstructor(
                                 type,
                                 Arrays.stream(constructor.getParameterTypes()).map(NativeClassLoader::getClassOrThrow).toArray(ClassReference[]::new),
+                                Arrays.stream(constructor.getExceptionTypes()).map(NativeClassLoader::getClassOrThrow).toArray(ClassReference[]::new),
                                 constructor
                         );
                         methods.put("<init>", method);

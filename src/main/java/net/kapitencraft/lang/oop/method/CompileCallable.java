@@ -13,18 +13,21 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class CompileCallable implements ScriptedCallable {
     private final ClassReference retType;
     private final List<Pair<ClassReference, String>> params;
+    private final ClassReference[] thrown;
     private final Stmt[] body;
     private final short modifiers;
     private final Annotation[] annotations;
 
-    public CompileCallable(ClassReference retType, List<Pair<ClassReference, String>> params, Stmt[] body, short modifiers, Annotation[] annotations) {
+    public CompileCallable(ClassReference retType, List<Pair<ClassReference, String>> params, ClassReference[] thrown, Stmt[] body, short modifiers, Annotation[] annotations) {
         this.retType = retType;
         this.params = params;
+        this.thrown = thrown;
         this.body = body;
         this.modifiers = modifiers;
         this.annotations = annotations;
@@ -37,6 +40,11 @@ public class CompileCallable implements ScriptedCallable {
             JsonArray array = new JsonArray();
             params.stream().map(Pair::getFirst).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
             object.add("params", array);
+        }
+        {
+            JsonArray array = new JsonArray();
+            Arrays.stream(thrown).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
+            object.add("thrown", array);
         }
         if (!isAbstract()) {
             Chunk.Builder chunk = new Chunk.Builder();
@@ -95,5 +103,10 @@ public class CompileCallable implements ScriptedCallable {
     @Override
     public ClassReference[] argTypes() {
         return params.stream().map(Pair::getFirst).toArray(ClassReference[]::new);
+    }
+
+    @Override
+    public ClassReference[] thrown() {
+        return thrown;
     }
 }

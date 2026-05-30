@@ -70,7 +70,7 @@ public record ClassHolder(ClassReference target, short modifiers,
             }
             Annotation[] annotations = stmtParser.parseAnnotations(methodHolder.annotations(), parser);
 
-            CompileCallable methodDecl = new CompileCallable(methodHolder.type().getReference(), methodHolder.extractParams(), body, methodHolder.modifiers(), annotations);
+            CompileCallable methodDecl = new CompileCallable(methodHolder.type().getReference(), methodHolder.extractParams(), methodHolder.extractThrown(), body, methodHolder.modifiers(), annotations);
             methods.add(Pair.of(methodHolder.name(), methodDecl));
         }
 
@@ -83,6 +83,7 @@ public record ClassHolder(ClassReference target, short modifiers,
                     new CompileCallable(
                             VarTypeManager.VOID.reference(),
                             List.of(),
+                            new ClassReference[0],
                             statics.toArray(new Stmt[0]),
                             Modifiers.pack(true, true, false),
                             new Annotation[0]
@@ -97,7 +98,7 @@ public record ClassHolder(ClassReference target, short modifiers,
             Stmt[] body = stmtParser.parse();
             Annotation[] annotations = stmtParser.parseAnnotations(constructorHolder.annotations(), parser);
 
-            CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), constructorHolder.extractParams(), body, (short) 0, annotations);
+            CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), constructorHolder.extractParams(), constructorHolder.extractThrown(), body, (short) 0, annotations);
             stmtParser.popMethod(constructorHolder.closeBracket());
             constructors.add(Pair.of(constructorHolder.name(), constDecl));
         }
@@ -140,7 +141,7 @@ public record ClassHolder(ClassReference target, short modifiers,
             builder.addMethod(logger, SkeletonMethod.create(methodHolder), methodHolder.name());
         }
         methods.computeIfAbsent("values", s -> new DataMethodContainer.Builder(this.name()))
-                .addMethod(logger, new SkeletonMethod(new ClassReference[0], target.array(), Modifiers.pack(false, true, false)), Token.createNative("values"));
+                .addMethod(logger, new SkeletonMethod(new ClassReference[0], new ClassReference[0], target.array(), Modifiers.pack(false, true, false)), Token.createNative("values"));
 
         //constructors
         for (ConstructorHolder constructorHolder : this.constructorHolders()) {

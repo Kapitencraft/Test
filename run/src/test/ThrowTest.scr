@@ -19,4 +19,8 @@ class ThrowTest {
             System.print(e.getMessage());
         }
     }
+
+    static void throwTest() throws ArithmeticException {
+        throw new ArithmeticException("");
+    }
 }
