@@ -25,7 +25,7 @@ public class MethodLookup {
 
     //region compile
 
-    public void checkFinal(Compiler.ErrorStorage logger, Pair<Token, CompileCallable>[] map) {
+    public void checkFinalMethods(Compiler.ErrorStorage logger, Pair<Token, CompileCallable>[] map) {
         for (Pair<Token, CompileCallable> pair : map) {
             for (Pair<ScriptedClass, AbstractMethodMap> lookupElement : lookup) {
                 Map<String, DataMethodContainer> methodMap = lookupElement.getSecond().asMap();
