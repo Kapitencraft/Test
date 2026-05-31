@@ -87,6 +87,11 @@ public class Compiler {
     public static ClassLoader.PackageHolder<CompilerLoaderHolder> compile(boolean logInfo, boolean failFast, File root, @Nullable File cache) {
         compileData = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
 
+        if (compileData.isEmpty()) {
+            if (logInfo)
+                System.out.println("no source found. returning");
+            return compileData;
+        }
         ExecutorService executor = Executors.newFixedThreadPool(10, new CompilerThreadFactory());
         try {
             for (Stage stage : Stage.values()) {
@@ -105,7 +110,7 @@ public class Compiler {
                 if (stage == Stage.CACHING && cache.exists())
                     Util.delete(cache);
 
-                ClassLoader.useHolders(compileData, stage.action, executor);
+                ClassLoader.useHolders(logInfo, compileData, stage.action, executor);
 
                 if (failFast) {
                     if (errorCount > 0) {

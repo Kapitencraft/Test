@@ -40,6 +40,8 @@ public class ErrorStorage {
         void print(String[] lines, String fileLoc);
 
         String msg();
+
+        int lineIndex();
     }
 
     public record Error(int lineIndex, int lineStartIndex, String msg, String line) implements Message {
@@ -63,6 +65,11 @@ public class ErrorStorage {
         @Override
         public void print(String[] lines, String fileLoc) {
             System.err.println(msg);
+        }
+
+        @Override
+        public int lineIndex() {
+            return -1;
         }
     }
     //endregion

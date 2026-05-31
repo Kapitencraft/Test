@@ -1,5 +1,27 @@
 [
   {
-    "target": ""
+    "target": "test.TestHolderParsing",
+    "output": [
+      {
+        "type": "error",
+        "line": 1,
+        "msg": "<identifier> expected"
+      },
+      {
+        "type": "error",
+        "line": 5,
+        "msg": "unknown symbol"
+      },
+      {
+        "type": "error",
+        "line": 5,
+        "msg": "<identifier> expected"
+      },
+      {
+        "type": "error",
+        "line": 1,
+        "msg": "package path '<unidentified>' does not match file path 'test'"
+      }
+    ]
   }
 ]

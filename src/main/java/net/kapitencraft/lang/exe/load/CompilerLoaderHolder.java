@@ -86,7 +86,8 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
     }
 
     public void analyse() {
-        builder.analyse();
+        if (builder != null)
+            builder.analyse();
     }
 
     public void cache() {

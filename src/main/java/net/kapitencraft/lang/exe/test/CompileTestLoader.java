@@ -17,8 +17,10 @@ import java.util.List;
 public class CompileTestLoader {
     private static final Gson GSON = new GsonBuilder().create();
     private static final File TEST_CONFIG = new File("./run/compile_test.json");
+    private static final File TEST_FILES = new File("./run/compile_test_source");
 
-    private record TestInstance(String target, String args, ErrorData[] output) {
+    private record TestInstance(String target, ErrorData[] output) {
+
         public boolean run(ClassLoader.PackageHolder<CompilerLoaderHolder> data) {
             CompilerLoaderHolder holder = data.getEntry(target);
             if (holder == null) {
@@ -38,7 +40,11 @@ public class CompileTestLoader {
                     }
                     ErrorStorage.Message message = errors.get(i);
                     if (errorData.type.matches(message)) {
-                        if (!message.msg().equals(errorData.msg)) {
+
+                        if (message.msg().equals(errorData.msg)) {
+                            if (message.lineIndex() != errorData.line)
+                                System.out.printf("\u001B[31mmessage on wrong line: expected: %s but got %s\u001B[0m\n", errorData.line, message.lineIndex());
+                        } else {
                             System.out.printf("\u001B[31mmessage doesn't match: expected: \"%s\" but got \"%s\"\u001B[0m\n", errorData.msg, message.msg());
                             hadError = true;
                         }
@@ -70,19 +76,18 @@ public class CompileTestLoader {
             for (JsonElement element : array.asList()) {
                 JsonObject object = element.getAsJsonObject();
                 String target = GsonHelper.getAsString(object, "target");
-                String testArgs = GsonHelper.getAsString(object, "args", "");
                 ErrorData[] data = GsonHelper.getAsJsonArray(object, "output").asList().stream()
                         .map(JsonElement::getAsJsonObject)
                         .map(o -> {
-                            ErrorType type = ErrorType.valueOf(GsonHelper.getAsString(o, "type"));
+                            ErrorType type = ErrorType.valueOf(GsonHelper.getAsString(o, "type").toUpperCase());
                             String msg = GsonHelper.getAsString(o, "msg");
-                            return new ErrorData(type, msg);
+                            int line = GsonHelper.getAsInt(o, "line");
+                            return new ErrorData(type, line, msg);
                         }).toArray(ErrorData[]::new);
-                tests.add(new TestInstance(target, testArgs, data));
+                tests.add(new TestInstance(target, data));
             }
-            ClassLoader.PackageHolder<CompilerLoaderHolder> holder = Compiler.compile(false, false, Compiler.ROOT, null);
+            ClassLoader.PackageHolder<CompilerLoaderHolder> holder = Compiler.compile(false, false, TEST_FILES, null);
             TestExecution execution = new TestExecution(holder);
-            execution.setup();
             tests.forEach(execution::runTest);
             execution.clear();
             System.out.printf("test complete. %s / %s successful\n", execution.getSucceeded(), tests.size());
@@ -102,22 +107,14 @@ public class CompileTestLoader {
             this.holders = holders;
         }
 
-        public void setup() {
-            Interpreter.output = this::checkOutput;
-        }
-
         @SuppressWarnings("ConstantValue")
         public void runTest(TestInstance instance) {
             this.running = instance;
             this.outputIndex = 0;
             this.error = false;
             error |= instance.run(this.holders);
-            if (instance.output.length > this.outputIndex) {
-                System.out.printf("\u001B[31mMissing outputs. got %s but expected %s\u001B[0m\n", this.outputIndex, instance.output.length);
-                error = true;
-            }
             if (error) {
-                System.out.println("\u001B[31mError running class '" + instance.target + "'\u001B[0m");
+                System.out.println("\u001B[31mError testing class '" + instance.target + "'\u001B[0m");
             } else {
                 succeeded++;
                 System.out.println("\u001B[32mSuccessfully tested class '" + instance.target + "'. took " + Interpreter.elapsedMillis() + "ms\u001B[0m");
@@ -126,17 +123,6 @@ public class CompileTestLoader {
 
         public void clear() {
             Interpreter.output = System.out::println;
-        }
-
-        private void checkOutput(String output) {
-            if (outputIndex >= running.output.length) {
-                System.out.println("\u001B[31mTest for '" + running.target + "' failed. more outputs got than expected: " + output + "\u001B[0m");
-                error = true;
-            } else if (!output.equals(running.output[outputIndex])) {
-                System.out.printf("\u001B[31mTest for '%s' failed at index %s. Expected \"%s\", but got: \"%s\"\u001B[0m\n", running.target, outputIndex, running.output[outputIndex], output);
-                error = true;
-            }
-            outputIndex++;
         }
 
         public boolean error() {
@@ -148,7 +134,7 @@ public class CompileTestLoader {
         }
     }
 
-    private record ErrorData(ErrorType type, String msg) {
+    private record ErrorData(ErrorType type, int line, String msg) {
     }
 
     private enum ErrorType {

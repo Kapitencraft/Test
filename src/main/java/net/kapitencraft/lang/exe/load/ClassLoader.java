@@ -207,7 +207,7 @@ public class ClassLoader {
         }
     }
 
-    public static <T extends ClassLoaderHolder<T>> void useHolders(PackageHolder<T> root, Consumer<T> consumer, Executor executor) {
+    public static <T extends ClassLoaderHolder<T>> void useHolders(boolean logInfo, PackageHolder<T> root, Consumer<T> consumer, Executor executor) {
         List<CompletableFuture<?>> futures = new ArrayList<>();
         List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
@@ -225,7 +225,8 @@ public class ClassLoader {
                                     System.exit(1);
                                 }
                                 int done = completed.incrementAndGet();
-                                printProgress(done, total);
+                                if (logInfo)
+                                    printProgress(done, total);
                             }))
             );
             holder.packages.forEach((name, holder1) ->
@@ -234,8 +235,10 @@ public class ClassLoader {
             packageData.removeFirst();
         }
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
-        printProgress(total, total);
-        System.out.println();
+        if (logInfo) {
+            printProgress(total, total);
+            System.out.println();
+        }
     }
 
     static void printProgress(int done, int total) {
@@ -299,6 +302,10 @@ public class ClassLoader {
                 if (holder == null) return null;
             }
             return holder.classes.get(split[split.length - 1]);
+        }
+
+        public boolean isEmpty() {
+            return this.packages.isEmpty() && this.classes.isEmpty();
         }
     }
 
