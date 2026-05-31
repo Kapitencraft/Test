@@ -5,6 +5,7 @@ import net.kapitencraft.lang.compiler.Lexer;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.HolderParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
@@ -22,7 +23,7 @@ import java.util.Objects;
 
 public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder> {
     private final String content;
-    private final Compiler.ErrorStorage storage;
+    private final ErrorStorage storage;
     private ClassConstructor holder;
     private Compiler.ClassBuilder builder;
     private CacheableClass target;
@@ -35,14 +36,14 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.storage = new Compiler.ErrorStorage(
+        this.storage = new ErrorStorage(
                 content.split("\n", Integer.MAX_VALUE), //second param required to not skip empty lines
                 file.getAbsolutePath().replace(".\\", "") //remove '\.\'
         );
         this.varTypeContainer = new VarTypeContainer();
     }
 
-    public CompilerLoaderHolder(ClassConstructor holder, Compiler.ErrorStorage storage, VarTypeContainer parser) {
+    public CompilerLoaderHolder(ClassConstructor holder, ErrorStorage storage, VarTypeContainer parser) {
         super(null);
         this.content = null; //not necessary with the holder already present
         this.storage = storage;
@@ -133,5 +134,9 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
 
     public void printErrors() {
         this.storage.printAll();
+    }
+
+    public ErrorStorage getErrorInfo() {
+        return storage;
     }
 }

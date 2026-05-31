@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
@@ -37,13 +38,13 @@ public record InterfaceHolder(ClassReference target, short modifiers,
                               FieldHolder[] fieldHolders
 ) implements ClassConstructor {
 
-    public BakedInterface construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
+    public BakedInterface construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, ErrorStorage logger) {
         Map<String, CompileField> staticFields = new HashMap<>();
         List<Stmt> statics = new ArrayList<>();
         for (FieldHolder fieldHolder : fieldHolders()) {
             Expr initializer = null;
             if (fieldHolder.body() != null) {
-                initializer = getFieldBody(stmtParser, parser, logger, fieldHolder, statics);
+                initializer = getFieldBody(stmtParser, parser, fieldHolder, statics);
             }
             Annotation[] annotations = stmtParser.parseAnnotations(fieldHolder.annotations(), parser);
 
@@ -104,7 +105,7 @@ public record InterfaceHolder(ClassReference target, short modifiers,
         return Arrays.stream(interfaces).map(SourceReference::getReference).toArray(ClassReference[]::new);
     }
 
-    public ScriptedClass createSkeleton(Compiler.ErrorStorage logger) {
+    public ScriptedClass createSkeleton(ErrorStorage logger) {
 
         //fields
         ImmutableMap.Builder<String, SkeletonField> staticFields = new ImmutableMap.Builder<>();
@@ -145,7 +146,7 @@ public record InterfaceHolder(ClassReference target, short modifiers,
         return Arrays.stream(interfaces).map(SourceReference::get).map(VarTypeManager::getClassName).toArray(String[]::new);
     }
 
-    public void validate(Compiler.ErrorStorage logger) {
+    public void validate(ErrorStorage logger) {
         Validatable.validateNullable(annotations, logger);
         Validatable.validateNullable(interfaces, logger);
         for (MethodHolder methodHolder : methodHolders) methodHolder.validate(logger);

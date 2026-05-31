@@ -3,6 +3,7 @@ package net.kapitencraft.lang.holder.baked;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -18,7 +19,7 @@ import net.kapitencraft.tool.Pair;
 import java.util.HashMap;
 import java.util.Map;
 
-public record BakedInterface(Compiler.ErrorStorage logger, Generics generics, ClassReference target,
+public record BakedInterface(ErrorStorage logger, Generics generics, ClassReference target,
                              Pair<Token, CompileCallable>[] methods,
                              Map<String, CompileField> staticFields, ClassReference[] interfaces,
                              Token name, String pck,

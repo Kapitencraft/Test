@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.analyser;
 
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.algebra.OperationType;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -247,10 +248,10 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         panicMode = true;
     }
 
-    private final Compiler.ErrorStorage errorStorage;
+    private final ErrorStorage errorStorage;
     //endregion
 
-    public SemanticAnalyser(Compiler.ErrorStorage errorStorage) {
+    public SemanticAnalyser(ErrorStorage errorStorage) {
         this.errorStorage = errorStorage;
     }
 

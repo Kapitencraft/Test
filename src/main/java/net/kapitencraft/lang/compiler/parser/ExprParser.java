@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
@@ -30,7 +31,7 @@ public class ExprParser extends AbstractParser {
     protected GenericStack generics = new GenericStack();
     private int anonymousCounter = 0; //counts how many anonymous classes have been created inside the class, to give each a unique name
 
-    public ExprParser(Compiler.ErrorStorage errorStorage) {
+    public ExprParser(ErrorStorage errorStorage) {
         super(errorStorage);
         this.fallback = new ArrayList<>();
     }

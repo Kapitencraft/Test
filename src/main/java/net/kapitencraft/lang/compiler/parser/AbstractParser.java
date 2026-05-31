@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
@@ -39,10 +40,10 @@ public class AbstractParser {
     protected Token[] tokens;
     protected VarTypeContainer parser;
     protected final LocationAnalyser locFinder = new LocationAnalyser();
-    protected final Compiler.ErrorStorage errorStorage;
+    protected final ErrorStorage errorStorage;
     protected boolean panicMode = false;
 
-    public AbstractParser(Compiler.ErrorStorage errorStorage) {
+    public AbstractParser(ErrorStorage errorStorage) {
         this.errorStorage = errorStorage;
     }
 

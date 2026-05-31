@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
@@ -45,7 +46,7 @@ public record EnumHolder(ClassReference target, short modifiers,
     /**
      * construct this enum to a baked class
      */
-    public BakedClass construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
+    public BakedClass construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, ErrorStorage logger) {
 
         List<Stmt> statics = new ArrayList<>();
 
@@ -123,7 +124,7 @@ public record EnumHolder(ClassReference target, short modifiers,
             short mods = fieldHolder.modifiers();
             Expr initializer = null;
             if (fieldHolder.body() != null) {
-                initializer = getFieldBody(stmtParser, parser, logger, fieldHolder, statics);
+                initializer = getFieldBody(stmtParser, parser, fieldHolder, statics);
             } else if (Modifiers.isFinal(mods)) finalFields.add(fieldHolder.name().lexeme());
             Annotation[] annotations = stmtParser.parseAnnotations(fieldHolder.annotations(), parser);
 
@@ -238,7 +239,7 @@ public record EnumHolder(ClassReference target, short modifiers,
         );
     }
 
-    public ScriptedClass createSkeleton(Compiler.ErrorStorage logger) {
+    public ScriptedClass createSkeleton(ErrorStorage logger) {
 
         //fields
         ImmutableMap.Builder<String, SkeletonField> fields = new ImmutableMap.Builder<>();
@@ -386,7 +387,7 @@ public record EnumHolder(ClassReference target, short modifiers,
     }
     //endregion
 
-    public void validate(Compiler.ErrorStorage logger) {
+    public void validate(ErrorStorage logger) {
         Validatable.validateNullable(annotations, logger);
         Validatable.validateNullable(interfaces, logger);
         Validatable.validateNullable(constructorHolders, logger);

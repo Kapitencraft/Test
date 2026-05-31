@@ -106,7 +106,7 @@ public class GsonHelper {
 
     /**
      * Gets the string value of the given JsonElement.  Expects the second parameter to be the name of the element's
-     * field if an error message needs to be thrown.
+     * field if an error msg needs to be thrown.
      */
     public static String convertToString(JsonElement pJson, String pMemberName) {
         if (pJson.isJsonPrimitive()) {
@@ -139,7 +139,7 @@ public class GsonHelper {
 
     /**
      * Gets the boolean value of the given JsonElement.  Expects the second parameter to be the name of the element's
-     * field if an error message needs to be thrown.
+     * field if an error msg needs to be thrown.
      */
     public static boolean convertToBoolean(JsonElement pJson, String pMemberName) {
         if (pJson.isJsonPrimitive()) {
@@ -190,7 +190,7 @@ public class GsonHelper {
 
     /**
      * Gets the float value of the given JsonElement.  Expects the second parameter to be the name of the element's field
-     * if an error message needs to be thrown.
+     * if an error msg needs to be thrown.
      */
     public static float convertToFloat(JsonElement pJson, String pMemberName) {
         if (pJson.isJsonPrimitive() && pJson.getAsJsonPrimitive().isNumber()) {
@@ -247,7 +247,7 @@ public class GsonHelper {
 
     /**
      * Gets the integer value of the given JsonElement.  Expects the second parameter to be the name of the element's
-     * field if an error message needs to be thrown.
+     * field if an error msg needs to be thrown.
      */
     public static int convertToInt(JsonElement pJson, String pMemberName) {
         if (pJson.isJsonPrimitive() && pJson.getAsJsonPrimitive().isNumber()) {
@@ -378,7 +378,7 @@ public class GsonHelper {
 
     /**
      * Gets the given JsonElement as a JsonObject.  Expects the second parameter to be the name of the element's field if
-     * an error message needs to be thrown.
+     * an error msg needs to be thrown.
      */
     public static JsonObject convertToJsonObject(JsonElement pJson, String pMemberName) {
         if (pJson.isJsonObject()) {
@@ -408,7 +408,7 @@ public class GsonHelper {
 
     /**
      * Gets the given JsonElement as a JsonArray.  Expects the second parameter to be the name of the element's field if
-     * an error message needs to be thrown.
+     * an error msg needs to be thrown.
      */
     public static JsonArray convertToJsonArray(JsonElement pJson, String pMemberName) {
         if (pJson.isJsonArray()) {

@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.holder.oop.generic;
 
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.token.Token;
@@ -10,7 +11,7 @@ import java.util.Map;
 
 public record AppliedGenerics(Token reference, ClassReference[] references) {
 
-    public void applyToStack(GenericStack stack, Generics reference, Compiler.ErrorStorage logger) {
+    public void applyToStack(GenericStack stack, Generics reference, ErrorStorage logger) {
         if (reference.variables().length != this.references.length) {
             logger.error(this.reference, "Wrong number of type arguments: " + this.references.length + "; required: " + reference.variables().length);
         }

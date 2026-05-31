@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.compiler;
 
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.holder.token.TokenTypeCategory;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.LiteralHolder;
@@ -28,7 +29,7 @@ public class Lexer {
 
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
-    private final Compiler.ErrorStorage errors;
+    private final ErrorStorage errors;
     private int start = 0;
     private int current = 0;
     private int line = 1;
@@ -39,7 +40,7 @@ public class Lexer {
         indexAtLineStart = current;
     }
 
-    public Lexer(String source, Compiler.ErrorStorage errors) {
+    public Lexer(String source, ErrorStorage errors) {
         this.source = source;
         this.errors = errors;
     }

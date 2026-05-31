@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -20,7 +21,7 @@ import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 public class StmtParser extends ExprParser {
 
-    public StmtParser(Compiler.ErrorStorage errorStorage) {
+    public StmtParser(ErrorStorage errorStorage) {
         super(errorStorage);
     }
 

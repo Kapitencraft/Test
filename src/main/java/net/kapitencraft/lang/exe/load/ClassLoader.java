@@ -12,6 +12,7 @@ import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.test.VMTestLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.util.*;
@@ -287,6 +288,17 @@ public class ClassLoader {
                 size += value.size();
             }
             return size;
+        }
+
+        public @Nullable T getEntry(String target) {
+            PackageHolder<T> holder = this;
+            String[] split = target.split("\\.");
+            for (int i = 0; i < split.length - 1; i++) {
+                String s = split[i];
+                holder = holder.packages.get(s);
+                if (holder == null) return null;
+            }
+            return holder.classes.get(split[split.length - 1]);
         }
     }
 

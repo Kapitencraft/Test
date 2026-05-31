@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -26,7 +27,7 @@ public record AnnotationHolder(ClassReference target, short modifiers,
                                AnnotationObj[] annotations, Generics generics, String pck, Token name,
                                MethodHolder[] methodHolders) implements ClassConstructor {
 
-    public BakedAnnotation construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, Compiler.ErrorStorage logger) {
+    public BakedAnnotation construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, ErrorStorage logger) {
         ImmutableMap.Builder<String, MethodWrapper> methods = new ImmutableMap.Builder<>();
         for (MethodHolder methodHolder : methodHolders()) {
             Expr val = null;
@@ -49,7 +50,7 @@ public record AnnotationHolder(ClassReference target, short modifiers,
     }
 
     //annotations are not available at skeleton construction
-    public ScriptedClass createSkeleton(Compiler.ErrorStorage logger) {
+    public ScriptedClass createSkeleton(ErrorStorage logger) {
 
         ImmutableMap.Builder<String, AnnotationCallable> methods = new ImmutableMap.Builder<>();
         for (MethodHolder methodHolder : methodHolders()) {
@@ -63,7 +64,7 @@ public record AnnotationHolder(ClassReference target, short modifiers,
         );
     }
 
-    public void validate(Compiler.ErrorStorage logger) {
+    public void validate(ErrorStorage logger) {
         Validatable.validateNullable(annotations, logger);
         for (MethodHolder methodHolder : methodHolders) methodHolder.validate(logger);
     }

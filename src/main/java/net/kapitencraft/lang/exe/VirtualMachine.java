@@ -653,7 +653,7 @@ public class VirtualMachine {
 
     public static ClassInstance createException(ClassReference type, String message) {
         DynamicClassInstance instance = new DynamicClassInstance(type.get());
-        instance.assignField("message", message);
+        instance.assignField("msg", message);
         return instance;
     }
 
@@ -703,7 +703,7 @@ public class VirtualMachine {
             popCall(); //pop call when no possible exception handler could be found
             callStackTop--;
         }
-        System.out.printf("Caused by: %s\n", exception.getField("message"));
+        System.out.printf("Caused by: %s\n", exception.getField("msg"));
         stackTrace.forEach(System.out::println);
         return false;
     }

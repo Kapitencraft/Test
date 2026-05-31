@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
@@ -33,7 +34,7 @@ public class HolderParser extends AbstractParser {
     private GenericStack activeGenerics = new GenericStack();
     private final Deque<String> activePackages = new ArrayDeque<>();
 
-    public HolderParser(Compiler.ErrorStorage errorStorage) {
+    public HolderParser(ErrorStorage errorStorage) {
         super(errorStorage);
     }
 

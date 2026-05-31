@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.method.CompileCallable;
@@ -77,7 +78,7 @@ public record DataMethodContainer(ScriptedCallable[] methods) implements MethodC
             this.className = className;
         }
 
-        public void addMethod(Compiler.ErrorStorage errorStorage, ScriptedCallable callable, Token methodName) {
+        public void addMethod(ErrorStorage errorStorage, ScriptedCallable callable, Token methodName) {
             List<? extends ClassReference[]> appliedTypes = methods.stream().map(ScriptedCallable::argTypes).toList();
             ClassReference[] argTypes = callable.argTypes();
             for (ClassReference[] appliedType : appliedTypes) {
