@@ -1,6 +1,6 @@
-package test;
+package vm_test;
 
-import test.AnnotationTest as AT;
+import vm_test.AnnotationTest as AT;
 
 @AT(name="A",min=0,max=5)
 class AnnotationImplTest {

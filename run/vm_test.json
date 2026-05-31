@@ -1,6 +1,6 @@
 [
   {
-    "target": "test.AlgebraTest",
+    "target": "vm_test.AlgebraTest",
     "output": [
       "7", "7", "7", "7", "7",
       "9", "10", "11", "12", "13",
@@ -9,7 +9,7 @@
     ]
   },
   {
-    "target": "test.ArrayTest",
+    "target": "vm_test.ArrayTest",
     "args": "a b c d e f g h i j k",
     "output": [
       "c", "d", "e", "f", "g", "h", "i", "j", "k",
@@ -17,48 +17,48 @@
     ]
   },
   {
-    "target": "test.EnumTest",
+    "target": "vm_test.EnumTest",
     "output": ["a", "b", "c"]
   },
   {
-    "target": "test.Faculty",
+    "target": "vm_test.Faculty",
     "output": ["3628800"]
   },
   {
-    "target": "test.ImportTest",
+    "target": "vm_test.ImportTest",
     "output": [
       "ea", "25", "Hello!"
     ]
   },
   {
-    "target": "test.InheritanceTest",
+    "target": "vm_test.InheritanceTest",
     "output": [
       "10", "5", "YAY", "5"
     ]
   },
   {
-    "target": "test.MultipleMethodsTest",
+    "target": "vm_test.MultipleMethodsTest",
     "output": [
       "el", "25", "Hello!"
     ]
   },
   {
-    "target": "test.GenericTest",
+    "target": "vm_test.GenericTest",
     "output": [
       "Hello!", "5",  "19.0", "14", "10"
     ]
   },
   {
-    "target": "test.FibonacciTest",
+    "target": "vm_test.FibonacciTest",
     "output": ["2178309"]
   },
   {
-    "target": "test.StringTest",
+    "target": "vm_test.StringTest",
     "args": "0123456789",
     "output": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a5"]
   },
   {
-    "target": "test.LoopTest",
+    "target": "vm_test.LoopTest",
     "args": "a b c d e f g h i j k l m",
     "output": [
       "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
@@ -76,26 +76,26 @@
     ]
   },
   {
-    "target": "test.AnonymousClassTest",
+    "target": "vm_test.AnonymousClassTest",
     "output": ["5"]
   },
   {
-    "target": "test.LoopFlowTest",
+    "target": "vm_test.LoopFlowTest",
     "output": [
       "1", "3", "5", "7", "9", "11", "13", "15", "17", "19", "21", "23", "25", "27", "29", "31", "33", "35", "37", "39",
       "41", "43", "45", "47", "49", "ended"
     ]
   },
   {
-    "target": "test.BoolAlgebraTest",
+    "target": "vm_test.BoolAlgebraTest",
     "output": ["true", "true", "true"]
   },
   {
-    "target": "test.NumberFormatTest",
+    "target": "vm_test.NumberFormatTest",
     "output": ["255", "3", "14", "0.25", "-24"]
   },
   {
-    "target": "test.SwitchTest",
+    "target": "vm_test.SwitchTest",
     "output": [
       "Ag", "Ba", "Cn", "Db", "Er", "Fm", "Ge", "Hg"
     ]

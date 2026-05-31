@@ -1,6 +1,6 @@
-package test;
+package vm_test;
 
-import test.EnumTest as ET;
+import vm_test.EnumTest as ET;
 import scripted.lang.annotations.Retention;
 import scripted.lang.annotations.RetentionPolicy;
 

@@ -14,9 +14,9 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TestLoader {
+public class VMTestLoader {
     private static final Gson GSON = new GsonBuilder().create();
-    private static final File TEST_CONFIG = new File("./run/test.json");
+    private static final File TEST_CONFIG = new File("./run/vm_test.json");
 
     private record TestInstance(String target, String args, String[] output) {
         public boolean run() {

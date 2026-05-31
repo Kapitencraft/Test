@@ -9,7 +9,7 @@ import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.exe.test.TestLoader;
+import net.kapitencraft.lang.exe.test.VMTestLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 
@@ -75,7 +75,7 @@ public class ClassLoader {
                     };
                     System.out.println("set debug mode to " + VirtualMachine.DEBUG);
                 } else if (line.startsWith("test")) {
-                    TestLoader.run();
+                    VMTestLoader.run();
                 } else if (line.startsWith("help")) {
                     System.out.println("== HELP ==");
                     System.out.println("\texit                        - Ends the Program");
