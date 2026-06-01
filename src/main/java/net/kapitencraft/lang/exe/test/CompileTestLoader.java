@@ -99,19 +99,15 @@ public class CompileTestLoader {
     private static class TestExecution {
         private final ClassLoader.PackageHolder<CompilerLoaderHolder> holders;
         private int succeeded = 0;
-        private int outputIndex = 0;
         private boolean error = false;
-        private TestInstance running;
 
         private TestExecution(ClassLoader.PackageHolder<CompilerLoaderHolder> holders) {
             this.holders = holders;
         }
 
-        @SuppressWarnings("ConstantValue")
         public void runTest(TestInstance instance) {
-            this.running = instance;
-            this.outputIndex = 0;
             this.error = false;
+            Interpreter.start();
             error |= instance.run(this.holders);
             if (error) {
                 System.out.println("\u001B[31mError testing class '" + instance.target + "'\u001B[0m");

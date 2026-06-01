@@ -40,6 +40,7 @@ public class Compiler {
     public static final LocationAnalyser LOCATION_ANALYSER = new LocationAnalyser();
 
     public static boolean optimize = false;
+    public static File source;
     static int errorCount = 0;
     private static ClassLoader.PackageHolder<CompilerLoaderHolder> compileData;
     private static final List<ClassRegister> registers = new ArrayList<>();
@@ -86,6 +87,8 @@ public class Compiler {
 
     public static ClassLoader.PackageHolder<CompilerLoaderHolder> compile(boolean logInfo, boolean failFast, File root, @Nullable File cache) {
         compileData = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
+
+        source = root;
 
         if (compileData.isEmpty()) {
             if (logInfo)

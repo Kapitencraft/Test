@@ -4,4 +4,10 @@ class TestHolderParsing {
 
     test() {
     }
+
+    class Inner {
+
+        void () {
+        }
+    }
 }

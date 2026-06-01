@@ -63,7 +63,8 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
 
         if (decl == null) return;
 
-        String path = file.getParentFile().getPath().substring(10).replace(".scr", "");
+        String rootPath = Compiler.source.getAbsolutePath();
+        String path = file.getParentFile().getAbsolutePath().substring(rootPath.length() + 1).replace(".scr", "");
         String pck = path.replace('\\', '.');
         String declPck = decl.pck();
         if (!Objects.equals(declPck, pck)) {
