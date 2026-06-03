@@ -23,5 +23,25 @@
         "msg": "package path '<unidentified>' does not match file path 'test'"
       }
     ]
+  },
+  {
+    "target": "test.TestReturn",
+    "output": [
+      {
+        "type": "error",
+        "line": 2,
+        "msg": "unreachable statement"
+      },
+      {
+        "type": "error",
+        "line": 2,
+        "msg": "unreachable statement"
+      },
+      {
+        "type": "error",
+        "line": 2,
+        "msg": "unreachable statement"
+      }
+    ]
   }
 ]
