@@ -9,4 +9,20 @@ class SumTest {
         }
         System.print(s);
     }
+
+    static int sum(int n) {
+        int sum = 0;
+        for (int i = 0; i <= n; i++) {
+            sum += i;
+        }
+        return sum;
+    }
+
+    static int quadSum(int n) {
+        int sum = 0;
+        for (int i = 0; i <= n; i++) {
+            sum += i**2;
+        }
+        return sum;
+    }
 }
