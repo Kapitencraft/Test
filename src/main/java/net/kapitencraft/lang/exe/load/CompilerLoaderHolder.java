@@ -59,19 +59,12 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         HolderParser parser = new HolderParser(storage);
         parser.apply(tokens.toArray(new Token[0]), varTypeContainer);
 
-        ClassConstructor decl = parser.parseFile(fileName);
-
-        if (decl == null) return;
-
         String rootPath = Compiler.source.getAbsolutePath();
         String path = file.getParentFile().getAbsolutePath().substring(rootPath.length() + 1).replace(".scr", "");
         String pck = path.replace('\\', '.');
-        String declPck = decl.pck();
-        if (!Objects.equals(declPck, pck)) {
-            storage.errorF(
-                    tokens.getFirst(),
-                    "package path '%s' does not match file path '%s'", declPck, pck);
-        }
+        ClassConstructor decl = parser.parseFile(fileName, pck);
+
+        if (decl == null) return;
 
         holder = decl;
     }

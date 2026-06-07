@@ -9,6 +9,11 @@
       },
       {
         "type": "error",
+        "line": 1,
+        "msg": "package path 'test' does not match file path '<unidentified>'"
+      },
+      {
+        "type": "error",
         "line": 5,
         "msg": "unknown symbol"
       },
@@ -19,8 +24,8 @@
       },
       {
         "type": "error",
-        "line": 1,
-        "msg": "package path '<unidentified>' does not match file path 'test'"
+        "line": 10,
+        "msg": "<identifier> expected"
       }
     ]
   },
@@ -29,18 +34,18 @@
     "output": [
       {
         "type": "error",
-        "line": 2,
+        "line": 7,
         "msg": "unreachable statement"
       },
       {
         "type": "error",
-        "line": 2,
+        "line": 16,
         "msg": "unreachable statement"
       },
       {
         "type": "error",
-        "line": 2,
-        "msg": "unreachable statement"
+        "line": 20,
+        "msg": "missing return value"
       }
     ]
   }

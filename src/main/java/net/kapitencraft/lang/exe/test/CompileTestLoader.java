@@ -17,10 +17,14 @@ import java.util.List;
 public class CompileTestLoader {
     private static final Gson GSON = new GsonBuilder().create();
     private static final File TEST_CONFIG = new File("./run/compile_test.json");
-    private static final File TEST_FILES = new File("./run/compile_test_source");
+    private static final File TEST_SRC = new File("./run/compile_test_source");
 
     private record TestInstance(String target, ErrorData[] output) {
 
+        /**
+         * @param data the loaded class info
+         * @return whether this test had an error
+         */
         public boolean run(ClassLoader.PackageHolder<CompilerLoaderHolder> data) {
             CompilerLoaderHolder holder = data.getEntry(target);
             if (holder == null) {
@@ -42,14 +46,16 @@ public class CompileTestLoader {
                     if (errorData.type.matches(message)) {
 
                         if (message.msg().equals(errorData.msg)) {
-                            if (message.lineIndex() != errorData.line)
-                                System.out.printf("\u001B[31mmessage on wrong line: expected: %s but got %s\u001B[0m\n", errorData.line, message.lineIndex());
+                            if (message.lineIndex() != errorData.line) {
+                                System.out.printf("\u001B[31mmessage at index %s on wrong line: expected: %s but got %s\u001B[0m\n", i, errorData.line, message.lineIndex());
+                                hadError = true;
+                            }
                         } else {
-                            System.out.printf("\u001B[31mmessage doesn't match: expected: \"%s\" but got \"%s\"\u001B[0m\n", errorData.msg, message.msg());
+                            System.out.printf("\u001B[31mmessage doesn't match at index %s: expected: \"%s\" but got \"%s\"\u001B[0m\n", i, errorData.msg, message.msg());
                             hadError = true;
                         }
                     } else {
-                        System.out.printf("\u001B[31mmessage type doesn't match: expected: %s but got %s\u001B[0m\n", errorData.type, message.getClass().getSimpleName());
+                        System.out.printf("\u001B[31mmessage type at index %s doesn't match: expected: %s but got %s\u001B[0m\n", i, errorData.type, message.getClass().getSimpleName());
                         hadError = true;
                     }
                 }
@@ -86,7 +92,7 @@ public class CompileTestLoader {
                         }).toArray(ErrorData[]::new);
                 tests.add(new TestInstance(target, data));
             }
-            ClassLoader.PackageHolder<CompilerLoaderHolder> holder = Compiler.compile(false, false, TEST_FILES, null);
+            ClassLoader.PackageHolder<CompilerLoaderHolder> holder = Compiler.compile(false, false, TEST_SRC, null);
             TestExecution execution = new TestExecution(holder);
             tests.forEach(execution::runTest);
             execution.clear();

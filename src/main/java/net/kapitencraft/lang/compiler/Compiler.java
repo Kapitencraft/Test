@@ -9,6 +9,7 @@ import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.exe.load.ClassLoader;
 import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
+import net.kapitencraft.lang.exe.test.CompileTestLoader;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;

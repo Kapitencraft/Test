@@ -302,6 +302,11 @@ public class AbstractParser {
             errorStorage.error(token, message);
     }
 
+    protected void errorF(Token token, String msg, Object... args) {
+        if (!this.panicMode)
+            errorStorage.errorF(token, msg, args);
+    }
+
     protected void warn(Token token, String message) {
         errorStorage.warn(token, message);
     }
