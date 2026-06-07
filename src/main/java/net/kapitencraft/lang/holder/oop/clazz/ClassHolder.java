@@ -42,7 +42,7 @@ public record ClassHolder(ClassReference target, short modifiers,
                           FieldHolder[] fieldHolders) implements ClassConstructor {
 
     @Override
-    public Compiler.ClassBuilder construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, ErrorStorage logger) {
+    public Compiler.ClassBuilder construct(StmtParser stmtParser, VarTypeContainer parser, ErrorStorage logger) {
         Map<Token, CompileField> fields = new HashMap<>();
         List<Stmt> statics = new ArrayList<>();
         for (FieldHolder fieldHolder : fieldHolders()) {

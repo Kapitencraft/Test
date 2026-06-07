@@ -19,4 +19,8 @@ class TestReturn {
     int testReturnValue() {
         return;
     }
+
+    int testReturnType() {
+        return "";
+    }
 }

@@ -1,9 +1,7 @@
 package net.kapitencraft.lang.holder.oop.clazz;
 
 import com.google.common.collect.ImmutableMap;
-import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
@@ -38,7 +36,7 @@ public record InterfaceHolder(ClassReference target, short modifiers,
                               FieldHolder[] fieldHolders
 ) implements ClassConstructor {
 
-    public BakedInterface construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, ErrorStorage logger) {
+    public BakedInterface construct(StmtParser stmtParser, VarTypeContainer parser, ErrorStorage logger) {
         Map<String, CompileField> staticFields = new HashMap<>();
         List<Stmt> statics = new ArrayList<>();
         for (FieldHolder fieldHolder : fieldHolders()) {

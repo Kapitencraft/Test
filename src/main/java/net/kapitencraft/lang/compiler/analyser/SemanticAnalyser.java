@@ -227,7 +227,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     private void errorIncompatibleTypes(Token loc, ClassReference expected, ClassReference gotten) {
-        errorF(loc, "incompatible types: %s cannot be converted to %s", gotten, expected);
+        errorF(loc, "incompatible types: %s cannot be converted to %s", gotten.absoluteName(), expected.absoluteName());
     }
 
     private void errorIncompatibleTypes(Token loc, ClassReference got) {

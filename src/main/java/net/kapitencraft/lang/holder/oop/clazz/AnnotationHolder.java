@@ -27,7 +27,7 @@ public record AnnotationHolder(ClassReference target, short modifiers,
                                AnnotationObj[] annotations, Generics generics, String pck, Token name,
                                MethodHolder[] methodHolders) implements ClassConstructor {
 
-    public BakedAnnotation construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, ErrorStorage logger) {
+    public BakedAnnotation construct(StmtParser stmtParser, VarTypeContainer parser, ErrorStorage logger) {
         ImmutableMap.Builder<String, MethodWrapper> methods = new ImmutableMap.Builder<>();
         for (MethodHolder methodHolder : methodHolders()) {
             Expr val = null;

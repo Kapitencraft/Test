@@ -46,7 +46,7 @@ public record EnumHolder(ClassReference target, short modifiers,
     /**
      * construct this enum to a baked class
      */
-    public BakedClass construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, ErrorStorage logger) {
+    public BakedClass construct(StmtParser stmtParser, VarTypeContainer parser, ErrorStorage logger) {
 
         List<Stmt> statics = new ArrayList<>();
 

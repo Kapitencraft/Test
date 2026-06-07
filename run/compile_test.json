@@ -46,6 +46,36 @@
         "type": "error",
         "line": 20,
         "msg": "missing return value"
+      },
+      {
+        "type": "error",
+        "line": 24,
+        "msg": "incompatible types: scripted.lang.String cannot be converted to scripted.lang.int"
+      }
+    ]
+  },
+  {
+    "target": "test.TestLoop",
+    "output": [
+      {
+        "type": "error",
+        "line": 7,
+        "msg": "unreachable statement"
+      },
+      {
+        "type": "error",
+        "line": 16,
+        "msg": "unreachable statement"
+      },
+      {
+        "type": "error",
+        "line": 20,
+        "msg": "missing return value"
+      },
+      {
+        "type": "error",
+        "line": 24,
+        "msg": "incompatible types: scripted.lang.String cannot be converted to scripted.lang.int"
       }
     ]
   }

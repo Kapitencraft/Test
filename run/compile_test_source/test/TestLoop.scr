@@ -1,0 +1,25 @@
+package test;
+
+class TestLoop {
+
+    static void whileLoop() {
+        while (true) {}
+
+        while () {}
+    }
+
+    static void forLoop() {
+        for (int i = 0; i < 10; i++) {}
+
+        for (;true;) {}
+
+        for (;;) {}
+
+        for (;true;)
+            int i = 5;
+    }
+
+    static void forEachLoop() {
+        for (char c : "a".toCharArray()) {}
+    }
+}

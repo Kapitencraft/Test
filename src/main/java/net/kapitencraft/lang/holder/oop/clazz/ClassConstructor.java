@@ -2,7 +2,6 @@ package net.kapitencraft.lang.holder.oop.clazz;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
@@ -26,7 +25,7 @@ public interface ClassConstructor extends Validatable {
 
     ClassReference target();
 
-    Compiler.ClassBuilder construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, ErrorStorage logger);
+    Compiler.ClassBuilder construct(StmtParser stmtParser, VarTypeContainer parser, ErrorStorage logger);
 
     ScriptedClass createSkeleton(ErrorStorage logger);
 

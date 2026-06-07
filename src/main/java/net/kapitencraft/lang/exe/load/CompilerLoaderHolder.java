@@ -3,7 +3,6 @@ package net.kapitencraft.lang.exe.load;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Lexer;
 import net.kapitencraft.lang.compiler.MethodLookup;
-import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.HolderParser;
@@ -19,7 +18,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Objects;
 
 public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder> {
     private final String content;
@@ -72,10 +70,9 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
     public void construct() {
         if (!checkHolderCreated()) return;
         StmtParser stmtParser = new StmtParser(this.storage);
-        SemanticAnalyser analyser = new SemanticAnalyser(this.storage);
 
         stmtParser.pushFallback(this.holder.target());
-        builder = holder.construct(stmtParser, analyser, this.varTypeContainer, this.storage);
+        builder = holder.construct(stmtParser, this.varTypeContainer, this.storage);
         stmtParser.popFallback();
     }
 
