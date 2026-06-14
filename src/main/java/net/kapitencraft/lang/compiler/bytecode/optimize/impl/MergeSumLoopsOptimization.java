@@ -3,6 +3,7 @@ package net.kapitencraft.lang.compiler.bytecode.optimize.impl;
 import net.kapitencraft.lang.compiler.bytecode.optimize.AdvancedOptimization;
 import net.kapitencraft.lang.compiler.bytecode.optimize.BytecodeOptimizer;
 
+//TODO
 public class MergeSumLoopsOptimization implements AdvancedOptimization {
     //int sum = 0;
     //for (int i = 0; i <= n; i++) {
@@ -20,6 +21,5 @@ public class MergeSumLoopsOptimization implements AdvancedOptimization {
 
     @Override
     public void optimize(BytecodeOptimizer.OptimizationStorage instructions) {
-
     }
 }
