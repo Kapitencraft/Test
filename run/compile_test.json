@@ -83,5 +83,25 @@
         "msg": "Missing variable type"
       }
     ]
+  },
+  {
+    "target": "test.TestVariable",
+    "output": [
+      {
+        "type": "error",
+        "line": 7,
+        "msg": "incompatible types: scripted.lang.String cannot be converted to scripted.lang.int"
+      },
+      {
+        "type": "error",
+        "line": 11,
+        "msg": "variable 'j' might not have been initialized"
+      },
+      {
+        "type": "error",
+        "line": 15,
+        "msg": "incompatible types: scripted.lang.String cannot be converted to scripted.lang.int"
+      }
+    ]
   }
 ]

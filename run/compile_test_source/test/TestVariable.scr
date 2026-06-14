@@ -1,0 +1,18 @@
+package test;
+
+class TestVariable {
+
+    static void test() {
+        int i = 5;
+        i = "l";
+
+        int j;
+
+        if (j > 10) {}
+
+        j = 15;
+
+        int l = "a";
+
+    }
+}

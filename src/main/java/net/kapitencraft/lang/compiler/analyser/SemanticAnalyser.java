@@ -330,6 +330,10 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             }
 
             errorF(expr.name, "unknown symbol: '%s'", expr.name.lexeme());
+        } else {
+            if (!fetchResult.assigned()) {
+                errorF(expr.name, "variable '%s' might not have been initialized", expr.name.lexeme());
+            }
         }
         expr.ordinal = fetchResult.ordinal();
         expr.type = null;
@@ -765,6 +769,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                 } else
                     operationInfo = getOperationInfo(varAnalyser.getType(expr.name.lexeme()), expr.type, expr.value);
                 expr.executor = operationInfo.executor;
+            } else {
+                errorIncompatibleTypes(expr.value, result.type(), type);
             }
         } else {
             if (expr.fieldOwner != null) {
@@ -904,7 +910,12 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public Void visitVarDeclStmt(Stmt.VarDecl stmt) {
         stmt.localId = varAnalyser.add(stmt.name.lexeme(), stmt.type, !stmt.isFinal, stmt.initializer != null);
-        analyseExpr(stmt.initializer);
+        if (stmt.initializer != null) {
+            ClassReference setType = analyseExpr(stmt.initializer);
+            if (!setType.is(stmt.type)) {
+                errorIncompatibleTypes(stmt.initializer, stmt.type, setType);
+            }
+        }
         return null;
     }
 
