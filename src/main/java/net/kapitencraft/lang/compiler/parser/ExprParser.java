@@ -79,7 +79,7 @@ public class ExprParser extends AbstractParser {
             return expr;
         }
         ClassReference target = consumeVarType(generics).getReference();
-        consume(DOT, "'.' expected");
+        consumeDot();
         Token name = consumeIdentifier();
 
         Expr.StaticGet staticGet = new Expr.StaticGet();
@@ -699,7 +699,12 @@ public class ExprParser extends AbstractParser {
             Optional<SourceReference> reference = tryConsumeVarType(generics);
             if (reference.isPresent()) {
                 ClassReference target = reference.get().getReference();
-                consume(DOT, "'.' expected");
+                if (match(IDENTIFIER)) {
+                    error(previous, "Declaration not allowed here");
+                    panicMode = true;
+                    return varRef(previous, (byte) -1);
+                }
+                consumeDot();
                 return parseObjAttributes(target);
             }
             advance();
@@ -723,6 +728,10 @@ public class ExprParser extends AbstractParser {
         error(peek(), "Illegal start of expression");
         this.panicMode = true;
         return varRef(Token.createNative("<unidentified>"), (byte) -1);
+    }
+
+    private void consumeDot() {
+        consume(DOT, "'.' expected");
     }
 
     protected @NotNull Expr parseObjAttributes(ClassReference target) {

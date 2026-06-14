@@ -207,28 +207,29 @@ public class ClassLoader {
         }
     }
 
-    public static <T extends ClassLoaderHolder<T>> void useHolders(boolean logInfo, PackageHolder<T> root, Consumer<T> consumer, Executor executor) {
+    public static void useHolders(boolean logInfo, PackageHolder<CompilerLoaderHolder> root, Consumer<CompilerLoaderHolder> consumer, Executor executor) {
         List<CompletableFuture<?>> futures = new ArrayList<>();
-        List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
+        List<Pair<PackageHolder<CompilerLoaderHolder>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         AtomicInteger completed = new AtomicInteger(0);
         int total = root.size();
         while (!packageData.isEmpty()) {
-            Pair<PackageHolder<T>, Package> data = packageData.getFirst();
-            PackageHolder<T> holder = data.getFirst();
+            Pair<PackageHolder<CompilerLoaderHolder>, Package> data = packageData.getFirst();
+            PackageHolder<CompilerLoaderHolder> holder = data.getFirst();
             Package pck = data.getSecond();
-            holder.classes.forEach((n, o) ->
+            holder.classes.forEach((n, o) -> {
+                if (!o.getErrorInfo().hadError())
                     futures.add(CompletableFuture.runAsync(() -> consumer.accept(o), executor)
-                            .whenComplete((v, ex) -> {
-                                if (ex != null) {
-                                    System.err.printf("error in thread: %s: %s\n", o.toString(), ex.getMessage());
-                                    System.exit(1);
-                                }
-                                int done = completed.incrementAndGet();
-                                if (logInfo)
-                                    printProgress(done, total);
-                            }))
-            );
+                        .whenComplete((v, ex) -> {
+                            if (ex != null) {
+                                System.err.printf("error in thread: %s: %s\n", o, ex.getMessage());
+                                System.exit(1);
+                            }
+                            int done = completed.incrementAndGet();
+                            if (logInfo)
+                                printProgress(done, total);
+                        }));
+            });
             holder.packages.forEach((name, holder1) ->
                     packageData.add(Pair.of(holder1, pck.getOrCreatePackage(name))) //adding all packages back to the queue
             );

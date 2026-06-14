@@ -1,6 +1,6 @@
 package test;
 
-class TestLoop {
+class TestLoopSyntax {
 
     static void whileLoop() {
         while (true) {}
@@ -21,5 +21,7 @@ class TestLoop {
 
     static void forEachLoop() {
         for (char c : "a".toCharArray()) {}
+
+        for (i : "a".toCharArray()) {}
     }
 }

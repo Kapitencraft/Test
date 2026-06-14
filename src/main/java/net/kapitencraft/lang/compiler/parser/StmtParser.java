@@ -113,6 +113,7 @@ public class StmtParser extends ExprParser {
 
         if (panicMode) {
             synchronize();
+            panicMode = false;
         }
         return stmt;
     }
@@ -244,20 +245,37 @@ public class StmtParser extends ExprParser {
             pushScope();
             loopIndex++;
             initializer = null;
-        } else if (match(IDENTIFIER) && parser.hasClass(previous().lexeme())) {
+        } else if (parser.hasClass(peek().lexeme()) && match(IDENTIFIER)) {
             pushScope();
             loopIndex++;
             initializer = varDeclaration(false, parser.getClass(previous().lexeme()));
         } else {
-            pushScope();
-            loopIndex++;
-            initializer = expressionStatement();
+            if (match(IDENTIFIER) && check(COLON)) {
+                Token identifier = previous();
+                advance(); //consume colon
+                error(identifier, "Missing variable type");
+                Expr init = expression();
+                consumeBracketClose("for");
+                pushScope();
+                loopIndex++;
+
+                Stmt stmt = statement();
+                stmt = mergeBody(stmt, popScopeStmt());
+                Stmt.ForEach forEach = new Stmt.ForEach();
+                forEach.type = VarTypeManager.VOID.reference();
+                forEach.name = identifier;
+                forEach.initializer = init;
+                forEach.body = stmt;
+                return forEach;
+            } else {
+                pushScope();
+                loopIndex++;
+                initializer = expressionStatement();
+            }
         }
 
-        Expr condition = null;
-        if (!check(EOA)) {
-            condition = expression();
-        }
+        Expr condition = expression();
+        this.panicMode = false;
         consumeEndOfArg();
 
         Expr increment = null;
@@ -270,6 +288,7 @@ public class StmtParser extends ExprParser {
 
         Stmt body = statement();
 
+        loopIndex--;
         body = mergeBody(body, popScopeStmt());
 
         Stmt.For aFor = new Stmt.For();
@@ -358,6 +377,7 @@ public class StmtParser extends ExprParser {
         this.pushScope();
         Stmt body = statement();
         body = mergeBody(body, popScopeStmt());
+        this.loopIndex--;
 
         Stmt.While aWhile = new Stmt.While();
         aWhile.condition = condition;

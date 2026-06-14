@@ -17,7 +17,7 @@ import java.util.List;
 public class CompileTestLoader {
     private static final Gson GSON = new GsonBuilder().create();
     private static final File TEST_CONFIG = new File("./run/compile_test.json");
-    private static final File TEST_SRC = new File("./run/compile_test_source");
+    public static final File TEST_SRC = new File("./run/compile_test_source");
 
     private record TestInstance(String target, ErrorData[] output) {
 

@@ -1,0 +1,11 @@
+package test;
+
+class TestReturnSemantic {
+    int testReturnValue() {
+        return;
+    }
+
+    int testReturnType() {
+        return "";
+    }
+}

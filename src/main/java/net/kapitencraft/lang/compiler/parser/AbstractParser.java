@@ -51,6 +51,7 @@ public class AbstractParser {
         this.current = 0;
         this.tokens = toParse;
         this.parser = targetAnalyser;
+        this.panicMode = false;
     }
 
     protected @Nullable AppliedGenerics appliedGenerics(GenericStack stack) {
@@ -206,8 +207,7 @@ public class AbstractParser {
             return Optional.of(SourceReference.from(t, reference));
         } else if (reference != null)
             return Optional.of(SourceReference.from(t, reference));
-        else
-            current--;
+        current--;
         return Optional.empty();
     }
 
@@ -313,6 +313,7 @@ public class AbstractParser {
 
 
     protected void synchronize() {
+        this.current--; //move back one to ensure finding EOA if they have been consumed by the underlying code
         while (!isAtEnd()) {
             switch (peek().type()) {
                 case EOF:

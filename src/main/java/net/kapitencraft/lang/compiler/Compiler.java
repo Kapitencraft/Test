@@ -9,6 +9,7 @@ import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.exe.load.ClassLoader;
 import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
+import net.kapitencraft.lang.exe.test.CompileTestLoader;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.token.Token;
@@ -39,7 +40,6 @@ public class Compiler {
 
     public static boolean optimize = false;
     public static File source;
-    static int errorCount = 0;
     private static ClassLoader.PackageHolder<CompilerLoaderHolder> compileData;
     private static final List<ClassRegister> registers = new ArrayList<>();
     private static Stage activeStage;
@@ -94,6 +94,7 @@ public class Compiler {
             return compileData;
         }
         ExecutorService executor = Executors.newFixedThreadPool(10, new CompilerThreadFactory());
+        ErrorStorage.overallErrorCount = 0;
         try {
             for (Stage stage : Stage.values()) {
                 if (stage == Stage.CACHING && cache == null) {
@@ -114,13 +115,13 @@ public class Compiler {
                 ClassLoader.useHolders(logInfo, compileData, stage.action, executor);
 
                 if (failFast) {
-                    if (errorCount > 0) {
+                    if (ErrorStorage.overallErrorCount > 0) {
                         printErrors(compileData);
 
                         if (logInfo) {
-                            if (errorCount > 100) {
-                                System.err.println("only showing the first 100 errors out of " + errorCount + " total");
-                            } else System.err.println(errorCount + " errors");
+                            if (ErrorStorage.overallErrorCount > 100) {
+                                System.err.println("only showing the first 100 errors out of " + ErrorStorage.overallErrorCount + " total");
+                            } else System.err.println(ErrorStorage.overallErrorCount + " errors");
                         }
                         System.exit(65);
                     }
