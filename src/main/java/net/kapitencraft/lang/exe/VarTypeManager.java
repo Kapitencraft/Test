@@ -47,6 +47,7 @@ public class VarTypeManager {
 
     public static final ClassReference STRING = getMainClass("String");
 
+    public static final ClassReference RUNTIME_EXCEPTION = getMainClass("RuntimeException");
     public static final ClassReference THROWABLE = getMainClass("Throwable");
     public static final ClassReference STACK_OVERFLOW_ERROR = getMainClass("StackOverflowError");
     public static final ClassReference UNKNOWN_ERROR = getMainClass("UnknownError");
