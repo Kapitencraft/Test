@@ -212,18 +212,32 @@ public class HolderParser extends AbstractParser {
 
         consumeBracketClose("params");
 
+        List<SourceReference> thrown = new ArrayList<>();
+        if (match(THROWS)) {
+            do {
+                thrown.add(consumeVarType(activeGenerics));
+            } while (match(COMMA));
+        }
+
         consumeCurlyOpen("method body");
 
         Token[] code = getCurlyEnclosedCode();
 
         Token endToken = consumeCurlyClose("method body");
 
-        return new ConstructorHolder(annotation, generics, origin, endToken, parameters, code);
+        return new ConstructorHolder(annotation, generics, origin, endToken, parameters, thrown, code);
     }
 
     private MethodHolder funcDecl(SourceReference type, ModifiersParser modifiers, Token name) {
         List<Pair<SourceReference, String>> parameters = parseParams();
         consumeBracketClose("params");
+
+        List<SourceReference> thrown = new ArrayList<>();
+        if (match(THROWS)) {
+            do {
+                thrown.add(consumeVarType(activeGenerics));
+            } while (match(COMMA));
+        }
 
         short mods = modifiers.packModifiers();
 
@@ -245,7 +259,7 @@ public class HolderParser extends AbstractParser {
 
             endClose = consumeCurlyClose("method body");
         } else consumeEndOfArg();
-        return new MethodHolder(modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), type, name, endClose, parameters, code);
+        return new MethodHolder(modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), type, name, endClose, parameters, thrown, code);
     }
 
     private List<FieldHolder> fieldDecl(SourceReference type, AnnotationObj[] annotations, Token name, short modifiers) {
@@ -502,7 +516,7 @@ public class HolderParser extends AbstractParser {
             defaulted = true;
         }
         consumeEndOfArg();
-        return new MethodHolder(Modifiers.pack(false, false, !defaulted), annotations, null, type, elementName, null, List.of(), defaultCode);
+        return new MethodHolder(Modifiers.pack(false, false, !defaulted), annotations, null, type, elementName, null, List.of(), List.of(), defaultCode);
     }
 
     private InterfaceHolder interfaceDecl(ModifiersParser mods, @Nullable String namePrefix, String pckID, @Nullable String fileId) {

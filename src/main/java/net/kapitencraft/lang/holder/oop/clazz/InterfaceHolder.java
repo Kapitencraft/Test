@@ -67,7 +67,7 @@ public record InterfaceHolder(ClassReference target, short modifiers,
             }
             Annotation[] annotations = stmtParser.parseAnnotations(methodHolder.annotations(), parser);
 
-            CompileCallable methodDecl = new CompileCallable(methodHolder.type().getReference(), methodHolder.extractParams(), body, methodHolder.modifiers(), annotations);
+            CompileCallable methodDecl = new CompileCallable(methodHolder.type().getReference(), methodHolder.extractParams(), methodHolder.extractThrown(), body, methodHolder.modifiers(), annotations);
             methods.add(Pair.of(methodHolder.name(), methodDecl));
         }
 
@@ -80,6 +80,7 @@ public record InterfaceHolder(ClassReference target, short modifiers,
                     new CompileCallable(
                             VarTypeManager.VOID.reference(),
                             List.of(),
+                            new ClassReference[0],
                             statics.toArray(new Stmt[0]),
                             Modifiers.pack(true, true, false),
                             new Annotation[0]

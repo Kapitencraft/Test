@@ -152,6 +152,7 @@ public record EnumHolder(ClassReference target, short modifiers,
             CompileCallable methodDecl = new CompileCallable(
                     methodHolder.type().getReference(),
                     methodHolder.extractParams(),
+                    methodHolder.extractThrown(),
                     body, methodHolder.modifiers(), annotations
             );
             methods.add(Pair.of(methodHolder.name(), methodDecl));
@@ -163,6 +164,7 @@ public record EnumHolder(ClassReference target, short modifiers,
         methods.add(Pair.of(this.name.asIdentifier("<clinit>"),
                 new CompileCallable(VarTypeManager.VOID.reference(),
                         List.of(),
+                        new ClassReference[0],
                         statics.toArray(new Stmt[0]),
                         Modifiers.pack(true, true, false),
                         new Annotation[0]
@@ -180,6 +182,7 @@ public record EnumHolder(ClassReference target, short modifiers,
                 new CompileCallable(
                         target.array(),
                         List.of(),
+                        new ClassReference[0],
                         new Stmt[]{
                                 aReturn1
                         },
@@ -198,7 +201,7 @@ public record EnumHolder(ClassReference target, short modifiers,
             body = this.prefixFieldInitializers(body, initializedFields);
             Annotation[] annotations = stmtParser.parseAnnotations(enumConstructorHolder.annotations(), parser);
 
-            CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), enumConstructorHolder.extractParams(), body, (short) 0, annotations);
+            CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), enumConstructorHolder.extractParams(), enumConstructorHolder.extractThrown(), body, (short) 0, annotations);
             stmtParser.popMethod(enumConstructorHolder.closeBracket());
             constructors.add(Pair.of(enumConstructorHolder.name(), constDecl));
         }
@@ -219,7 +222,7 @@ public record EnumHolder(ClassReference target, short modifiers,
             constructors.add(Pair.of(this.name, new CompileCallable(VarTypeManager.VOID.reference(), List.of(
                     Pair.of(VarTypeManager.STRING, "$name"),
                     Pair.of(VarTypeManager.INTEGER.reference(), "$ordinal")
-            ), new Stmt[]{stmt1, ret}, (short) 0, new Annotation[0])));
+            ), new ClassReference[0], new Stmt[]{stmt1, ret}, (short) 0, new Annotation[0])));
         }
 
         return new BakedClass(
@@ -267,7 +270,7 @@ public record EnumHolder(ClassReference target, short modifiers,
             builder.addMethod(logger, SkeletonMethod.create(methodHolder), methodHolder.name());
         }
         methods.computeIfAbsent("values", s -> new DataMethodContainer.Builder(this.name()))
-                .addMethod(logger, new SkeletonMethod(new ClassReference[0], target.array(), Modifiers.pack(false, true, false)), Token.createNative("values"));
+                .addMethod(logger, new SkeletonMethod(new ClassReference[0], new ClassReference[0], target.array(), Modifiers.pack(false, true, false)), Token.createNative("values"));
 
         //constructors
         methods.putIfAbsent("<init>", new DataMethodContainer.Builder(this.name()));
@@ -279,7 +282,7 @@ public record EnumHolder(ClassReference target, short modifiers,
             builder.addMethod(logger, SkeletonMethod.createNative(new ClassReference[]{
                     VarTypeManager.STRING,
                     VarTypeManager.INTEGER.reference()
-            }, VarTypeManager.VOID.reference(), (short) 0), Token.createNative("<init>"));
+            }, new ClassReference[0], VarTypeManager.VOID.reference(), (short) 0), Token.createNative("<init>"));
         }
 
         return new SkeletonClass(

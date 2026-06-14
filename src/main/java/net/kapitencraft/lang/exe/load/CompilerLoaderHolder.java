@@ -3,6 +3,7 @@ package net.kapitencraft.lang.exe.load;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Lexer;
 import net.kapitencraft.lang.compiler.MethodLookup;
+import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.parser.HolderParser;
@@ -118,9 +119,12 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
             MethodLookup lookup = MethodLookup.createFromClass(builder.superclass().get(), builder.interfaces());
             lookup.checkAbstract(storage, builder.name(), builder.methods());
             if (builder instanceof BakedClass) {
-                lookup.checkFinal(storage, builder.methods());
+                lookup.checkFinalMethods(storage, builder.methods());
             }
         }
+        //TODO get access to final fields
+        FinalsPopulatedAnalyser analyser = new FinalsPopulatedAnalyser(this.storage);
+
         target = builder.build();
         this.holder.target().setTarget((ScriptedClass) target);
     }

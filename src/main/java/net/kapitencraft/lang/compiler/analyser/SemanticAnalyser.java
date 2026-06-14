@@ -23,7 +23,6 @@ import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,6 +31,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     //region expect
     private final ArrayDeque<Set<ClassReference>> activeArgs = new ArrayDeque<>();
     private ClassReference methodReturnType = VarTypeManager.VOID.reference();
+    private ArrayDeque<ClassReference[]> methodThrown = new ArrayDeque<>();
 
     private boolean isExpected(ClassReference reference) {
         return activeArgs.isEmpty() || activeArgs.peek().contains(reference);
@@ -51,7 +51,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     protected ClassReference expectType(Token errorLoc, ClassReference gotten, ClassReference expected) {
         if (expected == VarTypeManager.OBJECT) return gotten;
-        if (!gotten.get().isChildOf(expected.get()))
+        if (!gotten.isChildOf(expected))
             errorF(errorLoc, "incompatible types: %s cannot be converted to %s", gotten.name(), expected.name());
         if (gotten instanceof AppliedGenericsReference reference) {
             if (expected instanceof AppliedGenericsReference reference1) {
@@ -64,7 +64,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                     errorF(gottenAppliedGenerics.reference(), "Wrong number of type arguments: %s; required: %s", gottenGenerics.length, expectedGenerics.length);
                 } else {
                     for (int i = 0; i < expectedGenerics.length; i++) {
-                        if (!expectedGenerics[i].get().isChildOf(gottenGenerics[i].get())) {
+                        if (!expectedGenerics[i].isChildOf(gottenGenerics[i])) {
                             String name = reference1.getGenerics().variables()[i].name().lexeme();
                             errorF(reference.getApplied().reference(), "incompatible types: inference variable %s has incompatible bounds", name);
 
@@ -78,6 +78,19 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             }
         }
         return gotten;
+    }
+
+    private void checkThrown(ClassReference thrown, Token loc) {
+        if (thrown.isChildOf(VarTypeManager.RUNTIME_EXCEPTION))
+            return; //ignore subclasses of the RuntimeException
+        for (ClassReference[] references : methodThrown) {
+            for (ClassReference reference : references) {
+                if (reference.isParentOf(thrown)) {
+                    return;
+                }
+            }
+        }
+        errorF(loc, "unhandled exception: %s" + thrown.absoluteName());
     }
 
     //endregion
@@ -131,8 +144,10 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         return OperationInfo.UNKNOWN;
     }
 
-    public void analyseBody(Stmt[] body, ClassReference retType, List<Pair<ClassReference, String>> params, @Nullable ClassReference selfClass) {
+    public void analyseBody(Stmt[] body, ClassReference retType, ClassReference[] thrown, List<Pair<ClassReference, String>> params, @Nullable ClassReference selfClass) {
         this.methodReturnType = retType;
+        this.methodThrown.clear();
+        this.methodThrown.push(thrown);
         this.varAnalyser.clear();
         if (selfClass != null) this.varAnalyser.add("this", selfClass, false, true);
         for (Pair<ClassReference, String> param : params) {
@@ -159,6 +174,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         if (callable != null) {
             retType = checkArguments(args, argTypes, callable.getSecond(), objType, name);
             signature = VarTypeManager.getMethodSignature(callable.getFirst(), name.lexeme(), callable.getSecond().argTypes());
+            for (ClassReference reference : callable.getSecond().thrown()) {
+                checkThrown(reference, name);
+            }
         }
         return new MethodData(signature, retType, targetClass.reference(), callable == null || callable.getSecond().isStatic());
     }
@@ -437,7 +455,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public ClassReference visitCastCheckExpr(Expr.CastCheck expr) {
         ClassReference reference = analyseExpr(expr.object);
-        if (!expr.targetType.get().isChildOf(reference.get())) {
+        if (!expr.targetType.isChildOf(reference)) {
             errorF(Compiler.LOCATION_ANALYSER.find(expr.object), "inconvertible types; %s cannot be cast to %s", reference.absoluteName(), expr.targetType.absoluteName());
         }
 
@@ -579,7 +597,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                 }
             }
 
-            errorF(expr.name, "unknown symbol: '%s'", expr.name.lexeme());        }
+            errorF(expr.name, "unknown symbol: '%s'", expr.name.lexeme());
+        }
         return expr.retType = result.type();
     }
 
@@ -588,8 +607,12 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ClassReference[] argTypes = args(expr.args);
         ScriptedCallable callable = tryGetConstructorMethod(argTypes, expr.target.get(), expr.keyword);
 
-        if (callable != null)
+        if (callable != null) {
             expr.signature = VarTypeManager.getClassName(expr.target) + VarTypeManager.getMethodSignatureNoTarget("<init>", callable.argTypes());
+            for (ClassReference reference : callable.thrown()) {
+                checkThrown(reference, expr.keyword);
+            }
+        }
 
         return expr.retType = expr.target;
     }
@@ -661,7 +684,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     public ClassReference visitSwitchExpr(Expr.Switch expr) {
         pushExpected(VarTypeManager.ENUM, VarTypeManager.STRING, VarTypeManager.INTEGER.reference(), VarTypeManager.DOUBLE.reference(), VarTypeManager.FLOAT.reference(), VarTypeManager.CHAR.reference());
         ClassReference reference = analyseExpr(expr.provider);
-        if (reference.get().isChildOf(VarTypeManager.ENUM.get())) {
+        if (reference.isChildOf(VarTypeManager.ENUM)) {
             expr.isEnum = true;
         }
         popExpected();
@@ -910,7 +933,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public Void visitThrowStmt(Stmt.Throw stmt) {
         pushExpected(VarTypeManager.THROWABLE);
-        analyseExpr(stmt.value);
+        ClassReference val = analyseExpr(stmt.value);
+        checkThrown(val, stmt.keyword);
         popExpected();
         return null;
     }
@@ -926,7 +950,17 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public Void visitTryStmt(Stmt.Try stmt) {
         pushScope();
+        methodThrown.push(
+                Arrays.stream(stmt.catches)
+                        .map(Pair::getFirst)
+                        .map(Pair::getFirst)
+                        .flatMap(Arrays::stream)
+                        .toArray(ClassReference[]::new)
+        );
+
         analyseStmt(stmt.body);
+
+        methodThrown.pop();
 
         for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches) {
             pushScope();

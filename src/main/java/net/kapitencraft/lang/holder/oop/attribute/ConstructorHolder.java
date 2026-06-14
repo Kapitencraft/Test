@@ -12,14 +12,19 @@ import net.kapitencraft.tool.Pair;
 import java.util.List;
 
 public record ConstructorHolder(AnnotationObj[] annotations, Generics generics, Token name, Token closeBracket,
-                                List<Pair<SourceReference, String>> params, Token[] body) implements Validatable {
+                                List<Pair<SourceReference, String>> params, List<SourceReference> thrown, Token[] body) implements Validatable {
     public void validate(Compiler.ErrorStorage logger) {
         Validatable.validateNullable(annotations, logger);
         if (annotations != null) for (AnnotationObj obj : annotations) obj.validate(logger);
         params.forEach(p -> p.getFirst().validate(logger));
+        thrown.forEach(s -> s.validate(logger));
     }
 
     public List<Pair<ClassReference, String>> extractParams() {
         return this.params.stream().map(p -> p.mapFirst(SourceReference::getReference)).toList();
+    }
+
+    public ClassReference[] extractThrown() {
+        return thrown.stream().map(SourceReference::getReference).toArray(ClassReference[]::new);
     }
 }
