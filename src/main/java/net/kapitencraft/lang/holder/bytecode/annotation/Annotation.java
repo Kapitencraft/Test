@@ -1,8 +1,10 @@
 package net.kapitencraft.lang.holder.bytecode.annotation;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.annotation.AnnotationMirror;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.exe.VarTypeManager;
@@ -59,6 +61,16 @@ public class Annotation {
         this.entries.forEach((string, annotationEntry) -> entries.add(string, EntryValue.toJson(annotationEntry)));
         object.add("entries", entries);
         return object;
+    }
+
+    public AnnotationMirror mirror() {
+        ImmutableMap.Builder<String, Object> values = new ImmutableMap.Builder<>();
+
+        this.entries.forEach((s, entryValue) -> {
+            values.put(s, entryValue.value());
+        });
+
+        return new AnnotationMirror(type, values.build());
     }
 
     public Object getProperty(String name) {

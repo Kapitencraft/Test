@@ -65,7 +65,7 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
             object.add("fields", fields);
         }
 
-        object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
+        object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations, this));
 
         if (this.modifiers != 0) object.addProperty("modifiers", modifiers);
 
