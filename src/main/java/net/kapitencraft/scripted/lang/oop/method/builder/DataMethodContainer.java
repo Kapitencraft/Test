@@ -19,6 +19,10 @@ import java.util.*;
 
 public record DataMethodContainer(ScriptedCallable[] methods) implements MethodContainer {
 
+    public int size() {
+        return methods.length;
+    }
+
     public static DataMethodContainer of(ScriptedCallable... methods) {
         return new DataMethodContainer(methods);
     }

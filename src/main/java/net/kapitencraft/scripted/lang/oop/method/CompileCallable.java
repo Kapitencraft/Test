@@ -26,6 +26,7 @@ public class CompileCallable implements ScriptedCallable {
     private final List<Stmt> body;
     private final int modifiers;
     private final Annotation[] annotations;
+    private Chunk code;
     private final ClassReference declaring;
 
     public CompileCallable(ClassReference retType, List<Pair<ClassReference, String>> params, ClassReference[] thrown, List<Stmt> body, int modifiers, Annotation[] annotations, ClassReference declaring) {
@@ -67,7 +68,7 @@ public class CompileCallable implements ScriptedCallable {
                 builder.cache(compileStmt);
             }
             builder.build(chunk);
-            object.add("body", chunk.build().save());
+            this.code = chunk.build();
         }
         if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);
 
@@ -126,6 +127,11 @@ public class CompileCallable implements ScriptedCallable {
     @Override
     public ClassReference[] thrown() {
         return thrown;
+    }
+
+    @Override
+    public Chunk getChunk() {
+        return code;
     }
 
     public void optimize() {

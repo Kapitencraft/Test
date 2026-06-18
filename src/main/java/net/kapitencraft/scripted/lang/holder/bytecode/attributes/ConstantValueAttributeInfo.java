@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.holder.bytecode.attributes;
 
+import net.kapitencraft.lang.bytecode.compile.BytecodeBuilder;
 import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
 
 public class ConstantValueAttributeInfo implements AttributeInfo {
@@ -17,7 +18,7 @@ public class ConstantValueAttributeInfo implements AttributeInfo {
     }
 
     @Override
-    public void write(CacheBuffer buffer) {
+    public void write(CacheBuffer buffer, BytecodeBuilder bytecodeBuilder) {
         buffer.writeShort(attributeName);
         buffer.writeInt(2);
         buffer.writeShort(constant);
