@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.holder.bytecode.attributes;
 
+import net.kapitencraft.lang.bytecode.compile.BytecodeBuilder;
 import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
 
@@ -7,6 +8,12 @@ public class CodeAttributeInfo implements AttributeInfo {
     short maxStack;
     short maxLocals; //why is this a short?
     Chunk chunk;
+
+    public static CodeAttributeInfo create(Chunk chunk) {
+        CodeAttributeInfo info = new CodeAttributeInfo();
+        info.chunk = chunk;
+        return info;
+    }
 
     @Override
     public String name() {
@@ -19,7 +26,7 @@ public class CodeAttributeInfo implements AttributeInfo {
     }
 
     @Override
-    public void write(CacheBuffer buffer) {
+    public void write(CacheBuffer buffer, BytecodeBuilder bytecodeBuilder) {
         buffer.writeShort(maxStack);
         buffer.writeShort(maxLocals);
         byte[] code = chunk.code();

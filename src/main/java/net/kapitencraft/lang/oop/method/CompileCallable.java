@@ -20,6 +20,7 @@ public class CompileCallable implements ScriptedCallable {
     private final Stmt[] body;
     private final short modifiers;
     private final Annotation[] annotations;
+    private Chunk code;
 
     public CompileCallable(ClassReference retType, List<? extends Pair<? extends ClassReference, String>> params, Stmt[] body, short modifiers, Annotation[] annotations) {
         this.retType = retType;
@@ -29,14 +30,7 @@ public class CompileCallable implements ScriptedCallable {
         this.annotations = annotations;
     }
 
-    public JsonObject save(Synthesizer builder) {
-        JsonObject object = new JsonObject();
-        object.addProperty("retType", VarTypeManager.getClassName(retType.get()));
-        {
-            JsonArray array = new JsonArray();
-            params.stream().map(Pair::left).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
-            object.add("params", array);
-        }
+    public void save(Synthesizer builder) {
         if (!Modifiers.isAbstract(modifiers)) {
             Chunk.Builder chunk = builder.setup();
             for (int i = 0; i < this.params.size(); i++) {
@@ -46,12 +40,8 @@ public class CompileCallable implements ScriptedCallable {
             for (Stmt compileStmt : body) {
                 builder.cache(compileStmt);
             }
-            object.add("body", chunk.build().save());
+            this.code = chunk.build();
         }
-        if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);
-
-        object.add("annotations", builder.cacheAnnotations(this.annotations));
-        return object;
     }
 
     @Override
@@ -87,5 +77,10 @@ public class CompileCallable implements ScriptedCallable {
     @Override
     public ClassReference[] argTypes() {
         return params.stream().map(Pair::left).toArray(ClassReference[]::new);
+    }
+
+    @Override
+    public Chunk getChunk() {
+        return code;
     }
 }

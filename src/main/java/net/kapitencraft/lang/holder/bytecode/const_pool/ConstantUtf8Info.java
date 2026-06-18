@@ -7,6 +7,12 @@ import java.io.DataOutputStream;
 public class ConstantUtf8Info implements ConstantPoolEntry {
     private String value;
 
+    public static ConstantUtf8Info create(String val) {
+        ConstantUtf8Info info = new ConstantUtf8Info();
+        info.value = val;
+        return info;
+    }
+
     @Override
     public byte getTag() {
         return 1;

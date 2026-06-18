@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.bytecode.compile.BytecodeBuilder;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
@@ -9,11 +10,13 @@ import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.holder.bytecode.ClassFile;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.run.natives.NativeClassInstance;
 import net.kapitencraft.tool.Pair;
@@ -34,7 +37,7 @@ public class Synthesizer implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final Chunk.Builder builder;
     private final Stack<Loop> loops = new Stack<>();
 
-    public Synthesizer(ConstantPoolBuilder pool) {
+    public Synthesizer(BytecodeBuilder pool) {
         this.builder = new Chunk.Builder(pool);
     }
 
@@ -60,8 +63,8 @@ public class Synthesizer implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = hadRetain;
     }
 
-    public JsonObject cacheClass(CacheableClass loxClass) {
-        return loxClass.save(this); //TODO convert to entirely bytecode later
+    public byte[] cacheClass(CompileClass loxClass) {
+        return ClassFile.write(loxClass, this);
     }
 
     public JsonArray cacheAnnotations(Annotation[] annotations) {

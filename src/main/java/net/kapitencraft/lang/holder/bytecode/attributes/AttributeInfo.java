@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.holder.bytecode.attributes;
 
+import net.kapitencraft.lang.bytecode.compile.BytecodeBuilder;
 import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
 
 public interface AttributeInfo {
@@ -8,5 +9,5 @@ public interface AttributeInfo {
 
     int length();
 
-    void write(CacheBuffer buffer);
+    void write(CacheBuffer buffer, BytecodeBuilder bytecodeBuilder);
 }

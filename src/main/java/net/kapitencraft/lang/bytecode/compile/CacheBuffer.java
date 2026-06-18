@@ -46,4 +46,16 @@ public class CacheBuffer extends OutputStream {
             buffer.add(b);
         }
     }
+
+    public void transfer(CacheBuffer mainBuffer) {
+        this.buffer.addAll(mainBuffer.buffer);
+    }
+
+    public byte[] toBytes() {
+        byte[] data = new byte[this.buffer.size()];
+        for (int i = 0; i < this.buffer.size(); i++) {
+            data[i] = this.buffer.get(i);
+        }
+        return data;
+    }
 }
