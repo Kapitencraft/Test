@@ -3,11 +3,10 @@ package net.kapitencraft.lang.holder.bytecode.attributes;
 import net.kapitencraft.lang.bytecode.compile.BytecodeBuilder;
 import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
 
-public class ExceptionsAttributeInfo implements AttributeInfo {
-
+public class SyntheticAttributeInfo implements AttributeInfo {
     @Override
     public String name() {
-        return "Exceptions";
+        return "Synthetic";
     }
 
     @Override

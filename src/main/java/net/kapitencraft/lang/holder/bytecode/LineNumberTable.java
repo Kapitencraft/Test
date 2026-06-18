@@ -1,31 +1,11 @@
 package net.kapitencraft.lang.holder.bytecode;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public record LineNumberTable(Pair<Integer, Integer>[] lines) {
-
-    public static LineNumberTable read(JsonArray data) {
-        return new LineNumberTable(data.asList().stream().map(JsonElement::getAsJsonObject)
-                .map(o -> Pair.of(GsonHelper.getAsInt(o, "pc"), GsonHelper.getAsInt(o, "line")))
-                .toArray(Pair[]::new));
-    }
-
-    public JsonArray save() {
-        return Arrays.stream(this.lines).map(p -> {
-            JsonObject object = new JsonObject();
-            object.addProperty("pc", p.getFirst());
-            object.addProperty("line", p.getSecond());
-            return object;
-        }).collect(GsonHelper.toJsonArray());
-    }
 
     public int getLineAt(int ip) {
         int i = 0;

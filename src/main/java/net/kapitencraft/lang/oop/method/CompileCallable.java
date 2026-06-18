@@ -23,6 +23,7 @@ public class CompileCallable implements ScriptedCallable {
     private final Stmt[] body;
     private final short modifiers;
     private final Annotation[] annotations;
+    private Chunk code;
 
     public CompileCallable(ClassReference retType, List<Pair<ClassReference, String>> params, ClassReference[] thrown, Stmt[] body, short modifiers, Annotation[] annotations) {
         this.retType = retType;
@@ -62,12 +63,8 @@ public class CompileCallable implements ScriptedCallable {
                 builder.cache(compileStmt);
             }
             builder.build(chunk);
-            object.add("body", chunk.build().save());
+            this.code = chunk.build();
         }
-        if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);
-
-        object.add("annotations", builder.cacheAnnotations(this.annotations));
-        return object;
     }
 
     public void analyseSemantics(SemanticAnalyser analyser, ClassReference declaring) {
@@ -113,5 +110,10 @@ public class CompileCallable implements ScriptedCallable {
     @Override
     public ClassReference[] thrown() {
         return thrown;
+    }
+
+    @Override
+    public Chunk getChunk() {
+        return code;
     }
 }

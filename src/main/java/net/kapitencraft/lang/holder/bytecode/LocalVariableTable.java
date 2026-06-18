@@ -1,25 +1,16 @@
 package net.kapitencraft.lang.holder.bytecode;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import net.kapitencraft.tool.GsonHelper;
+import net.kapitencraft.lang.bytecode.compile.BytecodeBuilder;
+import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantUtf8Info;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public record LocalVariableTable(Entry[] entries) {
-
-    public JsonElement save() {
-        return Arrays.stream(entries).map(Entry::toJson).collect(GsonHelper.toJsonArray());
-    }
-
-    public static LocalVariableTable read(JsonArray array) {
-        return new LocalVariableTable(array.asList().stream().map(JsonElement::getAsJsonObject)
-                .map(Entry::read).toArray(Entry[]::new));
-    }
 
     public Pair<String, String> get(int pc, int i) {
         for (Entry entry : entries) {
@@ -29,26 +20,25 @@ public record LocalVariableTable(Entry[] entries) {
         return Pair.of("UNKNOWN", "V");
     }
 
+    public void write(CacheBuffer buffer, BytecodeBuilder builder) {
+        buffer.writeShort(entries.length);
+        for (Entry entry : entries) {
+            entry.write(buffer, builder);
+        }
+    }
+
+    public int bytecodeLength() {
+        return 2 + entries.length * 10;
+    }
+
     private record Entry(int startPc, int length, String name, String type, int index) {
 
-        public JsonObject toJson() {
-            JsonObject object = new JsonObject();
-            object.addProperty("startPc", startPc);
-            object.addProperty("length", length);
-            object.addProperty("name", name);
-            object.addProperty("type", type);
-            object.addProperty("index", index);
-            return object;
-        }
-
-        public static Entry read(JsonObject object) {
-            return new Entry(
-                    GsonHelper.getAsInt(object, "startPc"),
-                    GsonHelper.getAsInt(object, "length"),
-                    GsonHelper.getAsString(object, "name"),
-                    GsonHelper.getAsString(object, "type"),
-                    GsonHelper.getAsInt(object, "index")
-            );
+        private void write(CacheBuffer buffer, BytecodeBuilder builder) {
+            buffer.writeShort(startPc);
+            buffer.writeShort(length);
+            builder.extractCPEntry(ConstantUtf8Info.create(name));
+            builder.extractCPEntry(ConstantUtf8Info.create(type));
+            buffer.writeShort(index);
         }
     }
 

@@ -1,7 +1,5 @@
 package net.kapitencraft.lang.compiler;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
@@ -14,16 +12,14 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
+import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -33,7 +29,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class Compiler {
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static final LocationAnalyser LOCATION_ANALYSER = new LocationAnalyser();
 
     public static boolean optimize = false;
@@ -89,13 +84,13 @@ public class Compiler {
                 activeStage = stage;
                 System.out.printf("executing step %s\n", stage);
 
-                if (stage == Stage.CACHING && cache.exists())
-                    Util.delete(cache);
+            if (stage == Stage.CACHING && cache.exists())
+                Util.delete(cache);
 
-                ClassLoader.useHolders(compileData, stage.action, executor);
+            ClassLoader.useHolders(compileData, stage.action, executor);
 
-                if (errorCount > 0) {
-                    printErrors(compileData);
+            if (errorCount > 0) {
+                printErrors(compileData);
 
                     if (errorCount > 100) {
                         System.err.println("only showing the first 100 errors out of " + errorCount + " total");
@@ -139,16 +134,16 @@ public class Compiler {
         void analyse();
     }
 
-    public static void cache(File cacheBase, Synthesizer builder, String path, CacheableClass target, String name) throws IOException {
-        JsonObject object = builder.cacheClass(target);
+    public static void cache(File cacheBase, Synthesizer builder, String path, CompileClass target, String name) throws IOException {
+        byte[] object = builder.cacheClass(target);
         File cacheTarget = new File(cacheBase, path + "/" + name + ".scrc");
         if (!cacheTarget.exists()) {
             cacheTarget.getParentFile().mkdirs();
             cacheTarget.createNewFile();
         }
-        FileWriter writer = new FileWriter(cacheTarget);
-        writer.write(GSON.toJson(object));
-        writer.close();
+        FileOutputStream stream = new FileOutputStream(cacheTarget);
+        stream.write(object);
+        stream.close();
     }
 
     public static class ErrorStorage {
