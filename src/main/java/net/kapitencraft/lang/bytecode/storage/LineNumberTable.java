@@ -1,32 +1,11 @@
 package net.kapitencraft.lang.bytecode.storage;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collector;
 
 public record LineNumberTable(Pair<Integer, Integer>[] lines) {
-
-    public static LineNumberTable read(JsonArray data) {
-        return new LineNumberTable(data.asList().stream().map(JsonElement::getAsJsonObject)
-                .map(o -> Pair.of(GsonHelper.getAsInt(o, "pc"), GsonHelper.getAsInt(o, "line")))
-                .toArray(Pair[]::new));
-    }
-
-    public JsonArray save() {
-        return Arrays.stream(this.lines).map(p -> {
-            JsonObject object = new JsonObject();
-            object.addProperty("pc", p.left());
-            object.addProperty("line", p.right());
-            return object;
-        }).collect(GsonHelper.toJsonArray());
-    }
 
     public int getLineAt(int ip) {
         int i = 0;
@@ -46,7 +25,7 @@ public record LineNumberTable(Pair<Integer, Integer>[] lines) {
         }
 
         public void changeIfNecessary(int line, int pc) {
-            if (line > -1 && (this.lineChanges.isEmpty() || this.lineChanges.get(this.lineChanges.size() - 1).right() != line)) {
+            if (line > -1 && (this.lineChanges.isEmpty() || this.lineChanges.getLast().right() != line)) {
                 this.lineChanges.add(Pair.of(pc, line));
             }
         }

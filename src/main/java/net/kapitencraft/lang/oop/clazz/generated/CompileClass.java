@@ -1,21 +1,24 @@
 package net.kapitencraft.lang.oop.clazz.generated;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Synthesizer;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.bytecode.FieldInfo;
+import net.kapitencraft.lang.holder.bytecode.MethodInfo;
+import net.kapitencraft.lang.holder.bytecode.attributes.AttributeInfo;
+import net.kapitencraft.lang.holder.bytecode.attributes.CodeAttributeInfo;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.CompileField;
+import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.run.VarTypeManager;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Map;
 
 public final class CompileClass implements CacheableClass, ScriptedClass {
     private final GeneratedMethodMap methods;
@@ -46,30 +49,6 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
         this.implemented = implemented;
         this.modifiers = modifiers;
         this.annotations = annotations;
-    }
-
-    public JsonObject save(Synthesizer cacheBuilder) {
-        JsonObject object = new JsonObject();
-        object.addProperty("TYPE", "class");
-        object.addProperty("name", name);
-        object.addProperty("superclass", VarTypeManager.getClassName(superclass));
-        {
-            JsonArray parentInterfaces = new JsonArray();
-            Arrays.stream(this.implemented).map(VarTypeManager::getClassName).forEach(parentInterfaces::add);
-            object.add("interfaces", parentInterfaces);
-        }
-        object.add("methods", methods.save(cacheBuilder));
-        {
-            JsonObject fields = new JsonObject();
-            allFields.forEach((name, field) -> fields.add(name, field.cache(cacheBuilder)));
-            object.add("fields", fields);
-        }
-
-        object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
-
-        if (this.modifiers != 0) object.addProperty("modifiers", modifiers);
-
-        return object;
     }
 
     @Override
@@ -138,5 +117,52 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
     @Override
     public boolean isNative() {
         return false;
+    }
+
+    public FieldInfo[] extractFields(Synthesizer synthesizer) {
+        FieldInfo[] infos = new FieldInfo[this.allFields.size()];
+        int[] i = {0};
+        this.allFields.forEach((s, compileField) -> {
+            //ConstantValue, Synthetic, Signature, Deprecated, RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations
+            AttributeInfo[] attributeInfos = new AttributeInfo[0];
+
+            infos[i[0]++] = new FieldInfo(
+                    compileField.modifiers(),
+                    s,
+                    VarTypeManager.getClassName(compileField.getType()),
+                    attributeInfos
+            );
+        });
+        return infos;
+    }
+
+    public MethodInfo[] extractMethods(Synthesizer synthesizer) {
+        MethodInfo[] infos = new MethodInfo[this.allMethods.values().stream()
+                .mapToInt(DataMethodContainer::size)
+                .sum()
+                ];
+        int[] i = {0};
+        this.allMethods.forEach((s, container) -> {
+
+            for (ScriptedCallable method : container.methods()) {
+                //Code, Exceptions, Synthetic, Signature, Deprecated, RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations,
+                //RuntimeVisibleParameterAnnotations, RuntimeInvisibleParameterAnnotations, AnnotationDefault
+                AttributeInfo[] attributeInfos = new AttributeInfo[]{
+                        CodeAttributeInfo.create(method.getChunk())
+
+                };
+
+                ((CompileCallable) method).save(synthesizer);
+
+                infos[i[0]++] = new MethodInfo(
+                        method.modifiers(),
+                        s,
+                        VarTypeManager.getClassName(method.retType()),
+                        attributeInfos
+                );
+            }
+
+        });
+        return infos;
     }
 }
