@@ -3,7 +3,11 @@ package net.kapitencraft.lang.holder.bytecode.const_pool;
 import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
 
 public class ConstantFloatInfo implements ConstantPoolEntry {
-    private float value;
+    private final float value;
+
+    public ConstantFloatInfo(float value) {
+        this.value = value;
+    }
 
     @Override
     public byte getTag() {
