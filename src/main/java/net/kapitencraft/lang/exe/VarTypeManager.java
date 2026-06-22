@@ -7,6 +7,7 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.clazz.primitive.*;
 import net.kapitencraft.lang.exe.natives.NativeClassLoader;

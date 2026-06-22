@@ -3,10 +3,13 @@ package net.kapitencraft.lang.oop.clazz.generated;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.bytecode.FieldInfo;
 import net.kapitencraft.lang.holder.bytecode.MethodInfo;
 import net.kapitencraft.lang.holder.bytecode.attributes.AttributeInfo;
 import net.kapitencraft.lang.holder.bytecode.attributes.CodeAttributeInfo;
+import net.kapitencraft.lang.holder.bytecode.attributes.ConstantValueAttributeInfo;
+import net.kapitencraft.lang.holder.bytecode.attributes.SignatureAttributeInfo;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
@@ -123,6 +126,14 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
         FieldInfo[] infos = new FieldInfo[this.allFields.size()];
         int[] i = {0};
         this.allFields.forEach((s, compileField) -> {
+            List<AttributeInfo> attributes = new ArrayList<>();
+
+            if (compileField.getInit() instanceof Expr.Literal literal) {
+                attributes.add(new ConstantValueAttributeInfo(literal.literal().literal().toBytecode()));
+            }
+
+            attributes.add(new SignatureAttributeInfo(VarTypeManager.getClassName(this)));
+
             //ConstantValue, Synthetic, Signature, Deprecated, RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations
             AttributeInfo[] attributeInfos = new AttributeInfo[0];
 
@@ -145,20 +156,21 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
         this.allMethods.forEach((s, container) -> {
 
             for (ScriptedCallable method : container.methods()) {
+                ((CompileCallable) method).save(synthesizer);
+
                 //Code, Exceptions, Synthetic, Signature, Deprecated, RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations,
                 //RuntimeVisibleParameterAnnotations, RuntimeInvisibleParameterAnnotations, AnnotationDefault
-                AttributeInfo[] attributeInfos = new AttributeInfo[]{
-                        CodeAttributeInfo.create(method.getChunk())
-
-                };
-
-                ((CompileCallable) method).save(synthesizer);
+                List<AttributeInfo> attributes = new ArrayList<>();
+                if (!method.isAbstract()) {
+                    attributes.add(CodeAttributeInfo.create(method.getChunk()));
+                }
+                attributes.add(SignatureAttributeInfo.create(method.getMethodTypeSignature(this)));
 
                 infos[i[0]++] = new MethodInfo(
                         method.modifiers(),
                         s,
                         VarTypeManager.getClassName(method.retType()),
-                        attributeInfos
+                        attributes.toArray(new AttributeInfo[0])
                 );
             }
 
