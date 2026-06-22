@@ -2,6 +2,8 @@ package net.kapitencraft.lang.func;
 
 import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.run.VarTypeManager;
 
@@ -25,6 +27,10 @@ public interface ScriptedCallable {
     ClassReference[] argTypes();
 
     Object call(Object[] arguments);
+
+    default String getMethodTypeSignature(ScriptedClass compileClass) {
+        return "(" +
+    }
 
     default Chunk getChunk() {
         return null;

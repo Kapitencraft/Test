@@ -1,6 +1,10 @@
 package net.kapitencraft.lang.holder;
 
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantDoubleInfo;
+import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantFloatInfo;
+import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantIntegerInfo;
+import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolEntry;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.tool.GsonHelper;
@@ -9,29 +13,19 @@ public record LiteralHolder(Object value, ScriptedClass type) {
 
     public static final LiteralHolder EMPTY = new LiteralHolder(null, null);
 
-    public JsonObject toJson() {
-        JsonObject object = new JsonObject();
-        if (this == EMPTY) return object;
+    public ConstantPoolEntry toBytecode() {
+        if (this == EMPTY)
+            throw new IllegalAccessError("can not convert empty literal to bytecode");
         if (type == VarTypeManager.INTEGER) {
-            object.addProperty("type", "int");
-            object.addProperty("value", (Integer)value);
+            return new ConstantIntegerInfo((Integer) value);
         } else if (type == VarTypeManager.FLOAT) {
-            object.addProperty("type", "float");
-            object.addProperty("value", (Float)value);
+            return new ConstantFloatInfo((Float) value);
         } else if (type == VarTypeManager.DOUBLE) {
-            object.addProperty("type", "double");
-            object.addProperty("value", (Double)value);
+            return new ConstantDoubleInfo((Double) value);
         } else if (type == VarTypeManager.BOOLEAN) {
-            object.addProperty("type", "bool");
-            object.addProperty("value", (Boolean)value);
-        } else if (type == VarTypeManager.CHAR) {
-            object.addProperty("type", "char");
-            object.addProperty("value", (Character)value);
-        } else if (type.is(VarTypeManager.STRING.get())) {
-            object.addProperty("type", "String");
-            object.addProperty("value", (String)value);
-        }
-        return object;
+            return new ConstantIntegerInfo((Boolean) value ? 1 : 0);
+        } else
+            throw new IllegalArgumentException("unknown literal holder type: " + type);
     }
 
     public static LiteralHolder fromJson(JsonObject object) {
