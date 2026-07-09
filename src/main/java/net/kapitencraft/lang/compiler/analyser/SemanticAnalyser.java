@@ -144,7 +144,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         return OperationInfo.UNKNOWN;
     }
 
-    public void analyseBody(Stmt[] body, ClassReference retType, ClassReference[] thrown, List<Pair<ClassReference, String>> params, @Nullable ClassReference selfClass) {
+    public void analyseBody(List<Stmt> body, ClassReference retType, ClassReference[] thrown, List<Pair<ClassReference, String>> params, @Nullable ClassReference selfClass) {
         this.methodReturnType = retType;
         this.methodThrown.clear();
         this.methodThrown.push(thrown);
@@ -788,6 +788,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                     operationInfo = getOperationInfo(varAnalyser.getType(expr.name.lexeme()), expr.type, expr.value);
                 expr.executor = operationInfo.executor;
             }
+            expr.ordinal = result.ordinal();
         } else {
             if (expr.fieldOwner != null) {
                 ScriptedClass scriptedClass = expr.fieldOwner.get();

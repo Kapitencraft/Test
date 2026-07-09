@@ -9,6 +9,7 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.CompileField;
+import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -70,6 +71,16 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
         if (this.modifiers != 0) object.addProperty("modifiers", modifiers);
 
         return object;
+    }
+
+    @Override
+    public void optimize() {
+        for (DataMethodContainer value : this.allMethods.values()) {
+            for (ScriptedCallable method : value.methods()) {
+                if (method instanceof CompileCallable callable)
+                    callable.optimize();
+            }
+        }
     }
 
     @Override

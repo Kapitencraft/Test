@@ -102,7 +102,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             byte ordinal = expr.ordinal;
             AssignOperators result = getAssignOperators(ordinal);
             assign(expr.executor, expr.value, expr.type, result.get(), result.assign(), opcode -> {
-                if (ordinal > 2)
+                if ((ordinal & 255) > 2)
                     byteCodeBuilder.addLocalAccess(opcode, ordinal);
                 else
                     byteCodeBuilder.addSimple(opcode);

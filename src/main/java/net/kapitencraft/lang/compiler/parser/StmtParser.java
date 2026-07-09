@@ -384,12 +384,12 @@ public class StmtParser extends ExprParser {
         return stmt;
     }
 
-    public Stmt[] parse() {
-        if (tokens.length == 0) return new Stmt[]{returnStmt(Token.createNative("return"))};
+    public List<Stmt> parse() {
+        if (tokens.length == 0) return List.of(returnStmt(Token.createNative("return")));
         List<Stmt> stmts = new ArrayList<>();
         while (!isAtEnd()) stmts.add(declaration());
         if (!seenReturn.getLast()) stmts.add(returnStmt(Token.createNative("return")));
-        return stmts.toArray(Stmt[]::new);
+        return stmts;
     }
 
     private Stmt returnStmt(Token aReturn) {

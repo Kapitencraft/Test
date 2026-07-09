@@ -41,7 +41,12 @@ public class NativeMethod implements ScriptedCallable {
     @Override
     public Object call(Object[] arguments) {
         try {
-            return new NativeClassInstance((NativeClassImpl) type.get(), method.invoke(instance ? NativeClassLoader.extractNative(arguments[0]) : null, NativeClassLoader.extractNatives(arguments, instance)));
+            Object value = method.invoke(instance ? NativeClassLoader.extractNative(arguments[0]) : null, NativeClassLoader.extractNatives(arguments, instance));
+            if (type == VarTypeManager.VOID.reference())
+                return null;
+            if (type.get().isPrimitive()) //don't wrap primitive values
+                return value;
+            return new NativeClassInstance((NativeClassImpl) type.get(), value);
         } catch (IllegalAccessException | InvocationTargetException e) {
             VirtualMachine.handleException(VirtualMachine.createException(VarTypeManager.FUNCTION_CALL_ERROR, e.getMessage()));
         } catch (Throwable e) {

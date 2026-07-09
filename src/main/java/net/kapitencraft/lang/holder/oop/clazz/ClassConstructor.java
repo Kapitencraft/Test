@@ -5,6 +5,7 @@ import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
@@ -14,6 +15,8 @@ import net.kapitencraft.lang.holder.oop.Validatable;
 import net.kapitencraft.lang.holder.oop.attribute.FieldHolder;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.method.CompileCallable;
+import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -57,7 +60,7 @@ public interface ClassConstructor extends Validatable {
         return initializer;
     }
 
-    default void checkFinalsPopulated(Stmt[] body, List<String> finalFields) {
+    default void checkFinalsPopulated(List<Stmt> body, List<String> finalFields) {
 
     }
 
@@ -67,5 +70,22 @@ public interface ClassConstructor extends Validatable {
             annotations.add(stmtParser.parseAnnotation(obj, parser));
         }
         return annotations.toArray(Annotation[]::new);
+    }
+
+    static void addClinit(List<Stmt> statics, List<Pair<Token, CompileCallable>> methods) {
+        Stmt.Return aReturn = new Stmt.Return();
+        aReturn.keyword = Token.createNative("return");
+        statics.add(aReturn);
+        methods.add(Pair.of( //add <clinit> method
+                Token.createNative("<clinit>"),
+                new CompileCallable(
+                        VarTypeManager.VOID.reference(),
+                        List.of(),
+                        new ClassReference[0],
+                        statics,
+                        Modifiers.pack(true, true, false),
+                        new Annotation[0]
+                )
+        ));
     }
 }

@@ -197,13 +197,11 @@ public class ExprParser extends AbstractParser {
 
             if (expr instanceof Expr.SingleIdentifier varRef) {
                 Token name = varRef.name;
-                byte ordinal = varRef.ordinal;
 
                 Expr.IdentifierAssign assign = new Expr.IdentifierAssign();
                 assign.name = name;
                 assign.type = assignKeyword;
                 assign.value = value;
-                assign.ordinal = ordinal;
                 assign.fieldOwner = varRef.type;
                 return assign;
             } else if (expr instanceof Expr.Get get) {

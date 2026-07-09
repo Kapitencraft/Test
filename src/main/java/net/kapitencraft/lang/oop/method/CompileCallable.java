@@ -2,6 +2,7 @@ package net.kapitencraft.lang.oop.method;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.ast_optimize.ASTOptimizer;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
@@ -20,11 +21,11 @@ public class CompileCallable implements ScriptedCallable {
     private final ClassReference retType;
     private final List<Pair<ClassReference, String>> params;
     private final ClassReference[] thrown;
-    private final Stmt[] body;
+    private final List<Stmt> body;
     private final short modifiers;
     private final Annotation[] annotations;
 
-    public CompileCallable(ClassReference retType, List<Pair<ClassReference, String>> params, ClassReference[] thrown, Stmt[] body, short modifiers, Annotation[] annotations) {
+    public CompileCallable(ClassReference retType, List<Pair<ClassReference, String>> params, ClassReference[] thrown, List<Stmt> body, short modifiers, Annotation[] annotations) {
         this.retType = retType;
         this.params = params;
         this.thrown = thrown;
@@ -108,5 +109,10 @@ public class CompileCallable implements ScriptedCallable {
     @Override
     public ClassReference[] thrown() {
         return thrown;
+    }
+
+    public void optimize() {
+        if (!this.isAbstract())
+            ASTOptimizer.optimize(this.body);
     }
 }

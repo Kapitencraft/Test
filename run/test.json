@@ -99,5 +99,11 @@
     "output": [
       "Ag", "Ba", "Cn", "Db", "Er", "Fm", "Ge", "Hg"
     ]
+  },
+  {
+    "target": "test.SumTest",
+    "output": [
+      "1275", "42925"
+    ]
   }
 ]

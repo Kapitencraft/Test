@@ -58,7 +58,7 @@ public record ClassHolder(ClassReference target, short modifiers,
 
         List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
         for (MethodHolder methodHolder : this.methodHolders()) {
-            Stmt[] body = new Stmt[0];
+            List<Stmt> body = null;
             if (!Modifiers.isAbstract(methodHolder.modifiers())) {
                 stmtParser.apply(methodHolder.body(), parser);
                 if (Modifiers.isStatic(methodHolder.modifiers()))
@@ -75,27 +75,14 @@ public record ClassHolder(ClassReference target, short modifiers,
         }
 
         if (!statics.isEmpty()) {
-            Stmt.Return aReturn = new Stmt.Return();
-            aReturn.keyword = name.asIdentifier("return");
-            statics.add(aReturn);
-            methods.add(Pair.of( //add <clinit> method
-                    name.asIdentifier("<clinit>"),
-                    new CompileCallable(
-                            VarTypeManager.VOID.reference(),
-                            List.of(),
-                            new ClassReference[0],
-                            statics.toArray(new Stmt[0]),
-                            Modifiers.pack(true, true, false),
-                            new Annotation[0]
-                    )
-            ));
+            ClassConstructor.addClinit(statics, methods);
         }
 
         List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
         for (ConstructorHolder constructorHolder : this.constructorHolders()) {
             stmtParser.apply(constructorHolder.body(), parser);
             stmtParser.applyMethod(ClassReference.of(VarTypeManager.VOID), constructorHolder.generics());
-            Stmt[] body = stmtParser.parse();
+            List<Stmt> body = stmtParser.parse();
             Annotation[] annotations = stmtParser.parseAnnotations(constructorHolder.annotations(), parser);
 
             CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), constructorHolder.extractParams(), constructorHolder.extractThrown(), body, (short) 0, annotations);

@@ -138,4 +138,8 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
     public void printErrors() {
         this.storage.printAll();
     }
+
+    public void optimize() {
+        this.target.optimize();
+    }
 }

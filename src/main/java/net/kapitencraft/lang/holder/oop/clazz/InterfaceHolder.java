@@ -55,7 +55,7 @@ public record InterfaceHolder(ClassReference target, short modifiers,
 
         List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
         for (MethodHolder methodHolder : this.methodHolders()) {
-            Stmt[] body = null;
+            List<Stmt> body = null;
             if (!Modifiers.isAbstract(methodHolder.modifiers())) {
                 stmtParser.apply(methodHolder.body(), parser);
                 if (Modifiers.isStatic(methodHolder.modifiers()))
@@ -72,20 +72,7 @@ public record InterfaceHolder(ClassReference target, short modifiers,
         }
 
         if (!statics.isEmpty()) {
-            Stmt.Return aReturn = new Stmt.Return();
-            aReturn.keyword = Token.createNative("return");
-            statics.add(aReturn);
-            methods.add(Pair.of( //add <clinit> method
-                    Token.createNative("<clinit>"),
-                    new CompileCallable(
-                            VarTypeManager.VOID.reference(),
-                            List.of(),
-                            new ClassReference[0],
-                            statics.toArray(new Stmt[0]),
-                            Modifiers.pack(true, true, false),
-                            new Annotation[0]
-                    )
-            ));
+            ClassConstructor.addClinit(statics, methods);
         }
 
         Annotation[] annotations = stmtParser.parseAnnotations(this.annotations(), parser);

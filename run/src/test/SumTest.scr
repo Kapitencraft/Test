@@ -3,16 +3,13 @@ package test;
 class SumTest {
 
     static void main(String[] args) {
-        int s = 0;
-        for (int i = 1; i <= 100; i++) {
-            s += i;
-        }
-        System.print(s);
+        System.print(sum(50));
+        System.print(quadSum(50));
     }
 
     static int sum(int n) {
         int sum = 0;
-        for (int i = 0; i <= n; i++) {
+        for (int i = 1; i <= n; i++) {
             sum += i;
         }
         return sum;

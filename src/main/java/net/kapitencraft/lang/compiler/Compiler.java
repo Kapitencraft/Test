@@ -277,6 +277,7 @@ public class Compiler {
         SYNTAX_ANALYSIS(CompilerLoaderHolder::construct),
         SEMANTIC_ANALYSIS(CompilerLoaderHolder::analyse),
         FINALIZE_LOAD(CompilerLoaderHolder::finalizeLoad),
+        OPTIMIZE(CompilerLoaderHolder::optimize),
         CACHING(CompilerLoaderHolder::cache);
 
         private final Consumer<CompilerLoaderHolder> action;

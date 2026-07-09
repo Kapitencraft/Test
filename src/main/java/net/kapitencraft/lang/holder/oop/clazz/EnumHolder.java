@@ -136,7 +136,7 @@ public record EnumHolder(ClassReference target, short modifiers,
 
         List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
         for (MethodHolder methodHolder : this.methodHolders()) {
-            Stmt[] body = null;
+            List<Stmt> body = null;
             if (!Modifiers.isAbstract(methodHolder.modifiers())) {
                 stmtParser.apply(methodHolder.body(), parser);
                 if (Modifiers.isStatic(methodHolder.modifiers()))
@@ -165,7 +165,7 @@ public record EnumHolder(ClassReference target, short modifiers,
                 new CompileCallable(VarTypeManager.VOID.reference(),
                         List.of(),
                         new ClassReference[0],
-                        statics.toArray(new Stmt[0]),
+                        statics,
                         Modifiers.pack(true, true, false),
                         new Annotation[0]
                 )
@@ -183,9 +183,7 @@ public record EnumHolder(ClassReference target, short modifiers,
                         target.array(),
                         List.of(),
                         new ClassReference[0],
-                        new Stmt[]{
-                                aReturn1
-                        },
+                        List.of(aReturn1),
                         Modifiers.pack(false, true, false),
                         new Annotation[0]
                 )
@@ -196,12 +194,13 @@ public record EnumHolder(ClassReference target, short modifiers,
         for (ConstructorHolder enumConstructorHolder : this.constructorHolders()) {
             stmtParser.apply(enumConstructorHolder.body(), parser);
             stmtParser.applyMethod(ClassReference.of(VarTypeManager.VOID), enumConstructorHolder.generics());
-            Stmt[] body = prefixEnumConstructorCall(stmtParser.parse());
-            this.checkFinalsPopulated(body, finalFields);
-            body = this.prefixFieldInitializers(body, initializedFields);
+            List<Stmt> original = stmtParser.parse();
+            prefixEnumConstructorCall(original);
+            this.checkFinalsPopulated(original, finalFields);
+            this.prefixFieldInitializers(original, initializedFields);
             Annotation[] annotations = stmtParser.parseAnnotations(enumConstructorHolder.annotations(), parser);
 
-            CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), enumConstructorHolder.extractParams(), enumConstructorHolder.extractThrown(), body, (short) 0, annotations);
+            CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), enumConstructorHolder.extractParams(), enumConstructorHolder.extractThrown(), original, (short) 0, annotations);
             stmtParser.popMethod(enumConstructorHolder.closeBracket());
             constructors.add(Pair.of(enumConstructorHolder.name(), constDecl));
         }
@@ -222,7 +221,7 @@ public record EnumHolder(ClassReference target, short modifiers,
             constructors.add(Pair.of(this.name, new CompileCallable(VarTypeManager.VOID.reference(), List.of(
                     Pair.of(VarTypeManager.STRING, "$name"),
                     Pair.of(VarTypeManager.INTEGER.reference(), "$ordinal")
-            ), new ClassReference[0], new Stmt[]{stmt1, ret}, (short) 0, new Annotation[0])));
+            ), new ClassReference[0], List.of(stmt1, ret), (short) 0, new Annotation[0])));
         }
 
         return new BakedClass(
@@ -310,12 +309,9 @@ public record EnumHolder(ClassReference target, short modifiers,
     /**
      * @param og             the original's constructor's body code
      * @param fieldsWithInit the fields that are to be initialized
-     * @return the new constructor code with the fields being initialized
      */
-    public Stmt[] prefixFieldInitializers(Stmt[] og, List<CompileField> fieldsWithInit) {
-        Stmt[] out = new Stmt[og.length + fieldsWithInit.size()];
-        System.arraycopy(og, 0, out, fieldsWithInit.size(), og.length);
-        for (int i = 0; i < fieldsWithInit.size(); i++) {
+    public void prefixFieldInitializers(List<Stmt> og, List<CompileField> fieldsWithInit) {
+        for (int i = fieldsWithInit.size() - 1; i > 0; i--) {
             CompileField field = fieldsWithInit.get(i);
             Token fieldName = field.getName();
             Stmt.Expression expression = new Stmt.Expression();
@@ -328,9 +324,8 @@ public record EnumHolder(ClassReference target, short modifiers,
                 set.executor = field.getType();
                 expression.expression = set;
             }
-            out[i] = expression;
+            og.addFirst(expression);
         }
-        return out;
     }
 
     /**
@@ -360,9 +355,7 @@ public record EnumHolder(ClassReference target, short modifiers,
      * @param original the original code of the constructor
      * @return the new code of the constructor, adding a `super` call to {@code Enum;<init>}
      */
-    private Stmt[] prefixEnumConstructorCall(Stmt[] original) {
-        Stmt[] out = new Stmt[original.length + 1];
-        System.arraycopy(original, 0, out, 1, original.length);
+    private void prefixEnumConstructorCall(List<Stmt> original) {
         Stmt.Expression expression = new Stmt.Expression();
         {
             Expr.Call call = new Expr.Call();
@@ -377,8 +370,7 @@ public record EnumHolder(ClassReference target, short modifiers,
             call.signature = "Lscripted/lang/Enum;<init>(Lscripted/lang/String;I)";
             expression.expression = call;
         }
-        out[0] = expression;
-        return out;
+        original.addFirst(expression);
     }
 
     private Expr varRef(Token name, byte ordinal) {
