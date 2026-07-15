@@ -4,8 +4,8 @@ import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantDoubleInfo;
 import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantFloatInfo;
 import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantIntegerInfo;
 import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolEntry;
-import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.run.VarTypeManager;
 
 public record LiteralHolder(Object value, ScriptedClass type) {
 

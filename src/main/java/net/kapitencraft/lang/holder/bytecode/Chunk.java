@@ -1,11 +1,9 @@
 package net.kapitencraft.lang.holder.bytecode;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
-import net.kapitencraft.lang.exe.Opcode;
+import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.lang.bytecode.exe.Opcode;
 import net.kapitencraft.lang.compiler.ConstantPoolBuilder;
+import net.kapitencraft.lang.compiler.Synthesizer;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.exe.VarTypeManager;
@@ -44,8 +42,8 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
             patchJump(falsePatch, (short) currentCodeIndex());
         }
 
-        public void addLocal(int index, ClassReference type, String  name) {
-            this.locals.addLocal(currentCodeIndex(), index, VarTypeManager.getClassName(type), name);
+        public void addLocal(int index, String type, String name) {
+            this.locals.addLocal(currentCodeIndex(), index, type, name);
         }
 
         public void patchJump(int index, short destination) {
