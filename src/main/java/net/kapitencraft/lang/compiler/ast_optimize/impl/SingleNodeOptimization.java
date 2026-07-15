@@ -4,7 +4,6 @@ import net.kapitencraft.lang.compiler.ast_optimize.ASTOptimization;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.List;
 
 public abstract class SingleNodeOptimization<T extends Stmt> implements ASTOptimization {
