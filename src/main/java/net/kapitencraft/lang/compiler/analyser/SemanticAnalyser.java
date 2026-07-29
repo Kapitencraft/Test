@@ -3,7 +3,7 @@ package net.kapitencraft.lang.compiler.analyser;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.algebra.OperationType;
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;

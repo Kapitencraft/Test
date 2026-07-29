@@ -1,19 +1,16 @@
 package net.kapitencraft.lang.oop.method;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class CompileCallable implements ScriptedCallable {
@@ -34,22 +31,9 @@ public class CompileCallable implements ScriptedCallable {
         this.annotations = annotations;
     }
 
-    public JsonObject save(CacheBuilder builder) {
-        JsonObject object = new JsonObject();
-        object.addProperty("retType", VarTypeManager.getClassName(retType.get()));
-        {
-            JsonArray array = new JsonArray();
-            params.stream().map(Pair::getFirst).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
-            object.add("params", array);
-        }
-        {
-            JsonArray array = new JsonArray();
-            Arrays.stream(thrown).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
-            object.add("thrown", array);
-        }
+    public void build(CacheBuilder builder) {
         if (!isAbstract()) {
-            Chunk.Builder chunk = new Chunk.Builder();
-            builder.reset();
+            Chunk.Builder chunk = builder.reset();
             int rIndex = 0;
             if (!isStatic()) {
                 chunk.addLocal(0, VarTypeManager.VOID.reference(), "this");

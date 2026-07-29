@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;

@@ -2,7 +2,7 @@ package net.kapitencraft.lang.exe.natives.impl;
 
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.natives.NativeClassLoader;
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;

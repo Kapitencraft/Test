@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.oop.attribute.ConstructorHolder;
@@ -107,6 +107,11 @@ public class SkeletonMethod implements ScriptedCallable {
     @Override
     public boolean isStatic() {
         return Modifiers.isStatic(modifiers);
+    }
+
+    @Override
+    public short modifiers() {
+        return modifiers;
     }
 
     @Override

@@ -1,9 +1,7 @@
 package net.kapitencraft.lang.holder.token;
 
-import com.google.gson.JsonObject;
-import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.tool.GsonHelper;
+import net.kapitencraft.lang.holder.LiteralHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,19 +9,6 @@ public record Token(TokenType type, String lexeme, LiteralHolder literal, int li
 
     public @NotNull String toString() {
         return String.format("Token{type=%s, lexeme=\"%s\", literal=%s}@line%s", type, lexeme, literal, line);
-    }
-
-    public static Token readFromSubObject(JsonObject object, String name) {
-        return fromJson(GsonHelper.getAsJsonObject(object, name));
-    }
-
-    public static Token fromJson(JsonObject object) {
-        TokenType type = TokenType.valueOf(GsonHelper.getAsString(object, "type"));
-        String lexeme = GsonHelper.getAsString(object, "lexeme");
-        LiteralHolder literal = LiteralHolder.fromJson(GsonHelper.getAsJsonObject(object, "literal"));
-        int line = GsonHelper.getAsInt(object, "line");
-        int lineStartIndex = GsonHelper.getAsInt(object, "lineStartIndex");
-        return new Token(type, lexeme, literal, line, lineStartIndex);
     }
 
     public static Token createNative(String lexeme) {

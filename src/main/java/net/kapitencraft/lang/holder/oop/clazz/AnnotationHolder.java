@@ -6,7 +6,7 @@ import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.baked.BakedAnnotation;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;

@@ -14,6 +14,7 @@ import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +27,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
     private final Compiler.ErrorStorage storage;
     private ClassConstructor holder;
     private Compiler.ClassBuilder builder;
-    private CacheableClass target;
+    private CompileClass target;
     private final VarTypeContainer varTypeContainer;
 
     public CompilerLoaderHolder(File file) {
@@ -93,7 +94,6 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         try {
             Compiler.cache(
                     ClassLoader.cacheLoc,
-                    new CacheBuilder(), //MUST under ALL CIRCUMSTANCES be thread-save. create a new object per class
                     target.pck().replace(".", "/"),
                     target,
                     target.name()
@@ -126,7 +126,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         FinalsPopulatedAnalyser analyser = new FinalsPopulatedAnalyser(this.storage);
 
         target = builder.build();
-        this.holder.target().setTarget((ScriptedClass) target);
+        this.holder.target().setTarget(target);
     }
 
     public void validate() {

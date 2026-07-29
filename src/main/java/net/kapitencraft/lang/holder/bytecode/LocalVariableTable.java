@@ -1,10 +1,9 @@
 package net.kapitencraft.lang.holder.bytecode;
 
-import net.kapitencraft.lang.bytecode.compile.BytecodeBuilder;
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.lang.compiler.bytecode.BytecodeBuffer;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.lang.exe.load.BytecodeReader;
 import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantUtf8Info;
-import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 
 import java.util.ArrayList;
@@ -20,11 +19,20 @@ public record LocalVariableTable(Entry[] entries) {
         return Pair.of("UNKNOWN", "V");
     }
 
-    public void write(CacheBuffer buffer, BytecodeBuilder builder) {
+    public void write(CacheBuffer buffer, BytecodeBuffer builder) {
         buffer.writeShort(entries.length);
         for (Entry entry : entries) {
             entry.write(buffer, builder);
         }
+    }
+
+    public static LocalVariableTable read(BytecodeReader reader) {
+        int length = reader.read2b();
+        Entry[] entries = new Entry[length];
+        for (int i = 0; i < length; i++) {
+            entries[i] = Entry.read(reader);
+        }
+        return new LocalVariableTable(entries);
     }
 
     public int bytecodeLength() {
@@ -33,12 +41,20 @@ public record LocalVariableTable(Entry[] entries) {
 
     private record Entry(int startPc, int length, String name, String type, int index) {
 
-        private void write(CacheBuffer buffer, BytecodeBuilder builder) {
+        private void write(CacheBuffer buffer, BytecodeBuffer builder) {
             buffer.writeShort(startPc);
             buffer.writeShort(length);
             builder.extractCPEntry(ConstantUtf8Info.create(name));
             builder.extractCPEntry(ConstantUtf8Info.create(type));
             buffer.writeShort(index);
+        }
+
+        private static Entry read(BytecodeReader reader) {
+            int startPc = reader.read2b(), length = reader.read2b();
+            ConstantUtf8Info name = reader.readCpEntry();
+            ConstantUtf8Info type = reader.readCpEntry();
+            int index = reader.read2b();
+            return new Entry(startPc, length, name.value(), type.value(), index);
         }
     }
 

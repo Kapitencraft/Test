@@ -1,10 +1,16 @@
 package net.kapitencraft.lang.holder.bytecode.const_pool;
 
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.lang.exe.load.BytecodeReader;
 
-public class ConstantNameAndTypeInfo implements ConstantPoolEntry {
-    private ConstantUtf8Info name;
-    private ConstantUtf8Info descriptor;
+public record ConstantNameAndTypeInfo(ConstantUtf8Info name, ConstantUtf8Info descriptor) implements ConstantPoolEntry {
+    public static void read(BytecodeReader reader, ConstantPoolReader cpReader) {
+        ConstantNameAndTypeInfo info = new ConstantNameAndTypeInfo(
+                cpReader.get(reader.read2b()),
+                cpReader.get(reader.read2b())
+        );
+        cpReader.add(info);
+    }
 
     @Override
     public byte getTag() {

@@ -2,7 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.SwitchKey;
@@ -13,7 +13,6 @@ import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.oop.AnnotationObj;
 import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import org.jetbrains.annotations.NotNull;

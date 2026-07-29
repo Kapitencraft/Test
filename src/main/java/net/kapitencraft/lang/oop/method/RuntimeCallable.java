@@ -1,52 +1,44 @@
 package net.kapitencraft.lang.oop.method;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.common.collect.Multimap;
+import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
-import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.holder.bytecode.attributes.AttributeInfo;
+import net.kapitencraft.lang.holder.bytecode.attributes.AttributeOwner;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.tool.GsonHelper;
-import net.kapitencraft.tool.StringReader;
 
+import java.util.Collection;
 import java.util.List;
 
-public class RuntimeCallable implements ScriptedCallable {
+public class RuntimeCallable implements ScriptedCallable, AttributeOwner {
     private final ClassReference retType;
     private final ClassReference[] params;
     private final ClassReference[] thrown;
     private final Chunk body;
     private final short modifiers;
     private final Annotation[] annotations;
+    private final Multimap<String, AttributeInfo> attributes;
 
-    public RuntimeCallable(ClassReference retType, List<ClassReference> params, List<ClassReference> thrown, Chunk body, short modifiers, Annotation[] annotations) {
+    public RuntimeCallable(ClassReference retType, List<ClassReference> params, List<ClassReference> thrown, Chunk body, short modifiers, Annotation[] annotations, AttributeInfo[] attributes) {
         this.retType = retType;
         this.params = params.toArray(ClassReference[]::new);
         this.thrown = thrown.toArray(ClassReference[]::new);
         this.body = body;
         this.modifiers = modifiers;
         this.annotations = annotations;
+        this.attributes = AttributeOwner.createLookup(attributes);
     }
 
-    public static RuntimeCallable load(JsonObject data) {
-        ClassReference retType = VarTypeManager.parseType(new StringReader(GsonHelper.getAsString(data, "retType")));
+    @Override
+    public <T extends AttributeInfo> Collection<T> getAttribute(String name) {
+        return (Collection<T>) attributes.get(name);
+    }
 
-        List<ClassReference> params = GsonHelper.getAsClassReferenceList(data, "params");
-
-        List<ClassReference> thrown = GsonHelper.getAsClassReferenceList(data, "thrown");
-
-        short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
-
-        Chunk b;
-        if (Modifiers.isAbstract(modifiers)) b = null;
-        else b  = Chunk.load(GsonHelper.getAsJsonObject(data, "body"));
-
-        Annotation[] annotations = Annotation.readAnnotations(data);
-
-        return new RuntimeCallable(retType, params, thrown, b, modifiers, annotations);
+    @Override
+    public boolean hasAttribute(String name) {
+        return attributes.containsKey(name);
     }
 
     @Override
@@ -72,6 +64,11 @@ public class RuntimeCallable implements ScriptedCallable {
     @Override
     public boolean isStatic() {
         return Modifiers.isStatic(modifiers);
+    }
+
+    @Override
+    public short modifiers() {
+        return modifiers;
     }
 
     @Override

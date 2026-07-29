@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.oop.method.map;
 
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import org.jetbrains.annotations.Nullable;
 

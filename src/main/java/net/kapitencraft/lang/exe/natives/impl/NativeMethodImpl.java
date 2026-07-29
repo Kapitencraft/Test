@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.exe.natives.impl;
 
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 
 @Deprecated

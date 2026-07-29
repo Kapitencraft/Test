@@ -1,7 +1,8 @@
 package net.kapitencraft.lang.holder.bytecode.attributes;
 
-import net.kapitencraft.lang.bytecode.compile.BytecodeBuilder;
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.lang.compiler.bytecode.BytecodeBuffer;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.lang.exe.load.BytecodeReader;
 import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolEntry;
 
 public class ConstantValueAttributeInfo implements AttributeInfo {
@@ -9,6 +10,10 @@ public class ConstantValueAttributeInfo implements AttributeInfo {
 
     public ConstantValueAttributeInfo(ConstantPoolEntry constant) {
         this.constant = constant;
+    }
+
+    public static AttributeInfo read(BytecodeReader reader) {
+        return new ConstantValueAttributeInfo(reader.readCpEntry());
     }
 
     @Override
@@ -22,7 +27,9 @@ public class ConstantValueAttributeInfo implements AttributeInfo {
     }
 
     @Override
-    public void write(CacheBuffer buffer, BytecodeBuilder bytecodeBuilder) {
+    public void write(CacheBuffer buffer, BytecodeBuffer bytecodeBuilder) {
         bytecodeBuilder.extractCPEntry(constant);
     }
+
+
 }

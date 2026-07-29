@@ -1,28 +1,29 @@
 package net.kapitencraft.lang.oop.clazz.generated;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonObject;
-import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
+import com.google.common.collect.Multimap;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.exe.ScriptedCallable;
+import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
+import net.kapitencraft.lang.holder.bytecode.attributes.AttributeInfo;
+import net.kapitencraft.lang.holder.bytecode.attributes.AttributeOwner;
+import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolEntry;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
-import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.oop.field.RuntimeField;
 import net.kapitencraft.lang.oop.field.ScriptedField;
-import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.exe.load.ClassLoader;
-import net.kapitencraft.tool.GsonHelper;
+import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.lang.tool.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public final class RuntimeClass implements ScriptedClass {
+public final class RuntimeClass implements ScriptedClass, AttributeOwner {
     private final Map<String, Object> staticFields = new HashMap<>();
+    public final ConstantPoolEntry[] constantPoolEntries;
 
     private final GeneratedMethodMap methods;
 
@@ -37,12 +38,16 @@ public final class RuntimeClass implements ScriptedClass {
     private final Annotation[] annotations;
 
     private final short modifiers;
+    private final Multimap<String, AttributeInfo> attributes;
 
-    public RuntimeClass(Map<String, DataMethodContainer> methods,
+    public RuntimeClass(ConstantPoolEntry[] constantPoolEntries, Map<String, DataMethodContainer> methods,
                         Map<String, RuntimeField> fields,
                         String superclass, String name, String packageRepresentation,
                         String[] implemented,
-                        short modifiers, Annotation[] annotations) {
+                        short modifiers, Annotation[] annotations,
+                        AttributeInfo[] attributes
+    ) {
+        this.constantPoolEntries = constantPoolEntries;
         this.methods = new GeneratedMethodMap(methods);
         this.allFields = fields;
         this.superclass = superclass;
@@ -50,32 +55,13 @@ public final class RuntimeClass implements ScriptedClass {
         this.packageRepresentation = packageRepresentation;
         this.implemented = implemented;
         this.modifiers = modifiers;
+        this.attributes = AttributeOwner.createLookup(attributes);
         this.lookup = MethodLookup.createFromClass(this);
         this.annotations = annotations;
     }
 
-    public static ScriptedClass load(JsonObject data, String pck) {
-        String name = GsonHelper.getAsString(data, "name");
-        String superclass = GsonHelper.getAsString(data, "superclass");
-        String[] implemented = ClassLoader.loadInterfaces(data);
-
-        ImmutableMap<String, DataMethodContainer> methods = DataMethodContainer.load(data, name, "methods");
-
-        ImmutableMap<String, RuntimeField> fields = RuntimeField.loadFieldMap(data, "fields");
-
-        short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
-
-        Annotation[] annotations = Annotation.readAnnotations(data);
-
-        return new RuntimeClass(
-                methods,
-                fields,
-                superclass,
-                name, pck,
-                implemented,
-                modifiers,
-                annotations
-        );
+    public <T extends ConstantPoolEntry> T getConstant(int idx) {
+        return (T) constantPoolEntries[idx];
     }
 
     @Override
@@ -174,5 +160,15 @@ public final class RuntimeClass implements ScriptedClass {
     @Override
     public boolean isNative() {
         return false;
+    }
+
+    @Override
+    public <T extends AttributeInfo> Collection<T> getAttribute(String name) {
+        return (Collection<T>) this.attributes.get(name);
+    }
+
+    @Override
+    public boolean hasAttribute(String name) {
+        return this.attributes.containsKey(name);
     }
 }

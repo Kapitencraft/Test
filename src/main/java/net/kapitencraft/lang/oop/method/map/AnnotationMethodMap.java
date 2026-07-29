@@ -1,8 +1,7 @@
 package net.kapitencraft.lang.oop.method.map;
 
 import com.google.common.collect.ImmutableMap;
-import net.kapitencraft.lang.func.ScriptedCallable;
-import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import org.jetbrains.annotations.Nullable;

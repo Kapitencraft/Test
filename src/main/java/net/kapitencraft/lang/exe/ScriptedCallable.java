@@ -1,11 +1,8 @@
-package net.kapitencraft.lang.func;
+package net.kapitencraft.lang.exe;
 
 import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.exe.VarTypeManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,8 +43,8 @@ public interface ScriptedCallable {
      */
     Object call(Object[] arguments);
 
-    default String getMethodTypeSignature(ScriptedClass compileClass) {
-        return "(" +
+    default String getMethodTypeSignature() {
+        return "(" + VarTypeManager.getArgsSignature(this.argTypes()) + ")" + VarTypeManager.getClassName(this.retType());
     }
 
     /**

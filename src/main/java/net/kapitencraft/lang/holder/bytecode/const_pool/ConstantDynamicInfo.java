@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.holder.bytecode.const_pool;
 
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
 
 public class ConstantDynamicInfo implements ConstantPoolEntry {
     @Override

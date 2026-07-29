@@ -3,7 +3,7 @@ package net.kapitencraft.lang.exe.load;
 import com.google.gson.*;
 import net.kapitencraft.lang.exe.Disassembler;
 import net.kapitencraft.lang.exe.VirtualMachine;
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;

@@ -26,7 +26,7 @@ public record BakedInterface(Compiler.ErrorStorage logger, Generics generics, Cl
 ) implements Compiler.ClassBuilder {
 
     @Override
-    public CacheableClass build() {
+    public CompileClass build() {
 
         Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
         for (Pair<Token, CompileCallable> method : this.methods()) {

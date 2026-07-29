@@ -19,7 +19,6 @@ import net.kapitencraft.lang.holder.ast.SwitchKey;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
-import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.natives.NativeClassInstance;
@@ -30,7 +29,6 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.annotation.RetentionPolicy;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public static final int majorVersion = 1, minorVersion = 0;
@@ -41,8 +39,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private boolean ignoredExprResult = false;
     private final ByteCodeBuilder byteCodeBuilder;
     private final ArrayDeque<Loop> loops = new ArrayDeque<>();
+    private final ConstantPoolBuilder constantPoolBuilder;
 
-    public CacheBuilder() {
+    public CacheBuilder(ConstantPoolBuilder constantPoolBuilder) {
+        this.constantPoolBuilder = constantPoolBuilder;
         this.byteCodeBuilder = new ByteCodeBuilder();
     }
 
@@ -75,10 +75,6 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             this.cache(arg);
         }
         retainExprResult = hadRetain;
-    }
-
-    public JsonObject cacheClass(CacheableClass loxClass) {
-        return loxClass.save(this); //TODO convert to entirely bytecode later
     }
 
     public JsonArray cacheAnnotations(Annotation[] annotations) {
@@ -121,8 +117,9 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         this.byteCodeBuilder.build(chunk);
     }
 
-    public void reset() {
+    public Chunk.Builder reset() {
         this.byteCodeBuilder.reset();
+        return new Chunk.Builder(this.constantPoolBuilder);
     }
 
     private record AssignOperators(Opcode get, Opcode assign) {

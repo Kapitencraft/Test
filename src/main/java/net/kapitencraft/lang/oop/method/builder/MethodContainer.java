@@ -1,9 +1,7 @@
 package net.kapitencraft.lang.oop.method.builder;
 
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-
-import java.util.List;
 
 public interface MethodContainer {
 
