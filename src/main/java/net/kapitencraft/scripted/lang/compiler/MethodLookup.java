@@ -1,7 +1,7 @@
 package net.kapitencraft.scripted.lang.compiler;
 
 import net.kapitencraft.scripted.lang.compiler.error.ErrorStorage;
-import net.kapitencraft.scripted.lang.func.ScriptedCallable;
+import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;

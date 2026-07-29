@@ -63,6 +63,11 @@ public class NativeConstructor implements ScriptedCallable {
     }
 
     @Override
+    public short modifiers() {
+        return Modifiers.pack(false, false, false);
+    }
+
+    @Override
     public ClassReference[] thrown() {
         return thrown;
     }

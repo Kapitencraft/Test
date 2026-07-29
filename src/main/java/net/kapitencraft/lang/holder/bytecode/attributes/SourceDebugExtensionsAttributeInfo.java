@@ -1,7 +1,7 @@
 package net.kapitencraft.lang.holder.bytecode.attributes;
 
-import net.kapitencraft.lang.bytecode.compile.BytecodeBuilder;
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.lang.compiler.bytecode.BytecodeBuffer;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
 
 public class SourceDebugExtensionsAttributeInfo implements AttributeInfo {
     @Override
@@ -15,7 +15,7 @@ public class SourceDebugExtensionsAttributeInfo implements AttributeInfo {
     }
 
     @Override
-    public void write(CacheBuffer buffer, BytecodeBuilder bytecodeBuilder) {
+    public void write(CacheBuffer buffer, BytecodeBuffer bytecodeBuilder) {
 
     }
 }

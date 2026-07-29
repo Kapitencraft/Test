@@ -1,7 +1,6 @@
 package net.kapitencraft.scripted.lang.oop.method.builder;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder;
@@ -33,33 +32,6 @@ public record DataMethodContainer(ScriptedCallable[] methods) implements MethodC
         }
         //just going to make it easier for myself xD
         return methods[0];
-    }
-
-    public static ImmutableMap<String, DataMethodContainer> load(JsonObject data, String className, String member) {
-        ImmutableMap.Builder<String, DataMethodContainer> methods = new ImmutableMap.Builder<>();
-        {
-            JsonObject methodData = GsonHelper.getAsJsonObject(data, member);
-            methodData.asMap().forEach((name1, element) -> {
-                try {
-                    DataMethodContainer container = new DataMethodContainer(element.getAsJsonArray().asList().stream().map(JsonElement::getAsJsonObject).map(RuntimeCallable::load).toArray(ScriptedCallable[]::new));
-                    methods.put(name1, container);
-                } catch (Exception e) {
-                    System.err.printf("error loading method '%s' inside class '%s': %s%n", name1, className, e.getMessage());
-                }
-            });
-        }
-        return methods.build();
-    }
-
-    //expecting Container methods to be Functions (!)
-    public JsonArray cache(Synthesizer builder) {
-        JsonArray array = new JsonArray(methods.length);
-        for (ScriptedCallable method : methods) {
-            if (method instanceof CompileCallable function) {
-                array.add(function.save(builder));
-            }
-        }
-        return array;
     }
 
     public static class Builder {

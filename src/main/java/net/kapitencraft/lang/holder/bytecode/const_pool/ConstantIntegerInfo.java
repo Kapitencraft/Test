@@ -1,12 +1,12 @@
 package net.kapitencraft.lang.holder.bytecode.const_pool;
 
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.lang.exe.load.BytecodeReader;
 
-public class ConstantIntegerInfo implements ConstantPoolEntry {
-    private final int value;
+public record ConstantIntegerInfo(int value) implements ConstantPoolEntry {
 
-    public ConstantIntegerInfo(int value) {
-        this.value = value;
+    public static void read(BytecodeReader reader, ConstantPoolReader cpReader) {
+        cpReader.add(new ConstantIntegerInfo(reader.read4b()));
     }
 
     @Override

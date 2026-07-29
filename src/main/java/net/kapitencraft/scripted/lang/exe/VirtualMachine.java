@@ -34,27 +34,28 @@ public class VirtualMachine {
 
     private static CallFrame frame;
     private static byte[] code;
-    private static byte[] constants;
+    private static RuntimeClass owner;
     private static int ip = 0;
     private static int stackBottom;
 
     private static final class CallFrame {
         private final String signature;
-        private final ScriptedCallable callable;
-        private final byte[] code, constants;
+        private final RuntimeClass owner;
+        private final RuntimeCallable callable;
+        private final byte[] code;
         private final int stackBottom;
         private int stackIndex;
         private final Chunk.ExceptionHandler[] handlers;
         private int ip;
 
-        private CallFrame(String signature, ScriptedCallable callable, int stackBottom) {
+        private CallFrame(String signature, RuntimeClass owner, RuntimeCallable callable, int stackBottom) {
             this.signature = signature;
+            this.owner = owner;
             this.callable = callable;
             this.stackBottom = stackBottom;
-            Chunk chunk = callable.getChunk();
-            this.code = chunk.code();
-            this.constants = chunk.constants();
-            this.handlers = chunk.handlers();
+            CodeAttributeInfo code = callable.getSingleAttribute("Code");
+            this.code = code.chunk.code();
+            this.handlers = code.chunk.handlers();
         }
 
         @Override
@@ -164,7 +165,7 @@ public class VirtualMachine {
                         System.err.println("Non-static method can not be referenced from a static context");
                         return;
                     }
-                    init(new CallFrame(VarTypeManager.getClassName(target) + "main", method, 0));
+                    init(new CallFrame(VarTypeManager.getClassName(target) + "main", (RuntimeClass) target, (RuntimeCallable) method, 0));
                     try {
                         Interpreter.start();
                         push(Arrays.stream(data.split(" ")).map(NativeClassLoader::wrapString).toArray());
@@ -266,26 +267,23 @@ public class VirtualMachine {
                     }
                     //region invoke
                     case INVOKE_STATIC -> {
-                        String execute = readString();
-                        StringReader reader = new StringReader(execute);
-                        ScriptedClass type = VarTypeManager.flatParse(reader);
+                        ConstantMethodRefInfo info = owner.getConstant(read2Byte());
+                        ScriptedClass type = VarTypeManager.directFlatParse(info.clazz.getValue());
                         if (invokeStaticInitIfNecessary(type, 3)) continue;
-                        ScriptedCallable callable = type.getMethod(reader.getRemaining());
+                        ScriptedCallable callable = type.getMethod(info.nameAndType);
 
                         int length = callable.argTypes().length;
                         if (!callable.isStatic()) length++; //remove callee too
                         int callableStackTop = stackIndex - length;
 
                         frame.stackIndex = callableStackTop;
-                        invokeCallable(callable, execute, new Object[length], callableStackTop, length);
+                        executeCall(type, callable, execute, length, callableStackTop);
                     }
                     case INVOKE_VIRTUAL -> {
-                        String execute = readString();
-                        StringReader reader = new StringReader(execute);
-                        ScriptedClass type = VarTypeManager.flatParse(reader);
+                        ConstantMethodRefInfo info = owner.getConstant(read2Byte());
+                        ScriptedClass type = VarTypeManager.directFlatParse(info.clazz.getValue());
                         if (invokeStaticInitIfNecessary(type, 3)) continue;
-
-                        ScriptedCallable referenceCallable = type.getMethod(reader.getRemaining());
+                        ScriptedCallable referenceCallable = type.getMethod(info.nameAndType);
 
                         int length = referenceCallable.argTypes().length + 1; //reference object
                         int stackTop = stackIndex - length;
@@ -313,7 +311,8 @@ public class VirtualMachine {
                         ClassInstance instance = (ClassInstance) reference;
                         ScriptedCallable callable = instance.getType().getMethod(reader.getRemaining()); //virtual invoke of the method
 
-                        invokeCallable(callable, execute, new Object[length], stackTop, length);
+
+                        executeCall(callable, execute, length, callableStackTop);
                     }
                     case INVOKE_DYNAMIC -> {
                         String signature = readString();
@@ -338,7 +337,8 @@ public class VirtualMachine {
                     }
                     //endregion
                     case INSTANCEOF -> {
-                        ScriptedClass reference = VarTypeManager.directFlatParse(readString());
+                        ConstantClassInfo info = owner.getConstant(read2Byte());
+                        ScriptedClass reference = VarTypeManager.directFlatParse(info.getValue());
                         ClassInstance value = (ClassInstance) pop();
                         push(reference.isChildOf(value.getType()));
                     }
@@ -346,7 +346,8 @@ public class VirtualMachine {
                         if (!handleException((ClassInstance) pop())) return;
                     }
                     case NEW -> {
-                        ScriptedClass reference = VarTypeManager.directFlatParse(readString());
+                        ConstantClassInfo info = owner.getConstant(read2Byte());
+                        ScriptedClass reference = VarTypeManager.directFlatParse(info.getValue());
                         push(new DynamicClassInstance(reference));
                     }
                     case SLICE -> slice();
@@ -375,10 +376,10 @@ public class VirtualMachine {
                     case D_M1 -> push(-1d);
                     case F_1 -> push(1f);
                     case F_M1 -> push(-1f);
-                    case I_CONST -> push(constInt(constants, read2Byte()));
-                    case D_CONST -> push(constDouble(constants, read2Byte()));
-                    case F_CONST -> push(constFloat(constants, read2Byte()));
-                    case S_CONST -> push(NativeClassLoader.wrapString(readString()));
+                    case I_CONST -> push(owner.<ConstantIntegerInfo>getConstant(read2Byte()).value());
+                    case D_CONST -> push(owner.<ConstantDoubleInfo>getConstant(read2Byte()).value());
+                    case F_CONST -> push(owner.<ConstantFloatInfo>getConstant(read2Byte()).value());
+                    case S_CONST -> push(NativeClassLoader.wrapString(owner.<ConstantUtf8Info>getConstant(read2Byte()).value()));
                     //endregion
                     case CONCENTRATION -> {
                         Object object = pop();
@@ -632,28 +633,28 @@ public class VirtualMachine {
                     case GET_FIELD -> {
                         ClassInstance instance = (ClassInstance) pop();
                         if (invokeStaticInitIfNecessary(instance.getType(), 1)) continue;
-                        String s = readString();
-                        push(instance.getField(s));
+                        String name = owner.<ConstantFieldRefInfo>getConstant(read2Byte()).nameAndType.name().value();
+                        push(instance.getField(name));
                     }
                     case GET_STATIC -> {
-                        String c = readString();
-                        ScriptedClass scriptedClass = VarTypeManager.directFlatParse(c);
+                        ConstantFieldRefInfo info = owner.getConstant(read2Byte());
+                        ScriptedClass scriptedClass = VarTypeManager.directFlatParse(info.clazz.getValue());
                         if (invokeStaticInitIfNecessary(scriptedClass, 3)) continue;
-                        String field = readString();
+                        String field = info.nameAndType.name().value();
                         push(scriptedClass.getStaticField(field));
                     }
                     case PUT_FIELD -> {
                         Object value = pop();
                         ClassInstance instance = (ClassInstance) pop();
                         if (invokeStaticInitIfNecessary(instance.getType(), 1)) continue;
-                        String s = readString();
+                        String s = owner.<ConstantFieldRefInfo>getConstant(read2Byte()).nameAndType.name().value();
                         instance.assignField(s, value);
                     }
                     case PUT_STATIC -> {
-                        String c = readString();
-                        ScriptedClass scriptedClass = VarTypeManager.directFlatParse(c);
+                        ConstantFieldRefInfo info = owner.getConstant(read2Byte());
+                        ScriptedClass scriptedClass = VarTypeManager.directFlatParse(info.clazz.getValue());
                         if (invokeStaticInitIfNecessary(scriptedClass, 3)) continue;
-                        String field = readString();
+                        String field = info.nameAndType.name().value();
                         scriptedClass.setStaticField(field, pop());
                     }
                     //endregion
@@ -667,6 +668,20 @@ public class VirtualMachine {
         }
     }
 
+    private static void executeCall(ScriptedClass owner, ScriptedCallable callable, String execute, int length, int callableStackTop) {
+        if (callable.isNative()) {
+            if (DEBUG == DebugType.OPERATIONS)
+                System.out.printf("[DEBUG]:%s calling native: %s\n", visualStackSize(), execute);
+            Object[] args = new Object[length];
+            System.arraycopy(stack, callableStackTop, args, 0, length);
+            stackIndex = callableStackTop; //reset stack index
+            Object object = callable.call(args);
+            if (callable.retType().is(VarTypeManager.VOID)) return;
+            push(object);
+        } else
+            pushCall(new CallFrame(execute, (RuntimeClass) owner, (RuntimeCallable) callable, callableStackTop));
+    }
+
     private static String getStackSnapshot() {
         StringBuilder builder = new StringBuilder();
         builder.append("[");
@@ -677,19 +692,6 @@ public class VirtualMachine {
         }
         builder.append("]");
         return builder.toString();
-    }
-
-    private static void invokeCallable(ScriptedCallable callable, String execute, Object[] args, int callableStackTop, int length1) {
-        if (callable.isNative()) {
-            if (DEBUG == DebugType.OPERATIONS)
-                System.out.printf("[DEBUG]:%s calling native: %s\n", visualStackSize(), execute);
-            System.arraycopy(stack, callableStackTop, args, 0, length1);
-            stackIndex = callableStackTop; //reset stack index
-            Object object = callable.call(args);
-            if (callable.retType().is(VarTypeManager.VOID)) return;
-            push(object);
-        } else
-            pushCall(new CallFrame(execute, callable, callableStackTop));
     }
 
     private static @NotNull String readString() {
@@ -711,10 +713,10 @@ public class VirtualMachine {
         if (scriptedClass.isNative() || initialized.contains(scriptedClass)) return false;
         initialized.add(scriptedClass); //add it before so it doesn't create a recursion loop when a static call / get is executed from within the <clinit> method
         ScriptedCallable method = scriptedClass.getMethod("<clinit>()");
-        if (method != null) {
+        if (method instanceof RuntimeCallable rc) {
             ip -= opcodeOffset; //reset to the last invoked Opcode, to prevent ip corruption
             frame.stackIndex = stackIndex;
-            pushCall(new CallFrame(VarTypeManager.getClassName(scriptedClass) + "<clinit>", method, stackIndex));
+            pushCall(new CallFrame(VarTypeManager.getClassName(scriptedClass) + "<clinit>", (RuntimeClass) scriptedClass, rc, stackIndex));
             return true;
         }
         return false;
@@ -761,7 +763,7 @@ public class VirtualMachine {
             for (Chunk.ExceptionHandler handler : frame.handlers) {
                 if (ip >= handler.startOp() && ip < handler.endOp()) {
                     if (handler.catchType() != 0) {
-                        ClassReference reference = VarTypeManager.parseType(new StringReader(constString(constants, handler.catchType())));
+                        ClassReference reference = VarTypeManager.directParseType(owner.<ConstantClassInfo>getConstant(handler.catchType()).getValue());
                         if (!reference.get().isParentOf(type)) continue;
                     }
                     push(exception);
@@ -828,7 +830,7 @@ public class VirtualMachine {
         stackIndex = frame.stackIndex;
         push(o);
         code = frame.code;
-        constants = frame.constants;
+        owner = frame.owner;
         stackBottom = frame.stackBottom;
         if (DEBUG == DebugType.OPERATIONS)
             System.out.printf("[DEBUG]:%s POP_CALL (@%3d): stackIndex=%3d\n", visualStackSize(), callStackTop, stackIndex);
@@ -839,7 +841,7 @@ public class VirtualMachine {
         stackIndex = frame.stackIndex;
         ip = frame.ip;
         code = frame.code;
-        constants = frame.constants;
+        owner = frame.owner;
         stackBottom = frame.stackBottom;
         if (DEBUG == DebugType.OPERATIONS)
             System.out.printf("[DEBUG]:%s POP_CALL_NO_ARG (@%3d): stackIndex=%3d\n", visualStackSize(), callStackTop, stackIndex);
@@ -850,7 +852,7 @@ public class VirtualMachine {
         frame = callStack[callStackTop++] = callFrame;
         ip = callFrame.ip;
         code = callFrame.code;
-        constants = callFrame.constants;
+        owner = callFrame.owner;
     }
 
     private static void pushCall(CallFrame callFrame) {
@@ -858,7 +860,7 @@ public class VirtualMachine {
         frame = callStack[callStackTop++] = callFrame;
         ip = callFrame.ip;
         code = callFrame.code;
-        constants = callFrame.constants;
+        owner = callFrame.owner;
         stackBottom = callFrame.stackBottom;
         if (DEBUG == DebugType.OPERATIONS)
             System.out.printf("[DEBUG]:%s PUSH_CALL (@%3d): stackIndex=%3d, name=%s\n", visualStackSize(), callStackTop - 1, callFrame.stackBottom, callFrame.signature);

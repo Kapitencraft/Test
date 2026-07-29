@@ -3,7 +3,7 @@ package net.kapitencraft.scripted.lang.exe.natives.impl;
 import net.kapitencraft.scripted.lang.exe.VirtualMachine;
 import net.kapitencraft.scripted.lang.compiler.Modifiers;
 import net.kapitencraft.scripted.lang.exe.natives.NativeClassInstance;
-import net.kapitencraft.scripted.lang.func.ScriptedCallable;
+import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
@@ -70,6 +70,11 @@ public class NativeMethod implements ScriptedCallable {
     @Override
     public boolean isStatic() {
         return Modifiers.isStatic(modifiers);
+    }
+
+    @Override
+    public short modifiers() {
+        return modifiers;
     }
 
     @Override

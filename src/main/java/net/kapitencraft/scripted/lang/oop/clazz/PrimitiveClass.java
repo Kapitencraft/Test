@@ -2,7 +2,7 @@ package net.kapitencraft.scripted.lang.oop.clazz;
 
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
-import net.kapitencraft.scripted.lang.func.ScriptedCallable;
+import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.class_ref.PrimitiveClassReference;
 import net.kapitencraft.scripted.lang.oop.method.map.GeneratedMethodMap;

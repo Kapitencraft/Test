@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.bytecode.compile;
+package net.kapitencraft.lang.compiler.bytecode;
 
 import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolEntry;
 

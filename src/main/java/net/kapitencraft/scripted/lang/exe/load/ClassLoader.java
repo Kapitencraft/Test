@@ -7,7 +7,7 @@ import net.kapitencraft.scripted.lang.exe.Disassembler;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.exe.VirtualMachine;
 import net.kapitencraft.scripted.lang.exe.test.VMTestLoader;
-import net.kapitencraft.scripted.lang.func.ScriptedCallable;
+import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.oop.Package;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;

@@ -1,12 +1,10 @@
 package net.kapitencraft.lang.oop.method;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import net.kapitencraft.lang.bytecode.storage.Chunk;
 import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Synthesizer;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
@@ -30,9 +28,14 @@ public class CompileCallable implements ScriptedCallable {
         this.annotations = annotations;
     }
 
-    public void save(Synthesizer builder) {
-        if (!Modifiers.isAbstract(modifiers)) {
-            Chunk.Builder chunk = builder.setup();
+    public void build(CacheBuilder builder) {
+        if (!isAbstract()) {
+            Chunk.Builder chunk = builder.reset();
+            int rIndex = 0;
+            if (!isStatic()) {
+                chunk.addLocal(0, VarTypeManager.VOID.reference(), "this");
+                rIndex++;
+            }
             for (int i = 0; i < this.params.size(); i++) {
                 Pair<? extends ClassReference, String> param = this.params.get(i);
                 chunk.addLocal(0, i, param.left(), param.right());

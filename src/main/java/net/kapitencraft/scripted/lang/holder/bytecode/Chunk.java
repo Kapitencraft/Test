@@ -1,11 +1,11 @@
 package net.kapitencraft.scripted.lang.holder.bytecode;
 
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.scripted.lang.bytecode.compile.CacheBuffer;
 import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.scripted.lang.exe.Opcode;
-import net.kapitencraft.lang.compiler.ConstantPoolBuilder;
-import net.kapitencraft.lang.compiler.Synthesizer;
-import net.kapitencraft.lang.compiler.ConstantPoolBuilder;
+import net.kapitencraft.scripted.lang.compiler.ConstantPoolBuilder;
+import net.kapitencraft.scripted.lang.compiler.Synthesizer;
+import net.kapitencraft.scripted.lang.compiler.ConstantPoolBuilder;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
@@ -18,7 +18,7 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
                     LocalVariableTable localVariableTable) {
 
     /**
-     * a builder for the chunk, used inside {@link CacheBuilder CacheBuilder} to create json format of the chunk
+     * a builder for the chunk, used inside {@link net.kapitencraft.lang.compiler.bytecode.CacheBuilder CacheBuilder} to create json format of the chunk
      */
     public static class Builder {
         private final List<ExceptionHandler> handlers;
@@ -66,24 +66,21 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
 
         public void addIntConstant(int constant) {
             this.addCode(Opcode.I_CONST);
-            this.addConstantArg();
-            this.cp.write32BitInt(constant);
+            this.cp.addEntry(new ConstantIntegerInfo(constant));
         }
 
         public void addDoubleConstant(double constant) {
             this.addCode(Opcode.D_CONST);
-            this.addConstantArg();
-            long l = Double.doubleToLongBits(constant);
-            for (int i = 0; i < 8; i++) {
-                this.cp.write((byte) ((l >> (8 * i)) & 255));
-            }
+            this.add2bArg(
+                    this.cp.addEntry(new ConstantDoubleInfo(constant))
+            );
         }
 
         public void addFloatConstant(float v) {
             this.addCode(Opcode.F_CONST);
-            this.addConstantArg();
-            int i = Float.floatToIntBits(v);
-            this.cp.write32BitInt(i);
+            this.add2bArg(
+                    this.cp.addEntry(new ConstantFloatInfo(v))
+            );
         }
 
         public void addStringConstant(String constant) {
@@ -91,22 +88,14 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
             injectString(constant);
         }
 
-        /**
-         * links the current constant position into the code to be used by whatever
-         */
-        public void addConstantArg() {
-            this.add2bArg(this.cp.index());
-        }
-
         public void injectString(String constant) {
-            this.addConstantArg();
-            this.cp.writeArray(constant.getBytes());
+            this.add2bArg(
+                    this.cp.addEntry(new ConstantStringInfo(constant))
+            );
         }
 
         public int injectStringNoArg(String constant) {
-            int loc = this.cp.index();
-            this.cp.writeArray(constant.getBytes());
-            return loc;
+            return this.cp.addEntry(new ConstantStringInfo(constant));
         }
 
         public Chunk build() {
@@ -205,8 +194,9 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
 
         public void addTraceDebug(byte[] ints) {
             this.addCode(Opcode.TRACE);
-            this.addConstantArg();
-            this.cp.writeArray(ints);
+            this.add2bArg(
+                    this.cp.addEntry(new Constant())
+            );
         }
     }
 
@@ -223,6 +213,15 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
             buffer.writeShort(endOp);
             buffer.writeShort(handlerOp);
             buffer.writeShort(catchType);
+        }
+
+        public static ExceptionHandler read(BytecodeReader reader) {
+            return new ExceptionHandler(
+                    reader.read2b(),
+                    reader.read2b(),
+                    reader.read2b(),
+                    reader.read2b()
+            );
         }
     }
 }

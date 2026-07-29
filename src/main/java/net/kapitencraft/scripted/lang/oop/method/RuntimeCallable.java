@@ -11,9 +11,10 @@ import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.StringReader;
 
+import java.util.Collection;
 import java.util.List;
 
-public class RuntimeCallable implements ScriptedCallable {
+public class RuntimeCallable implements ScriptedCallable, AttributeOwner {
     private final ClassReference retType;
     private final ClassReference[] params;
     private final ClassReference[] thrown;
@@ -21,8 +22,9 @@ public class RuntimeCallable implements ScriptedCallable {
     private final short modifiers;
     private final Annotation[] annotations;
     private final ClassReference declaring;
+    private final Multimap<String, AttributeInfo> attributes;
 
-    public RuntimeCallable(ClassReference retType, List<ClassReference> params, List<ClassReference> thrown, Chunk body, short modifiers, Annotation[] annotations, ClassReference declaring) {
+    public RuntimeCallable(ClassReference retType, List<ClassReference> params, List<ClassReference> thrown, Chunk body, short modifiers, Annotation[] annotations, ClassReference declaring, AttributeInfo[] attributes) {
         this.retType = retType;
         this.params = params.toArray(ClassReference[]::new);
         this.thrown = thrown.toArray(ClassReference[]::new);
@@ -30,26 +32,17 @@ public class RuntimeCallable implements ScriptedCallable {
         this.modifiers = modifiers;
         this.annotations = annotations;
         this.declaring = declaring;
+        this.attributes = AttributeOwner.createLookup(attributes);
     }
 
-    public static RuntimeCallable load(JsonObject data) {
-        ClassReference retType = VarTypeManager.parseType(new StringReader(GsonHelper.getAsString(data, "returnType")));
+    @Override
+    public <T extends AttributeInfo> Collection<T> getAttribute(String name) {
+        return (Collection<T>) attributes.get(name);
+    }
 
-        List<ClassReference> params = GsonHelper.getAsClassReferenceList(data, "params");
-
-        List<ClassReference> thrown = GsonHelper.getAsClassReferenceList(data, "thrown");
-
-        short modifiers = data.has("modifiers") ? GsonHelper.getAsShort(data, "modifiers") : 0;
-
-        Chunk b;
-        if (Modifiers.isAbstract(modifiers)) b = null;
-        else b = Chunk.load(GsonHelper.getAsJsonObject(data, "body"));
-
-        Annotation[] annotations = Annotation.readAnnotations(data);
-
-        ClassReference declaring = ClassLoader.loadClassReference(data, "declaring");
-
-        return new RuntimeCallable(retType, params, thrown, b, modifiers, annotations, declaring);
+    @Override
+    public boolean hasAttribute(String name) {
+        return attributes.containsKey(name);
     }
 
     @Override
@@ -75,6 +68,11 @@ public class RuntimeCallable implements ScriptedCallable {
     @Override
     public boolean isStatic() {
         return Modifiers.isStatic(modifiers);
+    }
+
+    @Override
+    public short modifiers() {
+        return modifiers;
     }
 
     @Override

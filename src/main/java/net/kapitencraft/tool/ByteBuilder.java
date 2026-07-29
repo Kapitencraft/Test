@@ -1,11 +1,13 @@
 package net.kapitencraft.tool;
 
-public class ByteBuilder {
+import java.io.OutputStream;
+
+public class ByteBuilder extends OutputStream {
     private byte[] pool;
     private int index;
 
     public ByteBuilder(int initialSize) {
-        pool = new byte[initialSize];
+        pool = new byte[Math.max(initialSize, 8)];
     }
 
     private void reallocate() {
@@ -14,11 +16,11 @@ public class ByteBuilder {
         this.pool = poolN;
     }
 
-    public void write(byte b) {
+    public void write(int b) {
         if (index >= pool.length) {
             reallocate();
         }
-        pool[index++] = b;
+        pool[index++] = (byte) (b & 255);
     }
 
     public void write16BitShort(short b) {
@@ -34,7 +36,7 @@ public class ByteBuilder {
 
     public void writeArray(byte[] bytes) {
         this.write((byte) bytes.length);
-        if (index + bytes.length >= pool.length) {
+        while (index + bytes.length >= pool.length) {
             reallocate();
         }
         System.arraycopy(bytes, 0, pool, index, bytes.length);
@@ -43,5 +45,11 @@ public class ByteBuilder {
 
     public int index() {
         return index;
+    }
+
+    public byte[] output() {
+        byte[] bytes = new byte[index];
+        System.arraycopy(pool, 0, bytes, 0, index);
+        return bytes;
     }
 }

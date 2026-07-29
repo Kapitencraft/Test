@@ -2,12 +2,14 @@ package net.kapitencraft.lang.compiler;
 
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
+import net.kapitencraft.lang.compiler.bytecode.ByteCodeBuilder;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.exe.load.ClassLoader;
 import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.holder.bytecode.ClassFile;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.token.Token;
@@ -121,7 +123,7 @@ public class Compiler {
 
     public interface ClassBuilder {
 
-        CacheableClass build();
+        CompileClass build();
 
         ClassReference superclass();
 
@@ -134,8 +136,8 @@ public class Compiler {
         void analyse();
     }
 
-    public static void cache(File cacheBase, Synthesizer builder, String path, CompileClass target, String name) throws IOException {
-        byte[] object = builder.cacheClass(target);
+    public static void cache(File cacheBase, String path, CompileClass target, String name) throws IOException {
+        byte[] object = ClassFile.write(target);
         File cacheTarget = new File(cacheBase, path + "/" + name + ".scrc");
         if (!cacheTarget.exists()) {
             cacheTarget.getParentFile().mkdirs();

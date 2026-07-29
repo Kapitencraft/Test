@@ -1,16 +1,14 @@
-package net.kapitencraft.lang.bytecode.compile;
+package net.kapitencraft.lang.compiler.bytecode;
 
 import net.kapitencraft.lang.holder.bytecode.attributes.AttributeInfo;
 import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolEntry;
 import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantUtf8Info;
 
-import java.io.IOException;
-
-public class BytecodeBuilder {
+public class BytecodeBuffer {
     private final CacheBuffer bytes;
     private final ConstantPoolBuilder constantPoolBuilder;
 
-    public BytecodeBuilder(CacheBuffer bytes, ConstantPoolBuilder constantPoolBuilder) {
+    public BytecodeBuffer(CacheBuffer bytes, ConstantPoolBuilder constantPoolBuilder) {
         this.bytes = bytes;
         this.constantPoolBuilder = constantPoolBuilder;
     }
