@@ -15,7 +15,7 @@ public class ConstantPoolReader {
     }
 
     public <T extends ConstantPoolEntry> T get(int idx) {
-        return (T) entries[idx];
+        return (T) entries[idx - 1];
     }
 
     public ConstantPoolEntry[] build() {

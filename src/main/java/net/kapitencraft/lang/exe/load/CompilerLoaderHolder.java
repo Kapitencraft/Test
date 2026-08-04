@@ -107,7 +107,6 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         return holder != null && !storage.hadError();
     }
 
-    @Override
     public void applySkeleton() {
         if (checkHolderCreated()) this.holder.applySkeleton(storage);
     }

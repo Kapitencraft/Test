@@ -7,6 +7,8 @@ import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.generated.RuntimeClass;
+import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.test.TestLoader;
@@ -114,7 +116,7 @@ public class ClassLoader {
                             System.out.println("== " + name + " ==");
                             System.out.println("<Native>");
                         } else {
-                            Disassembler.disassemble(method.getChunk(), name);
+                            Disassembler.disassemble((RuntimeCallable) method, (RuntimeClass) scriptedClass, name);
                         }
                         System.out.println();
                     }
@@ -127,7 +129,6 @@ public class ClassLoader {
     public static void loadClasses() {
         PackageHolder<VMLoaderHolder> pckSkeleton = load(cacheLoc, ".scrc", VMLoaderHolder::new);
         useClasses(pckSkeleton, (classes, pck) -> classes.forEach((name, vmLoaderHolder) -> loadHolderReference(pck, vmLoaderHolder)));
-        generateSkeletons(pckSkeleton);
         generateClasses(pckSkeleton);
     }
 
@@ -163,31 +164,12 @@ public class ClassLoader {
         return root;
     }
 
-    public static void generateSkeletons(PackageHolder<?> root) {
-        useClasses(root, (classes, pck) -> classes.forEach((s, classLoaderHolder) -> classLoaderHolder.applySkeleton()));
-    }
-
     public static void generateClasses(PackageHolder<VMLoaderHolder> root) {
-        record Entry(VMLoaderHolder holder, String name, Package pck) {}
-
-        List<Entry> entries = new ArrayList<>();
-
-        useClasses(root, (classes, pck) -> classes.forEach((name, holder1) -> entries.add(new Entry(holder1, name, pck))));
-
-        //elements are sorted so that the first elements have only native or no parent to ensure classes
-        // with in-code parents loading after their parent and its methods
-        Comparator<Entry> sortFunction = (o1, o2) -> {
-            ScriptedClass o1Class = o1.holder.reference.get();
-            ScriptedClass o2Class = o2.holder.reference.get();
-            return o1Class.isChildOf(o2Class) ? 1 : o2Class.isChildOf(o1Class) ? -1 : o1.name.compareTo(o2.name);
-        };
-
-        Entry[] values = entries.toArray(new Entry[0]);
-        Arrays.sort(values, sortFunction);
-
-        for (Entry entry : values) {
-            entry.pck.addNullableClass(entry.name, entry.holder.loadClass());
-        }
+        useClasses(root, (classes, pck) ->
+                classes.forEach((name, holder1) ->
+                        pck.addNullableClass(name, holder1.loadClass())
+                )
+        );
     }
 
     //how should I name this...

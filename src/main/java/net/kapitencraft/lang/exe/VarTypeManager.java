@@ -228,10 +228,6 @@ public class VarTypeManager {
         else return "L" + reference.absoluteName().replaceAll("\\.", "/") + ";";
     }
 
-    public static String getMethodSignature(ScriptedClass target, String name, ClassReference[] argTypes) {
-        return getClassName(target) + getMethodSignatureNoTarget(name, argTypes);
-    }
-
     public static String getMethodSignatureNoTarget(String name, ClassReference[] argTypes) {
         return name + "(" + getArgsSignature(argTypes) + ")";
     }

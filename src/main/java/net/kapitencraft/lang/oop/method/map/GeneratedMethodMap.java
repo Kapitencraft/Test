@@ -8,11 +8,11 @@ import java.util.Map;
 
 public class GeneratedMethodMap implements AbstractMethodMap {
     private final Map<String, DataMethodContainer> methods;
-    private final Map<String, ScriptedCallable> plainMap;
+    private final Map<String, ScriptedCallable> signatureMap;
 
     public GeneratedMethodMap(Map<String, DataMethodContainer> methods) {
         this.methods = methods;
-        this.plainMap = ScriptedCallable.parseMethods(methods);
+        this.signatureMap = ScriptedCallable.parseMethods(methods);
     }
 
     public static GeneratedMethodMap empty() {
@@ -21,7 +21,7 @@ public class GeneratedMethodMap implements AbstractMethodMap {
 
     @Override
     public ScriptedCallable getMethod(String signature) {
-        return plainMap.get(signature);
+        return signatureMap.get(signature);
     }
 
     public boolean has(String name) {

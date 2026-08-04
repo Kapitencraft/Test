@@ -11,6 +11,7 @@ public interface AttributeInfo {
         ConstantUtf8Info attributeName = reader.readCpEntry();
         int length = reader.read4b();
         return switch (attributeName.value()) {
+            case "AnnotationDefault" -> AnnotationDefaultAttributeInfo.read(reader);
             case "ConstantValue" -> ConstantValueAttributeInfo.read(reader);
             case "Code" -> CodeAttributeInfo.read(reader);
             case "StackMapTable" -> StackMapTableAttributeInfo.read(reader);

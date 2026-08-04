@@ -6,24 +6,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ConstantPoolBuilder {
-    private final List<ConstantPoolEntry> entries;
-
-    public ConstantPoolBuilder() {
-        this.entries = new ArrayList<>();
-    }
+    private final List<ConstantPoolEntry.Baked> bakedEntries = new ArrayList<>();
 
     public int addEntry(ConstantPoolEntry entry) {
-        int size = getSize();
-        entries.add(entry);
-        return size;
+        bakedEntries.add(entry.bake(this));
+        return bakedEntries.size();
     }
 
     public int getSize() {
-        return entries.size() + 1;
+        return bakedEntries.size() + 1;
     }
 
     public void flush(CacheBuffer buffer) {
         buffer.writeShort(getSize());
-        entries.forEach(entry -> entry.write(buffer));
+        bakedEntries.forEach(entry -> {
+            buffer.writeByte(entry.getTag());
+            entry.write(buffer);
+        });
     }
 }

@@ -374,7 +374,7 @@ public record EnumHolder(ClassReference target, short modifiers,
             };
             call.declaring = VarTypeManager.ENUM;
             call.retType = VarTypeManager.VOID.reference();
-            call.signature = "Lscripted/lang/Enum;<init>(Lscripted/lang/String;I)";
+            call.signature = "<init>(Lscripted/lang/String;I)";
             expression.expression = call;
         }
         out[0] = expression;

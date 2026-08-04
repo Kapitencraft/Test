@@ -13,6 +13,7 @@ import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.CompileField;
 import net.kapitencraft.lang.oop.method.CompileCallable;
+import net.kapitencraft.lang.oop.method.annotation.CompileAnnotationCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
@@ -154,13 +155,24 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
         this.allMethods.forEach((s, container) -> {
 
             for (ScriptedCallable method : container.methods()) {
-                ((CompileCallable) method).build(builder);
+                List<AttributeInfo> attributes = new ArrayList<>();
+                if (method instanceof CompileCallable cc) {
+                    cc.build(builder);
+                    if (!method.isAbstract()) {
+                        attributes.add(new LineNumberTableAttributeInfo(cc.getLNT()));
+                        attributes.add(new LocalVariableTableAttributeInfo(cc.getLVT()));
+                    }
+                }
 
+                //Local Variable Table, Line Number Table
                 //Code, Exceptions, Synthetic, Signature, Deprecated, RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations,
                 //RuntimeVisibleParameterAnnotations, RuntimeInvisibleParameterAnnotations, AnnotationDefault
-                List<AttributeInfo> attributes = new ArrayList<>();
                 if (!method.isAbstract()) {
-                    attributes.add(CodeAttributeInfo.create(method.getChunk()));
+                    if (method instanceof CompileAnnotationCallable cac) {
+                        attributes.add(new AnnotationDefaultAttributeInfo()); //TODO
+                    } else {
+                        attributes.add(CodeAttributeInfo.create(method.getChunk()));
+                    }
                 }
                 attributes.add(SignatureAttributeInfo.create(method.getMethodTypeSignature()));
                 attributes.add(ExceptionsAttributeInfo.create(method.thrown()));
@@ -168,7 +180,7 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
                 infos[i[0]++] = new MethodInfo(
                         method.modifiers(),
                         s,
-                        VarTypeManager.getClassName(method.retType()),
+                        method.getMethodTypeSignature(),
                         attributes.toArray(new AttributeInfo[0])
                 );
             }

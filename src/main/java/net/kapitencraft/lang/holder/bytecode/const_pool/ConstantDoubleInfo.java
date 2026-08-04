@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.holder.bytecode.const_pool;
 
 import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.lang.compiler.bytecode.ConstantPoolBuilder;
 import net.kapitencraft.lang.exe.load.BytecodeReader;
 
 public record ConstantDoubleInfo(double value) implements ConstantPoolEntry {
@@ -12,15 +13,21 @@ public record ConstantDoubleInfo(double value) implements ConstantPoolEntry {
     }
 
     @Override
-    public byte getTag() {
-        return 6;
+    public ConstantPoolEntry.Baked bake(ConstantPoolBuilder builder) {
+        return new Baked(value);
     }
 
-    @Override
-    public void write(CacheBuffer buffer) {
-        buffer.writeByte(getTag());
-        long l = Double.doubleToLongBits(value);
-        buffer.writeInt((int) (l >> 32));
-        buffer.writeInt((int) l);
+    public record Baked(double value) implements ConstantPoolEntry.Baked {
+        @Override
+        public byte getTag() {
+            return 6;
+        }
+
+        @Override
+        public void write(CacheBuffer buffer) {
+            long l = Double.doubleToLongBits(value);
+            buffer.writeInt((int) (l >> 32));
+            buffer.writeInt((int) l);
+        }
     }
 }

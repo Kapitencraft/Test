@@ -66,6 +66,7 @@
         "SpecialSet": {
           "object": "Expr",
           "name": "Token",
+          "type": "ClassReference",
           "assignType": "Token",
           "signature": "String"
         },

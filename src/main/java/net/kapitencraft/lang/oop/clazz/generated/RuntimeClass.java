@@ -1,9 +1,7 @@
 package net.kapitencraft.lang.oop.clazz.generated;
 
 import com.google.common.collect.Multimap;
-import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.bytecode.attributes.AttributeInfo;
@@ -26,8 +24,6 @@ public final class RuntimeClass implements ScriptedClass, AttributeOwner {
     public final ConstantPoolEntry[] constantPoolEntries;
 
     private final GeneratedMethodMap methods;
-
-    private final MethodLookup lookup;
 
     private final Map<String, RuntimeField> allFields;
 
@@ -56,12 +52,11 @@ public final class RuntimeClass implements ScriptedClass, AttributeOwner {
         this.implemented = implemented;
         this.modifiers = modifiers;
         this.attributes = AttributeOwner.createLookup(attributes);
-        this.lookup = MethodLookup.createFromClass(this);
         this.annotations = annotations;
     }
 
     public <T extends ConstantPoolEntry> T getConstant(int idx) {
-        return (T) constantPoolEntries[idx];
+        return (T) constantPoolEntries[idx - 1];
     }
 
     @Override
@@ -72,16 +67,6 @@ public final class RuntimeClass implements ScriptedClass, AttributeOwner {
     @Override
     public ScriptedClass getFieldDeclaring(String name) {
         return allFields.containsKey(name) ? this : ScriptedClass.super.getFieldDeclaring(name);
-    }
-
-    @Override
-    public ScriptedCallable getMethod(String signature) {
-        return lookup.get(signature);
-    }
-
-    @Override
-    public boolean hasMethod(String name) {
-        return methods.has(name) || ScriptedClass.super.hasMethod(name);
     }
 
     @Override

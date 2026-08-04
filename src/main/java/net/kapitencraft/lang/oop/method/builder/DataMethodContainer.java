@@ -1,17 +1,16 @@
 package net.kapitencraft.lang.oop.method.builder;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.lang.tool.Util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public record DataMethodContainer(ScriptedCallable[] methods) implements MethodContainer {
 

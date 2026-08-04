@@ -2,12 +2,7 @@ package net.kapitencraft.lang.exe.load;
 
 import net.kapitencraft.lang.holder.bytecode.ClassFile;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.ClassType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonAnnotation;
-import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonClass;
-import net.kapitencraft.lang.oop.clazz.skeleton.SkeletonInterface;
-import net.kapitencraft.tool.GsonHelper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,7 +10,6 @@ import java.io.IOException;
 
 public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
     private final byte[] data;
-    private final ClassType type;
     public final String name;
     final ClassReference reference;
 
@@ -35,18 +29,6 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
         }
         this.name = packages[packages.length - 1];
         this.reference = new ClassReference(name, pck.toString());
-        this.type = ClassType.valueOf(GsonHelper.getAsString(data, "TYPE").toUpperCase());
-    }
-
-    @Override
-    public void applySkeleton() {
-
-        ScriptedClass skeleton = switch (type) {
-            case ENUM, CLASS -> SkeletonClass.fromCache(data, pck());
-            case INTERFACE -> SkeletonInterface.fromCache(data, pck());
-            case ANNOTATION -> SkeletonAnnotation.fromCache(data, pck());
-        };
-        this.reference.setTarget(skeleton);
     }
 
     public ScriptedClass loadClass() {

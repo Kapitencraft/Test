@@ -1,9 +1,9 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.algebra.OperationType;
-import net.kapitencraft.lang.exe.ScriptedCallable;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.attribute.EnumConstantHolder;
@@ -72,13 +72,24 @@ public interface ScriptedClass {
     @Nullable
     ClassReference superclass();
 
+    /**
+     * interfaces declared on this class
+     *
+     * @return the interfaces declared on this class, and not any superclass
+     */
     default ClassReference[] interfaces() {
-        return superclass() != null ? superclass().get().interfaces() : new ClassReference[0];
+        return new ClassReference[0];
     }
 
+    /**
+     * return a declared field on this class
+     *
+     * @param name the name of the field
+     * @return the type of the field or VOID if none could be found
+     */
     @NotNull
     default ClassReference getFieldType(String name) {
-        return superclass() != null ? superclass().get().getFieldType(name) : VarTypeManager.VOID.reference();
+        return VarTypeManager.VOID.reference();
     }
 
     /**
@@ -117,16 +128,43 @@ public interface ScriptedClass {
 
     //region method
 
-    /**
-     * @param signature the signature of the method, without declaring class or return type
-     * @return the method for the signature or null if it couldn't be found
-     */
-    ScriptedCallable getMethod(String signature);
-
-    default boolean hasMethod(String name) {
-        return superclass() != null && superclass().get().hasMethod(name);
+    default ScriptedClass getClassDeclaringMethod(String signature) {
+        if (getMethod(signature) != null) return this;
+        if (superclass() != null) {
+            ScriptedClass superFetch = superclass().get().getClassDeclaringMethod(signature);
+            if (superFetch != null)
+                return superFetch;
+        }
+        for (ClassReference reference : this.interfaces()) {
+            ScriptedClass interfaceFetch = reference.get().getClassDeclaringMethod(signature);
+            if (interfaceFetch != null) {
+                return interfaceFetch;
+            }
+        }
+        return null;
     }
 
+    /**
+     * @param signature the signature of the method, on this class, and none of it superclasses without declaring class or return type
+     * @return the method for the signature or null if it couldn't be found
+     */
+    default ScriptedCallable getMethod(String signature) {
+        return getMethods().getMethod(signature);
+    }
+
+    /**
+     * whether this class has at least one method with the given name
+     *
+     * @param name the name of the method to query
+     * @return whether a method with the given name could be found on this class specifically
+     */
+    default boolean hasMethod(String name) {
+        return getMethods().has(name);
+    }
+
+    /**
+     * @return the method map of this class
+     */
     AbstractMethodMap getMethods();
 
     //endregion
