@@ -57,12 +57,11 @@ public final class RuntimeClass implements ScriptedClass, AttributeOwner {
         this.implemented = implemented;
         this.modifiers = modifiers;
         this.attributes = AttributeOwner.createLookup(attributes);
-        this.lookup = MethodLookup.createFromClass(this);
         this.annotations = annotations;
     }
 
     public <T extends ConstantPoolEntry> T getConstant(int idx) {
-        return (T) constantPoolEntries[idx];
+        return (T) constantPoolEntries[idx - 1];
     }
 
     @Override
@@ -73,16 +72,6 @@ public final class RuntimeClass implements ScriptedClass, AttributeOwner {
     @Override
     public ScriptedClass getFieldDeclaring(String name) {
         return allFields.containsKey(name) ? this : ScriptedClass.super.getFieldDeclaring(name);
-    }
-
-    @Override
-    public ScriptedCallable getMethod(String signature) {
-        return lookup.get(signature);
-    }
-
-    @Override
-    public boolean hasMethod(String name) {
-        return methods.has(name) || ScriptedClass.super.hasMethod(name);
     }
 
     @Override

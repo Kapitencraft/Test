@@ -127,7 +127,6 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             String signature = operation.getMethodName() + "(" + VarTypeManager.getClassName(right) + ")";
             ScriptedCallable method = left.get().getMethod(signature);
             if (method != null && !method.isStatic()) {
-                signature = VarTypeManager.getClassName(left) + signature;
                 return new OperationInfo(left, method.retType(), signature);
             }
         }
@@ -155,7 +154,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ScriptedCallable method = reference.get().getMethod(methodSig);
 
         if (method != null && !method.isStatic()) {
-            return new OperationInfo(reference, method.retType(), VarTypeManager.getClassName(reference) + methodSig);
+            return new OperationInfo(reference, method.retType(), methodSig);
         } else {
             errorF(operator, "operation '%s' not applicable for argument type %s", OperationType.of(operator.type()).getMethodName(), reference.absoluteName());
         }
@@ -199,7 +198,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         String signature = null;
         if (callable != null) {
             retType = checkArguments(args, argTypes, callable, objType, name);
-            signature = VarTypeManager.getMethodSignature(callable.declaringClass().get(), name.lexeme(), callable.argTypes());
+            signature = VarTypeManager.getMethodSignatureNoTarget(name.lexeme(), callable.argTypes());
             for (ClassReference reference : callable.thrown()) {
                 checkThrown(reference, name);
             }
@@ -574,11 +573,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             }
         }
 
-        if (!methodData.isStatic && expr.declaring != null && expr.object != null)
+        if (!methodData.isStatic && expr.object != null)
             analyseExpr(expr.object);
-        if (methodData.isStatic) {
-            expr.declaring = methodData.declaring;
-        }
+        expr.declaring = methodData.declaring;
         expr.signature = methodData.signature;
         return expr.retType = methodData.retType;
     }
@@ -716,6 +713,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public ClassReference visitSpecialSetExpr(Expr.SpecialSet expr) {
         ClassReference objType = analyseExpr(expr.object);
+        expr.type = objType;
 
         String fieldName = expr.name.lexeme();
         ClassReference fieldType = VarTypeManager.VOID.reference();
@@ -808,7 +806,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ScriptedCallable callable = tryGetConstructorMethod(argTypes, expr.target.get(), expr.keyword);
 
         if (callable != null) {
-            expr.signature = VarTypeManager.getClassName(expr.target) + VarTypeManager.getMethodSignatureNoTarget("<init>", callable.argTypes());
+            expr.signature = VarTypeManager.getMethodSignatureNoTarget("<init>", callable.argTypes());
             for (ClassReference reference : callable.thrown()) {
                 checkThrown(reference, expr.keyword);
             }

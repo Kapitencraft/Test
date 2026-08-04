@@ -35,8 +35,8 @@ public class BytecodeBuffer {
         bytes.writeByte(b);
     }
 
-    public short writeEntry(ConstantPoolEntry entry) {
-        return bytes.writeEntry(entry);
+    public void writeEntry(ConstantPoolEntry.Baked entry) {
+        bytes.writeEntry(entry);
     }
 
     public void writeArray(byte[] code) {

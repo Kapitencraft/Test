@@ -3,7 +3,9 @@ package net.kapitencraft.lang.exe.load;
 import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolEntry;
 import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolReader;
 
-public class BytecodeReader {
+import java.io.InputStream;
+
+public class BytecodeReader extends InputStream {
     private final byte[] data;
     private int index;
     private ConstantPoolReader cpReader;
@@ -20,16 +22,16 @@ public class BytecodeReader {
         return cpReader.get(read2b());
     }
 
-    public byte read() {
-        return data[index++];
+    public int read() {
+        return data[index++] & 0xFF;
     }
 
     public int read2b() {
-        return ((data[index++] & 255) << 8) | (data[index] & 255);
+        return (read() << 8) | read();
     }
 
     public int read4b() {
-        return ((((data[index++] & 255) << 8) | (data[index++] & 255) << 8) | (data[index++] & 255) << 8) | (data[index] & 255);
+        return (read2b() << 16) | read2b();
     }
 
     public byte[] readArray(int l) {

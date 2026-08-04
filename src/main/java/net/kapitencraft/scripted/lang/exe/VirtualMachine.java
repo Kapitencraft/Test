@@ -6,6 +6,8 @@ import net.kapitencraft.scripted.lang.exe.natives.NativeClassInstance;
 import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
+import net.kapitencraft.lang.holder.bytecode.attributes.LineNumberTableAttributeInfo;
+import net.kapitencraft.lang.holder.bytecode.attributes.LocalVariableTableAttributeInfo;
 import net.kapitencraft.scripted.lang.holder.bytecode.LocalVariableTable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
@@ -260,30 +262,30 @@ public class VirtualMachine {
                             ip += 2;
                             table = tableData.get(ip);
                         } else {
-                            table = new TraceTable(readLocals(read2Byte()), ip, frame.callable.getChunk().localVariableTable());
+                            table = new TraceTable(readLocals(read2Byte()), ip, frame.owner.<LocalVariableTableAttributeInfo>getSingleAttribute("LocalVariableTable").table());
                             tableData.put(ip, table);
                         }
                         table.lookup(stackBottom);
                     }
                     //region invoke
                     case INVOKE_STATIC -> {
-                        ConstantMethodRefInfo info = owner.getConstant(read2Byte());
-                        ScriptedClass type = VarTypeManager.directFlatParse(info.clazz.getValue());
+                        ConstantObjRefInfo info = owner.getConstant(read2Byte());
+                        ScriptedClass type = info.clazz.parse();
                         if (invokeStaticInitIfNecessary(type, 3)) continue;
-                        ScriptedCallable callable = type.getMethod(info.nameAndType);
+                        ScriptedCallable callable = type.getMethod(info.nameAndType.descriptor().value());
 
                         int length = callable.argTypes().length;
                         if (!callable.isStatic()) length++; //remove callee too
                         int callableStackTop = stackIndex - length;
 
                         frame.stackIndex = callableStackTop;
-                        executeCall(type, callable, execute, length, callableStackTop);
+                        executeCall(type, callable, info.nameAndType, length, callableStackTop);
                     }
                     case INVOKE_VIRTUAL -> {
-                        ConstantMethodRefInfo info = owner.getConstant(read2Byte());
-                        ScriptedClass type = VarTypeManager.directFlatParse(info.clazz.getValue());
+                        ConstantObjRefInfo info = owner.getConstant(read2Byte());
+                        ScriptedClass type = info.clazz.parse();
                         if (invokeStaticInitIfNecessary(type, 3)) continue;
-                        ScriptedCallable referenceCallable = type.getMethod(info.nameAndType);
+                        ScriptedCallable referenceCallable = type.getMethod(info.nameAndType.descriptor().value());
 
                         int length = referenceCallable.argTypes().length + 1; //reference object
                         int stackTop = stackIndex - length;
@@ -309,10 +311,12 @@ public class VirtualMachine {
                             break;
                         }
                         ClassInstance instance = (ClassInstance) reference;
-                        ScriptedCallable callable = instance.getType().getMethod(reader.getRemaining()); //virtual invoke of the method
+                        String signature = info.nameAndType.descriptor().value();
+                        ScriptedClass objType = instance.getType().getClassDeclaringMethod(signature);
 
+                        ScriptedCallable callable = objType.getMethod(signature); //virtual invoke of the method
 
-                        executeCall(callable, execute, length, callableStackTop);
+                        executeCall(objType, callable, info.nameAndType, length, callableStackTop);
                     }
                     case INVOKE_DYNAMIC -> {
                         String signature = readString();
@@ -338,7 +342,7 @@ public class VirtualMachine {
                     //endregion
                     case INSTANCEOF -> {
                         ConstantClassInfo info = owner.getConstant(read2Byte());
-                        ScriptedClass reference = VarTypeManager.directFlatParse(info.getValue());
+                        ScriptedClass reference = info.parse();
                         ClassInstance value = (ClassInstance) pop();
                         push(reference.isChildOf(value.getType()));
                     }
@@ -347,7 +351,7 @@ public class VirtualMachine {
                     }
                     case NEW -> {
                         ConstantClassInfo info = owner.getConstant(read2Byte());
-                        ScriptedClass reference = VarTypeManager.directFlatParse(info.getValue());
+                        ScriptedClass reference = info.parse();
                         push(new DynamicClassInstance(reference));
                     }
                     case SLICE -> slice();
@@ -379,7 +383,7 @@ public class VirtualMachine {
                     case I_CONST -> push(owner.<ConstantIntegerInfo>getConstant(read2Byte()).value());
                     case D_CONST -> push(owner.<ConstantDoubleInfo>getConstant(read2Byte()).value());
                     case F_CONST -> push(owner.<ConstantFloatInfo>getConstant(read2Byte()).value());
-                    case S_CONST -> push(NativeClassLoader.wrapString(owner.<ConstantUtf8Info>getConstant(read2Byte()).value()));
+                    case S_CONST -> push(NativeClassLoader.wrapString(owner.<ConstantStringInfo>getConstant(read2Byte()).string.value()));
                     //endregion
                     case CONCENTRATION -> {
                         Object object = pop();
@@ -633,12 +637,12 @@ public class VirtualMachine {
                     case GET_FIELD -> {
                         ClassInstance instance = (ClassInstance) pop();
                         if (invokeStaticInitIfNecessary(instance.getType(), 1)) continue;
-                        String name = owner.<ConstantFieldRefInfo>getConstant(read2Byte()).nameAndType.name().value();
+                        String name = owner.<ConstantObjRefInfo>getConstant(read2Byte()).nameAndType.name().value();
                         push(instance.getField(name));
                     }
                     case GET_STATIC -> {
-                        ConstantFieldRefInfo info = owner.getConstant(read2Byte());
-                        ScriptedClass scriptedClass = VarTypeManager.directFlatParse(info.clazz.getValue());
+                        ConstantObjRefInfo info = owner.getConstant(read2Byte());
+                        ScriptedClass scriptedClass = info.clazz.parse();
                         if (invokeStaticInitIfNecessary(scriptedClass, 3)) continue;
                         String field = info.nameAndType.name().value();
                         push(scriptedClass.getStaticField(field));
@@ -647,12 +651,12 @@ public class VirtualMachine {
                         Object value = pop();
                         ClassInstance instance = (ClassInstance) pop();
                         if (invokeStaticInitIfNecessary(instance.getType(), 1)) continue;
-                        String s = owner.<ConstantFieldRefInfo>getConstant(read2Byte()).nameAndType.name().value();
+                        String s = owner.<ConstantObjRefInfo>getConstant(read2Byte()).nameAndType.name().value();
                         instance.assignField(s, value);
                     }
                     case PUT_STATIC -> {
-                        ConstantFieldRefInfo info = owner.getConstant(read2Byte());
-                        ScriptedClass scriptedClass = VarTypeManager.directFlatParse(info.clazz.getValue());
+                        ConstantObjRefInfo info = owner.getConstant(read2Byte());
+                        ScriptedClass scriptedClass = info.clazz.parse();
                         if (invokeStaticInitIfNecessary(scriptedClass, 3)) continue;
                         String field = info.nameAndType.name().value();
                         scriptedClass.setStaticField(field, pop());
@@ -661,14 +665,14 @@ public class VirtualMachine {
                     default -> throw new IllegalArgumentException("unknown opcode: " + o);
                 }
             } catch (Throwable t) {
-                Disassembler.disassemble(frame.callable.getChunk(), "Error: " + frame.signature);
+                Disassembler.disassemble(frame.callable, frame.owner, "Error: " + frame.signature);
                 if (!handleException(createException(VarTypeManager.UNKNOWN_ERROR, t.getMessage())))
                     return;
             }
         }
     }
 
-    private static void executeCall(ScriptedClass owner, ScriptedCallable callable, String execute, int length, int callableStackTop) {
+    private static void executeCall(ScriptedClass owner, ScriptedCallable callable, ConstantNameAndTypeInfo execute, int length, int callableStackTop) {
         if (callable.isNative()) {
             if (DEBUG == DebugType.OPERATIONS)
                 System.out.printf("[DEBUG]:%s calling native: %s\n", visualStackSize(), execute);
@@ -679,7 +683,7 @@ public class VirtualMachine {
             if (callable.retType().is(VarTypeManager.VOID)) return;
             push(object);
         } else
-            pushCall(new CallFrame(execute, (RuntimeClass) owner, (RuntimeCallable) callable, callableStackTop));
+            pushCall(new CallFrame(execute.descriptor().value(), (RuntimeClass) owner, (RuntimeCallable) callable, callableStackTop));
     }
 
     private static String getStackSnapshot() {
@@ -699,12 +703,7 @@ public class VirtualMachine {
     }
 
     private static byte[] readLocals(int pos) {
-        byte localSize = constants[pos];
-        byte[] locals = new byte[localSize];
-        for (int i = 0; i < localSize; i++) {
-            locals[i] = constants[pos + i + 1];
-        }
-        return locals;
+        return owner.<ConstantTraceLocalsInfo>getConstant(pos).data();
     }
 
     private static final Set<ScriptedClass> initialized = new HashSet<>();
@@ -745,7 +744,7 @@ public class VirtualMachine {
         List<String> stackTrace = new ArrayList<>();
         for (int i = callStackTop - 1; i > -1; i--) {
             CallFrame callFrame = callStack[i];
-            int lineAt = callFrame.callable.getChunk().lineNumberTable().getLineAt(callFrame.ip);
+            int lineAt = callFrame.owner.<LineNumberTableAttributeInfo>getSingleAttribute("LineNumberTable").table().getLineAt(callFrame.ip);
             String readableSignature = callFrame.signature.substring(1, callFrame.signature.indexOf('(') == -1 ?
                     callFrame.signature.length() :
                     callFrame.signature.indexOf('(')).replaceAll("[;/]", ".");
@@ -763,8 +762,8 @@ public class VirtualMachine {
             for (Chunk.ExceptionHandler handler : frame.handlers) {
                 if (ip >= handler.startOp() && ip < handler.endOp()) {
                     if (handler.catchType() != 0) {
-                        ClassReference reference = VarTypeManager.directParseType(owner.<ConstantClassInfo>getConstant(handler.catchType()).getValue());
-                        if (!reference.get().isParentOf(type)) continue;
+                        ScriptedClass reference = owner.<ConstantClassInfo>getConstant(handler.catchType()).parse();
+                        if (!reference.isParentOf(type)) continue;
                     }
                     push(exception);
                     VirtualMachine.ip = handler.handlerOp();
@@ -813,13 +812,13 @@ public class VirtualMachine {
     private static void get(int i) {
         push(stack[stackBottom + i]);
         if (DEBUG == DebugType.OPERATIONS)
-            System.out.printf("[DEBUG]:%s GET: %s (%s)\n", visualStackSize(), i, frame.callable.getChunk().localVariableTable().get(ip, i).first());
+            System.out.printf("[DEBUG]:%s GET: %s (%s)\n", visualStackSize(), i, frame.callable.<LocalVariableTableAttributeInfo>getSingleAttribute("LocalVariableTable").table().get(ip, i).first());
     }
 
     private static void assign(int i) {
         stack[stackBottom + i] = pop();
         if (DEBUG == DebugType.OPERATIONS)
-            System.out.printf("[DEBUG]:%s ASSIGN: %s (%s)\n", visualStackSize(), i, frame.callable.getChunk().localVariableTable().get(ip, i).first());
+            System.out.printf("[DEBUG]:%s ASSIGN: %s (%s)\n", visualStackSize(), i, frame.callable.<LocalVariableTableAttributeInfo>getSingleAttribute("LocalVariableTable").table().get(ip, i).first());
     }
 
     //region flow-control
@@ -877,36 +876,6 @@ public class VirtualMachine {
         if (DEBUG == DebugType.OPERATIONS)
             System.out.printf("[DEBUG]:%s POP  (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(stack[stackIndex - 1]));
         return stack[--stackIndex];
-    }
-    //endregion
-
-    //region constants
-    public static String constString(byte[] constants, int index) {
-        int length = constants[index];
-        byte[] s = new byte[length];
-        System.arraycopy(constants, index + 1, s, 0, length);
-        return new String(s);
-    }
-
-    @Contract(pure = true)
-    public static double constDouble(byte[] constants, int index) {
-        long d = 0;
-        for (int i = 0; i < 8; i++) {
-            d += (constants[index + i] & 255L) << (8 * i);
-        }
-        return Double.longBitsToDouble(d);
-    }
-
-    public static int constInt(byte[] constants, int index) {
-        int c = 0;
-        for (int i = 0; i < 4; i++) {
-            c += (constants[index + i] & 255) << (8 * i);
-        }
-        return c;
-    }
-
-    public static float constFloat(byte[] bytes, Integer integer) {
-        return Float.intBitsToFloat(constInt(bytes, integer));
     }
     //endregion
 

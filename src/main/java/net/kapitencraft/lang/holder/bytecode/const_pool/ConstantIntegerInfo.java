@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.holder.bytecode.const_pool;
 
 import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.lang.compiler.bytecode.ConstantPoolBuilder;
 import net.kapitencraft.lang.exe.load.BytecodeReader;
 
 public record ConstantIntegerInfo(int value) implements ConstantPoolEntry {
@@ -10,13 +11,19 @@ public record ConstantIntegerInfo(int value) implements ConstantPoolEntry {
     }
 
     @Override
-    public byte getTag() {
-        return 3;
+    public ConstantPoolEntry.Baked bake(ConstantPoolBuilder builder) {
+        return new Baked(value);
     }
 
-    @Override
-    public void write(CacheBuffer buffer) {
-        buffer.writeByte(getTag());
-        buffer.writeInt(value);
+    public record Baked(int value) implements ConstantPoolEntry.Baked {
+        @Override
+        public byte getTag() {
+            return 3;
+        }
+
+        @Override
+        public void write(CacheBuffer buffer) {
+            buffer.writeInt(value);
+        }
     }
 }

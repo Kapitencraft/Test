@@ -164,12 +164,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         } else {
             if (expr.isStatic) {
                 specialAssign(expr.retType, expr.assignType, Opcode.GET_STATIC, Opcode.PUT_STATIC,
-                        o -> byteCodeBuilder.addStringInstruction(o, expr.name.lexeme())
+                        o -> byteCodeBuilder.addInfoInstruction(o, expr.type, expr.name.lexeme(), expr.name.lexeme())
                 );
             } else {
                 byteCodeBuilder.addSimple(Opcode.GET_0);
                 specialAssign(expr.retType, expr.assignType, Opcode.GET_FIELD, Opcode.PUT_FIELD,
-                        o -> byteCodeBuilder.addStringInstruction(o, expr.name.lexeme())
+                        o -> byteCodeBuilder.addInfoInstruction(o, expr.type, expr.name.lexeme(), expr.name.lexeme())
                 );
             }
         }
@@ -227,14 +227,14 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cache(expr.left);
         Token operator = expr.operator;
         if (operator.type() == TokenType.ADD && expr.executor.is(VarTypeManager.STRING) && !expr.left.retType().is(VarTypeManager.STRING)) {
-            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_STATIC, "Lscripted/lang/String;valueOf(Lscripted/lang/Object)");
+            byteCodeBuilder.addInfoInstruction(Opcode.INVOKE_STATIC, VarTypeManager.STRING, "valueOf", "valueOf(Lscripted/lang/Object)");
         }
 
         cache(expr.right);
 
-
         if (expr.signature != null) {
-            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_VIRTUAL, expr.signature);
+            OperationType operation = OperationType.of(operator.type());
+            byteCodeBuilder.addInfoInstruction(Opcode.INVOKE_VIRTUAL, expr.executor, operation.getMethodName(), expr.signature);
         } else {
             if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
                 final ClassReference executor = expr.executor;
@@ -266,7 +266,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private void convertToStringIfNecessary(TokenType operator, ClassReference executor) {
         if (operator == TokenType.ADD && executor.is(VarTypeManager.STRING)) {
-            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_STATIC, "Lscripted/lang/String;valueOf(Lscripted/lang/Object)");
+            byteCodeBuilder.addInfoInstruction(Opcode.INVOKE_STATIC, VarTypeManager.STRING, "valueOf", "valueOf(Lscripted/lang/Object)");
         }
     }
 
@@ -335,11 +335,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
 
         saveArgs(expr.args);
-        if (expr.virtual) {
-            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_VIRTUAL, expr.signature);
-        } else {
-            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_STATIC, expr.signature);
-        }
+        byteCodeBuilder.addInfoInstruction(
+                expr.virtual ? Opcode.INVOKE_VIRTUAL : Opcode.INVOKE_STATIC,
+                expr.declaring,
+                expr.name.lexeme(),
+                expr.signature
+        );
         if (expr.retType.is(VarTypeManager.VOID))
             ignoredExprResult = true;
         return null;
@@ -378,7 +379,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             if (expr.type.get().isArray()) { //only `.length` exists on arrays, so we can be sure
                 byteCodeBuilder.addSimple(Opcode.ARRAY_LENGTH);
             } else {
-                byteCodeBuilder.addStringInstruction(Opcode.GET_FIELD, expr.name.lexeme());
+                byteCodeBuilder.addInfoInstruction(Opcode.GET_FIELD, expr.type, expr.name.lexeme(), expr.name.lexeme());
             }
         } else {
             byteCodeBuilder.addSimple(Opcode.POP);
@@ -398,9 +399,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitStaticGetExpr(Expr.StaticGet expr) {
         if (retainExprResult) {
             byteCodeBuilder.changeLineIfNecessary(expr.name);
-            String className = VarTypeManager.getClassName(expr.target.get());
             String fieldName = expr.name.lexeme();
-            byteCodeBuilder.addStaticFieldAccess(Opcode.GET_STATIC, className, fieldName);
+            byteCodeBuilder.addInfoInstruction(Opcode.GET_STATIC, expr.target, fieldName, fieldName);
         }
         return null;
     }
@@ -430,7 +430,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (type != TokenType.ASSIGN) {
             byteCodeBuilder.addSimple(Opcode.DUP);
             byteCodeBuilder.changeLineIfNecessary(expr.name);
-            byteCodeBuilder.addStringInstruction(Opcode.GET_FIELD, expr.name.lexeme());
+            byteCodeBuilder.addInfoInstruction(Opcode.GET_FIELD, expr.executor, expr.name.lexeme(), expr.name.lexeme());
             cacheRetained(expr.value);
             byteCodeBuilder.changeLineIfNecessary(expr.assignType);
             Opcode opcode = switch (type) {
@@ -453,15 +453,16 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             ignoredExprResult = true;
         }
         byteCodeBuilder.changeLineIfNecessary(expr.name);
-        byteCodeBuilder.addStringInstruction(Opcode.PUT_FIELD, expr.name.lexeme());
+        byteCodeBuilder.addInfoInstruction(Opcode.PUT_FIELD, expr.executor, expr.name.lexeme(), expr.name.lexeme());
         return null;
     }
 
     @Override
     public Void visitStaticSetExpr(Expr.StaticSet expr) {
-        String className = VarTypeManager.getClassName(expr.target.get());
         String fieldName = expr.name.lexeme();
-        assign(expr.executor, expr.value, expr.assignType, Opcode.GET_STATIC, Opcode.PUT_STATIC, opcode -> byteCodeBuilder.addStaticFieldAccess(opcode, className, fieldName));
+        assign(expr.executor, expr.value, expr.assignType, Opcode.GET_STATIC, Opcode.PUT_STATIC, opcode ->
+                byteCodeBuilder.addInfoInstruction(opcode, expr.target, fieldName, fieldName)
+        );
 
         return null;
     }
@@ -510,7 +511,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitSpecialSetExpr(Expr.SpecialSet expr) {
         cacheRetained(expr.object);
         specialAssign(expr.retType, expr.assignType, Opcode.GET_FIELD, Opcode.PUT_FIELD,
-                o -> byteCodeBuilder.addStringInstruction(o, expr.name.lexeme())
+                o -> byteCodeBuilder.addInfoInstruction(o, expr.type, expr.name.lexeme(), expr.name.lexeme())
         );
         return null;
     }
@@ -600,7 +601,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitSwitchExpr(Expr.Switch expr) {
         cacheRetained(expr.provider);
         if (expr.isEnum) {
-            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_VIRTUAL, "Lscripted/lang/Enum;ordinal()");
+            byteCodeBuilder.addInfoInstruction(Opcode.INVOKE_VIRTUAL, VarTypeManager.ENUM, "ordinal", "ordinal()");
         }
         int instDefaultPatch = byteCodeBuilder.size();
 
@@ -649,7 +650,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         cacheRetained(expr.object);
         if (expr.patternVarName != null)
             byteCodeBuilder.addSimple(Opcode.DUP);
-        byteCodeBuilder.addStringInstruction(Opcode.INSTANCEOF, VarTypeManager.getClassName(expr.targetType));
+        byteCodeBuilder.addClassInfoInstruction(Opcode.INSTANCEOF, expr.targetType);
         return null;
     }
 
@@ -798,10 +799,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             byteCodeBuilder.changeLineIfNecessary(expr.name);
             if (expr.type != null) {
                 if (expr.isStatic) {
-                    byteCodeBuilder.add(new StaticFieldAccessInstruction(Opcode.GET_STATIC, VarTypeManager.getClassName(expr.type), expr.name.lexeme()));
+                    byteCodeBuilder.addInfoInstruction(Opcode.GET_STATIC, expr.type, expr.name.lexeme(), expr.name.lexeme());
                 } else {
                     byteCodeBuilder.addSimple(Opcode.GET_0);
-                    byteCodeBuilder.addStringInstruction(Opcode.GET_FIELD, expr.name.lexeme());
+                    byteCodeBuilder.addInfoInstruction(Opcode.GET_FIELD, expr.type, expr.name.lexeme(), expr.name.lexeme());
                 }
             } else
                 getVar(expr.ordinal);
@@ -813,8 +814,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitConstructorExpr(Expr.Constructor expr) {
         byteCodeBuilder.changeLineIfNecessary(expr.keyword);
-        ScriptedClass target = expr.target.get();
-        byteCodeBuilder.addStringInstruction(Opcode.NEW, VarTypeManager.getClassName(target));
+        byteCodeBuilder.addClassInfoInstruction(Opcode.NEW, expr.target);
 
         if (expr.signature != null) {
             if (retainExprResult) {
@@ -823,7 +823,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 ignoredExprResult = true;
             }
             saveArgs(expr.args);
-            byteCodeBuilder.addStringInstruction(Opcode.INVOKE_VIRTUAL, expr.signature);
+            byteCodeBuilder.addInfoInstruction(Opcode.INVOKE_VIRTUAL, expr.target, "<init>", expr.signature);
         }
 
         return null;

@@ -411,6 +411,23 @@ public interface Expr {
         }
     }
 
+    class ComparisonChain implements Expr {
+        public Expr[] entries;
+        public Token[] types;
+        public ClassReference dataType;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitComparisonChainExpr(this);
+        }
+
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+        }
+    }
+
     class When implements Expr {
         public Expr condition;
         public Expr ifTrue;
@@ -482,6 +499,28 @@ public interface Expr {
         }
     }
 
+    class IdentifierAssign implements Expr {
+        public Token name;
+        public Expr value;
+        public Token type;
+        public byte ordinal;
+        public ClassReference executor;
+        public String signature;
+        public ClassReference fieldOwner;
+        public boolean isStatic;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitIdentifierAssignExpr(this);
+        }
+
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+        }
+    }
+
     class Slice implements Expr {
         public Expr object;
         public Expr start;
@@ -509,6 +548,38 @@ public interface Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitGetExpr(this);
+        }
+
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+        }
+    }
+
+    class ArrayGet implements Expr {
+        public Expr object;
+        public Expr index;
+        public ClassReference componentType;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitArrayGetExpr(this);
+        }
+
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+        }
+    }
+
+    class Literal implements Expr {
+        public Token literal;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitLiteralExpr(this);
         }
 
         @Override
@@ -545,6 +616,44 @@ public interface Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitBinaryExpr(this);
+        }
+
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+        }
+    }
+
+    class StaticSpecial implements Expr {
+        public ClassReference target;
+        public Token name;
+        public Token assignType;
+        public ClassReference executor;
+        public String signature;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitStaticSpecialExpr(this);
+        }
+
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+        }
+    }
+
+    class SpecialSet implements Expr {
+        public Expr object;
+        public Token name;
+        public ClassReference type;
+        public Token assignType;
+        public String signature;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitSpecialSetExpr(this);
         }
 
         @Override

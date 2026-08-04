@@ -5,12 +5,7 @@ import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
 import net.kapitencraft.lang.exe.load.BytecodeReader;
 import net.kapitencraft.lang.holder.bytecode.LineNumberTable;
 
-public class LineNumberTableAttributeInfo implements AttributeInfo {
-    LineNumberTable table;
-
-    public LineNumberTableAttributeInfo(LineNumberTable table) {
-        this.table = table;
-    }
+public record LineNumberTableAttributeInfo(LineNumberTable table) implements AttributeInfo {
 
     public static AttributeInfo read(BytecodeReader reader) {
         return new LineNumberTableAttributeInfo(LineNumberTable.read(reader));

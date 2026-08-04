@@ -44,14 +44,14 @@ public class CodeAttributeInfo implements AttributeInfo {
         CodeAttributeInfo info = new CodeAttributeInfo();
         info.maxStack = (short) reader.read2b();
         info.maxLocals = (short) reader.read2b();
-        byte[] code = reader.readArray(reader.read2b());
+        byte[] code = reader.readArray(reader.read4b());
         int exceptionHandlerCount = reader.read2b();
         Chunk.ExceptionHandler[] handlers = new Chunk.ExceptionHandler[exceptionHandlerCount];
         for (int i = 0; i < exceptionHandlerCount; i++) {
             handlers[i] = Chunk.ExceptionHandler.read(reader);
         }
-        Chunk chunk = new Chunk(code, handlers)
+        info.chunk = new Chunk(code, handlers);
 
-        return new CodeAttributeInfo();
+        return info;
     }
 }

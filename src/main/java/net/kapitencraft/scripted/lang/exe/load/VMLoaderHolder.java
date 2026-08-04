@@ -15,7 +15,6 @@ import java.io.IOException;
 
 public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
     private final byte[] data;
-    private final ClassType type;
     public final String name;
     private final String pck;
     final ClassReference reference;
@@ -37,18 +36,6 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
         this.name = packages[packages.length - 1];
         this.pck = pck.toString();
         this.reference = new ClassReference(name, pck.toString());
-        this.type = ClassType.valueOf(GsonHelper.getAsString(data, "TYPE").toUpperCase());
-    }
-
-    @Override
-    public void applySkeleton() {
-
-        ScriptedClass skeleton = switch (type) {
-            case ENUM, CLASS -> SkeletonClass.fromCache(data, pck);
-            case INTERFACE -> SkeletonInterface.fromCache(data, pck);
-            case ANNOTATION -> SkeletonAnnotation.fromCache(data, pck);
-        };
-        this.reference.setTarget(skeleton);
     }
 
     public ScriptedClass loadClass() {

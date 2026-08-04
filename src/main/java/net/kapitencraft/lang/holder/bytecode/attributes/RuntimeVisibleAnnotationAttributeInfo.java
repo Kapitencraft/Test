@@ -2,8 +2,13 @@ package net.kapitencraft.lang.holder.bytecode.attributes;
 
 import net.kapitencraft.lang.compiler.bytecode.BytecodeBuffer;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.lang.exe.load.BytecodeReader;
 
 public class RuntimeVisibleAnnotationAttributeInfo implements AttributeInfo {
+    public static AttributeInfo read(BytecodeReader reader) {
+        return new RuntimeVisibleAnnotationAttributeInfo();
+    }
+
     @Override
     public String name() {
         return "RuntimeVisibleAnnotations";

@@ -14,7 +14,10 @@ import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.scripted.lang.tool.Util;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public record DataMethodContainer(ScriptedCallable[] methods) implements MethodContainer {
 

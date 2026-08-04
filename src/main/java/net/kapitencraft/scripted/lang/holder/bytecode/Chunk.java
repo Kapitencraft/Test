@@ -14,8 +14,7 @@ import net.kapitencraft.tool.GsonHelper;
 import java.util.ArrayList;
 import java.util.List;
 
-public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable lineNumberTable,
-                    LocalVariableTable localVariableTable) {
+public record Chunk(byte[] code, ExceptionHandler[] handlers) {
 
     /**
      * a builder for the chunk, used inside {@link net.kapitencraft.lang.compiler.bytecode.CacheBuilder CacheBuilder} to create json format of the chunk
@@ -66,21 +65,17 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
 
         public void addIntConstant(int constant) {
             this.addCode(Opcode.I_CONST);
-            this.cp.addEntry(new ConstantIntegerInfo(constant));
+            addConstant(new ConstantIntegerInfo(constant));
         }
 
         public void addDoubleConstant(double constant) {
             this.addCode(Opcode.D_CONST);
-            this.add2bArg(
-                    this.cp.addEntry(new ConstantDoubleInfo(constant))
-            );
+            addConstant(new ConstantDoubleInfo(constant));
         }
 
         public void addFloatConstant(float v) {
             this.addCode(Opcode.F_CONST);
-            this.add2bArg(
-                    this.cp.addEntry(new ConstantFloatInfo(v))
-            );
+            addConstant(new ConstantFloatInfo(v));
         }
 
         public void addStringConstant(String constant) {
@@ -89,13 +84,11 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
         }
 
         public void injectString(String constant) {
-            this.add2bArg(
-                    this.cp.addEntry(new ConstantStringInfo(constant))
-            );
+            addConstant(ConstantStringInfo.create(constant));
         }
 
         public int injectStringNoArg(String constant) {
-            return this.cp.addEntry(new ConstantStringInfo(constant));
+            return this.cp.addEntry(ConstantStringInfo.create(constant));
         }
 
         public Chunk build() {
@@ -103,7 +96,15 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
             for (int i = 0; i < code.length; i++) {
                 code[i] = this.code.get(i);
             }
-            return new Chunk(code, this.handlers.toArray(new ExceptionHandler[0]), this.lineNumbers.build(), this.locals.build(this.currentCodeIndex()));
+            return new Chunk(code, this.handlers.toArray(new ExceptionHandler[0]));
+        }
+
+        public LineNumberTable getLineNumbers() {
+            return this.lineNumbers.build();
+        }
+
+        public LocalVariableTable getLocals() {
+            return this.locals.build(currentCodeIndex());
         }
 
         public void addArg(byte b) {
@@ -194,8 +195,12 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers, LineNumberTable li
 
         public void addTraceDebug(byte[] ints) {
             this.addCode(Opcode.TRACE);
+            addConstant(new ConstantTraceLocalsInfo(ints));
+        }
+
+        public void addConstant(ConstantPoolEntry entry) {
             this.add2bArg(
-                    this.cp.addEntry(new Constant())
+                    this.cp.addEntry(entry)
             );
         }
     }

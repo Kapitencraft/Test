@@ -1,8 +1,8 @@
 package net.kapitencraft.lang.holder.bytecode.const_pool;
 
 import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.lang.compiler.bytecode.ConstantPoolBuilder;
 import net.kapitencraft.lang.exe.load.BytecodeReader;
-import net.kapitencraft.lang.holder.bytecode.ClassFile;
 
 public class ConstantMethodHandleInfo implements ConstantPoolEntry {
     private byte kind;
@@ -10,21 +10,27 @@ public class ConstantMethodHandleInfo implements ConstantPoolEntry {
 
     public static void read(BytecodeReader reader, ConstantPoolReader cpReader) {
         ConstantMethodHandleInfo info = new ConstantMethodHandleInfo();
-        info.kind = reader.read();
+        info.kind = (byte) reader.read();
         info.obj = cpReader.get(reader.read2b());
         cpReader.add(info);
     }
 
     @Override
-    public byte getTag() {
-        return 15;
+    public ConstantPoolEntry.Baked bake(ConstantPoolBuilder builder) {
+        return new Baked(kind, builder.addEntry(obj));
     }
 
-    @Override
-    public void write(CacheBuffer buffer) {
-        short c = buffer.writeEntry(obj);
-        buffer.writeByte(getTag());
-        buffer.writeByte(kind);
-        buffer.writeShort(c);
+    public record Baked(byte kind, int objIndex) implements ConstantPoolEntry.Baked {
+
+        @Override
+        public byte getTag() {
+            return 15;
+        }
+
+        @Override
+        public void write(CacheBuffer buffer) {
+            buffer.writeByte(kind);
+            buffer.writeShort(objIndex);
+        }
     }
 }

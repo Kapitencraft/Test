@@ -11,6 +11,8 @@ import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.oop.Package;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.clazz.generated.RuntimeClass;
+import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.GsonHelper;
 
@@ -109,7 +111,7 @@ public class ClassLoader {
                             System.out.println("== " + name + " ==");
                             System.out.println("<Native>");
                         } else {
-                            Disassembler.disassemble(method.getChunk(), name);
+                            Disassembler.disassemble((RuntimeCallable) method, (RuntimeClass) scriptedClass, name);
                         }
                         System.out.println();
                     }
@@ -122,7 +124,6 @@ public class ClassLoader {
     public static void loadClasses() {
         PackageHolder<VMLoaderHolder> pckSkeleton = PackageHolder.load(cacheLoc, ".scrc", VMLoaderHolder::new);
         pckSkeleton.useClasses((classes, pck) -> classes.forEach((name, vmLoaderHolder) -> loadHolderReference(pck, vmLoaderHolder)), VarTypeManager.rootPackage());
-        generateSkeletons(pckSkeleton);
         generateClasses(pckSkeleton);
     }
 

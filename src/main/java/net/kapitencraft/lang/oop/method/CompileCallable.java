@@ -5,7 +5,12 @@ import net.kapitencraft.lang.bytecode.storage.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Synthesizer;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.exe.ScriptedCallable;
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.holder.bytecode.Chunk;
+import net.kapitencraft.lang.holder.bytecode.LineNumberTable;
+import net.kapitencraft.lang.holder.bytecode.LocalVariableTable;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
@@ -19,6 +24,8 @@ public class CompileCallable implements ScriptedCallable {
     private final short modifiers;
     private final Annotation[] annotations;
     private Chunk code;
+    private LineNumberTable lineNumberTable;
+    private LocalVariableTable localVariableTable;
 
     public CompileCallable(ClassReference retType, List<? extends Pair<? extends ClassReference, String>> params, Stmt[] body, short modifiers, Annotation[] annotations) {
         this.retType = retType;
@@ -30,20 +37,23 @@ public class CompileCallable implements ScriptedCallable {
 
     public void build(CacheBuilder builder) {
         if (!isAbstract()) {
-            Chunk.Builder chunk = builder.reset();
+            Chunk.Builder chunkBuilder = builder.reset();
             int rIndex = 0;
             if (!isStatic()) {
-                chunk.addLocal(0, VarTypeManager.VOID.reference(), "this");
+                chunkBuilder.addLocal(0, VarTypeManager.VOID.reference(), "this");
                 rIndex++;
             }
             for (int i = 0; i < this.params.size(); i++) {
                 Pair<? extends ClassReference, String> param = this.params.get(i);
-                chunk.addLocal(0, i, param.left(), param.right());
+                chunkBuilder.addLocal(0, i, param.left(), param.right());
             }
             for (Stmt compileStmt : body) {
                 builder.cache(compileStmt);
             }
-            this.code = chunk.build();
+            builder.build(chunkBuilder);
+            this.code = chunkBuilder.build();
+            this.lineNumberTable = chunkBuilder.getLineNumbers();
+            this.localVariableTable = chunkBuilder.getLocals();
         }
     }
 
@@ -85,5 +95,13 @@ public class CompileCallable implements ScriptedCallable {
     @Override
     public Chunk getChunk() {
         return code;
+    }
+
+    public LineNumberTable getLNT() {
+        return this.lineNumberTable;
+    }
+
+    public LocalVariableTable getLVT() {
+        return this.localVariableTable;
     }
 }

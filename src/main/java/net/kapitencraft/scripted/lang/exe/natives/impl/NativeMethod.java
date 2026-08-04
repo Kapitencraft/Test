@@ -7,6 +7,8 @@ import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
+import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -44,7 +46,7 @@ public class NativeMethod implements ScriptedCallable {
     public Object call(Object[] arguments) {
         try {
             Object value = method.invoke(instance ? NativeClassLoader.extractNative(arguments[0]) : null, NativeClassLoader.extractNatives(arguments, instance));
-            if (type == VarTypeManager.VOID.reference())
+            if (type.get() == VarTypeManager.VOID)
                 return null;
             if (type.get().isPrimitive()) //don't wrap primitive values
                 return value;

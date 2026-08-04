@@ -5,12 +5,7 @@ import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
 import net.kapitencraft.lang.exe.load.BytecodeReader;
 import net.kapitencraft.lang.holder.bytecode.LocalVariableTable;
 
-public class LocalVariableTableAttributeInfo implements AttributeInfo {
-    LocalVariableTable table;
-
-    public LocalVariableTableAttributeInfo(LocalVariableTable table) {
-        this.table = table;
-    }
+public record LocalVariableTableAttributeInfo(LocalVariableTable table) implements AttributeInfo {
 
     public static AttributeInfo read(BytecodeReader reader) {
         return new LocalVariableTableAttributeInfo(LocalVariableTable.read(reader));

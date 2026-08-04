@@ -35,10 +35,9 @@ public class CacheBuffer extends OutputStream {
         buffer.add(b);
     }
 
-    public short writeEntry(ConstantPoolEntry entry) {
-        int loc = buffer.size();
+    public void writeEntry(ConstantPoolEntry.Baked entry) {
+        this.writeByte(entry.getTag());
         entry.write(this);
-        return (short) loc;
     }
 
     public void writeArray(byte[] code) {
@@ -48,7 +47,7 @@ public class CacheBuffer extends OutputStream {
     }
 
     public void transfer(CacheBuffer mainBuffer) {
-        this.buffer.addAll(mainBuffer.buffer);
+        mainBuffer.buffer.addAll(this.buffer);
     }
 
     public byte[] toBytes() {

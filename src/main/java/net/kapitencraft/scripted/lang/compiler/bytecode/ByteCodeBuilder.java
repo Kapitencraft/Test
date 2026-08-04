@@ -33,6 +33,14 @@ public class ByteCodeBuilder {
         add(new StringArgInstruction(opcode, val));
     }
 
+    public void addInfoInstruction(Opcode opcode, ClassReference type, String name, String desc) {
+        this.instructions.add(new WithInfoInstruction(opcode, type, name, desc, (byte) (opcode == Opcode.INVOKE_STATIC || opcode == Opcode.INVOKE_VIRTUAL ? 10 : 9)));
+    }
+
+    public void addClassInfoInstruction(Opcode opcode, ClassReference type) {
+        this.instructions.add(new WithClassInfoInstruction(opcode, type));
+    }
+
     public int addJump() {
         int i = instructions.size();
         add(new JumpInstruction(Opcode.JUMP));
@@ -103,10 +111,6 @@ public class ByteCodeBuilder {
 
     public void addLocalAccess(Opcode opcode, int i) {
         add(new LocalInstruction(opcode, i));
-    }
-
-    public void addStaticFieldAccess(Opcode opcode, String className, String fieldName) {
-        add(new StaticFieldAccessInstruction(opcode, className, fieldName));
     }
 
     public void build(Chunk.Builder builder) {
