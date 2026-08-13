@@ -101,7 +101,7 @@
     ]
   },
   {
-    "target": "test.SumTest",
+    "target": "vm_test.SumTest",
     "output": [
       "1275", "42925"
     ]

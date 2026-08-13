@@ -784,7 +784,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         LocalVariableContainer.FetchResult result = checkVarExistence(expr.name, expr.type.type() != TokenType.ASSIGN, false);
         if (result != LocalVariableContainer.FetchResult.FAIL) {
             ClassReference type = analyseExpr(expr.value);
-            if (type.is(result.type())) {
+            if (type.isChildOf(result.type())) {
                 OperationInfo operationInfo;
                 if (expr.type.type() == TokenType.ASSIGN) {
                     varAnalyser.setHasValue(result.ordinal());
@@ -936,7 +936,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         stmt.localId = varAnalyser.add(stmt.name.lexeme(), stmt.type, !stmt.isFinal, stmt.initializer != null);
         if (stmt.initializer != null) {
             ClassReference setType = analyseExpr(stmt.initializer);
-            if (!setType.is(stmt.type)) {
+            if (!setType.isChildOf(stmt.type)) {
                 errorIncompatibleTypes(stmt.initializer, stmt.type, setType);
             }
         }

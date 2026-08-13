@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.analyser;
 
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -14,9 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
-    private final Compiler.ErrorStorage errorStorage;
+    private final ErrorStorage errorStorage;
 
-    public FinalsPopulatedAnalyser(Compiler.ErrorStorage errorStorage) {
+    public FinalsPopulatedAnalyser(ErrorStorage errorStorage) {
         this.errorStorage = errorStorage;
     }
 
