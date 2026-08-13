@@ -13,7 +13,7 @@ public class AnnotationManager {
 
         for (AnnotationProcessor processor : processors) {
             if (processor.getSupportedTypes().contains(mirror.getType())) {
-                processor.process(mirror, );
+                //processor.process(mirror, );
             }
         }
     }

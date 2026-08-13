@@ -6,5 +6,5 @@ public interface AnnotationProcessor {
 
     Set<String> getSupportedTypes();
 
-
+    void process(AnnotationMirror mirror, ProcessingEnvironment environment);
 }

@@ -3,6 +3,7 @@ package net.kapitencraft.lang.compiler.bytecode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.annotation.AnnotationManager;
+import net.kapitencraft.lang.compiler.annotation.ProcessingEnvironment;
 import net.kapitencraft.lang.compiler.bytecode.instruction.IncrementIntVarInstruction;
 import net.kapitencraft.lang.compiler.bytecode.instruction.StaticFieldAccessInstruction;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
