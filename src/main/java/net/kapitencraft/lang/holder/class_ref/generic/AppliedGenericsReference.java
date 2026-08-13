@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.holder.class_ref.generic;
 
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.generic.AppliedGenerics;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
@@ -20,7 +21,7 @@ public class AppliedGenericsReference extends ClassReference {
         return expected.generics.equals(gotten.generics);
     }
 
-    public void push(GenericStack genericStack, Compiler.ErrorStorage logger) {
+    public void push(GenericStack genericStack, ErrorStorage logger) {
         this.generics.applyToStack(genericStack, this.reference.getGenerics(), logger);
     }
 

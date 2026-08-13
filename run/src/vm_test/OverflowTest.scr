@@ -1,0 +1,15 @@
+package vm_test;
+
+class OverflowTest {
+    static void test() {
+        OverflowTest.test1();
+    }
+
+    static void test1() {
+        OverflowTest.test();
+    }
+
+    static void main(String[] args) {
+        OverflowTest.test();
+    }
+}

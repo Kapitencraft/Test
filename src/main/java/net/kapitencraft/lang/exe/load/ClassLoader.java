@@ -9,9 +9,10 @@ import net.kapitencraft.lang.oop.Package;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.exe.test.TestLoader;
+import net.kapitencraft.lang.exe.test.VMTestLoader;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.util.*;
@@ -75,7 +76,7 @@ public class ClassLoader {
                     };
                     System.out.println("set debug mode to " + VirtualMachine.DEBUG);
                 } else if (line.startsWith("test")) {
-                    TestLoader.run();
+                    VMTestLoader.run();
                 } else if (line.startsWith("help")) {
                     System.out.println("== HELP ==");
                     System.out.println("\texit                        - Ends the Program");
@@ -206,35 +207,39 @@ public class ClassLoader {
         }
     }
 
-    public static <T extends ClassLoaderHolder<T>> void useHolders(PackageHolder<T> root, Consumer<T> consumer, Executor executor) {
+    public static void useHolders(boolean logInfo, PackageHolder<CompilerLoaderHolder> root, Consumer<CompilerLoaderHolder> consumer, Executor executor) {
         List<CompletableFuture<?>> futures = new ArrayList<>();
-        List<Pair<PackageHolder<T>, Package>> packageData = new ArrayList<>();
+        List<Pair<PackageHolder<CompilerLoaderHolder>, Package>> packageData = new ArrayList<>();
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         AtomicInteger completed = new AtomicInteger(0);
         int total = root.size();
         while (!packageData.isEmpty()) {
-            Pair<PackageHolder<T>, Package> data = packageData.getFirst();
-            PackageHolder<T> holder = data.getFirst();
+            Pair<PackageHolder<CompilerLoaderHolder>, Package> data = packageData.getFirst();
+            PackageHolder<CompilerLoaderHolder> holder = data.getFirst();
             Package pck = data.getSecond();
-            holder.classes.forEach((n, o) ->
+            holder.classes.forEach((n, o) -> {
+                if (!o.getErrorInfo().hadError())
                     futures.add(CompletableFuture.runAsync(() -> consumer.accept(o), executor)
-                            .whenComplete((v, ex) -> {
-                                if (ex != null) {
-                                    System.err.printf("error in thread: %s: %s\n", o.toString(), ex.getMessage());
-                                    System.exit(1);
-                                }
-                                int done = completed.incrementAndGet();
+                        .whenComplete((v, ex) -> {
+                            if (ex != null) {
+                                System.err.printf("error in thread: %s: %s\n", o, ex.getMessage());
+                                System.exit(1);
+                            }
+                            int done = completed.incrementAndGet();
+                            if (logInfo)
                                 printProgress(done, total);
-                            }))
-            );
+                        }));
+            });
             holder.packages.forEach((name, holder1) ->
                     packageData.add(Pair.of(holder1, pck.getOrCreatePackage(name))) //adding all packages back to the queue
             );
             packageData.removeFirst();
         }
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
-        printProgress(total, total);
-        System.out.println();
+        if (logInfo) {
+            printProgress(total, total);
+            System.out.println();
+        }
     }
 
     static void printProgress(int done, int total) {
@@ -287,6 +292,21 @@ public class ClassLoader {
                 size += value.size();
             }
             return size;
+        }
+
+        public @Nullable T getEntry(String target) {
+            PackageHolder<T> holder = this;
+            String[] split = target.split("\\.");
+            for (int i = 0; i < split.length - 1; i++) {
+                String s = split[i];
+                holder = holder.packages.get(s);
+                if (holder == null) return null;
+            }
+            return holder.classes.get(split[split.length - 1]);
+        }
+
+        public boolean isEmpty() {
+            return this.packages.isEmpty() && this.classes.isEmpty();
         }
     }
 

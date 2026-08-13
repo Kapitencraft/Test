@@ -1,0 +1,10 @@
+package vm_test;
+
+class BoolAlgebraTest {
+
+    static void main(String[] args) {
+        System.print(4 < 5 && 5 < 6);
+        System.print(3 > 4 || 4 > 3);
+        System.print(true ^ false);
+    }
+}

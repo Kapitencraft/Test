@@ -1,0 +1,18 @@
+package test;
+
+class TestReturnSyntax {
+
+    void testPostReturn() {
+        return;
+        System.print("5");
+    }
+
+    void testBranchReturn() {
+        if (true) {
+            return;
+        } else {
+            return;
+        }
+        System.print("4");
+    }
+}

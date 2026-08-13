@@ -1,0 +1,13 @@
+package;
+
+class TestHolderParsing {
+
+    test() {
+    }
+
+    class Inner {
+
+        void () {
+        }
+    }
+}

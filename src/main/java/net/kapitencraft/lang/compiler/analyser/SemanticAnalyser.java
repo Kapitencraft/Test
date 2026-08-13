@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.analyser;
 
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.algebra.OperationType;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -244,7 +245,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     private void errorIncompatibleTypes(Token loc, ClassReference expected, ClassReference gotten) {
-        errorF(loc, "incompatible types: %s cannot be converted to %s", gotten, expected);
+        errorF(loc, "incompatible types: %s cannot be converted to %s", gotten.absoluteName(), expected.absoluteName());
     }
 
     private void errorIncompatibleTypes(Token loc, ClassReference got) {
@@ -265,10 +266,10 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         panicMode = true;
     }
 
-    private final Compiler.ErrorStorage errorStorage;
+    private final ErrorStorage errorStorage;
     //endregion
 
-    public SemanticAnalyser(Compiler.ErrorStorage errorStorage) {
+    public SemanticAnalyser(ErrorStorage errorStorage) {
         this.errorStorage = errorStorage;
     }
 
@@ -347,6 +348,10 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             }
 
             errorF(expr.name, "unknown symbol: '%s'", expr.name.lexeme());
+        } else {
+            if (!fetchResult.assigned()) {
+                errorF(expr.name, "variable '%s' might not have been initialized", expr.name.lexeme());
+            }
         }
         expr.ordinal = fetchResult.ordinal();
         expr.type = null;
@@ -787,6 +792,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                 } else
                     operationInfo = getOperationInfo(varAnalyser.getType(expr.name.lexeme()), expr.type, expr.value);
                 expr.executor = operationInfo.executor;
+            } else {
+                errorIncompatibleTypes(expr.value, result.type(), type);
             }
             expr.ordinal = result.ordinal();
         } else {
@@ -927,7 +934,12 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public Void visitVarDeclStmt(Stmt.VarDecl stmt) {
         stmt.localId = varAnalyser.add(stmt.name.lexeme(), stmt.type, !stmt.isFinal, stmt.initializer != null);
-        analyseExpr(stmt.initializer);
+        if (stmt.initializer != null) {
+            ClassReference setType = analyseExpr(stmt.initializer);
+            if (!setType.is(stmt.type)) {
+                errorIncompatibleTypes(stmt.initializer, stmt.type, setType);
+            }
+        }
         return null;
     }
 

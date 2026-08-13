@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.holder.oop.attribute;
 
-import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.oop.AnnotationObj;
@@ -16,7 +16,7 @@ public record MethodHolder(short modifiers,
                            Token name, Token closeBracket, List<Pair<SourceReference, String>> params,
                            List<SourceReference> thrown,
                            Token[] body) implements Validatable {
-    public void validate(Compiler.ErrorStorage logger) {
+    public void validate(ErrorStorage logger) {
         Validatable.validateNullable(annotations, logger);
         type.validate(logger);
         params.forEach(p -> p.getFirst().validate(logger));

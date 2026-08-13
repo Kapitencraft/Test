@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
@@ -33,7 +34,7 @@ public class HolderParser extends AbstractParser {
     private GenericStack activeGenerics = new GenericStack();
     private final Deque<String> activePackages = new ArrayDeque<>();
 
-    public HolderParser(Compiler.ErrorStorage errorStorage) {
+    public HolderParser(ErrorStorage errorStorage) {
         super(errorStorage);
     }
 
@@ -116,9 +117,9 @@ public class HolderParser extends AbstractParser {
         }
     }
 
-    public ClassConstructor parseFile(String fileName) {
+    public ClassConstructor parseFile(String fileName, String declaredPck) {
         List<Token> pck = new ArrayList<>();
-        consume(PACKAGE, "package expected!");
+        Token packageDecl = consume(PACKAGE, "package expected!");
         pck.add(consumeIdentifier());
         while (!check(EOA)) {
             consume(DOT, "unexpected token");
@@ -131,6 +132,14 @@ public class HolderParser extends AbstractParser {
         parseImports();
 
         String pckId = pck.stream().map(Token::lexeme).collect(Collectors.joining("."));
+        if (!Objects.equals(pckId, declaredPck)) {
+            errorF(
+                    packageDecl,
+                    "package path '%s' does not match file path '%s'",
+                    declaredPck, pckId
+            );
+            pckId = declaredPck;
+        }
 
         ModifiersParser parser = MODS_NO_GENERICS;
         parser.parse();

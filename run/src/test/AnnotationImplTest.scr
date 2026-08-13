@@ -1,7 +1,0 @@
-package test;
-
-import test.AnnotationTest as AT;
-
-@AT(name="A",min=0,max=5)
-class AnnotationImplTest {
-}

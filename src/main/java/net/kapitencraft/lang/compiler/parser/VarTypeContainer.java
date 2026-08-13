@@ -1,6 +1,6 @@
 package net.kapitencraft.lang.compiler.parser;
 
-import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
@@ -43,7 +43,7 @@ public class VarTypeContainer implements Validatable {
         return hasClass(Optional.ofNullable(nameOverride).orElseGet(target::name));
     }
 
-    public void validate(Compiler.ErrorStorage logger) {
+    public void validate(ErrorStorage logger) {
         implemented.values().forEach(ref -> ref.validate(logger));
     }
 }

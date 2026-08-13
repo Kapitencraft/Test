@@ -3,6 +3,7 @@ package net.kapitencraft.lang.holder.baked;
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.generic.Generics;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 public record BakedClass(
-        Compiler.ErrorStorage logger,
+        ErrorStorage logger,
         Generics generics,
         ClassReference target,
         Pair<Token, CompileCallable>[] methods,

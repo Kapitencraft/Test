@@ -1,0 +1,107 @@
+[
+  {
+    "target": "test.TestHolderParsing",
+    "output": [
+      {
+        "type": "error",
+        "line": 1,
+        "msg": "<identifier> expected"
+      },
+      {
+        "type": "error",
+        "line": 1,
+        "msg": "package path 'test' does not match file path '<unidentified>'"
+      },
+      {
+        "type": "error",
+        "line": 5,
+        "msg": "unknown symbol"
+      },
+      {
+        "type": "error",
+        "line": 5,
+        "msg": "<identifier> expected"
+      },
+      {
+        "type": "error",
+        "line": 10,
+        "msg": "<identifier> expected"
+      }
+    ]
+  },
+  {
+    "target": "test.TestReturnSyntax",
+    "output": [
+      {
+        "type": "error",
+        "line": 7,
+        "msg": "unreachable statement"
+      },
+      {
+        "type": "error",
+        "line": 16,
+        "msg": "unreachable statement"
+      }
+    ]
+  },
+  {
+    "target": "test.TestReturnSemantic",
+    "output": [
+      {
+        "type": "error",
+        "line": 5,
+        "msg": "missing return value"
+      },
+      {
+        "type": "error",
+        "line": 9,
+        "msg": "incompatible types: scripted.lang.String cannot be converted to scripted.lang.int"
+      }
+    ]
+  },
+  {
+    "target": "test.TestLoopSyntax",
+    "output": [
+      {
+        "type": "error",
+        "line": 8,
+        "msg": "Illegal start of expression"
+      },
+      {
+        "type": "error",
+        "line": 16,
+        "msg": "Illegal start of expression"
+      },
+      {
+        "type": "error",
+        "line": 19,
+        "msg": "Declaration not allowed here"
+      },
+      {
+        "type": "error",
+        "line": 25,
+        "msg": "Missing variable type"
+      }
+    ]
+  },
+  {
+    "target": "test.TestVariable",
+    "output": [
+      {
+        "type": "error",
+        "line": 7,
+        "msg": "incompatible types: scripted.lang.String cannot be converted to scripted.lang.int"
+      },
+      {
+        "type": "error",
+        "line": 11,
+        "msg": "variable 'j' might not have been initialized"
+      },
+      {
+        "type": "error",
+        "line": 15,
+        "msg": "incompatible types: scripted.lang.String cannot be converted to scripted.lang.int"
+      }
+    ]
+  }
+]

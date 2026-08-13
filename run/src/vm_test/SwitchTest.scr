@@ -1,0 +1,27 @@
+package vm_test;
+
+enum SwitchTest {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H;
+
+    static void main(String[] args) {
+        for (SwitchTest st : SwitchTest.values()) {
+            switch (st) {
+                case A -> System.print("Ag");
+                case B -> System.print("Ba");
+                case C -> System.print("Cn");
+                case D -> System.print("Db");
+                case E -> System.print("Er");
+                case F -> System.print("Fm");
+                case G -> System.print("Ge");
+                case H -> System.print("Hg");
+            };
+        }
+    }
+}

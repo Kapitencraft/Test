@@ -1,0 +1,12 @@
+package vm_test;
+
+import vm_test.InterfaceTest as IT;
+import vm_test.FinalTest;
+
+class InterfaceImplementationTest extends FinalTest implements IT {
+
+    @Override
+    String e() {
+        return "e";
+    }
+}

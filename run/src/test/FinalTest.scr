@@ -1,9 +1,0 @@
-package test;
-
-class FinalTest {
-
-    final String test() {
-        System.print("test!");
-        return "Ha! cicero";
-    }
-}

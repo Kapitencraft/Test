@@ -2,6 +2,7 @@ package net.kapitencraft.lang.compiler.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
@@ -39,10 +40,10 @@ public class AbstractParser {
     protected Token[] tokens;
     protected VarTypeContainer parser;
     protected final LocationAnalyser locFinder = new LocationAnalyser();
-    protected final Compiler.ErrorStorage errorStorage;
+    protected final ErrorStorage errorStorage;
     protected boolean panicMode = false;
 
-    public AbstractParser(Compiler.ErrorStorage errorStorage) {
+    public AbstractParser(ErrorStorage errorStorage) {
         this.errorStorage = errorStorage;
     }
 
@@ -50,6 +51,7 @@ public class AbstractParser {
         this.current = 0;
         this.tokens = toParse;
         this.parser = targetAnalyser;
+        this.panicMode = false;
     }
 
     protected @Nullable AppliedGenerics appliedGenerics(GenericStack stack) {
@@ -205,8 +207,7 @@ public class AbstractParser {
             return Optional.of(SourceReference.from(t, reference));
         } else if (reference != null)
             return Optional.of(SourceReference.from(t, reference));
-        else
-            current--;
+        current--;
         return Optional.empty();
     }
 
@@ -301,12 +302,18 @@ public class AbstractParser {
             errorStorage.error(token, message);
     }
 
+    protected void errorF(Token token, String msg, Object... args) {
+        if (!this.panicMode)
+            errorStorage.errorF(token, msg, args);
+    }
+
     protected void warn(Token token, String message) {
         errorStorage.warn(token, message);
     }
 
 
     protected void synchronize() {
+        this.current--; //move back one to ensure finding EOA if they have been consumed by the underlying code
         while (!isAtEnd()) {
             switch (peek().type()) {
                 case EOF:

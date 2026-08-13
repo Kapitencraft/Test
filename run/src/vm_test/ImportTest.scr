@@ -1,0 +1,12 @@
+package vm_test;
+
+import vm_test.MultipleMethodsTest as MMT;
+
+class ImportTest {
+
+    static void main(String[] args) {
+        MMT mmt = new MMT("e", "a");
+        mmt.test(5);
+        mmt.test("Hello!");
+    }
+}

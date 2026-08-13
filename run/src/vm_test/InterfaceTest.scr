@@ -1,0 +1,11 @@
+package vm_test;
+
+interface InterfaceTest {
+    void test();
+
+    String e();
+
+    default String a() {
+        return "a";
+    }
+}

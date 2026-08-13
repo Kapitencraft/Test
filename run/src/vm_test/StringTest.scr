@@ -1,0 +1,15 @@
+package vm_test;
+
+class StringTest {
+
+    static void main(String[] args) {
+        for (char c : args[0].toCharArray()) {
+            System.print(c);
+        }
+        System.print(a() + 5);
+    }
+
+    static String a() {
+        return "a";
+    }
+}

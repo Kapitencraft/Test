@@ -2,7 +2,7 @@ package net.kapitencraft.lang.holder.oop.clazz;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
@@ -28,11 +28,11 @@ public interface ClassConstructor extends Validatable {
 
     ClassReference target();
 
-    Compiler.ClassBuilder construct(StmtParser stmtParser, SemanticAnalyser analyser, VarTypeContainer parser, Compiler.ErrorStorage logger);
+    Compiler.ClassBuilder construct(StmtParser stmtParser, VarTypeContainer parser, ErrorStorage logger);
 
-    ScriptedClass createSkeleton(Compiler.ErrorStorage logger);
+    ScriptedClass createSkeleton(ErrorStorage logger);
 
-    default void applySkeleton(Compiler.ErrorStorage logger) {
+    default void applySkeleton(ErrorStorage logger) {
         ScriptedClass skeleton = createSkeleton(logger);
         this.target().setTarget(skeleton);
     }
@@ -41,7 +41,7 @@ public interface ClassConstructor extends Validatable {
 
     String pck();
 
-    default @NotNull Expr getFieldBody(StmtParser stmtParser, VarTypeContainer parser, Compiler.ErrorStorage logger, FieldHolder fieldHolder, List<Stmt> statics) {
+    default @NotNull Expr getFieldBody(StmtParser stmtParser, VarTypeContainer parser, FieldHolder fieldHolder, List<Stmt> statics) {
         stmtParser.apply(fieldHolder.body(), parser);
         Expr initializer = stmtParser.expression();
         if (Modifiers.isStatic(fieldHolder.modifiers())) {

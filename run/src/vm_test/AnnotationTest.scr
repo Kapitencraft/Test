@@ -1,0 +1,16 @@
+package vm_test;
+
+import vm_test.EnumTest as ET;
+import scripted.lang.annotations.Retention;
+import scripted.lang.annotations.RetentionPolicy;
+
+@Retention(RetentionPolicy.SOURCE)
+annotation AnnotationTest {
+    String name() default "";
+
+    int max();
+
+    int min();
+
+    ET test() default ET.A;
+}

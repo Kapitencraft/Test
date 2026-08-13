@@ -5,11 +5,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.exe.load.ClassLoader;
 import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
-import net.kapitencraft.lang.holder.ast.Expr;
-import net.kapitencraft.lang.holder.ast.Stmt;
+import net.kapitencraft.lang.exe.test.CompileTestLoader;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.token.Token;
@@ -33,11 +33,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class Compiler {
+    public static final File ROOT = new File("./run/src");
+
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static final LocationAnalyser LOCATION_ANALYSER = new LocationAnalyser();
 
     public static boolean optimize = false;
-    static int errorCount = 0;
+    public static File source;
     private static ClassLoader.PackageHolder<CompilerLoaderHolder> compileData;
     private static final List<ClassRegister> registers = new ArrayList<>();
     private static Stage activeStage;
@@ -74,38 +76,65 @@ public class Compiler {
             optimize = true;
         }
 
-        File root = new File("./run/src");
         File cache = ClassLoader.cacheLoc;
 
         System.out.println("Compiling...");
 
+        compile(true, true, ROOT, cache);
+    }
+
+    public static ClassLoader.PackageHolder<CompilerLoaderHolder> compile(boolean logInfo, boolean failFast, File root, @Nullable File cache) {
         compileData = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
 
+        source = root;
+
+        if (compileData.isEmpty()) {
+            if (logInfo)
+                System.out.println("no source found. returning");
+            return compileData;
+        }
         ExecutorService executor = Executors.newFixedThreadPool(10, new CompilerThreadFactory());
+        ErrorStorage.overallErrorCount = 0;
         try {
             for (Stage stage : Stage.values()) {
+                if (stage == Stage.CACHING && cache == null) {
+                    if (logInfo)
+                        System.out.println("Skipping step CACHING as there is no cache root provided");
+                    continue;
+                }
+
                 registers.forEach(ClassRegister::register);
                 registers.clear();
                 activeStage = stage;
-                System.out.printf("executing step %s\n", stage);
+                if (logInfo)
+                    System.out.printf("executing step %s\n", stage);
 
                 if (stage == Stage.CACHING && cache.exists())
                     Util.delete(cache);
 
-                ClassLoader.useHolders(compileData, stage.action, executor);
+                ClassLoader.useHolders(logInfo, compileData, stage.action, executor);
 
-                if (errorCount > 0) {
-                    printErrors(compileData);
+                if (failFast) {
+                    if (ErrorStorage.overallErrorCount > 0) {
+                        printErrors(compileData);
 
-                    if (errorCount > 100) {
-                        System.err.println("only showing the first 100 errors out of " + errorCount + " total");
-                    } else System.err.println(errorCount + " errors");
-                    System.exit(65);
+                        if (logInfo) {
+                            if (ErrorStorage.overallErrorCount > 100) {
+                                System.err.println("only showing the first 100 errors out of " + ErrorStorage.overallErrorCount + " total");
+                            } else System.err.println(ErrorStorage.overallErrorCount + " errors");
+                        }
+                        System.exit(65);
+                    }
                 }
             }
         } finally {
             executor.shutdownNow();
         }
+        return compileData;
+    }
+
+    public static ClassLoader.PackageHolder<CompilerLoaderHolder> getCompileData() {
+        return compileData;
     }
 
     /**
@@ -149,104 +178,6 @@ public class Compiler {
         FileWriter writer = new FileWriter(cacheTarget);
         writer.write(GSON.toJson(object));
         writer.close();
-    }
-
-    public static class ErrorStorage {
-        private final String[] lines;
-        private final String fileLoc;
-        private final List<Message> messages = new ArrayList<>();
-
-        public ErrorStorage(String[] lines, String fileLoc) {
-            this.lines = lines;
-            this.fileLoc = fileLoc;
-        }
-
-        public void printAll() {
-            for (Message msg : messages) {
-                msg.print(lines, fileLoc);
-            }
-        }
-
-        //region message
-        private interface Message {
-
-            void print(String[] lines, String fileLoc);
-        }
-
-        private record Error(int lineIndex, int lineStartIndex, String msg, String line) implements Message {
-
-            @Override
-            public void print(String[] lines, String fileLoc) {
-                Compiler.error(lineIndex, lineStartIndex, msg, fileLoc, line);
-            }
-        }
-
-        private record Warn(int lineIndex, int lineStartIndex, String msg) implements Message {
-
-            @Override
-            public void print(String[] lines, String fileLoc) {
-                Compiler.warn(lineIndex, lineStartIndex, msg, fileLoc, lines[lineIndex]);
-            }
-        }
-
-        private record Log(String message) implements Message {
-
-            @Override
-            public void print(String[] lines, String fileLoc) {
-                System.err.println(message);
-            }
-        }
-        //endregion
-
-        public void error(Token loc, String msg) {
-            error(loc.line(), loc.lineStartIndex(), msg);
-        }
-
-        public void errorF(Token loc, String format, Object... args) {
-            error(loc, String.format(format, args));
-        }
-
-        public void errorF(Expr loc, String format, Object... args) {
-            errorF(LOCATION_ANALYSER.find(loc), format, args);
-        }
-
-        public void error(int lineIndex, int lineStartIndex, String msg) {
-            if (errorCount++ < 100)
-                messages.add(new Error(lineIndex, lineStartIndex, msg, lines[lineIndex - 1]));
-        }
-
-        public void error(Stmt loc, String msg) {
-            error(LOCATION_ANALYSER.find(loc), msg);
-        }
-
-        public void error(Expr loc, String msg) {
-            error(LOCATION_ANALYSER.find(loc), msg);
-        }
-
-        public void logError(String s) {
-            this.messages.add(new Log(s));
-        }
-
-        public void warn(int lineIndex, int lineStartIndex, String msg) {
-            this.messages.add(new Warn(lineIndex, lineStartIndex, msg));
-        }
-
-        public void warn(Token loc, String msg) {
-            warn(loc.line(), loc.lineStartIndex(), msg);
-        }
-
-        public void warn(Stmt loc, String msg) {
-            warn(LOCATION_ANALYSER.find(loc), msg);
-        }
-
-        @Override
-        public String toString() {
-            return "ErrorStorage for '" + fileLoc + "' (errorCount: " + messages.size() + ")";
-        }
-
-        public boolean hadError() {
-            return errorCount > 0;
-        }
     }
 
     public static void error(int lineIndex, int lineStartIndex, String msg, String fileId, String line) {

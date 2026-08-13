@@ -6,6 +6,7 @@ import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
+import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.HolderParser;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
@@ -19,11 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Objects;
 
 public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder> {
     private final String content;
-    private final Compiler.ErrorStorage storage;
+    private final ErrorStorage storage;
     private ClassConstructor holder;
     private Compiler.ClassBuilder builder;
     private CacheableClass target;
@@ -36,14 +36,14 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.storage = new Compiler.ErrorStorage(
+        this.storage = new ErrorStorage(
                 content.split("\n", Integer.MAX_VALUE), //second param required to not skip empty lines
                 file.getAbsolutePath().replace(".\\", "") //remove '\.\'
         );
         this.varTypeContainer = new VarTypeContainer();
     }
 
-    public CompilerLoaderHolder(ClassConstructor holder, Compiler.ErrorStorage storage, VarTypeContainer parser) {
+    public CompilerLoaderHolder(ClassConstructor holder, ErrorStorage storage, VarTypeContainer parser) {
         super(null);
         this.content = null; //not necessary with the holder already present
         this.storage = storage;
@@ -59,18 +59,12 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         HolderParser parser = new HolderParser(storage);
         parser.apply(tokens.toArray(new Token[0]), varTypeContainer);
 
-        ClassConstructor decl = parser.parseFile(fileName);
+        String rootPath = Compiler.source.getAbsolutePath();
+        String path = file.getParentFile().getAbsolutePath().substring(rootPath.length() + 1).replace(".scr", "");
+        String pck = path.replace('\\', '.');
+        ClassConstructor decl = parser.parseFile(fileName, pck);
 
         if (decl == null) return;
-
-        String path = file.getParentFile().getPath().substring(10).replace(".scr", "");
-        String pck = path.replace('\\', '.');
-        String declPck = decl.pck();
-        if (!Objects.equals(declPck, pck)) {
-            storage.errorF(
-                    tokens.getFirst(),
-                    "package path '%s' does not match file path '%s'", declPck, pck);
-        }
 
         holder = decl;
     }
@@ -78,15 +72,15 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
     public void construct() {
         if (!checkHolderCreated()) return;
         StmtParser stmtParser = new StmtParser(this.storage);
-        SemanticAnalyser analyser = new SemanticAnalyser(this.storage);
 
         stmtParser.pushFallback(this.holder.target());
-        builder = holder.construct(stmtParser, analyser, this.varTypeContainer, this.storage);
+        builder = holder.construct(stmtParser, this.varTypeContainer, this.storage);
         stmtParser.popFallback();
     }
 
     public void analyse() {
-        builder.analyse();
+        if (builder != null)
+            builder.analyse();
     }
 
     public void cache() {
@@ -137,6 +131,10 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
 
     public void printErrors() {
         this.storage.printAll();
+    }
+
+    public ErrorStorage getErrorInfo() {
+        return storage;
     }
 
     public void optimize() {
