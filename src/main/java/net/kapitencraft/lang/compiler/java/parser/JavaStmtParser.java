@@ -399,7 +399,7 @@ public class JavaStmtParser extends JavaExprParser implements StmtParser {
         return aWhile;
     }
 
-    private List<Stmt> block(String name) {
+    protected List<Stmt> block(String name) {
         List<Stmt> statements = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {

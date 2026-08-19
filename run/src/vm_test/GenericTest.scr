@@ -8,10 +8,21 @@ class GenericTest {
         System.print(test(14.));
         Supplier<int> abcd = new TestA(10);
         System.print(GenericTest.test(abcd.get()));
+        printValue(GenericTest::value);
+        printValue(() -> 20);
+        printValue(abcd::get);
     }
 
     static <T> T create(T in) {
         return in;
+    }
+
+    static int value() {
+        return 5;
+    }
+
+    static void printValue(Supplier<int> supplier) {
+        System.print(supplier.get());
     }
 
     static <T extends num> T test(T in) {
