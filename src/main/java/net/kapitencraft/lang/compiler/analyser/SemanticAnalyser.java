@@ -472,6 +472,12 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     @Override
+    public ClassReference visitMethodRefExpr(Expr.MethodRef expr) {
+
+        return null;
+    }
+
+    @Override
     public ClassReference visitArrayGetExpr(Expr.ArrayGet expr) {
         ClassReference reference = analyseExpr(expr.object);
 
@@ -552,6 +558,11 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         expr.retType = fieldType;
 
         return fieldType;
+    }
+
+    @Override
+    public ClassReference visitExprLambdaExpr(Expr.ExprLambda expr) {
+        return null;
     }
 
     @Override
@@ -670,6 +681,11 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     @Override
+    public ClassReference visitBlockLambdaExpr(Expr.BlockLambda expr) {
+        return null;
+    }
+
+    @Override
     public ClassReference visitStaticGetExpr(Expr.StaticGet expr) {
         String fieldName = expr.name.lexeme();
 
@@ -777,6 +793,11 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         }
 
         return expr.retType = fieldType;
+    }
+
+    @Override
+    public ClassReference visitStaticMethodRefExpr(Expr.StaticMethodRef expr) {
+        return null;
     }
 
     @Override

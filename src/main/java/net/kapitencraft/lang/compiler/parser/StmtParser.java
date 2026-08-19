@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.compiler.parser;
 
-import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
@@ -386,7 +385,7 @@ public class StmtParser extends ExprParser {
         return aWhile;
     }
 
-    private List<Stmt> block(String name) {
+    protected List<Stmt> block(String name) {
         List<Stmt> statements = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {

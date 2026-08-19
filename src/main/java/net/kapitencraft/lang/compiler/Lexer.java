@@ -111,7 +111,13 @@ public class Lexer {
             case '.': addToken(DOT); break;
             case ';': addToken(EOA); break;
             case '-':
-                addToken(match('>') ? LAMBDA : match('-') ? SHRINK : match('=') ? SUB_ASSIGN : SUB);
+                addToken(
+                        match('>') ? LAMBDA :
+                                match('-') ? SHRINK :
+                                        match('=') ?
+                                                SUB_ASSIGN :
+                                                SUB
+                );
                 break;
             case '+':
                 addToken(match('+') ? GROW : match('=') ? ADD_ASSIGN : ADD);
@@ -173,6 +179,8 @@ public class Lexer {
                 break;
             case '"': string(); break;
             case ':':
+                if (match(':'))
+                    addToken(TokenType.DOUBLE_COLON);
                 addToken(TokenType.COLON);
                 break;
             case '?':

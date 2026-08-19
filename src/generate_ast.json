@@ -153,6 +153,22 @@
           "entries": "Expr[]",
           "types": "Token[]",
           "dataType": "ClassReference"
+        },
+        "MethodRef": {
+          "obj": "Expr",
+          "name": "Token"
+        },
+        "StaticMethodRef": {
+          "obj": "ClassReference",
+          "name": "Token"
+        },
+        "ExprLambda": {
+          "params": "Token[]",
+          "value": "Expr"
+        },
+        "BlockLambda": {
+          "params": "Token[]",
+          "value": "Stmt.Block"
         }
       },
       "imports": [

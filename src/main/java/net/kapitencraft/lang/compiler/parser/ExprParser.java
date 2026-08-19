@@ -6,6 +6,7 @@ import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
+import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.ast.SwitchKey;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -670,6 +671,9 @@ public class ExprParser extends AbstractParser {
 
         if (match(IDENTIFIER)) {
             Token previous = previous(); //the identifier just consumed
+            if (match(LAMBDA)) {
+                return makeLambda(List.of(previous));
+            }
             if (currentFallback().exists()) { //check if the parser has a class fallback available
                 ClassReference fallbackReference = currentFallback();
                 ScriptedClass fallback = fallbackReference.get(); //get said fallback
@@ -718,6 +722,20 @@ public class ExprParser extends AbstractParser {
         );
 
         if (match(BRACKET_O)) {
+            int startIdx = current;
+            if (match(IDENTIFIER)) {
+                if (check(COMMA) || check(LAMBDA)) {
+                    List<Token> args = new ArrayList<>();
+                    args.add(tokens[startIdx]);
+
+                    while (match(COMMA)) {
+                        args.add(consumeIdentifier());
+                    }
+                    consume(LAMBDA, "'lambda' or '->' expected");
+                    return makeLambda(args);
+                }
+            }
+            current = startIdx;
             Expr expr = expression();
             consumeBracketClose("expression");
             return expr; //the grouping expression mustn't exist as a real AST entry
@@ -728,11 +746,33 @@ public class ExprParser extends AbstractParser {
         return varRef(Token.createNative("<unidentified>"), (byte) -1);
     }
 
+    private Expr makeLambda(List<Token> args) {
+        if (match(C_BRACKET_O)) {
+            if (this instanceof StmtParser stmtParser) {
+                List<Stmt> content = stmtParser.block("lambda");
+                Expr.BlockLambda lambda = new Expr.BlockLambda();
+                lambda.value = new Stmt.Block();
+                lambda.value.statements = content;
+                lambda.params = args.toArray(Token[]::new);
+                return lambda;
+            }
+            //block lambda
+            throw new IllegalStateException("can not create block lambda from expr parser");
+        } else {
+            Expr expr = expression();
+            Expr.ExprLambda lambda = new Expr.ExprLambda();
+            lambda.params = args.toArray(Token[]::new);
+            lambda.value = expr;
+            return lambda;
+        }
+    }
+
     private void consumeDot() {
         consume(DOT, "'.' expected");
     }
 
     protected @NotNull Expr parseObjAttributes(ClassReference target) {
+        if (match(DOUBLE_COLON)) return staticMethodRef(target);
         Token name = consumeIdentifier();
         if (match(BRACKET_O)) return finishCall(name, target, null);
         if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
@@ -741,6 +781,10 @@ public class ExprParser extends AbstractParser {
         get.target = target;
         get.name = name;
         return get;
+    }
+
+    private @NotNull Expr staticMethodRef(ClassReference target) {
+        return null;
     }
 
     private Expr varRef(Token previous, byte ordinal) {
