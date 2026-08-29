@@ -9,7 +9,6 @@ import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.exe.load.ClassLoader;
 import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
-import net.kapitencraft.lang.exe.test.CompileTestLoader;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.token.Token;
@@ -161,7 +160,7 @@ public class Compiler {
 
         Token name();
 
-        Pair<Token, CompileCallable>[] methods();
+        List<Pair<Token, CompileCallable>> methods();
 
         ClassReference[] interfaces();
 

@@ -6,7 +6,7 @@ public interface ScriptedField {
 
     ClassReference type();
 
-    short modifiers();
+    int modifiers();
 
     boolean isFinal();
 

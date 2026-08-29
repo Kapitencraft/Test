@@ -29,7 +29,7 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.*;
 
-public record InterfaceHolder(ClassReference target, short modifiers,
+public record InterfaceHolder(ClassReference target, int modifiers,
                               AnnotationObj[] annotations, Generics generics, String pck, Token name,
                               SourceReference[] interfaces,
                               MethodHolder[] methodHolders,
@@ -78,7 +78,7 @@ public record InterfaceHolder(ClassReference target, short modifiers,
 
         return new BakedInterface(
                 logger, generics, target,
-                methods.toArray(new Pair[0]),
+                methods,
                 staticFields,
                 extractInterfaces(),
                 name,

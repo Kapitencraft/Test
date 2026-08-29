@@ -21,9 +21,9 @@ public class SkeletonMethod implements ScriptedCallable {
     private final ClassReference[] args;
     private final ClassReference[] thrown;
     private final ClassReference retType;
-    private final short modifiers;
+    private final int modifiers;
 
-    public SkeletonMethod(ClassReference[] args, ClassReference[] thrown, ClassReference retType, short modifiers) {
+    public SkeletonMethod(ClassReference[] args, ClassReference[] thrown, ClassReference retType, int modifiers) {
         this.args = args;
         this.thrown = thrown;
         this.retType = retType;
@@ -34,7 +34,7 @@ public class SkeletonMethod implements ScriptedCallable {
         return create(decl.params(), decl.thrown(), decl.type().getReference(), decl.modifiers());
     }
 
-    private static SkeletonMethod create(List<? extends Pair<SourceReference, String>> params, List<SourceReference> thrown, ClassReference type, short modifiers) {
+    private static SkeletonMethod create(List<? extends Pair<SourceReference, String>> params, List<SourceReference> thrown, ClassReference type, int modifiers) {
         return new SkeletonMethod(
                 params.stream()
                         .map(Pair::getFirst)

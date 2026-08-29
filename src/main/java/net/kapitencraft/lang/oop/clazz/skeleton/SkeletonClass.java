@@ -34,7 +34,7 @@ public class SkeletonClass implements ScriptedClass {
 
     private final GeneratedMethodMap methods;
 
-    private final short modifiers;
+    private final int modifiers;
     private final String[] interfaces;
     private final boolean isCompiler; //this is necessary in order to use the correct mapper from string -> ClassReference
 
@@ -42,7 +42,7 @@ public class SkeletonClass implements ScriptedClass {
                          String name, String pck, String superclass,
                          Map<String, SkeletonField> fields, EnumConstantHolder[] constants,
                          Map<String, DataMethodContainer> methods,
-                         short modifiers, String[] interfaces) {
+                         int modifiers, String[] interfaces) {
         this.name = name;
         this.pck = pck;
         this.superclass = superclass;
@@ -149,7 +149,7 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public short getModifiers() {
+    public int getModifiers() {
         return modifiers;
     }
 

@@ -29,7 +29,7 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
     private final String name;
     private final String packageRepresentation;
 
-    private final short modifiers;
+    private final int modifiers;
 
     private final Annotation[] annotations;
 
@@ -37,7 +37,7 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
                         Map<String, CompileField> fields,
                         ClassReference superclass, String name, String packageRepresentation,
                         ClassReference[] implemented,
-                        short modifiers, Annotation[] annotations) {
+                        int modifiers, Annotation[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
         this.allFields = fields;

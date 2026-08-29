@@ -20,6 +20,8 @@ public interface ScriptedCallable {
         return map;
     }
 
+    ClassReference declaringClass();
+
     /**
      * supplies the given return tpe
      * @return the return type of this Method / Function

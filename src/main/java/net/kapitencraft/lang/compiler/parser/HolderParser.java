@@ -359,7 +359,7 @@ public class HolderParser extends AbstractParser {
         List<ConstructorHolder> constructorHolders = new ArrayList<>();
         List<FieldHolder> fieldHolders = new ArrayList<>();
 
-        short modifiers = mods != null ? mods.packModifiers() : 0;
+        int modifiers = mods != null ? mods.packModifiers() : 0;
         AnnotationObj[] annotations = mods != null ? mods.getAnnotations() : new AnnotationObj[0];
 
         parseClassProperties(Modifiers.isAbstract(modifiers) ? ModifierScope.Group.ABSTRACT_CLASS : ModifierScope.Group.CLASS, methodHolders, constructorHolders, fieldHolders, target, pckID, name, false);
@@ -525,7 +525,7 @@ public class HolderParser extends AbstractParser {
             defaulted = true;
         }
         consumeEndOfArg();
-        return new MethodHolder(Modifiers.pack(false, false, !defaulted), annotations, null, type, elementName, null, List.of(), List.of(), defaultCode);
+        return new MethodHolder(Modifiers.pack(Modifiers.ABSTRACT), annotations, null, type, elementName, null, List.of(), List.of(), defaultCode);
     }
 
     private InterfaceHolder interfaceDecl(ModifiersParser mods, @Nullable String namePrefix, String pckID, @Nullable String fileId) {
@@ -576,7 +576,7 @@ public class HolderParser extends AbstractParser {
         if (stack != null) activeGenerics = stack;
         else if (classGenerics != null) activeGenerics.pop();
         activePackages.pop();
-        short modifiers = mods != null ? mods.packModifiers() : 0;
+        int modifiers = mods != null ? mods.packModifiers() : 0;
         AnnotationObj[] annotations = mods != null ? mods.getAnnotations() : new AnnotationObj[0];
         return new InterfaceHolder(target, modifiers,
                 annotations, classGenerics, pckID, name,
@@ -660,8 +660,12 @@ public class HolderParser extends AbstractParser {
             encountered.clear();
         }
 
-        private short packModifiers() {
-            return Modifiers.pack(isFinal(), isStatic(), isAbstract() && !isDefault());
+        private int packModifiers() {
+            int[] modifiers = new int[3];
+            if (isFinal()) modifiers[0] = Modifiers.FINAL;
+            if (isStatic()) modifiers[1] = Modifiers.STATIC;
+            if (isAbstract() && !isDefault()) modifiers[2] = Modifiers.ABSTRACT;
+            return Modifiers.pack(modifiers);
         }
 
         private boolean isFinal() {

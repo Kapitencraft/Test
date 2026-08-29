@@ -23,12 +23,12 @@ public record BakedClass(
         ErrorStorage logger,
         Generics generics,
         ClassReference target,
-        Pair<Token, CompileCallable>[] methods,
-        Pair<Token, CompileCallable>[] constructors,
+        List<Pair<Token, CompileCallable>> methods,
+        List<Pair<Token, CompileCallable>> constructors,
         Map<Token, CompileField> fields,
         ClassReference superclass, Token name, String pck,
         ClassReference[] interfaces,
-        short modifiers,
+        int modifiers,
         Annotation[] annotations
 ) implements Compiler.ClassBuilder {
 
@@ -66,9 +66,11 @@ public record BakedClass(
 
     @Override
     public void analyse() {
-        SemanticAnalyser analyser = new SemanticAnalyser(this.logger);
+        SemanticAnalyser analyser = new SemanticAnalyser(this.logger, this.methods::add);
 
-        for (Pair<Token, CompileCallable> method : this.methods) {
+        List<Pair<Token, CompileCallable>> pairs = this.methods;
+        for (int i = 0; i < pairs.size(); i++) {
+            Pair<Token, CompileCallable> method = pairs.get(i);
             method.getSecond().analyseSemantics(analyser, this.target);
         }
         for (Pair<Token, CompileCallable> constructor : this.constructors) {

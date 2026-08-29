@@ -16,10 +16,10 @@ public class CompileField implements ScriptedField {
     private final Token name;
     private final Expr init;
     private final ClassReference type;
-    private final short modifiers;
+    private final int modifiers;
     private final Annotation[] annotations;
 
-    public CompileField(Token name, Expr init, ClassReference type, short modifiers, Annotation[] annotations) {
+    public CompileField(Token name, Expr init, ClassReference type, int modifiers, Annotation[] annotations) {
         this.name = name;
         this.init = init;
         this.type = type;
@@ -60,7 +60,7 @@ public class CompileField implements ScriptedField {
     }
 
     @Override
-    public short modifiers() {
+    public int modifiers() {
         return modifiers;
     }
 

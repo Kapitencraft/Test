@@ -9,10 +9,10 @@ import java.lang.reflect.Field;
 
 public class NativeField implements ScriptedField {
     private final ClassReference type;
-    private final short modifiers;
+    private final int modifiers;
     private final Field field;
 
-    public NativeField(ClassReference type, short modifiers, Field field) {
+    public NativeField(ClassReference type, int modifiers, Field field) {
         this.type = type;
         this.modifiers = modifiers;
         this.field = field;
@@ -50,7 +50,7 @@ public class NativeField implements ScriptedField {
     }
 
     @Override
-    public short modifiers() {
+    public int modifiers() {
         return modifiers;
     }
 }

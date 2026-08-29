@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.exe;
 
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
@@ -11,6 +12,7 @@ import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.clazz.primitive.*;
 import net.kapitencraft.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.tool.StringReader;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -60,6 +62,29 @@ public class VarTypeManager {
     public static final ClassReference OVERRIDE = getMainClass("Override");
     public static final ClassReference RETENTION_POLICY = getAnnotationClass("RetentionPolicy");
     public static final ClassReference RETENTION = getAnnotationClass("Retention");
+
+    /**
+     * attempts to get a functional method (e.g. a lambda method) from the type
+     * @param reference the type to check
+     * @return the found method, or null if it doesn't exist
+     */
+    public static @Nullable ScriptedCallable getFunctionalMethod(ClassReference reference) {
+        if (reference.get().isInterface()) {
+            List<ScriptedCallable> candidates = new ArrayList<>();
+            reference.get().getMethods().asMap().forEach((s, container) -> {
+                for (ScriptedCallable method : container.methods()) {
+                    if (method.isAbstract()) {
+                        candidates.add(method);
+                    }
+                }
+            });
+            if (candidates.size() == 1) {
+                return candidates.getFirst();
+            }
+            return null;
+        }
+        return null; //class not interface: can not infer functional method
+    }
 
     public static ClassReference getClassForName(String type) {
         int arrayCount = 0;
@@ -142,7 +167,7 @@ public class VarTypeManager {
             }
             pg = pg.getPackage(lexeme);
         }
-        Token token = s.get(s.size()-1);
+        Token token = s.getLast();
         String lexeme = token.lexeme();
         if (!pg.hasClass(lexeme)) {
             error.accept(token, "unknown class '" + lexeme + "'");
@@ -157,7 +182,7 @@ public class VarTypeManager {
             String pckName = path.get(i).lexeme();
             pg = pg.getOrCreatePackage(pckName);
         }
-        Token last = path.get(path.size() - 1);
+        Token last = path.getLast();
         return SourceReference.from(last, pg.getOrCreateClass(last.lexeme()));
     }
 
@@ -201,6 +226,7 @@ public class VarTypeManager {
         return objects.stream().map(VarTypeManager::getClassFromObject).toList();
     }
 
+    //region conversion
     public static String getClassName(ScriptedClass reference) {
         if (reference == NUMBER)
             return "N";
@@ -349,6 +375,7 @@ public class VarTypeManager {
             }
         };
     }
+    //endregion
 
     public static void registerFlat(ScriptedClass target) {
         flatMap.put(target.absoluteName().replaceAll("\\.", "/"), target);

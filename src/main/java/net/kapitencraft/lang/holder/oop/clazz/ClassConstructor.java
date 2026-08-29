@@ -83,7 +83,7 @@ public interface ClassConstructor extends Validatable {
                         List.of(),
                         new ClassReference[0],
                         statics,
-                        Modifiers.pack(true, true, false),
+                        Modifiers.SF,
                         new Annotation[0]
                 )
         ));

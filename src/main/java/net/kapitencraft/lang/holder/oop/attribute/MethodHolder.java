@@ -11,7 +11,7 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.List;
 
-public record MethodHolder(short modifiers,
+public record MethodHolder(int modifiers,
                            AnnotationObj[] annotations, Generics generics, SourceReference type,
                            Token name, Token closeBracket, List<Pair<SourceReference, String>> params,
                            List<SourceReference> thrown,

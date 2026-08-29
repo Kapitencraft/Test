@@ -15,6 +15,7 @@ import net.kapitencraft.lang.oop.method.annotation.CompileAnnotationCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
 
+import java.util.List;
 import java.util.Map;
 
 public record BakedAnnotation(
@@ -42,7 +43,7 @@ public record BakedAnnotation(
     }
 
     @Override
-    public Pair<Token, CompileCallable>[] methods() {
+    public List<Pair<Token, CompileCallable>> methods() {
         return new Pair[0];
     }
 

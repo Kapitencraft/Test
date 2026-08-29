@@ -147,7 +147,7 @@ public interface ScriptedClass {
     //region MODIFIERS
 
     @Contract(pure = true)
-    short getModifiers();
+    int getModifiers();
 
     default boolean isInterface() {
         return (getModifiers() & Modifiers.INTERFACE) != 0;

@@ -23,7 +23,7 @@ import net.kapitencraft.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.lang.oop.method.annotation.SkeletonAnnotationMethod;
 import org.jetbrains.annotations.Nullable;
 
-public record AnnotationHolder(ClassReference target, short modifiers,
+public record AnnotationHolder(ClassReference target, int modifiers,
                                AnnotationObj[] annotations, Generics generics, String pck, Token name,
                                MethodHolder[] methodHolders) implements ClassConstructor {
 
@@ -70,7 +70,7 @@ public record AnnotationHolder(ClassReference target, short modifiers,
     }
 
     public record MethodWrapper(@Nullable Expr val, ClassReference retType, Annotation[] annotations,
-                                short modifiers) implements ScriptedCallable {
+                                int modifiers) implements ScriptedCallable {
 
         @Override
         public ClassReference[] argTypes() {

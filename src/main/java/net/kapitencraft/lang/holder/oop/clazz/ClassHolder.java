@@ -33,7 +33,7 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.*;
 
-public record ClassHolder(ClassReference target, short modifiers,
+public record ClassHolder(ClassReference target, int modifiers,
                           AnnotationObj[] annotations, Generics generics, String pck, Token name,
                           SourceReference parent,
                           SourceReference[] interfaces,
@@ -52,7 +52,7 @@ public record ClassHolder(ClassReference target, short modifiers,
             }
             Annotation[] annotations = stmtParser.parseAnnotations(fieldHolder.annotations(), parser);
 
-            short mods = fieldHolder.modifiers();
+            int mods = fieldHolder.modifiers();
             CompileField fieldDecl = new CompileField(fieldHolder.name(), initializer, fieldHolder.type().getReference(), mods, annotations);
             fields.put(fieldHolder.name(), fieldDecl);
         }
@@ -97,8 +97,8 @@ public record ClassHolder(ClassReference target, short modifiers,
                 logger,
                 generics,
                 this.target(),
-                methods.toArray(new Pair[0]),
-                constructors.toArray(new Pair[0]),
+                methods,
+                constructors,
                 fields,
                 this.parent.getReference(),
                 this.name(),
@@ -129,7 +129,7 @@ public record ClassHolder(ClassReference target, short modifiers,
             builder.addMethod(logger, SkeletonMethod.create(methodHolder), methodHolder.name());
         }
         methods.computeIfAbsent("values", s -> new DataMethodContainer.Builder(this.name()))
-                .addMethod(logger, new SkeletonMethod(new ClassReference[0], new ClassReference[0], target.array(), Modifiers.pack(false, true, false)), Token.createNative("values"));
+                .addMethod(logger, new SkeletonMethod(new ClassReference[0], new ClassReference[0], target.array(), Modifiers.pack(Modifiers.STATIC)), Token.createNative("values"));
 
         //constructors
         for (ConstructorHolder constructorHolder : this.constructorHolders()) {
