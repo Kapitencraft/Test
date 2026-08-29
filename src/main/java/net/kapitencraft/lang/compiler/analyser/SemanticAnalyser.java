@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.analyser;
 
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.algebra.OperationType;
@@ -9,6 +10,7 @@ import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.ast.SwitchKey;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
@@ -19,12 +21,15 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassReference> {
@@ -92,6 +97,17 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             }
         }
         errorF(loc, "unhandled exception: %s" + thrown.absoluteName());
+    }
+
+    private List<ScriptedCallable> findFunctionMethodCandidates() {
+        List<ScriptedCallable> functionalMethodCandidates = new ArrayList<>();
+        for (ClassReference reference : activeArgs.peek()) {
+            ScriptedCallable method = VarTypeManager.getFunctionalMethod(reference);
+            if (method != null) {
+                functionalMethodCandidates.add(method);
+            }
+        }
+        return functionalMethodCandidates;
     }
 
     //endregion
@@ -268,9 +284,12 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     private final ErrorStorage errorStorage;
     //endregion
+    private final Consumer<Pair<Token, CompileCallable>> methodAdditionSink;
+    private final AtomicInteger lambdaCount = new AtomicInteger(0);
 
-    public SemanticAnalyser(ErrorStorage errorStorage) {
+    public SemanticAnalyser(ErrorStorage errorStorage, Consumer<Pair<Token, CompileCallable>> methodAdditionSink) {
         this.errorStorage = errorStorage;
+        this.methodAdditionSink = methodAdditionSink;
     }
 
     public ClassReference analyseExpr(Expr expr) {
@@ -473,7 +492,14 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitMethodRefExpr(Expr.MethodRef expr) {
-
+        ClassReference type = analyseExpr(expr.obj);
+        DataMethodContainer container = type.get().getMethods().get(expr.name.lexeme());
+        if (container == null) {
+            errorF(expr.name, "unknown symbol: '%s'", expr.name.lexeme());
+            return VarTypeManager.VOID.reference();
+        } else {
+            container.getMethod()
+        }
         return null;
     }
 
@@ -553,7 +579,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             errorF(expr.name, "unknown field in class %s: %s", objType.absoluteName(), fieldName);
         }
 
-        OperationInfo info = getOperationInfo(expr.assignType, fieldType);
+        OperationInfo info = getOperationInfo(expr.assignType, fieldType); //TODO?
 
         expr.retType = fieldType;
 
@@ -562,6 +588,21 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitExprLambdaExpr(Expr.ExprLambda expr) {
+        ClassReference type = analyseExpr(expr.value);
+        Stmt.Return stmt = new Stmt.Return();
+        stmt.value = expr.value;
+        //TODO: analyse method graph
+        List<ScriptedCallable> methodCandidates = findFunctionMethodCandidates();
+
+        CompileCallable callable = new CompileCallable(
+                type,
+                ,
+                new ClassReference[0],
+                List.of(stmt),
+                Modifiers.pack(Modifiers.SYNTHETIC),
+                new Annotation[0]
+        );
+        methodAdditionSink.accept(Pair.of(, callable));
         return null;
     }
 

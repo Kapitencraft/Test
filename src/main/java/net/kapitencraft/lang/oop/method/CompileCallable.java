@@ -22,16 +22,18 @@ public class CompileCallable implements ScriptedCallable {
     private final List<Pair<ClassReference, String>> params;
     private final ClassReference[] thrown;
     private final List<Stmt> body;
-    private final short modifiers;
+    private final int modifiers;
     private final Annotation[] annotations;
+    private final ClassReference declaring;
 
-    public CompileCallable(ClassReference retType, List<Pair<ClassReference, String>> params, ClassReference[] thrown, List<Stmt> body, short modifiers, Annotation[] annotations) {
+    public CompileCallable(ClassReference retType, List<Pair<ClassReference, String>> params, ClassReference[] thrown, List<Stmt> body, int modifiers, Annotation[] annotations, ClassReference declaring) {
         this.retType = retType;
         this.params = params;
         this.thrown = thrown;
         this.body = body;
         this.modifiers = modifiers;
         this.annotations = annotations;
+        this.declaring = declaring;
     }
 
     public JsonObject save(CacheBuilder builder) {
@@ -94,6 +96,11 @@ public class CompileCallable implements ScriptedCallable {
     @Override
     public boolean isStatic() {
         return Modifiers.isStatic(modifiers);
+    }
+
+    @Override
+    public ClassReference declaringClass() {
+        return this.declaring;
     }
 
     @Override

@@ -344,7 +344,7 @@ public class NativeClassLoader {
             }
 
             @Override
-            public short getModifiers() {
+            public int getModifiers() {
                 return 0;
             }
 

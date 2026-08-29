@@ -3,7 +3,7 @@ package net.kapitencraft.lang.oop.field;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 
-public record SkeletonField(ClassReference type, short modifiers) implements ScriptedField {
+public record SkeletonField(ClassReference type, int modifiers) implements ScriptedField {
 
     @Override
     public boolean isFinal() {

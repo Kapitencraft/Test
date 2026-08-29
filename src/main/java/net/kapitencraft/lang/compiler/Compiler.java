@@ -138,7 +138,7 @@ public class Compiler {
 
         Token name();
 
-        Pair<Token, CompileCallable>[] methods();
+        List<Pair<Token, CompileCallable>> methods();
 
         ClassReference[] interfaces();
 

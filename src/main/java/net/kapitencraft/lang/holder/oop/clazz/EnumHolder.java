@@ -31,7 +31,7 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.*;
 
-public record EnumHolder(ClassReference target, short modifiers,
+public record EnumHolder(ClassReference target, int modifiers,
                          AnnotationObj[] annotations, Generics generics, String pck, Token name,
                          SourceReference[] interfaces,
                          OperationHolder[] constructorHolders,
@@ -109,7 +109,7 @@ public record EnumHolder(ClassReference target, short modifiers,
             valuesInit.name = keyword;
             stmt.expression = valuesInit;
         }
-        fields.put(keyword, new CompileField(keyword, valuesInit, target.array(), Modifiers.pack(true, true, false), new Annotation[0]));
+        fields.put(keyword, new CompileField(keyword, valuesInit, target.array(), Modifiers.pack(Modifiers.FINAL, Modifiers.STATIC), new Annotation[0]));
         statics.add(stmt);
         //endregion
 
@@ -158,7 +158,7 @@ public record EnumHolder(ClassReference target, short modifiers,
                         List.of(),
                         new ClassReference[0],
                         statics,
-                        Modifiers.pack(true, true, false),
+                        Modifiers.pack(Modifiers.FINAL, Modifiers.STATIC),
                         new Annotation[0]
                 )
         ));
@@ -176,7 +176,7 @@ public record EnumHolder(ClassReference target, short modifiers,
                         List.of(),
                         new ClassReference[0],
                         List.of(aReturn1),
-                        Modifiers.pack(false, true, false),
+                        Modifiers.pack(Modifiers.STATIC),
                         new Annotation[0]
                 )
         ));
@@ -219,14 +219,14 @@ public record EnumHolder(ClassReference target, short modifiers,
                 logger,
                 new Generics(new Generic[0]),
                 target(),
-                methods.toArray(Pair[]::new),
-                constructors.toArray(Pair[]::new),
+                methods,
+                constructors,
                 fields,
                 VarTypeManager.ENUM,
                 name(),
                 pck(),
                 extractInterfaces(),
-                Modifiers.pack(true, true, false),
+                Modifiers.pack(Modifiers.FINAL, Modifiers.STATIC),
                 parseAnnotations(stmtParser, parser)
         );
     }
@@ -245,11 +245,11 @@ public record EnumHolder(ClassReference target, short modifiers,
 
         if (this.enumConstantHolders() != null) {
             for (EnumConstantHolder constant : this.enumConstantHolders()) {
-                SkeletonField field = new SkeletonField(target, Modifiers.pack(true, true, false));
+                SkeletonField field = new SkeletonField(target, Modifiers.SF);
                 fields.put(constant.name().lexeme(), field);
             }
 
-            fields.put("$VALUES", new SkeletonField(target.array(), Modifiers.pack(true, true, false)));
+            fields.put("$VALUES", new SkeletonField(target.array(), Modifiers.SF));
         }
 
         //methods
@@ -260,7 +260,7 @@ public record EnumHolder(ClassReference target, short modifiers,
             builder.addMethod(logger, SkeletonMethod.create(methodHolder), methodHolder.name());
         }
         methods.computeIfAbsent("values", s -> new DataMethodContainer.Builder(this.name()))
-                .addMethod(logger, new SkeletonMethod(new ClassReference[0], new ClassReference[0], target.array(), Modifiers.pack(false, true, false)), Token.createNative("values"));
+                .addMethod(logger, new SkeletonMethod(new ClassReference[0], new ClassReference[0], target.array(), Modifiers.pack(Modifiers.STATIC)), Token.createNative("values"));
 
         //constructors
         methods.putIfAbsent("<init>", new DataMethodContainer.Builder(this.name()));

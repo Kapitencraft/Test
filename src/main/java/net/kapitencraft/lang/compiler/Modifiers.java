@@ -1,29 +1,38 @@
 package net.kapitencraft.lang.compiler;
 
 public interface Modifiers {
-    short STATIC = 1,
-            FINAL = 2,
-            INTERFACE = 4,
-            ABSTRACT = 8,
-            ANNOTATION = 16,
-            ENUM = 32;
+    int SF = Modifiers.STATIC | Modifiers.FINAL;
+
+    int STATIC = 8,
+            FINAL = 0x10,
+            NATIVE = 0x100,
+            INTERFACE = 0x200,
+            ABSTRACT = 0x400,
+            SYNTHETIC = 0x1000,
+            ANNOTATION = 0x2000,
+            ENUM = 0x4000
+    ;
     //no access modifiers to worry about. yay!
     //short has 16 bits. should be sufficient
 
-    static boolean isFinal(short modifiers) {
+    static boolean isFinal(int modifiers) {
         return (modifiers & FINAL) != 0;
     }
 
-    static boolean isStatic(short modifiers) {
+    static boolean isStatic(int modifiers) {
         return (modifiers & STATIC) != 0;
     }
 
-    static boolean isAbstract(short modifiers) {
+    static boolean isAbstract(int modifiers) {
         return (modifiers & ABSTRACT) != 0;
     }
 
-    static short pack(boolean isFinal, boolean isStatic, boolean isAbstract) {
-        return (short) ((isFinal ? FINAL : 0) | (isStatic ? STATIC : 0) | (isAbstract ? ABSTRACT : 0));
+    static int pack(int... modifiers) {
+        int m = 0;
+        for (int modifier : modifiers) {
+            m |= modifier;
+        }
+        return m;
     }
 
     /**
@@ -33,7 +42,7 @@ public interface Modifiers {
      * @return the extracted scripted mods
      * @see java.lang.reflect.Modifier
      */
-    static short fromJavaMods(int javaMods) {
-        return (short) ((javaMods >> 3 & 3) | (javaMods >> 7 & 12) | (javaMods >> 9 & 48) | (javaMods >> 8 & 64));
+    static int fromJavaMods(int javaMods) {
+        return javaMods & 0x7718;
     }
 }

@@ -17,10 +17,11 @@ import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public record BakedInterface(ErrorStorage logger, Generics generics, ClassReference target,
-                             Pair<Token, CompileCallable>[] methods,
+                             List<Pair<Token, CompileCallable>> methods,
                              Map<String, CompileField> staticFields, ClassReference[] interfaces,
                              Token name, String pck,
                              Annotation[] annotations
@@ -55,7 +56,7 @@ public record BakedInterface(ErrorStorage logger, Generics generics, ClassRefere
 
     @Override
     public void analyse() {
-        SemanticAnalyser analyser = new SemanticAnalyser(logger);
+        SemanticAnalyser analyser = new SemanticAnalyser(logger, this.methods::add);
 
         for (Pair<Token, CompileCallable> method : this.methods) {
             method.getSecond().analyseSemantics(analyser, this.target);
