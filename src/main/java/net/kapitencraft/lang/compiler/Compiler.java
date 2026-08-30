@@ -6,10 +6,13 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
+import net.kapitencraft.lang.compiler.exe.CompileEnvironment;
+import net.kapitencraft.lang.compiler.exe.pipeline.CompilePipeline;
+import net.kapitencraft.lang.compiler.exe.pipeline.CompilePipelines;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.exe.load.ClassLoader;
+import net.kapitencraft.lang.exe.load.ClassLoaderHolder;
 import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
-import net.kapitencraft.lang.exe.test.CompileTestLoader;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.token.Token;
@@ -26,14 +29,17 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class Compiler {
     public static final File ROOT = new File("./run/src");
+    private static final List<CompilePipeline> PIPELINES = List.of(
+            CompilePipelines.JAVA,
+            CompilePipelines.PYTHON
+    );
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static final LocationAnalyser LOCATION_ANALYSER = new LocationAnalyser();
@@ -83,17 +89,48 @@ public class Compiler {
         compile(true, true, ROOT, cache);
     }
 
+    private static CompileEnvironment loadSource(File fileLoc, Executor executor) {
+
+        List<File> sourceQueue = new ArrayList<>();
+        sourceQueue.add(fileLoc);
+        CompileEnvironment environment = new CompileEnvironment();
+        while (!sourceQueue.isEmpty()) {
+            File pck = sourceQueue.getFirst();
+            File[] files = pck.listFiles();
+            if (files == null) {
+                sourceQueue.removeFirst();
+                continue;
+            }
+            for (File file1 : files) {
+                if (file1.isDirectory()) {
+                    sourceQueue.add(file1);
+                } else {
+                    String[] split = file1.getName().split("\\.");
+                    String fileExtension = split[split.length - 1];
+                    CompletableFuture<?> processor = null;
+                    for (CompilePipeline pipeline : PIPELINES) {
+                        if (fileExtension.equals(pipeline.getExtension())) {
+                            processor = pipeline.createProcessor(CompletableFuture.supplyAsync(() -> pipeline.createInfo(pck), executor), environment, executor);
+                        }
+                    }
+                    if (processor == null) {
+                        processor = CompletableFuture.failedFuture(new IllegalStateException("no pipeline for extension '" + fileExtension + "'"));
+                    }
+                    environment.addProcessor(processor);
+                }
+            }
+            sourceQueue.removeFirst();
+        }
+        return environment;
+    }
+
+
     public static ClassLoader.PackageHolder<CompilerLoaderHolder> compile(boolean logInfo, boolean failFast, File root, @Nullable File cache) {
-        compileData = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
+        ExecutorService executor = Executors.newFixedThreadPool(10, new CompilerThreadFactory());
+        CompileEnvironment environment = loadSource(root, executor);
 
         source = root;
 
-        if (compileData.isEmpty()) {
-            if (logInfo)
-                System.out.println("no source found. returning");
-            return compileData;
-        }
-        ExecutorService executor = Executors.newFixedThreadPool(10, new CompilerThreadFactory());
         ErrorStorage.overallErrorCount = 0;
         try {
             for (Stage stage : Stage.values()) {

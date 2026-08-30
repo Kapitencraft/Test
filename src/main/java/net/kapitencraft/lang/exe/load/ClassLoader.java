@@ -242,19 +242,7 @@ public class ClassLoader {
         }
     }
 
-    static void printProgress(int done, int total) {
-        int width = 40; // bar width
-        int progress = (int) ((done / (double) total) * width);
 
-        String bar = "[" +
-                "=".repeat(progress) +
-                " ".repeat(width - progress) +
-                "]";
-
-        int percent = (int) ((done / (double) total) * 100);
-
-        System.out.print("\r" + bar + " " + percent + "% (" + done + "/" + total + ")");
-    }
 
     public static ClassReference loadClassReference(JsonObject object, String elementName) {
         return VarTypeManager.getClassOrError(GsonHelper.getAsString(object, elementName));
