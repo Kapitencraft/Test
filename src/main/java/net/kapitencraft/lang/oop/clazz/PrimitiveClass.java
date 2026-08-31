@@ -82,7 +82,7 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public short getModifiers() {
+    public int getModifiers() {
         return 0;
     }
 

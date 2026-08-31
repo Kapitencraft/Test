@@ -116,7 +116,7 @@ public record EnumHolder(ClassReference target, int modifiers,
         List<String> finalFields = new ArrayList<>();
         List<CompileField> initializedFields = new ArrayList<>(); //store initialized Fields to add them in each constructor
         for (FieldHolder fieldHolder : fieldHolders()) {
-            short mods = fieldHolder.modifiers();
+            int mods = fieldHolder.modifiers();
             Expr initializer = null;
             if (fieldHolder.body() != null) {
                 initializer = getFieldBody(stmtParser, parser, fieldHolder, statics);
@@ -145,7 +145,8 @@ public record EnumHolder(ClassReference target, int modifiers,
                     methodHolder.retType(),
                     methodHolder.extractParams(),
                     methodHolder.extractThrown(),
-                    body, methodHolder.modifiers(), annotations
+                    body, methodHolder.modifiers(), annotations,
+                    this.target
             );
             methods.add(Pair.of(methodHolder.name(), methodDecl));
         }
@@ -159,7 +160,8 @@ public record EnumHolder(ClassReference target, int modifiers,
                         new ClassReference[0],
                         statics,
                         Modifiers.pack(Modifiers.FINAL, Modifiers.STATIC),
-                        new Annotation[0]
+                        new Annotation[0],
+                        this.target
                 )
         ));
 
@@ -177,7 +179,8 @@ public record EnumHolder(ClassReference target, int modifiers,
                         new ClassReference[0],
                         List.of(aReturn1),
                         Modifiers.pack(Modifiers.STATIC),
-                        new Annotation[0]
+                        new Annotation[0],
+                        this.target
                 )
         ));
         //endregion
@@ -191,14 +194,21 @@ public record EnumHolder(ClassReference target, int modifiers,
             this.prefixFieldInitializers(original, initializedFields);
             Annotation[] annotations = stmtParser.parseAnnotations(enumConstructorHolder.annotations(), parser);
 
-            CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), enumConstructorHolder.extractParams(), enumConstructorHolder.extractThrown(), original, (short) 0, annotations);
+            CompileCallable constDecl = new CompileCallable(
+                    VarTypeManager.VOID.reference(),
+                    enumConstructorHolder.extractParams(),
+                    enumConstructorHolder.extractThrown(),
+                    original, 0,
+                    annotations,
+                    target
+            );
             stmtParser.popMethod(enumConstructorHolder.closeBracket());
             constructors.add(Pair.of(enumConstructorHolder.name(), constDecl));
         }
         if (constructors.isEmpty()) {
             Expr.Call body = new Expr.Call();
             body.object = varRef(Token.createNative("super"), (byte) 0);
-            body.args = new Expr[] {
+            body.args = new Expr[]{
                     varRef(Token.createNative("$name"), (byte) 1),
                     varRef(Token.createNative("$ordinal"), (byte) 2)
             };
@@ -212,7 +222,8 @@ public record EnumHolder(ClassReference target, int modifiers,
             constructors.add(Pair.of(this.name, new CompileCallable(VarTypeManager.VOID.reference(), List.of(
                     Pair.of(VarTypeManager.STRING, "$name"),
                     Pair.of(VarTypeManager.INTEGER.reference(), "$ordinal")
-            ), new ClassReference[0], List.of(stmt1, ret), (short) 0, new Annotation[0])));
+            ), new ClassReference[0], List.of(stmt1, ret), (short) 0, new Annotation[0], target
+            )));
         }
 
         return new BakedClass(

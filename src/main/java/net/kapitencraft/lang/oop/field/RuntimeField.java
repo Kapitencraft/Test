@@ -2,25 +2,13 @@ package net.kapitencraft.lang.oop.field;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.tool.GsonHelper;
 
-public class RuntimeField implements ScriptedField {
-    private final ClassReference type;
-    private final short modifiers;
-
-    public RuntimeField(ClassReference type, short modifiers) {
-        this.type = type;
-        this.modifiers = modifiers;
-    }
-
-    @Override
-    public ClassReference type() {
-        return type;
-    }
+public record RuntimeField(ClassReference type, int modifiers) implements ScriptedField {
 
     public static RuntimeField fromJson(JsonObject object) {
         ClassReference type = VarTypeManager.directParseType(GsonHelper.getAsString(object, "type"));
@@ -47,10 +35,5 @@ public class RuntimeField implements ScriptedField {
     @Override
     public boolean isStatic() {
         return Modifiers.isStatic(this.modifiers);
-    }
-
-    @Override
-    public short modifiers() {
-        return modifiers;
     }
 }

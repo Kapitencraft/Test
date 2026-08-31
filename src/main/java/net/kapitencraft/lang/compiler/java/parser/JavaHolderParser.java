@@ -252,7 +252,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
             } while (match(COMMA));
         }
 
-        short mods = modifiers.packModifiers();
+        int mods = modifiers.packModifiers();
 
         Token[] code = null;
         Token endClose = null;
@@ -275,7 +275,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
         return new MethodHolder(modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), type, name, endClose, parameters, thrown, code);
     }
 
-    private List<FieldHolder> fieldDecl(SourceReference type, AnnotationObj[] annotations, Token name, short modifiers) {
+    private List<FieldHolder> fieldDecl(SourceReference type, AnnotationObj[] annotations, Token name, int modifiers) {
         Token[] code = null;
         Token assign = null;
 

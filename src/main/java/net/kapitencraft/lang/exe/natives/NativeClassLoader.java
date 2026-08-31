@@ -99,6 +99,7 @@ public class NativeClassLoader {
     private static void createNativeClass(Class<?> clazz, String className, String pck, @Nullable String[] capturedMethods, @Nullable String[] capturedFields) {
         try {
             Multimap<String, ScriptedCallable> methods = HashMultimap.create();
+            ClassReference type = getClassOrThrow(clazz);
             for (Method declaredMethod : clazz.getDeclaredMethods()) {
                 int modifiers = declaredMethod.getModifiers();
                 if (Modifier.isPublic(modifiers) && !declaredMethod.isAnnotationPresent(Excluded.class) && (capturedMethods == null || Util.arrayContains(capturedMethods, declaredMethod.getName()))) {
@@ -111,14 +112,14 @@ public class NativeClassLoader {
                                 Arrays.stream(declaredMethod.getExceptionTypes()).map(NativeClassLoader::getClassOrThrow).toArray(ClassReference[]::new),
                                 declaredMethod,
                                 !isStatic,
-                                Modifiers.fromJavaMods(modifiers)
+                                Modifiers.fromJavaMods(modifiers),
+                                type
                         );
                         methods.put(methodName, method);
                     } catch (RuntimeException ignored) {
                     }
                 }
             }
-
 
             Map<String, NativeField> fields = new HashMap<>();
             for (Field declaredField : clazz.getDeclaredFields()) {
@@ -135,7 +136,6 @@ public class NativeClassLoader {
                 } catch (RuntimeException ignored) {
                 }
             }
-            ClassReference type = getClassOrThrow(clazz);
             for (Constructor<?> constructor : clazz.getConstructors()) {
                 try {
                     if (!constructor.isAnnotationPresent(Excluded.class)) {
@@ -143,7 +143,8 @@ public class NativeClassLoader {
                                 type,
                                 Arrays.stream(constructor.getParameterTypes()).map(NativeClassLoader::getClassOrThrow).toArray(ClassReference[]::new),
                                 Arrays.stream(constructor.getExceptionTypes()).map(NativeClassLoader::getClassOrThrow).toArray(ClassReference[]::new),
-                                constructor
+                                constructor,
+                                type
                         );
                         methods.put("<init>", method);
                     }

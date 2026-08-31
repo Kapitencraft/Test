@@ -156,10 +156,12 @@
         },
         "MethodRef": {
           "obj": "Expr",
+          "signature": "String",
           "name": "Token"
         },
         "StaticMethodRef": {
           "obj": "ClassReference",
+          "signature": "String",
           "name": "Token"
         },
         "ExprLambda": {

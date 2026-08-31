@@ -74,8 +74,10 @@ public class CompileCallable implements ScriptedCallable {
     }
 
     public void analyseSemantics(SemanticAnalyser analyser, ClassReference declaring) {
-        if (!isAbstract())
+        if (!isAbstract()) {
+            analyser.clear();
             analyser.analyseBody(body, this.retType, this.thrown, params, isStatic() ? null : declaring);
+        }
     }
 
     @Override

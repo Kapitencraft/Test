@@ -58,18 +58,6 @@ public record DataMethodContainer(ScriptedCallable[] methods) implements MethodC
         return array;
     }
 
-    public ScriptedCallable getMethodByOrdinal(int ordinal) {
-        if (ordinal == -1) return methods[0]; //default
-        return methods[ordinal];
-    }
-
-    public int getMethodOrdinal(ClassReference[] types) {
-        for (int i = 0; i < methods.length; i++) {
-            if (Util.matchArgs(types, methods[i].argTypes())) return i;
-        }
-        return -1;
-    }
-
     public static class Builder {
         private final Token className;
         private final List<ScriptedCallable> methods = new ArrayList<>();

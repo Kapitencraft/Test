@@ -18,14 +18,16 @@ public class NativeMethod implements ScriptedCallable {
     private final Method method;
     private final boolean instance;
     private final int modifiers;
+    private final ClassReference declaring;
 
-    public NativeMethod(ClassReference type, ClassReference[] args, ClassReference[] thrown, Method method, boolean instance, int modifiers) {
+    public NativeMethod(ClassReference type, ClassReference[] args, ClassReference[] thrown, Method method, boolean instance, int modifiers, ClassReference declaring) {
         this.type = type;
         this.args = args;
         this.thrown = thrown;
         this.method = method;
         this.instance = instance;
         this.modifiers = modifiers | Modifiers.NATIVE;
+        this.declaring = declaring;
     }
 
     @Override
@@ -73,5 +75,10 @@ public class NativeMethod implements ScriptedCallable {
     @Override
     public ClassReference[] thrown() {
         return thrown;
+    }
+
+    @Override
+    public ClassReference declaringClass() {
+        return declaring;
     }
 }

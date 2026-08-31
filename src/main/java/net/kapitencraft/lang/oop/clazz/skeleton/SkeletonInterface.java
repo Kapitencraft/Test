@@ -103,7 +103,7 @@ public class SkeletonInterface implements ScriptedClass {
     }
 
     @Override
-    public short getModifiers() {
+    public int getModifiers() {
         return Modifiers.INTERFACE;
     }
 

@@ -44,7 +44,7 @@ public record BakedAnnotation(
 
     @Override
     public List<Pair<Token, CompileCallable>> methods() {
-        return new Pair[0];
+        return List.of();
     }
 
     @Override

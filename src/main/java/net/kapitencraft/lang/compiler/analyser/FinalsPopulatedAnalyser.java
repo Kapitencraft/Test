@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.compiler.analyser;
 
-import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -112,6 +111,12 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     }
 
     @Override
+    public Void visitMethodRefExpr(Expr.MethodRef expr) {
+        analyse(expr.obj);
+        return null;
+    }
+
+    @Override
     public Void visitArrayGetExpr(Expr.ArrayGet expr) {
         analyse(expr.object);
         analyse(expr.index);
@@ -149,6 +154,11 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
             error(expr.name, "can not read unassigned final field");
         }
         analyse(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitExprLambdaExpr(Expr.ExprLambda expr) {
         return null;
     }
 
@@ -200,6 +210,11 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     }
 
     @Override
+    public Void visitBlockLambdaExpr(Expr.BlockLambda expr) {
+        return null;
+    }
+
+    @Override
     public Void visitStaticGetExpr(Expr.StaticGet expr) {
         //doesn't need to do anything
         return null;
@@ -227,6 +242,11 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     @Override
     public Void visitGetExpr(Expr.Get expr) {
         analyse(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitStaticMethodRefExpr(Expr.StaticMethodRef expr) {
         return null;
     }
 
