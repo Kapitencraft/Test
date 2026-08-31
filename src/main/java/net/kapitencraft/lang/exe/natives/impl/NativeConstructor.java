@@ -15,11 +15,16 @@ public class NativeConstructor implements ScriptedCallable {
     private final ClassReference[] thrown;
     private final Constructor<?> constructor;
 
-    public NativeConstructor(ClassReference type, ClassReference[] args, ClassReference[] thrown, Constructor<?> constructor) {
+    public NativeConstructor(ClassReference type, ClassReference[] args, ClassReference[] thrown, Constructor<?> constructor, ClassReference declaring) {
         this.type = type;
         this.args = args;
         this.thrown = thrown;
         this.constructor = constructor;
+    }
+
+    @Override
+    public ClassReference declaringClass() {
+        return this.type;
     }
 
     @Override

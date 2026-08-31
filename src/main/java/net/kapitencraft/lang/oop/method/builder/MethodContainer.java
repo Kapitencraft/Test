@@ -9,9 +9,5 @@ public interface MethodContainer {
 
     ScriptedCallable getMethod(ClassReference[] expectedArgs);
 
-    ScriptedCallable getMethodByOrdinal(int ordinal);
-
-    int getMethodOrdinal(ClassReference[] types);
-
     ScriptedCallable[] methods();
 }

@@ -8,6 +8,7 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -38,6 +39,7 @@ public class Util {
         return main != null ? main : other;
     }
 
+    @Contract(pure = true)
     public static boolean matchArgs(ClassReference[] got, ClassReference[] expected) {
         if (got.length != expected.length) return false;
         if (got.length == 0) return true;

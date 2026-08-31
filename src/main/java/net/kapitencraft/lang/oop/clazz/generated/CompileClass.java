@@ -142,7 +142,7 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
     }
 
     @Override
-    public short getModifiers() {
+    public int getModifiers() {
         return 0;
     }
 

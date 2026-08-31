@@ -320,6 +320,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitBlockLambdaExpr(Expr.BlockLambda expr) {
+        return null;
+    }
+
+    @Override
     public Void visitCallExpr(Expr.Call expr) {
         if (expr.object != null) {
             //object is NOT POPED from the stack. keep it before the args
@@ -377,6 +382,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             byteCodeBuilder.addSimple(Opcode.POP);
             ignoredExprResult = true;
         }
+        return null;
+    }
+
+    @Override
+    public Void visitStaticMethodRefExpr(Expr.StaticMethodRef expr) {
         return null;
     }
 
@@ -499,6 +509,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         specialAssign(expr.retType, expr.assignType, Opcode.GET_FIELD, Opcode.PUT_FIELD,
                 o -> byteCodeBuilder.addStringInstruction(o, expr.name.lexeme())
         );
+        return null;
+    }
+
+    @Override
+    public Void visitExprLambdaExpr(Expr.ExprLambda expr) {
         return null;
     }
 
@@ -626,6 +641,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (expr.patternVarName != null)
             byteCodeBuilder.addSimple(Opcode.DUP);
         byteCodeBuilder.addStringInstruction(Opcode.INSTANCEOF, VarTypeManager.getClassName(expr.targetType));
+        return null;
+    }
+
+    @Override
+    public Void visitMethodRefExpr(Expr.MethodRef expr) {
         return null;
     }
 

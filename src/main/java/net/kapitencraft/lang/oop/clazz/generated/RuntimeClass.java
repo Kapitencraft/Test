@@ -167,7 +167,7 @@ public final class RuntimeClass implements ScriptedClass {
     }
 
     @Override
-    public short getModifiers() {
+    public int getModifiers() {
         return modifiers;
     }
 

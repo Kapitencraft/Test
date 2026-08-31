@@ -248,7 +248,7 @@ public class HolderParser extends AbstractParser {
             } while (match(COMMA));
         }
 
-        short mods = modifiers.packModifiers();
+        int mods = modifiers.packModifiers();
 
         Token[] code = null;
         Token endClose = null;
@@ -271,14 +271,15 @@ public class HolderParser extends AbstractParser {
         return new MethodHolder(modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), type, name, endClose, parameters, thrown, code);
     }
 
-    private List<FieldHolder> fieldDecl(SourceReference type, AnnotationObj[] annotations, Token name, short modifiers) {
+    private List<FieldHolder> fieldDecl(SourceReference type, AnnotationObj[] annotations, Token name, int modifiers) {
         Token[] code = null;
         Token assign = null;
 
         List<FieldHolder> fieldHolders = new ArrayList<>();
 
         do {
-            if (!fieldHolders.isEmpty()) name = consumeIdentifier(); //only consume a new name if the name comes after a `,`
+            if (!fieldHolders.isEmpty())
+                name = consumeIdentifier(); //only consume a new name if the name comes after a `,`
             if (match(ASSIGN)) {
                 assign = previous();
                 code = getFieldCode();

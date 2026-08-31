@@ -46,7 +46,7 @@ public record InterfaceHolder(ClassReference target, int modifiers,
             }
             Annotation[] annotations = stmtParser.parseAnnotations(fieldHolder.annotations(), parser);
 
-            short mods = fieldHolder.modifiers();
+            int mods = fieldHolder.modifiers();
             CompileField fieldDecl = new CompileField(fieldHolder.name(), initializer, fieldHolder.type().getReference(), mods, annotations);
             if (Modifiers.isStatic(fieldHolder.modifiers())) staticFields.put(fieldHolder.name().lexeme(), fieldDecl);
             else logger.error(fieldHolder.name(), "fields on interfaces must be static");
@@ -66,12 +66,18 @@ public record InterfaceHolder(ClassReference target, int modifiers,
             }
             Annotation[] annotations = stmtParser.parseAnnotations(methodHolder.annotations(), parser);
 
-            CompileCallable methodDecl = new CompileCallable(methodHolder.type().getReference(), methodHolder.extractParams(), methodHolder.extractThrown(), body, methodHolder.modifiers(), annotations);
+            CompileCallable methodDecl = new CompileCallable(
+                    methodHolder.type().getReference(),
+                    methodHolder.extractParams(),
+                    methodHolder.extractThrown(), body,
+                    methodHolder.modifiers(), annotations,
+                    target
+            );
             methods.add(Pair.of(methodHolder.name(), methodDecl));
         }
 
         if (!statics.isEmpty()) {
-            ClassConstructor.addClinit(statics, methods);
+            ClassConstructor.addClinit(statics, methods, target);
         }
 
         Annotation[] annotations = stmtParser.parseAnnotations(this.annotations(), parser);

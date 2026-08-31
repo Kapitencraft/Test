@@ -101,5 +101,10 @@ public record AnnotationHolder(ClassReference target, int modifiers,
         public ClassReference[] thrown() {
             return new ClassReference[0];
         }
+
+        @Override
+        public ClassReference declaringClass() {
+            return null;
+        }
     }
 }

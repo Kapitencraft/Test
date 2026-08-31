@@ -30,6 +30,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassReference> {
@@ -161,11 +162,14 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         return OperationInfo.UNKNOWN;
     }
 
+    public void clear() {
+        this.methodThrown.clear();
+        this.varAnalyser.clear();
+    }
+
     public void analyseBody(List<Stmt> body, ClassReference retType, ClassReference[] thrown, List<Pair<ClassReference, String>> params, @Nullable ClassReference selfClass) {
         this.methodReturnType = retType;
-        this.methodThrown.clear();
         this.methodThrown.push(thrown);
-        this.varAnalyser.clear();
         if (selfClass != null) this.varAnalyser.add("this", selfClass, false, true);
         for (Pair<ClassReference, String> param : params) {
             varAnalyser.add(param.getSecond(), param.getFirst(), true, true);
@@ -498,7 +502,17 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             errorF(expr.name, "unknown symbol: '%s'", expr.name.lexeme());
             return VarTypeManager.VOID.reference();
         } else {
-            container.getMethod()
+            List<ScriptedCallable> methodCandidates = findFunctionMethodCandidates();
+            for (ScriptedCallable methodCandidate : methodCandidates) {
+                for (ScriptedCallable method : container.methods()) {
+                    if (Util.matchArgs(methodCandidate.argTypes(), method.argTypes())) {
+                        //found candidate
+
+                        expr.retType = methodCandidate.declaringClass();
+                    }
+                }
+            }
+            errorF(expr.name, "cannot resolve method '%s'", expr.name.lexeme());
         }
         return null;
     }
@@ -596,13 +610,14 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         CompileCallable callable = new CompileCallable(
                 type,
-                ,
+                List.of(),
                 new ClassReference[0],
                 List.of(stmt),
                 Modifiers.pack(Modifiers.SYNTHETIC),
-                new Annotation[0]
+                new Annotation[0],
+                null
         );
-        methodAdditionSink.accept(Pair.of(, callable));
+        //methodAdditionSink.accept(Pair.of(, callable));
         return null;
     }
 

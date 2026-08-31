@@ -22,12 +22,14 @@ public class SkeletonMethod implements ScriptedCallable {
     private final ClassReference[] thrown;
     private final ClassReference retType;
     private final int modifiers;
+    private final ClassReference declaring;
 
-    public SkeletonMethod(ClassReference[] args, ClassReference[] thrown, ClassReference retType, int modifiers) {
+    public SkeletonMethod(ClassReference[] args, ClassReference[] thrown, ClassReference retType, int modifiers, ClassReference declaring) {
         this.args = args;
         this.thrown = thrown;
         this.retType = retType;
         this.modifiers = modifiers;
+        this.declaring = declaring;
     }
 
     public static SkeletonMethod create(MethodHolder decl) {
@@ -112,5 +114,10 @@ public class SkeletonMethod implements ScriptedCallable {
     @Override
     public ClassReference[] thrown() {
         return thrown;
+    }
+
+    @Override
+    public ClassReference declaringClass() {
+        return declaring;
     }
 }
