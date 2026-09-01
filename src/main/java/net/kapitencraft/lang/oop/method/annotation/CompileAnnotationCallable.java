@@ -8,8 +8,8 @@ public class CompileAnnotationCallable extends AnnotationCallable {
     private final Expr expr;
     private final Annotation[] annotations;
 
-    public CompileAnnotationCallable(ClassReference type, Expr expr, Annotation[] annotations) {
-        super(type, null);
+    public CompileAnnotationCallable(ClassReference type, Expr expr, Annotation[] annotations, ClassReference declaring) {
+        super(type, null, declaring);
         this.expr = expr;
         this.annotations = annotations;
     }

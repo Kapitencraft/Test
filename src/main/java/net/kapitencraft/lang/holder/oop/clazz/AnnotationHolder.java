@@ -52,7 +52,7 @@ public record AnnotationHolder(ClassReference target, int modifiers,
 
         ImmutableMap.Builder<String, AnnotationCallable> methods = new ImmutableMap.Builder<>();
         for (MethodHolder methodHolder : methodHolders()) {
-            methods.put(methodHolder.name().lexeme(), new SkeletonAnnotationMethod(methodHolder.returnType().getReference(), methodHolder.body().length > 0));
+            methods.put(methodHolder.name().lexeme(), new SkeletonAnnotationMethod(methodHolder.returnType().getReference(), methodHolder.body().length > 0, target));
         }
 
         return new SkeletonAnnotation(

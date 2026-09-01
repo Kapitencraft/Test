@@ -3,6 +3,7 @@ package net.kapitencraft.lang.oop.method;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.exe.load.ClassLoader;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
@@ -46,7 +47,9 @@ public class RuntimeCallable implements ScriptedCallable {
 
         Annotation[] annotations = Annotation.readAnnotations(data);
 
-        return new RuntimeCallable(retType, params, thrown, b, modifiers, annotations);
+        ClassReference declaring = ClassLoader.loadClassReference(data, "declaring");
+
+        return new RuntimeCallable(retType, params, thrown, b, modifiers, annotations, declaring);
     }
 
     @Override

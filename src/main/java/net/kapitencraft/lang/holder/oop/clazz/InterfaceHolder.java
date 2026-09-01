@@ -116,11 +116,11 @@ public record InterfaceHolder(ClassReference target, int modifiers,
             if (Modifiers.isStatic(methodHolder.modifiers())) {
                 staticMethods.putIfAbsent(methodHolder.name().lexeme(), new DataMethodContainer.Builder(this.name()));
                 DataMethodContainer.Builder builder = staticMethods.get(methodHolder.name().lexeme());
-                builder.addMethod(logger, SkeletonMethod.create(methodHolder), methodHolder.name());
+                builder.addMethod(logger, SkeletonMethod.create(methodHolder, target), methodHolder.name());
             } else {
                 methods.putIfAbsent(methodHolder.name().lexeme(), new DataMethodContainer.Builder(this.name()));
                 DataMethodContainer.Builder builder = methods.get(methodHolder.name().lexeme());
-                builder.addMethod(logger, SkeletonMethod.create(methodHolder), methodHolder.name());
+                builder.addMethod(logger, SkeletonMethod.create(methodHolder, target), methodHolder.name());
             }
         }
 
