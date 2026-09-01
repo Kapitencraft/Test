@@ -70,6 +70,7 @@ public class CompileCallable implements ScriptedCallable {
         if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);
 
         object.add("annotations", builder.cacheAnnotations(this.annotations));
+        object.addProperty("declaring", VarTypeManager.getClassName(declaring));
         return object;
     }
 

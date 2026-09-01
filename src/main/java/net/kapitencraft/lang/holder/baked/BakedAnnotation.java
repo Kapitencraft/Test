@@ -29,7 +29,7 @@ public record BakedAnnotation(
     public CompileClass build() {
 
         ImmutableMap.Builder<String, DataMethodContainer> builder = new ImmutableMap.Builder<>();
-        methodWrappers.forEach((string, wrapper) -> builder.put(string, new DataMethodContainer(new ScriptedCallable[]{new CompileAnnotationCallable(wrapper.retType(), wrapper.val(), wrapper.annotations())})));
+        methodWrappers.forEach((string, wrapper) -> builder.put(string, new DataMethodContainer(new ScriptedCallable[]{new CompileAnnotationCallable(wrapper.retType(), wrapper.val(), wrapper.annotations(), target)})));
 
         return new CompileClass(
                 builder.build(), Map.of(), VarTypeManager.OBJECT,

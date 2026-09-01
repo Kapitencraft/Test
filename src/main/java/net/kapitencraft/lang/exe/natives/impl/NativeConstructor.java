@@ -1,10 +1,10 @@
 package net.kapitencraft.lang.exe.natives.impl;
 
+import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.VirtualMachine;
+import net.kapitencraft.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.exe.natives.NativeClassLoader;
-import net.kapitencraft.lang.exe.VarTypeManager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

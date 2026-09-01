@@ -276,10 +276,10 @@ public record EnumHolder(ClassReference target, int modifiers,
         for (MethodHolder methodHolder : this.methodHolders()) {
             methods.putIfAbsent(methodHolder.name().lexeme(), new DataMethodContainer.Builder(this.name()));
             DataMethodContainer.Builder builder = methods.get(methodHolder.name().lexeme());
-            builder.addMethod(logger, SkeletonMethod.create(methodHolder), methodHolder.name());
+            builder.addMethod(logger, SkeletonMethod.create(methodHolder, target), methodHolder.name());
         }
         methods.computeIfAbsent("values", s -> new DataMethodContainer.Builder(this.name()))
-                .addMethod(logger, new SkeletonMethod(new ClassReference[0], new ClassReference[0], target.array(), Modifiers.pack(Modifiers.STATIC)), Token.createNative("values"));
+                .addMethod(logger, new SkeletonMethod(new ClassReference[0], new ClassReference[0], target.array(), Modifiers.pack(Modifiers.STATIC), target), Token.createNative("values"));
 
         //constructors
         methods.putIfAbsent("<init>", new DataMethodContainer.Builder(this.name()));
@@ -291,7 +291,7 @@ public record EnumHolder(ClassReference target, int modifiers,
             builder.addMethod(logger, SkeletonMethod.createNative(new ClassReference[]{
                     VarTypeManager.STRING,
                     VarTypeManager.INTEGER.reference()
-            }, new ClassReference[0], VarTypeManager.VOID.reference(), (short) 0), Token.createNative("<init>"));
+            }, new ClassReference[0], VarTypeManager.VOID.reference(), 0, target), Token.createNative("<init>"));
         }
 
         return new SkeletonClass(

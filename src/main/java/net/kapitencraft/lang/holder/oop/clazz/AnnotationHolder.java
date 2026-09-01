@@ -1,9 +1,7 @@
 package net.kapitencraft.lang.holder.oop.clazz;
 
 import com.google.common.collect.ImmutableMap;
-import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.StmtParser;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
@@ -54,7 +52,7 @@ public record AnnotationHolder(ClassReference target, int modifiers,
 
         ImmutableMap.Builder<String, AnnotationCallable> methods = new ImmutableMap.Builder<>();
         for (MethodHolder methodHolder : methodHolders()) {
-            methods.put(methodHolder.name().lexeme(), new SkeletonAnnotationMethod(methodHolder.type().getReference(), methodHolder.body().length > 0));
+            methods.put(methodHolder.name().lexeme(), new SkeletonAnnotationMethod(methodHolder.type().getReference(), methodHolder.body().length > 0, target));
         }
 
         return new SkeletonAnnotation(
