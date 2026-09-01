@@ -82,7 +82,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
     }
 
     private AnnotationObj parseAnnotationObject() {
-        SourceReference cInst = consumeVarTypeNoArray(GenericStack.EMPTY);
+        SourceReference cInst = consumeVarTypeNoArray();
         Token[] properties = new Token[0];
         if (match(BRACKET_O)) {
             properties = getBracketEnclosedCode();
@@ -161,6 +161,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
     }
 
     private static ClassReference getOrCreate(String name, String pck) {
+        System.out.printf("found class '%s' in %s\n", name, pck);
         return VarTypeManager.getOrCreateClass(name, pck);
     }
 
@@ -207,7 +208,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
                     error(peek(), "Can't have more than 255 params.");
                 }
 
-                SourceReference pType = consumeVarType(activeGenerics);
+                SourceReference pType = consumeVarType();
                 Token pName = consume(IDENTIFIER, "Expected parameter name.");
                 parameters.add(Pair.of(pType, pName.lexeme()));
             } while (match(COMMA));
@@ -228,7 +229,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
         List<SourceReference> thrown = new ArrayList<>();
         if (match(THROWS)) {
             do {
-                thrown.add(consumeVarType(activeGenerics));
+                thrown.add(consumeVarType());
             } while (match(COMMA));
         }
 
@@ -248,7 +249,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
         List<SourceReference> thrown = new ArrayList<>();
         if (match(THROWS)) {
             do {
-                thrown.add(consumeVarType(activeGenerics));
+                thrown.add(consumeVarType());
             } while (match(COMMA));
         }
 
@@ -753,7 +754,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
 
     @NotNull
     protected SourceReference consumeVarType() {
-        SourceReference sourceReference = consumeVarTypeNoArray(activeGenerics);
+        SourceReference sourceReference = consumeVarTypeNoArray();
         ClassReference reference = sourceReference.getReference();
         Token last = sourceReference.getToken();
         AppliedGenerics appliedGenerics = appliedGenerics(activeGenerics);

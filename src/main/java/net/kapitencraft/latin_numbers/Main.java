@@ -26,16 +26,16 @@ public class Main {
         while (in > 0) {
             for (int i = latins.size()-1; i >= 0; i--) {
                 Pair<Integer, String> element = latins.get(i);
-                if (element.getFirst() <= in) {
-                    s.append(element.getSecond());
-                    in -= element.getFirst();
+                if (element.first() <= in) {
+                    s.append(element.second());
+                    in -= element.first();
                     break;
                 } else {
                     for (int i1 = 0; i1 < i; i1+=2) {
                         Pair<Integer, String> e1 = latins.get(i1);
-                        if (element.getFirst() - e1.getFirst() <= in) {
-                            s.append(e1.getSecond()).append(element.getSecond());
-                            in -= element.getFirst() - e1.getFirst();
+                        if (element.first() - e1.first() <= in) {
+                            s.append(e1.second()).append(element.second());
+                            in -= element.first() - e1.first();
                             break;
                         }
                     }

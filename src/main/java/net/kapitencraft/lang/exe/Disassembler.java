@@ -102,7 +102,7 @@ public class Disassembler {
         }
         String log = Arrays.stream(ordinalIds).mapToObj(i -> {
             Pair<String, String> local = local(chunk, offset, i);
-            return local.getFirst() + ": " + local.getSecond();
+            return local.first() + ": " + local.second();
         }).collect(Collectors.joining(", ", "[", "]"));
         System.out.printf("%-16s %s\n", "DEBUG_TRACE", log);
         return offset + 3;
@@ -133,7 +133,7 @@ public class Disassembler {
 
     private static int defVar(Opcode opcode, Chunk chunk, int offset, int ordinal) {
         Pair<String, String> pair = chunk.localVariableTable().get(offset, ordinal);
-        System.out.printf("%-16s %4d: \"%s\" -> %s\n", opcode, ordinal, pair.getFirst(), pair.getSecond());
+        System.out.printf("%-16s %4d: \"%s\" -> %s\n", opcode, ordinal, pair.first(), pair.second());
         return offset + 1;
     }
 

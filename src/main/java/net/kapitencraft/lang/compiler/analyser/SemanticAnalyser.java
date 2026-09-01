@@ -30,7 +30,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassReference> {
@@ -172,7 +171,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         this.methodThrown.push(thrown);
         if (selfClass != null) this.varAnalyser.add("this", selfClass, false, true);
         for (Pair<ClassReference, String> param : params) {
-            varAnalyser.add(param.getSecond(), param.getFirst(), true, true);
+            varAnalyser.add(param.second(), param.first(), true, true);
         }
         for (Stmt stmt : body) {
             if (stmt != null)
@@ -184,7 +183,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ClassReference[] argTypes = args(args);
         ScriptedClass targetClass = objType.get();
 
-        Pair<ScriptedClass, ScriptedCallable> callable;
+        ScriptedCallable callable;
         if (!targetClass.hasMethod(name.lexeme())) {
             errorF(name, "unknown method '%s' in class %s", name.lexeme(), objType.absoluteName());
             callable = null;
@@ -193,13 +192,13 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ClassReference retType = VarTypeManager.VOID.reference();
         String signature = null;
         if (callable != null) {
-            retType = checkArguments(args, argTypes, callable.getSecond(), objType, name);
-            signature = VarTypeManager.getMethodSignature(callable.getFirst(), name.lexeme(), callable.getSecond().argTypes());
-            for (ClassReference reference : callable.getSecond().thrown()) {
+            retType = checkArguments(args, argTypes, callable, objType, name);
+            signature = VarTypeManager.getMethodSignature(callable.declaringClass().get(), name.lexeme(), callable.argTypes());
+            for (ClassReference reference : callable.thrown()) {
                 checkThrown(reference, name);
             }
         }
-        return new MethodData(signature, retType, targetClass.reference(), callable == null || callable.getSecond().isStatic());
+        return new MethodData(signature, retType, targetClass.reference(), callable == null || callable.isStatic());
     }
 
     private record MethodData(String signature, ClassReference retType, ClassReference declaring, boolean isStatic) {
@@ -218,7 +217,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             return null;
         }
 
-        return Util.getVirtualMethod(scriptedClass, "<init>", argTypes).getSecond();
+        return Util.getVirtualMethod(scriptedClass, "<init>", argTypes);
     }
 
     private record OperationInfo(ClassReference executor, ClassReference result,
@@ -1042,8 +1041,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         pushScope();
         methodThrown.push(
                 Arrays.stream(stmt.catches)
-                        .map(Pair::getFirst)
-                        .map(Pair::getFirst)
+                        .map(Pair::first)
+                        .map(Pair::first)
                         .flatMap(Arrays::stream)
                         .toArray(ClassReference[]::new)
         );
@@ -1054,8 +1053,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches) {
             pushScope();
-            tryCreateVar(aCatch.getFirst().getSecond(), VarTypeManager.THROWABLE, true, false);
-            analyseStmt(aCatch.getSecond());
+            tryCreateVar(aCatch.first().second(), VarTypeManager.THROWABLE, true, false);
+            analyseStmt(aCatch.second());
         }
 
         if (stmt.finale != null) {

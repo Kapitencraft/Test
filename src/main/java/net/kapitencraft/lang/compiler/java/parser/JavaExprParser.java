@@ -444,6 +444,7 @@ public class JavaExprParser extends AbstractJavaParser {
                 consumeEndOfArg();
             } else {
                 error(peek(), "unexpected token");
+                break;
             }
         }
 
@@ -705,7 +706,6 @@ public class JavaExprParser extends AbstractJavaParser {
                     panicMode = true;
                     return varRef(previous, (byte) -1);
                 }
-                consumeDot();
                 return parseObjAttributes(target);
             }
             advance();
@@ -770,20 +770,33 @@ public class JavaExprParser extends AbstractJavaParser {
         consume(DOT, "'.' expected");
     }
 
-    protected @NotNull Expr parseObjAttributes(ClassReference target) {
-        if (match(DOUBLE_COLON)) return staticMethodRef(target);
-        Token name = consumeIdentifier();
-        if (match(BRACKET_O)) return finishCall(name, target, null);
-        if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
-        if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
-        Expr.StaticGet get = new Expr.StaticGet();
-        get.target = target;
-        get.name = name;
-        return get;
+    protected @Nullable Expr parseObjAttributes(ClassReference target) {
+        if (match2(COLON, COLON)) return staticMethodRef(target);
+        if (match(DOT)) {
+            Token name = consumeIdentifier();
+            if (match(BRACKET_O)) return finishCall(name, target, null);
+            if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
+            if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
+            Expr.StaticGet get = new Expr.StaticGet();
+            get.target = target;
+            get.name = name;
+            return get;
+        }
+        return null;
+    }
+
+    private boolean match2(TokenType first, TokenType second) {
+        if (match(first) && match(second))
+            return true;
+        current--; //un-consume first token
+        return false;
     }
 
     private @NotNull Expr staticMethodRef(ClassReference target) {
-        return null;
+        Expr.StaticMethodRef methodRef = new Expr.StaticMethodRef();
+        methodRef.name = consumeIdentifier();
+        methodRef.obj = target;
+        return methodRef;
     }
 
     private Expr varRef(Token previous, byte ordinal) {

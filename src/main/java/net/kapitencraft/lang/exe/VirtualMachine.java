@@ -80,7 +80,7 @@ public class VirtualMachine {
             List<String>[] values = new List[localIndexes.length];
             for (int i = 0; i < localIndexes.length; i++) {
                 List<String> v = values[i] = new ArrayList<>();
-                v.add(table.get(pc, localIndexes[i]).getFirst());
+                v.add(table.get(pc, localIndexes[i]).first());
             }
             for (String[] entry : entries) {
                 for (int i = 0; i < localIndexes.length; i++) {
@@ -741,12 +741,12 @@ public class VirtualMachine {
 
     private static void get(int i) {
         push(stack[stackBottom + i]);
-        if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s GET: %s (%s)\n", visualStackSize(), i, frame.callable.getChunk().localVariableTable().get(ip, i).getFirst());
+        if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s GET: %s (%s)\n", visualStackSize(), i, frame.callable.getChunk().localVariableTable().get(ip, i).first());
     }
 
     private static void assign(int i) {
         stack[stackBottom + i] = pop();
-        if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s ASSIGN: %s (%s)\n", visualStackSize(), i, frame.callable.getChunk().localVariableTable().get(ip, i).getFirst());
+        if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s ASSIGN: %s (%s)\n", visualStackSize(), i, frame.callable.getChunk().localVariableTable().get(ip, i).first());
     }
 
     //region flow-control

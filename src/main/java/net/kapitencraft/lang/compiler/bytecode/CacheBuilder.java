@@ -1039,11 +1039,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         List<Integer> jumps = new ArrayList<>();
         jumps.add(byteCodeBuilder.addJump());
         for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches) {
-            for (ClassReference reference : aCatch.getFirst().getFirst()) {
+            for (ClassReference reference : aCatch.first().first()) {
                 byteCodeBuilder.addExceptionHandler(handlerStart, handlerEnd, VarTypeManager.getClassName(reference.get()));
             }
             retainExprResult = false;
-            cache(aCatch.getSecond());
+            cache(aCatch.second());
             jumps.add(byteCodeBuilder.addJump());
         }
         if (stmt.finale != null) {
