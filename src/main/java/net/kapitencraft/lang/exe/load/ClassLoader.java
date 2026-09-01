@@ -142,8 +142,8 @@ public class ClassLoader {
         pckLoader.add(Pair.of(fileLoc, root));
         while (!pckLoader.isEmpty()) {
             Pair<File, PackageHolder<T>> pck = pckLoader.getFirst();
-            File file = pck.getFirst();
-            PackageHolder<T> holder = pck.getSecond();
+            File file = pck.first();
+            PackageHolder<T> holder = pck.second();
             File[] files = file.listFiles();
             if (files == null) {
                 pckLoader.removeFirst();
@@ -197,8 +197,8 @@ public class ClassLoader {
         packageData.add(Pair.of(root, VarTypeManager.rootPackage()));
         while (!packageData.isEmpty()) {
             Pair<PackageHolder<T>, Package> data = packageData.getFirst();
-            PackageHolder<T> holder = data.getFirst();
-            Package pck = data.getSecond();
+            PackageHolder<T> holder = data.first();
+            Package pck = data.second();
             consumer.accept(holder.classes, pck);
             holder.packages.forEach((name, holder1) ->
                     packageData.add(Pair.of(holder1, pck.getOrCreatePackage(name))) //adding all packages back to the queue
@@ -215,8 +215,8 @@ public class ClassLoader {
         int total = root.size();
         while (!packageData.isEmpty()) {
             Pair<PackageHolder<CompilerLoaderHolder>, Package> data = packageData.getFirst();
-            PackageHolder<CompilerLoaderHolder> holder = data.getFirst();
-            Package pck = data.getSecond();
+            PackageHolder<CompilerLoaderHolder> holder = data.first();
+            Package pck = data.second();
             holder.classes.forEach((n, o) -> {
                 if (!o.getErrorInfo().hadError())
                     futures.add(CompletableFuture.runAsync(() -> consumer.accept(o), executor)

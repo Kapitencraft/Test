@@ -21,16 +21,16 @@ public record LineNumberTable(Pair<Integer, Integer>[] lines) {
     public JsonArray save() {
         return Arrays.stream(this.lines).map(p -> {
             JsonObject object = new JsonObject();
-            object.addProperty("pc", p.getFirst());
-            object.addProperty("line", p.getSecond());
+            object.addProperty("pc", p.first());
+            object.addProperty("line", p.second());
             return object;
         }).collect(GsonHelper.toJsonArray());
     }
 
     public int getLineAt(int ip) {
         int i = 0;
-        while (i < lines.length - 1 && lines[i].getFirst() < ip) i++;
-        return lines[i].getSecond();
+        while (i < lines.length - 1 && lines[i].first() < ip) i++;
+        return lines[i].second();
     }
 
     public static class Builder {
@@ -45,7 +45,7 @@ public record LineNumberTable(Pair<Integer, Integer>[] lines) {
         }
 
         public void changeIfNecessary(int line, int pc) {
-            if (line > -1 && (this.lineChanges.isEmpty() || this.lineChanges.getLast().getSecond() != line)) {
+            if (line > -1 && (this.lineChanges.isEmpty() || this.lineChanges.getLast().second() != line)) {
                 this.lineChanges.add(Pair.of(pc, line));
             }
         }

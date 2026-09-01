@@ -19,7 +19,7 @@ public record MethodHolder(int modifiers,
     public void validate(ErrorStorage logger) {
         Validatable.validateNullable(annotations, logger);
         type.validate(logger);
-        params.forEach(p -> p.getFirst().validate(logger));
+        params.forEach(p -> p.first().validate(logger));
         thrown.forEach(s -> s.validate(logger));
     }
 

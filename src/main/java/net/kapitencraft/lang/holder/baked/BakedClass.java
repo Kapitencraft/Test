@@ -36,8 +36,8 @@ public record BakedClass(
     public CompileClass build() {
         Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
         for (Pair<Token, CompileCallable> method : this.methods()) {
-            methods.putIfAbsent(method.getFirst().lexeme(), new DataMethodContainer.Builder(this.name()));
-            methods.get(method.getFirst().lexeme()).addMethod(logger, method.getSecond(), method.getFirst());
+            methods.putIfAbsent(method.first().lexeme(), new DataMethodContainer.Builder(this.name()));
+            methods.get(method.first().lexeme()).addMethod(logger, method.second(), method.first());
         }
 
         List<Token> finalFields = new ArrayList<>();
@@ -49,7 +49,7 @@ public record BakedClass(
 
         for (Pair<Token, CompileCallable> method : this.constructors()) {
             methods.putIfAbsent("<init>", new DataMethodContainer.Builder(this.name()));
-            methods.get("<init>").addMethod(logger, method.getSecond(), method.getFirst());
+            methods.get("<init>").addMethod(logger, method.second(), method.first());
         }
 
         return new CompileClass(
@@ -71,10 +71,10 @@ public record BakedClass(
         List<Pair<Token, CompileCallable>> pairs = this.methods;
         for (int i = 0; i < pairs.size(); i++) {
             Pair<Token, CompileCallable> method = pairs.get(i);
-            method.getSecond().analyseSemantics(analyser, this.target);
+            method.second().analyseSemantics(analyser, this.target);
         }
         for (Pair<Token, CompileCallable> constructor : this.constructors) {
-            constructor.getSecond().analyseSemantics(analyser, this.target);
+            constructor.second().analyseSemantics(analyser, this.target);
         }
         for (CompileField value : this.fields.values()) {
             value.analyseSemantics(analyser);

@@ -179,8 +179,6 @@ public class Lexer {
                 break;
             case '"': string(); break;
             case ':':
-                if (match(':'))
-                    addToken(TokenType.DOUBLE_COLON);
                 addToken(TokenType.COLON);
                 break;
             case '?':

@@ -60,13 +60,14 @@ public class StmtParser extends ExprParser {
 
         Optional<SourceReference> type = tryConsumeVarType(generics);
         Stmt stmt = type.map(sourceClassReference -> {
-            if (match(DOT)) {
+            Expr expr = parseObjAttributes(sourceClassReference.getReference());
+            if (expr != null) {
                 Stmt.Expression expression = new Stmt.Expression();
-                expression.expression = parseObjAttributes(sourceClassReference.getReference());
+                expression.expression = expr;
                 consumeEndOfArg();
                 return expression;
-            } else
-                return varDeclaration(false, sourceClassReference.getReference());
+            }
+            return varDeclaration(false, sourceClassReference.getReference());
         }).orElseGet(this::statement);
         if (panicMode)
             synchronize();

@@ -41,7 +41,7 @@ public class CompileCallable implements ScriptedCallable {
         object.addProperty("retType", VarTypeManager.getClassName(retType.get()));
         {
             JsonArray array = new JsonArray();
-            params.stream().map(Pair::getFirst).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
+            params.stream().map(Pair::first).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
             object.add("params", array);
         }
         {
@@ -59,7 +59,7 @@ public class CompileCallable implements ScriptedCallable {
             }
             for (int i = 0; i < this.params.size(); i++) {
                 Pair<? extends ClassReference, String> param = this.params.get(i);
-                chunk.addLocal(rIndex + i, param.getFirst(), param.getSecond());
+                chunk.addLocal(rIndex + i, param.first(), param.second());
             }
             for (Stmt compileStmt : body) {
                 builder.cache(compileStmt);
@@ -113,7 +113,7 @@ public class CompileCallable implements ScriptedCallable {
 
     @Override
     public ClassReference[] argTypes() {
-        return params.stream().map(Pair::getFirst).toArray(ClassReference[]::new);
+        return params.stream().map(Pair::first).toArray(ClassReference[]::new);
     }
 
     @Override

@@ -32,9 +32,9 @@ public record BakedInterface(ErrorStorage logger, Generics generics, ClassRefere
 
         Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
         for (Pair<Token, CompileCallable> method : this.methods()) {
-            methods.putIfAbsent(method.getFirst().lexeme(), new DataMethodContainer.Builder(this.name()));
-            DataMethodContainer.Builder builder = methods.get(method.getFirst().lexeme());
-            builder.addMethod(logger, method.getSecond(), method.getFirst());
+            methods.putIfAbsent(method.first().lexeme(), new DataMethodContainer.Builder(this.name()));
+            DataMethodContainer.Builder builder = methods.get(method.first().lexeme());
+            builder.addMethod(logger, method.second(), method.first());
         }
 
         return new CompileClass(
@@ -59,7 +59,7 @@ public record BakedInterface(ErrorStorage logger, Generics generics, ClassRefere
         SemanticAnalyser analyser = new SemanticAnalyser(logger, this.methods::add);
 
         for (Pair<Token, CompileCallable> method : this.methods) {
-            method.getSecond().analyseSemantics(analyser, this.target);
+            method.second().analyseSemantics(analyser, this.target);
         }
         for (CompileField value : staticFields.values()) {
             value.analyseSemantics(analyser);

@@ -38,7 +38,7 @@ public class SkeletonMethod implements ScriptedCallable {
     private static SkeletonMethod create(List<? extends Pair<SourceReference, String>> params, List<SourceReference> thrown, ClassReference type, ClassReference declaring, int modifiers) {
         return new SkeletonMethod(
                 params.stream()
-                        .map(Pair::getFirst)
+                        .map(Pair::first)
                         .map(SourceReference::getReference)
                         .toArray(ClassReference[]::new),
                 thrown.stream()

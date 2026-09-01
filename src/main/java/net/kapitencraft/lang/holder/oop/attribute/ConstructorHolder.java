@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.holder.oop.attribute;
 
-import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
@@ -17,7 +16,7 @@ public record ConstructorHolder(AnnotationObj[] annotations, Generics generics, 
     public void validate(ErrorStorage logger) {
         Validatable.validateNullable(annotations, logger);
         if (annotations != null) for (AnnotationObj obj : annotations) obj.validate(logger);
-        params.forEach(p -> p.getFirst().validate(logger));
+        params.forEach(p -> p.first().validate(logger));
         thrown.forEach(s -> s.validate(logger));
     }
 
