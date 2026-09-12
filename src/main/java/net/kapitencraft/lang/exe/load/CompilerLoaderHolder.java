@@ -4,6 +4,7 @@ import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Lexer;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
+import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.parser.HolderParser;
