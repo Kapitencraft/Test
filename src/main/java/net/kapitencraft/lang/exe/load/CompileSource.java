@@ -1,35 +1,31 @@
 package net.kapitencraft.lang.exe.load;
 
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Lexer;
 import net.kapitencraft.lang.compiler.MethodLookup;
 import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
-import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
-import net.kapitencraft.lang.compiler.parser.HolderParser;
-import net.kapitencraft.lang.compiler.parser.StmtParser;
+import net.kapitencraft.lang.compiler.exe.CompileStage;
+import net.kapitencraft.lang.compiler.exe.pipeline.CompilePipeline;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.holder.baked.BakedClass;
 import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
-import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.List;
 
-public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder> {
-    private final String content;
-    private final ErrorStorage storage;
-    private ClassConstructor holder;
-    private Compiler.ClassBuilder builder;
-    private CacheableClass target;
-    private final VarTypeContainer varTypeContainer;
+public abstract class CompileSource extends ClassLoaderHolder<CompileSource> {
+    protected final String content;
+    protected final ErrorStorage storage;
+    protected final VarTypeContainer varTypeContainer;
+    protected ClassConstructor holder;
+    protected Compiler.ClassBuilder builder;
+    protected CacheableClass target;
 
-    public CompilerLoaderHolder(File file) {
+    public CompileSource(File file) {
         super(file);
         try {
             content = new String(Files.readAllBytes(file.toPath()));
@@ -43,7 +39,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         this.varTypeContainer = new VarTypeContainer();
     }
 
-    public CompilerLoaderHolder(ClassConstructor holder, ErrorStorage storage, VarTypeContainer parser) {
+    public CompileSource(ClassConstructor holder, ErrorStorage storage, VarTypeContainer parser) {
         super(null);
         this.content = null; //not necessary with the holder already present
         this.storage = storage;
@@ -51,39 +47,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         this.varTypeContainer = parser;
     }
 
-    public void parseSource() {
-        if (this.holder != null) return; //only parse source if holder wasn't created
-        Lexer lexer = new Lexer(content, storage);
-        List<Token> tokens = lexer.scanTokens();
-        String fileName = file.getName().replace(".scr", "");
-        HolderParser parser = new HolderParser(storage);
-        parser.apply(tokens.toArray(new Token[0]), varTypeContainer);
-
-        String rootPath = Compiler.source.getAbsolutePath();
-        String path = file.getParentFile().getAbsolutePath().substring(rootPath.length() + 1).replace(".scr", "");
-        String pck = path.replace('\\', '.');
-        ClassConstructor decl = parser.parseFile(fileName, pck);
-
-        if (decl == null) return;
-
-        holder = decl;
-    }
-
-    public void construct() {
-        if (!checkHolderCreated()) return;
-        StmtParser stmtParser = new StmtParser(this.storage);
-
-        stmtParser.pushFallback(this.holder.target());
-        builder = holder.construct(stmtParser, this.varTypeContainer, this.storage);
-        stmtParser.popFallback();
-    }
-
-    public void analyse() {
-        if (builder != null)
-            builder.analyse();
-    }
-
-    public void cache() {
+    public final void cache() {
         try {
             Compiler.cache(
                     ClassLoader.cacheLoc,
@@ -97,17 +61,12 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         }
     }
 
-    public boolean checkHolderCreated() {
-        return holder != null && !storage.hadError();
-    }
-
     @Override
     public void applySkeleton() {
-        if (checkHolderCreated()) this.holder.applySkeleton(storage);
+        this.holder.applySkeleton(storage);
     }
 
     public void finalizeLoad() {
-        if (!checkHolderCreated()) return;
 
         if (builder.superclass() != null) {
             MethodLookup lookup = MethodLookup.createFromClass(builder.superclass().get(), builder.interfaces());
@@ -123,12 +82,6 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         this.holder.target().setTarget((ScriptedClass) target);
     }
 
-    public void validate() {
-        if (!checkHolderCreated()) return;
-        this.varTypeContainer.validate(this.storage);
-        this.holder.validate(this.storage);
-    }
-
     public void printErrors() {
         this.storage.printAll();
     }
@@ -139,5 +92,11 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
 
     public void optimize() {
         this.target.optimize();
+    }
+
+    public abstract CompilePipeline<?> getPipeline();
+
+    public <T extends CompileSource> void process(CompileStage activeStage) {
+        ((CompilePipeline<T>) getPipeline()).getExecutor(activeStage).process((T) this);
     }
 }

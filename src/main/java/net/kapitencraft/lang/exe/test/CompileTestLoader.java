@@ -5,7 +5,7 @@ import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.Interpreter;
 import net.kapitencraft.lang.exe.load.ClassLoader;
-import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
+import net.kapitencraft.lang.exe.load.CompileSource;
 import net.kapitencraft.tool.GsonHelper;
 
 import java.io.File;
@@ -25,8 +25,8 @@ public class CompileTestLoader {
          * @param data the loaded class info
          * @return whether this test had an error
          */
-        public boolean run(ClassLoader.PackageHolder<CompilerLoaderHolder> data) {
-            CompilerLoaderHolder holder = data.getEntry(target);
+        public boolean run(ClassLoader.PackageHolder<CompileSource> data) {
+            CompileSource holder = data.getEntry(target);
             if (holder == null) {
                 System.out.println("\u001B[31munknown class: " + target + "\u001B[0m");
                 return true;
@@ -92,7 +92,7 @@ public class CompileTestLoader {
                         }).toArray(ErrorData[]::new);
                 tests.add(new TestInstance(target, data));
             }
-            ClassLoader.PackageHolder<CompilerLoaderHolder> holder = Compiler.compile(false, false, TEST_SRC, null);
+            ClassLoader.PackageHolder<CompileSource> holder = Compiler.compile(false, false, TEST_SRC, null);
             TestExecution execution = new TestExecution(holder);
             tests.forEach(execution::runTest);
             execution.clear();
@@ -103,11 +103,11 @@ public class CompileTestLoader {
     }
 
     private static class TestExecution {
-        private final ClassLoader.PackageHolder<CompilerLoaderHolder> holders;
+        private final ClassLoader.PackageHolder<CompileSource> holders;
         private int succeeded = 0;
         private boolean error = false;
 
-        private TestExecution(ClassLoader.PackageHolder<CompilerLoaderHolder> holders) {
+        private TestExecution(ClassLoader.PackageHolder<CompileSource> holders) {
             this.holders = holders;
         }
 

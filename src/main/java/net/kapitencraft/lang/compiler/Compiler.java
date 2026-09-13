@@ -3,13 +3,16 @@ package net.kapitencraft.lang.compiler;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.PackageHolder;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
+import net.kapitencraft.lang.compiler.exe.CompileStage;
+import net.kapitencraft.lang.compiler.exe.pipeline.CompilePipeline;
+import net.kapitencraft.lang.compiler.exe.pipeline.JavaCompilePipeline;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.exe.load.ClassLoader;
-import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
-import net.kapitencraft.lang.exe.test.CompileTestLoader;
+import net.kapitencraft.lang.exe.load.CompileSource;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.token.Token;
@@ -38,20 +41,22 @@ public class Compiler {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static final LocationAnalyser LOCATION_ANALYSER = new LocationAnalyser();
 
+    private static final List<CompilePipeline<?>> PIPELINES = List.of(
+            JavaCompilePipeline.INSTANCE
+    );
+
     public static boolean optimize = false;
     public static File source;
-    private static ClassLoader.PackageHolder<CompilerLoaderHolder> compileData;
+    private static PackageHolder<CompileSource> compileData;
     private static final List<ClassRegister> registers = new ArrayList<>();
-    private static Stage activeStage;
+    private static CompileStage activeStage;
 
-    public static void register(CompilerLoaderHolder holder, String pck, @Nullable String name) {
+    public static void register(CompileSource holder, String pck, @Nullable String name) {
         compileData.add(pck, name, holder);
     }
 
-    public static void dispatch(CompilerLoaderHolder holder) {
-        for (int i = 1; i <= activeStage.ordinal(); i++) {
-            Stage.values()[i].action.accept(holder);
-        }
+    public static void dispatch(CompileSource holder) {
+        holder.process(activeStage);
     }
 
     public static void queueRegister(ClassConstructor aClass, ErrorStorage errorStorage, VarTypeContainer parser, @Nullable String namePrefix) {
@@ -61,9 +66,9 @@ public class Compiler {
         Compiler.dispatch(e.holder);
     }
 
-    private record ClassRegister(CompilerLoaderHolder holder, String pck, @Nullable String name) {
+    private record ClassRegister(CompileSource holder, String pck, @Nullable String name) {
         public static ClassRegister create(ClassConstructor entry, ErrorStorage logger, VarTypeContainer parser, @Nullable String name) {
-            return new ClassRegister(new CompilerLoaderHolder(entry, logger, parser), entry.pck(), name);
+            return new ClassRegister(new CompileSource(entry, logger, parser), entry.pck(), name);
         }
 
         private void register() {
@@ -83,8 +88,8 @@ public class Compiler {
         compile(true, true, ROOT, cache);
     }
 
-    public static ClassLoader.PackageHolder<CompilerLoaderHolder> compile(boolean logInfo, boolean failFast, File root, @Nullable File cache) {
-        compileData = ClassLoader.load(root, ".scr", CompilerLoaderHolder::new);
+    public static PackageHolder<CompileSource> compile(boolean logInfo, boolean failFast, File root, @Nullable File cache) {
+        compileData = PackageHolder.load(root, ".scr", CompileSource::new);
 
         source = root;
 
@@ -96,8 +101,8 @@ public class Compiler {
         ExecutorService executor = Executors.newFixedThreadPool(10, new CompilerThreadFactory());
         ErrorStorage.overallErrorCount = 0;
         try {
-            for (Stage stage : Stage.values()) {
-                if (stage == Stage.CACHING && cache == null) {
+            for (CompileStage stage : CompileStage.values()) {
+                if (stage == CompileStage.CACHING && cache == null) {
                     if (logInfo)
                         System.out.println("Skipping step CACHING as there is no cache root provided");
                     continue;
@@ -133,7 +138,7 @@ public class Compiler {
         return compileData;
     }
 
-    public static ClassLoader.PackageHolder<CompilerLoaderHolder> getCompileData() {
+    public static PackageHolder<CompileSource> getCompileData() {
         return compileData;
     }
 
@@ -149,8 +154,8 @@ public class Compiler {
         }
     }
 
-    private static void printErrors(ClassLoader.PackageHolder<CompilerLoaderHolder> compileData) {
-        compileData.forEach(CompilerLoaderHolder::printErrors);
+    private static void printErrors(PackageHolder<CompileSource> compileData) {
+        compileData.forEach(CompileSource::printErrors);
     }
 
     public interface ClassBuilder {
@@ -199,22 +204,5 @@ public class Compiler {
 
         target.println(line);
         target.println(" ".repeat(startIndex) + "^");
-    }
-
-    public enum Stage {
-        PARSE_SOURCE(CompilerLoaderHolder::parseSource),
-        CREATE_SKELETON(CompilerLoaderHolder::applySkeleton),
-        VALIDATE(CompilerLoaderHolder::validate),
-        SYNTAX_ANALYSIS(CompilerLoaderHolder::construct),
-        SEMANTIC_ANALYSIS(CompilerLoaderHolder::analyse),
-        FINALIZE_LOAD(CompilerLoaderHolder::finalizeLoad),
-        OPTIMIZE(CompilerLoaderHolder::optimize),
-        CACHING(CompilerLoaderHolder::cache);
-
-        private final Consumer<CompilerLoaderHolder> action;
-
-        Stage(Consumer<CompilerLoaderHolder> action) {
-            this.action = action;
-        }
     }
 }
