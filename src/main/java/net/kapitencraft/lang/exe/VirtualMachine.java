@@ -289,6 +289,20 @@ public class VirtualMachine {
                         } else
                             pushCall(new CallFrame(execute, callable, callableStackTop));
                     }
+                    case INVOKE_INTERFACE -> {
+                        String execute = constString(constants, read2Byte());
+                        StringReader reader = new StringReader(execute);
+                        ScriptedClass type = VarTypeManager.flatParse(reader);
+                        if (invokeStaticInitIfNecessary(type, 3)) continue;
+
+                        ScriptedCallable callable = type.getMethod(reader.getRemaining());
+
+                        int length = callable.argTypes().length;
+                        ClassInstance instance = (ClassInstance) stack[stackIndex - length];
+
+                        ScriptedClass instanceType = instance.getType();
+                        instanceType.getMethods();
+                    }
                     case INSTANCEOF -> {
                         ScriptedClass reference = VarTypeManager.directFlatParse(constString(constants, read2Byte()));
                         ClassInstance value = (ClassInstance) pop();
@@ -795,7 +809,7 @@ public class VirtualMachine {
         if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s PUSH (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(o));
     }
 
-    @Contract(pure = false)
+    @Contract()
     private static Object pop() {
         if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s POP  (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(stack[stackIndex - 1]));
         return stack[--stackIndex];

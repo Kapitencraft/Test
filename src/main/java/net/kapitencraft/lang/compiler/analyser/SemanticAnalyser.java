@@ -256,6 +256,21 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     private final LocalVariableContainer varAnalyser = new LocalVariableContainer();
     //endregion
 
+    private void makeLambda(List<Stmt> body, Token[] params) {
+        varAnalyser.push();
+
+        CompileCallable callable = new CompileCallable(
+                type,
+                List.of(),
+                new ClassReference[0],
+                body,
+                Modifiers.pack(Modifiers.SYNTHETIC),
+                new Annotation[0],
+
+        );
+        methodAdditionSink.accept(Pair.of(, callable));
+    }
+
     //region error
     private boolean panicMode = false;
 
@@ -601,22 +616,13 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitExprLambdaExpr(Expr.ExprLambda expr) {
-        ClassReference type = analyseExpr(expr.value);
         Stmt.Return stmt = new Stmt.Return();
         stmt.value = expr.value;
         //TODO: analyse method graph
         List<ScriptedCallable> methodCandidates = findFunctionMethodCandidates();
 
-        CompileCallable callable = new CompileCallable(
-                type,
-                List.of(),
-                new ClassReference[0],
-                List.of(stmt),
-                Modifiers.pack(Modifiers.SYNTHETIC),
-                new Annotation[0],
-                null
-        );
-        //methodAdditionSink.accept(Pair.of(, callable));
+        makeLambda(List.of(stmt), expr.params);
+
         return null;
     }
 
@@ -737,6 +743,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitBlockLambdaExpr(Expr.BlockLambda expr) {
+
+        makeLambda(expr.value.statements, expr.params);
         return null;
     }
 
