@@ -69,6 +69,7 @@ public record BakedClass(
         SemanticAnalyser analyser = new SemanticAnalyser(this.logger, this.methods::add);
 
         List<Pair<Token, CompileCallable>> pairs = this.methods;
+        //must be iterator loop due to the nature of the analyser being able to append synthetic (lambda) methods
         for (int i = 0; i < pairs.size(); i++) {
             Pair<Token, CompileCallable> method = pairs.get(i);
             method.second().analyseSemantics(analyser, this.target);
