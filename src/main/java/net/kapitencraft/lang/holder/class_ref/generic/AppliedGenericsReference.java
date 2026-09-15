@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.holder.class_ref.generic;
 
-import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.generic.AppliedGenerics;

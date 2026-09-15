@@ -4,33 +4,35 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.compiler.bytecode.instruction.IncrementIntVarInstruction;
 import net.kapitencraft.lang.compiler.bytecode.instruction.StaticFieldAccessInstruction;
-import net.kapitencraft.lang.holder.bytecode.Chunk;
-import net.kapitencraft.lang.exe.Opcode;
-import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.bytecode.instruction.SwitchInstruction;
 import net.kapitencraft.lang.compiler.bytecode.instruction.TraceDebugInstruction;
 import net.kapitencraft.lang.compiler.bytecode.instruction.constant.DoubleConstantInstruction;
 import net.kapitencraft.lang.compiler.bytecode.instruction.constant.FloatConstantInstruction;
+import net.kapitencraft.lang.exe.Opcode;
+import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.exe.natives.NativeClassInstance;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.ast.SwitchKey;
+import net.kapitencraft.lang.holder.bytecode.Chunk;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.exe.natives.NativeClassInstance;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.RetentionPolicy;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public static final int majorVersion = 1, minorVersion = 0;
@@ -60,8 +62,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private void cacheOrNull(@Nullable Expr expr) {
         if (expr == null) {
             byteCodeBuilder.addSimple(Opcode.NULL);
-        }
-        else cache(expr);
+        } else cache(expr);
     }
 
     public void cache(Stmt stmt) {
@@ -85,7 +86,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         JsonArray array = new JsonArray();
         for (Annotation instance : annotations) {
             Annotation retention;
-            if ((retention = VarTypeManager.directParseTypeCompiler(instance.getType()).get().getAnnotation(VarTypeManager.RETENTION)) != null) {
+            if ((retention = VarTypeManager.directParseType(instance.getType()).get().getAnnotation(VarTypeManager.RETENTION)) != null) {
                 if (((NativeClassInstance) retention.getProperty("value")).getObject() == RetentionPolicy.SOURCE) {
                     continue;
                 }
@@ -154,11 +155,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             int ordinal = expr.ordinal;
             AssignOperators operators = getAssignOperators(ordinal);
             if (expr.executor.is(VarTypeManager.INTEGER) && !retainExprResult) {
-            byteCodeBuilder.add(new IncrementIntVarInstruction(ordinal, expr.assignType.type() == TokenType.GROW ? 1 : -1));
-            ignoredExprResult = true;
-            return null;
-        }
-        specialAssign(expr.executor, expr.assignType, operators.get(), operators.assign(), o -> {
+                byteCodeBuilder.add(new IncrementIntVarInstruction(ordinal, expr.assignType.type() == TokenType.GROW ? 1 : -1));
+                ignoredExprResult = true;
+                return null;
+            }
+            specialAssign(expr.executor, expr.assignType, operators.get(), operators.assign(), o -> {
                 if (ordinal > 2)
                     byteCodeBuilder.addLocalAccess(o, ordinal);
                 else
@@ -241,7 +242,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         } else {
             if (hadRetain) { //if the result of a binary expression is ignored, we don't need to do its calculation as it is pure without side effects
                 final ClassReference executor = expr.executor;
-            byteCodeBuilder.changeLineIfNecessary(operator);
+                byteCodeBuilder.changeLineIfNecessary(operator);
                 Opcode opcode = switch (operator.type()) {
                     case EQUAL -> Opcode.EQUAL;
                     case NEQUAL -> Opcode.NEQUAL;
@@ -484,8 +485,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
         if (hadRetain) {
             byteCodeBuilder.addSimple(Opcode.DUP); //duplicate to keep the value on the stack as the ARRAY_SET does not actually keep anything on the stack
-        }
-        else
+        } else
             ignoredExprResult = true;
         retainExprResult = hadRetain;
         Opcode store = getArrayStore(retType);
@@ -583,7 +583,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
         //compile entries to add sorted
         List<Integer> keys = Arrays.stream(expr.params).map(key -> key.index).sorted(Integer::compareTo).toList();
-        record SwitchEntry(int key, Expr entry) {}
+        record SwitchEntry(int key, Expr entry) {
+        }
 
         List<SwitchEntry> entries = new ArrayList<>();
         List<SwitchInstruction.Entry> instEntries = new ArrayList<>();
@@ -644,8 +645,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             double v = (double) value;
             if (v == 1d) {
                 byteCodeBuilder.addSimple(Opcode.D_1);
-            }
-            else if (v == -1d) {
+            } else if (v == -1d) {
                 byteCodeBuilder.addSimple(Opcode.D_M1);
             } else {
                 byteCodeBuilder.add(new DoubleConstantInstruction(v));
@@ -668,8 +668,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             boolean b = (boolean) value;
             if (b) {
                 byteCodeBuilder.addSimple(Opcode.TRUE);
-            }
-            else {
+            } else {
                 byteCodeBuilder.addSimple(Opcode.FALSE);
             }
         }
@@ -753,8 +752,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             byteCodeBuilder.changeLineIfNecessary(operator);
             if (operator.type() == TokenType.NOT) {
                 byteCodeBuilder.addSimple(Opcode.NOT);
-            }
-            else {
+            } else {
                 Opcode neg = getNeg(expr.executor);
                 byteCodeBuilder.addSimple(neg);
             }

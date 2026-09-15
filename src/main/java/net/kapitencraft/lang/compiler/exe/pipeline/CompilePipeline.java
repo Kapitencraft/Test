@@ -2,7 +2,8 @@ package net.kapitencraft.lang.compiler.exe.pipeline;
 
 import net.kapitencraft.lang.compiler.exe.CompileStage;
 import net.kapitencraft.lang.compiler.exe.CompileStageExecutor;
-import net.kapitencraft.lang.exe.load.CompileSource;
+import net.kapitencraft.lang.compiler.exe.source.CompileSource;
+import net.kapitencraft.lang.compiler.exe.source.SourceTree;
 
 import java.io.File;
 
@@ -10,7 +11,7 @@ public interface CompilePipeline<T extends CompileSource> {
 
     CompileStageExecutor<T> getExecutor(CompileStage stage);
 
-    T createSource(File source);
+    T createSource(File source, String name, String pck, SourceTree.DirectoryNode owner);
 
     String getFileExtension();
 }

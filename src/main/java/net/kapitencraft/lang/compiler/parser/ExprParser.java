@@ -1,7 +1,8 @@
 package net.kapitencraft.lang.compiler.parser;
 
-import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
+import net.kapitencraft.lang.compiler.exe.JavaCompileSource;
+import net.kapitencraft.lang.compiler.exe.source.SourceTree;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
@@ -14,7 +15,6 @@ import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.oop.AnnotationObj;
 import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import org.jetbrains.annotations.NotNull;
@@ -26,13 +26,13 @@ import java.util.stream.Collectors;
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
 
-public class ExprParser extends AbstractParser {
+public class ExprParser extends AbstractJavaParser {
     private final List<ClassReference> fallback;
     protected GenericStack generics = new GenericStack();
     private int anonymousCounter = 0; //counts how many anonymous classes have been created inside the class, to give each a unique name
 
-    public ExprParser(ErrorStorage errorStorage) {
-        super(errorStorage);
+    public ExprParser(ErrorStorage errorStorage, SourceTree sourceSink, JavaCompileSource source) {
+        super(errorStorage, sourceSink, source);
         this.fallback = new ArrayList<>();
     }
 
@@ -579,7 +579,7 @@ public class ExprParser extends AbstractParser {
             consumeBracketClose("constructors");
 
             if (match(C_BRACKET_O)) {
-                HolderParser hParser = new HolderParser(this.errorStorage);
+                HolderParser hParser = new HolderParser(this.errorStorage, this.sourceSink, this.source);
                 if (type.get().isFinal()) {
                     error(previous(), "can not extend final class");
                 }
@@ -592,18 +592,16 @@ public class ExprParser extends AbstractParser {
                 SourceReference original = type;
                 type = SourceReference.from(name, typeTarget);
                 if (original.get().isInterface()) {
-                    Compiler.queueRegister(
+                    addInternal(
                             hParser.parseInterface(typeTarget, pck, name, null, null, null, List.of(original)),
                             this.errorStorage,
-                            this.parser,
-                            outName
+                            this.parser
                     );
                 } else {
-                    Compiler.queueRegister(
+                    addInternal(
                             hParser.parseClass(typeTarget, null, null, null, pck, name, original, List.of()),
                             this.errorStorage,
-                            this.parser,
-                            outName
+                            this.parser
                     );
                 }
 

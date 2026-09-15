@@ -3,12 +3,15 @@ package net.kapitencraft.lang.compiler.parser;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
+import net.kapitencraft.lang.compiler.exe.JavaCompileSource;
+import net.kapitencraft.lang.compiler.exe.source.SourceTree;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsSourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
+import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.oop.generic.AppliedGenerics;
 import net.kapitencraft.lang.holder.oop.generic.Generic;
 import net.kapitencraft.lang.holder.oop.generic.Generics;
@@ -24,7 +27,7 @@ import java.util.*;
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 @SuppressWarnings({"UnusedReturnValue"})
-public class AbstractParser {
+public class AbstractJavaParser {
 
     private static final Map<TokenTypeCategory, TokenType[]> categoryLookup = createCategoryLookup();
 
@@ -42,9 +45,21 @@ public class AbstractParser {
     protected final LocationAnalyser locFinder = new LocationAnalyser();
     protected final ErrorStorage errorStorage;
     protected boolean panicMode = false;
+    protected final SourceTree sourceSink;
+    protected final JavaCompileSource source;
 
-    public AbstractParser(ErrorStorage errorStorage) {
+    public AbstractJavaParser(ErrorStorage errorStorage, SourceTree sourceSink, JavaCompileSource source) {
         this.errorStorage = errorStorage;
+        this.sourceSink = sourceSink;
+        this.source = source;
+    }
+
+    public void addInternal(ClassConstructor holder, ErrorStorage storage, VarTypeContainer parser) {
+        SourceTree.DirectoryNode declaring = this.source.getDeclaring();
+        String name = holder.name().lexeme();
+        JavaCompileSource compileSource = new JavaCompileSource(name, this.source.pck(), holder, storage, parser, declaring);
+        sourceSink.addSource(declaring, name, compileSource);
+        Compiler.dispatch(compileSource);
     }
 
     public void apply(Token[] toParse, VarTypeContainer targetAnalyser) {
@@ -110,7 +125,7 @@ public class AbstractParser {
     }
 
     /**
-     * same as {@link AbstractParser#check(TokenType) check} but consumes token
+     * same as {@link AbstractJavaParser#check(TokenType) check} but consumes token
      */
     protected boolean match(TokenType... types) {
         for (TokenType type : types) {

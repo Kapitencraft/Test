@@ -3,18 +3,17 @@ package net.kapitencraft.lang.compiler;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.PackageHolder;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.exe.CompileStage;
+import net.kapitencraft.lang.compiler.exe.JavaCompileSource;
 import net.kapitencraft.lang.compiler.exe.pipeline.CompilePipeline;
 import net.kapitencraft.lang.compiler.exe.pipeline.JavaCompilePipeline;
-import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
+import net.kapitencraft.lang.compiler.exe.source.CompileSource;
+import net.kapitencraft.lang.compiler.exe.source.SourceTree;
 import net.kapitencraft.lang.exe.load.ClassLoader;
-import net.kapitencraft.lang.exe.load.CompileSource;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.method.CompileCallable;
@@ -27,13 +26,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 public class Compiler {
     public static final File ROOT = new File("./run/src");
@@ -41,38 +38,18 @@ public class Compiler {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static final LocationAnalyser LOCATION_ANALYSER = new LocationAnalyser();
 
-    private static final List<CompilePipeline<?>> PIPELINES = List.of(
+    public static final List<CompilePipeline<?>> PIPELINES = List.of(
             JavaCompilePipeline.INSTANCE
     );
 
     public static boolean optimize = false;
     public static File source;
-    private static PackageHolder<CompileSource> compileData;
-    private static final List<ClassRegister> registers = new ArrayList<>();
+    private static SourceTree compileData;
     private static CompileStage activeStage;
 
-    public static void register(CompileSource holder, String pck, @Nullable String name) {
-        compileData.add(pck, name, holder);
-    }
-
     public static void dispatch(CompileSource holder) {
-        holder.process(activeStage);
-    }
-
-    public static void queueRegister(ClassConstructor aClass, ErrorStorage errorStorage, VarTypeContainer parser, @Nullable String namePrefix) {
-        String name = aClass.name().lexeme();
-        ClassRegister e = ClassRegister.create(aClass, errorStorage, parser, name);
-        registers.add(e);
-        Compiler.dispatch(e.holder);
-    }
-
-    private record ClassRegister(CompileSource holder, String pck, @Nullable String name) {
-        public static ClassRegister create(ClassConstructor entry, ErrorStorage logger, VarTypeContainer parser, @Nullable String name) {
-            return new ClassRegister(new CompileSource(entry, logger, parser), entry.pck(), name);
-        }
-
-        private void register() {
-            Compiler.register(holder, pck, name);
+        for (int i = CompileStage.CREATE_SKELETON.ordinal(); i <= activeStage.ordinal(); i++) {
+            holder.process(CompileStage.values()[i], compileData);
         }
     }
 
@@ -88,8 +65,8 @@ public class Compiler {
         compile(true, true, ROOT, cache);
     }
 
-    public static PackageHolder<CompileSource> compile(boolean logInfo, boolean failFast, File root, @Nullable File cache) {
-        compileData = PackageHolder.load(root, ".scr", CompileSource::new);
+    public static SourceTree compile(boolean logInfo, boolean failFast, File root, @Nullable File cache) {
+        compileData = SourceTree.load(root);
 
         source = root;
 
@@ -108,20 +85,18 @@ public class Compiler {
                     continue;
                 }
 
-                registers.forEach(ClassRegister::register);
-                registers.clear();
                 activeStage = stage;
                 if (logInfo)
                     System.out.printf("executing step %s\n", stage);
 
-                if (stage == Stage.CACHING && cache.exists())
+                if (stage == CompileStage.CACHING && cache.exists())
                     Util.delete(cache);
 
-                ClassLoader.useHolders(logInfo, compileData, stage.action, executor);
+                compileData.execute(stage, executor, logInfo);
 
                 if (failFast) {
                     if (ErrorStorage.overallErrorCount > 0) {
-                        printErrors(compileData);
+                        compileData.forEach(CompileSource::printErrors);
 
                         if (logInfo) {
                             if (ErrorStorage.overallErrorCount > 100) {
@@ -138,7 +113,7 @@ public class Compiler {
         return compileData;
     }
 
-    public static PackageHolder<CompileSource> getCompileData() {
+    public static SourceTree getCompileData() {
         return compileData;
     }
 
@@ -152,10 +127,6 @@ public class Compiler {
         public Thread newThread(@NotNull Runnable r) {
             return new Thread(r, "CompilerThread#" + poolNumber.getAndIncrement());
         }
-    }
-
-    private static void printErrors(PackageHolder<CompileSource> compileData) {
-        compileData.forEach(CompileSource::printErrors);
     }
 
     public interface ClassBuilder {
@@ -173,6 +144,7 @@ public class Compiler {
         void analyse();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void cache(File cacheBase, CacheBuilder builder, String path, CacheableClass target, String name) throws IOException {
         JsonObject object = builder.cacheClass(target);
         File cacheTarget = new File(cacheBase, path + "/" + name + ".scrc");

@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.exe.load;
+package net.kapitencraft.lang.compiler.exe.source;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.MethodLookup;
@@ -8,7 +8,10 @@ import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.exe.CompileStage;
 import net.kapitencraft.lang.compiler.exe.pipeline.CompilePipeline;
 import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
+import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.exe.load.ClassLoader;
 import net.kapitencraft.lang.holder.baked.BakedClass;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
@@ -17,7 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-public abstract class CompileSource extends ClassLoaderHolder<CompileSource> {
+public abstract class CompileSource {
+    protected final String name, pck;
+    protected final ClassReference reference;
+    protected final File file;
     protected final String content;
     protected final ErrorStorage storage;
     protected final VarTypeContainer varTypeContainer;
@@ -25,8 +31,10 @@ public abstract class CompileSource extends ClassLoaderHolder<CompileSource> {
     protected Compiler.ClassBuilder builder;
     protected CacheableClass target;
 
-    public CompileSource(File file) {
-        super(file);
+    public CompileSource(String name, String pck, File file) {
+        this.name = name;
+        this.pck = pck;
+        this.file = file;
         try {
             content = new String(Files.readAllBytes(file.toPath()));
         } catch (IOException e) {
@@ -37,17 +45,21 @@ public abstract class CompileSource extends ClassLoaderHolder<CompileSource> {
                 file.getAbsolutePath().replace(".\\", "") //remove '\.\'
         );
         this.varTypeContainer = new VarTypeContainer();
+        this.reference = VarTypeManager.getOrCreateClass(name, pck);
     }
 
-    public CompileSource(ClassConstructor holder, ErrorStorage storage, VarTypeContainer parser) {
-        super(null);
+    public CompileSource(String name, String pck, ClassConstructor holder, ErrorStorage storage, VarTypeContainer parser) {
+        this.name = name;
+        this.pck = pck;
+        this.file = null;
         this.content = null; //not necessary with the holder already present
         this.storage = storage;
         this.holder = holder;
         this.varTypeContainer = parser;
+        this.reference = VarTypeManager.getOrCreateClass(name, pck);
     }
 
-    public final void cache() {
+    public final void cache(SourceTree sourceTree) {
         try {
             Compiler.cache(
                     ClassLoader.cacheLoc,
@@ -61,12 +73,11 @@ public abstract class CompileSource extends ClassLoaderHolder<CompileSource> {
         }
     }
 
-    @Override
-    public void applySkeleton() {
-        this.holder.applySkeleton(storage);
+    public void applySkeleton(SourceTree sourceTree) {
+        reference.setTarget(this.holder.createSkeleton(storage));
     }
 
-    public void finalizeLoad() {
+    public void finalizeLoad(SourceTree sourceTree) {
 
         if (builder.superclass() != null) {
             MethodLookup lookup = MethodLookup.createFromClass(builder.superclass().get(), builder.interfaces());
@@ -90,13 +101,25 @@ public abstract class CompileSource extends ClassLoaderHolder<CompileSource> {
         return storage;
     }
 
-    public void optimize() {
+    public void optimize(SourceTree sourceTree) {
         this.target.optimize();
     }
 
     public abstract CompilePipeline<?> getPipeline();
 
-    public <T extends CompileSource> void process(CompileStage activeStage) {
-        ((CompilePipeline<T>) getPipeline()).getExecutor(activeStage).process((T) this);
+    public <T extends CompileSource> void process(CompileStage activeStage, SourceTree source) {
+        ((CompilePipeline<T>) getPipeline()).getExecutor(activeStage).process((T) this, source);
+    }
+
+    public String fullName() {
+        return this.pck + "." + this.name;
+    }
+
+    public String name() {
+        return this.name;
+    }
+
+    public String pck() {
+        return this.pck;
     }
 }

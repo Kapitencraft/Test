@@ -1,20 +1,19 @@
 package net.kapitencraft.lang.exe;
 
+import net.kapitencraft.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
+import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.token.Token;
-import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.Package;
+import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.lang.oop.clazz.primitive.*;
-import net.kapitencraft.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.tool.StringReader;
 
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class VarTypeManager {
@@ -109,6 +108,7 @@ public class VarTypeManager {
 
     /**
      * gets a package
+     *
      * @param s the package, use "." to split
      * @return the package, or null if it doesn't exist
      */
@@ -142,7 +142,7 @@ public class VarTypeManager {
             }
             pg = pg.getPackage(lexeme);
         }
-        Token token = s.get(s.size()-1);
+        Token token = s.getLast();
         String lexeme = token.lexeme();
         if (!pg.hasClass(lexeme)) {
             error.accept(token, "unknown class '" + lexeme + "'");
@@ -157,7 +157,7 @@ public class VarTypeManager {
             String pckName = path.get(i).lexeme();
             pg = pg.getOrCreatePackage(pckName);
         }
-        Token last = path.get(path.size() - 1);
+        Token last = path.getLast();
         return SourceReference.from(last, pg.getOrCreateClass(last.lexeme()));
     }
 
@@ -170,17 +170,10 @@ public class VarTypeManager {
     }
 
     public static ClassReference getOrCreateClass(String name, String pck) {
-        String[] packages = pck.split("[.$]");
+        String[] packages = pck.split("[.]");
         Package pg = rootPackage();
         for (String aPackage : packages) {
             pg = pg.getOrCreatePackage(aPackage);
-        }
-        if (name.contains("$")) {
-            packages = name.split("\\$");
-            for (int i = 0; i < packages.length - 1; i++) {
-                pg = pg.getOrCreatePackage(packages[i]);
-            }
-            return pg.getOrCreateClass(packages[packages.length - 1]);
         }
         return pg.getOrCreateClass(name);
     }
@@ -271,7 +264,7 @@ public class VarTypeManager {
                 if (name.startsWith("[")) {
                     yield directParseType(name.substring(1));
                 } else if (name.startsWith("L")) {
-                    yield getClassForName(name.substring(1, name.length() - 1).replaceAll("/", "."));
+                    yield getClassForName(name.substring(1, name.length() - 1).replace("/", "."));
                 }
                 throw new IllegalArgumentException("unknown type pattern: '" + name + "'");
             }
@@ -279,34 +272,7 @@ public class VarTypeManager {
     }
 
     private static String replaceSourceChars(String in) {
-        StringBuilder s = new StringBuilder();
-        for (char c : in.toCharArray()) {
-            if (c == '/' || c == '$')
-                s.append('.');
-            else
-                s.append(c);
-        }
-        return s.toString();
-    }
-
-    public static ClassReference directParseTypeCompiler(String name) {
-        return switch (name) {
-            case "N" -> VarTypeManager.NUMBER.reference();
-            case "I" -> VarTypeManager.INTEGER.reference();
-            case "F" -> VarTypeManager.FLOAT.reference();
-            case "D" -> VarTypeManager.DOUBLE.reference();
-            case "B" -> VarTypeManager.BOOLEAN.reference();
-            case "C" -> VarTypeManager.CHAR.reference();
-            case "V" -> VarTypeManager.VOID.reference();
-            default -> {
-                if (name.startsWith("[")) {
-                    yield directParseTypeCompiler(name.substring(1));
-                } else if (name.startsWith("L")) {
-                    yield getClassForName(replaceSourceChars(name.substring(1, name.length() - 1)));
-                }
-                throw new IllegalArgumentException("unknown type pattern: '" + name + "'");
-            }
-        };
+        return in.replace('/', '.');
     }
 
     public static ScriptedClass flatParse(StringReader reader) {

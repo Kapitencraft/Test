@@ -3,6 +3,7 @@ package net.kapitencraft.lang.compiler.exe.pipeline;
 import net.kapitencraft.lang.compiler.exe.CompileStage;
 import net.kapitencraft.lang.compiler.exe.CompileStageExecutor;
 import net.kapitencraft.lang.compiler.exe.JavaCompileSource;
+import net.kapitencraft.lang.compiler.exe.source.SourceTree;
 
 import java.io.File;
 import java.util.EnumMap;
@@ -28,8 +29,8 @@ public class JavaCompilePipeline implements CompilePipeline<JavaCompileSource> {
     }
 
     @Override
-    public JavaCompileSource createSource(File source) {
-        return new JavaCompileSource(source);
+    public JavaCompileSource createSource(File source, String name, String pck, SourceTree.DirectoryNode owner) {
+        return new JavaCompileSource(source, name, pck, owner);
     }
 
     @Override
