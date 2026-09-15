@@ -72,10 +72,10 @@ public record BakedClass(
         //must be iterator loop due to the nature of the analyser being able to append synthetic (lambda) methods
         for (int i = 0; i < pairs.size(); i++) {
             Pair<Token, CompileCallable> method = pairs.get(i);
-            method.second().analyseSemantics(analyser, this.target);
+            method.second().analyseSemantics(analyser, this.target, method.first());
         }
         for (Pair<Token, CompileCallable> constructor : this.constructors) {
-            constructor.second().analyseSemantics(analyser, this.target);
+            constructor.second().analyseSemantics(analyser, this.target, constructor.first());
         }
         for (CompileField value : this.fields.values()) {
             value.analyseSemantics(analyser);

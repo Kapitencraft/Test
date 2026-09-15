@@ -12,6 +12,7 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
 
 import java.util.Arrays;
@@ -74,10 +75,10 @@ public class CompileCallable implements ScriptedCallable {
         return object;
     }
 
-    public void analyseSemantics(SemanticAnalyser analyser, ClassReference declaring) {
+    public void analyseSemantics(SemanticAnalyser analyser, ClassReference declaring, Token name) {
         if (!isAbstract()) {
             analyser.clear();
-            analyser.analyseBody(body, this.retType, this.thrown, params, isStatic() ? null : declaring);
+            analyser.analyseBody(body, name, this.retType, this.thrown, params, isStatic() ? null : declaring);
         }
     }
 

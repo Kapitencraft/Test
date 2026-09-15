@@ -25,6 +25,7 @@ import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -166,9 +167,10 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         this.varAnalyser.clear();
     }
 
-    public void analyseBody(List<Stmt> body, ClassReference retType, ClassReference[] thrown, List<Pair<ClassReference, String>> params, @Nullable ClassReference selfClass) {
+    public void analyseBody(List<Stmt> body, Token name, ClassReference retType, ClassReference[] thrown, List<Pair<ClassReference, String>> params, @Nullable ClassReference selfClass) {
         this.methodReturnType = retType;
         this.methodThrown.push(thrown);
+        this.methodNames.push(new MethodFrame(name));
         if (selfClass != null) this.varAnalyser.add("this", selfClass, false, true);
         for (Pair<ClassReference, String> param : params) {
             varAnalyser.add(param.second(), param.first(), true, true);
@@ -177,6 +179,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             if (stmt != null)
                 this.analyseStmt(stmt);
         }
+        this.methodNames.pop();
+        this.methodThrown.pop();
     }
 
     private MethodData analyseCall(Token name, ClassReference objType, Expr[] args) {
@@ -228,6 +232,22 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     //endregion
 
     //region var & scope analysis
+    private final LocalVariableContainer varAnalyser = new LocalVariableContainer();
+    private final ArrayDeque<MethodFrame> methodNames = new ArrayDeque<>();
+
+    private static class MethodFrame {
+        private int lambdaCount = 0;
+        private final Token name;
+
+        private MethodFrame(Token name) {
+            this.name = name;
+        }
+
+        public int getAndIncrementLambdaCount() {
+            return lambdaCount++;
+        }
+    }
+
     protected byte tryCreateVar(Token name, ClassReference type, boolean hasValue, boolean isFinal) {
         byte ordinal = varAnalyser.add(name.lexeme(), type, !isFinal, hasValue);
         if (ordinal == -1)
@@ -253,11 +273,14 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         varAnalyser.push();
     }
 
-    private final LocalVariableContainer varAnalyser = new LocalVariableContainer();
     //endregion
 
-    private void makeLambda(List<Stmt> body, Token[] params) {
+    private void makeLambda(List<Stmt> body, Token keyword, Token[] params) {
         varAnalyser.push();
+        MethodFrame frame = methodNames.peek();
+        Token name = keyword.asIdentifier(frame.name.lexeme() + "$lambda$" + frame.getAndIncrementLambdaCount());
+
+        analyseBody(body, name, );
 
         CompileCallable callable = new CompileCallable(
                 type,
@@ -268,7 +291,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                 new Annotation[0],
 
         );
-        methodAdditionSink.accept(Pair.of(, callable));
+        methodAdditionSink.accept(Pair.of(name, callable));
     }
 
     //region error
