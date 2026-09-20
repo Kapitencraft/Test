@@ -359,7 +359,6 @@ public class AbstractPythonParser {
         errorStorage.warn(token, message);
     }
 
-
     protected void synchronize() {
         this.current--; //move back one to ensure finding EOA if they have been consumed by the underlying code
         while (!isAtEnd()) {

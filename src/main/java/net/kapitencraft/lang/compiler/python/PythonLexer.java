@@ -200,9 +200,9 @@ public class PythonLexer implements Lexer {
             case '^':
                 addToken(match('=') ? XOR_ASSIGN : XOR);
                 break;
-            case ' ':
             case '\t':
                 addToken(TAB);
+            case ' ':
             case '\r':
                 // Ignore whitespace.
                 break;

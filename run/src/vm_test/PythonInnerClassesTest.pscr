@@ -1,0 +1,6 @@
+
+class Test:
+    Test(String val):
+        System.print(val)
+
+new Test("test")

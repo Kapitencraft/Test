@@ -130,6 +130,10 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         List<MethodHolder> methods = new ArrayList<>();
         List<FieldHolder> fields = new ArrayList<>();
         while (!isAtEnd()) {
+            //noinspection StatementWithEmptyBody
+            while (!isAtEnd() && match(TAB, LINE_FEED));
+            //skip any leading whitespace
+
             if (check(TokenTypeCategory.ATT_MODIFIER) || check(TokenTypeCategory.ATT_KEYWORD)) {
                 ModifiersParser parser = MODS_NO_GENERICS;
                 parser.parse();
@@ -371,12 +375,11 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
             } while (match(COMMA));
         }
 
-        consumeCurlyOpen("class head");
+        consumeColon("classBody");
 
         anonymousNames.push(name.lexeme());
 
         ClassHolder h = parseClass(target, mods, stack, classGenerics, pckID, name, superClass, implemented);
-        consumeCurlyClose("class");
         anonymousNames.pop();
         return h;
     }
