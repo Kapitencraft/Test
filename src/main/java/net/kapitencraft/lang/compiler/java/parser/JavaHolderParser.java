@@ -1,9 +1,10 @@
-package net.kapitencraft.lang.compiler.parser;
+package net.kapitencraft.lang.compiler.java.parser;
 
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
-import net.kapitencraft.lang.compiler.exe.JavaCompileSource;
+import net.kapitencraft.lang.compiler.exe.source.CompileSource;
 import net.kapitencraft.lang.compiler.exe.source.SourceTree;
+import net.kapitencraft.lang.compiler.exe.text.HolderParser;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
@@ -31,12 +32,12 @@ import java.util.stream.Collectors;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
-public class HolderParser extends AbstractJavaParser {
+public class JavaHolderParser extends AbstractJavaParser implements HolderParser {
     private GenericStack activeGenerics = new GenericStack();
     private final String pck;
     private final ArrayDeque<String> anonymousNames = new ArrayDeque<>();
 
-    public HolderParser(ErrorStorage errorStorage, SourceTree sourceSink, JavaCompileSource source) {
+    public JavaHolderParser(ErrorStorage errorStorage, SourceTree sourceSink, CompileSource source) {
         super(errorStorage, sourceSink, source);
         this.pck = source.pck();
     }
@@ -718,16 +719,16 @@ public class HolderParser extends AbstractJavaParser {
         }
 
 
-        public void check(HolderParser holderParser, ModifiersParser parser) {
+        public void check(JavaHolderParser javaHolderParser, ModifiersParser parser) {
             parser.setDefaultAbstract(this == INTERFACE);
             illegalModifiers.stream()
                     .map(parser::get)
                     .filter(Objects::nonNull)
-                    .forEach(token -> holderParser.error(token, java.lang.String.format("modifier '%s' not allowed here", token.lexeme())));
+                    .forEach(token -> javaHolderParser.error(token, java.lang.String.format("modifier '%s' not allowed here", token.lexeme())));
             redundantModifiers.stream()
                     .map(parser::get)
                     .filter(Objects::nonNull)
-                    .forEach(token -> holderParser.warn(token, java.lang.String.format("redundant modifier '%s'", token.lexeme())));
+                    .forEach(token -> javaHolderParser.warn(token, java.lang.String.format("redundant modifier '%s'", token.lexeme())));
         }
 
         public enum Group {

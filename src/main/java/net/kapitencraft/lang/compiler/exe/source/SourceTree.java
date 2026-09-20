@@ -3,7 +3,7 @@ package net.kapitencraft.lang.compiler.exe.source;
 import com.google.common.collect.ImmutableList;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.exe.CompileStage;
-import net.kapitencraft.lang.compiler.exe.pipeline.CompilePipeline;
+import net.kapitencraft.lang.compiler.exe.CompilePipeline;
 
 import java.io.File;
 import java.util.*;
@@ -78,7 +78,7 @@ public class SourceTree {
             } else {
                 String[] split = name.split("\\.");
                 if (split.length > 2) {
-                    System.err.printf("found source with illegal name: %s\n", name);
+                    System.err.printf("found source with illegal name: '%s'\n", name);
                     continue;
                     //error
                 }
@@ -90,7 +90,7 @@ public class SourceTree {
                     }
                 }
                 if (processor == null) {
-                    System.err.printf("found source with unknown extension: %s\n", fileExtension);
+                    System.err.printf("found source with unknown extension: '%s'\n", fileExtension);
                     continue;
                 }
                 tree.sources.put(path + "." + split[0], processor);

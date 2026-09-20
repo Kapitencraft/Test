@@ -7,11 +7,11 @@ import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.exe.CompileStage;
-import net.kapitencraft.lang.compiler.exe.JavaCompileSource;
-import net.kapitencraft.lang.compiler.exe.pipeline.CompilePipeline;
-import net.kapitencraft.lang.compiler.exe.pipeline.JavaCompilePipeline;
+import net.kapitencraft.lang.compiler.exe.CompilePipeline;
+import net.kapitencraft.lang.compiler.java.JavaCompilePipeline;
 import net.kapitencraft.lang.compiler.exe.source.CompileSource;
 import net.kapitencraft.lang.compiler.exe.source.SourceTree;
+import net.kapitencraft.lang.compiler.python.PythonCompilePipeline;
 import net.kapitencraft.lang.exe.load.ClassLoader;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
@@ -39,7 +39,8 @@ public class Compiler {
     public static final LocationAnalyser LOCATION_ANALYSER = new LocationAnalyser();
 
     public static final List<CompilePipeline<?>> PIPELINES = List.of(
-            JavaCompilePipeline.INSTANCE
+            JavaCompilePipeline.INSTANCE,
+            PythonCompilePipeline.INSTANCE
     );
 
     public static boolean optimize = false;

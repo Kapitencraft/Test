@@ -1,7 +1,5 @@
-package net.kapitencraft.lang.compiler.exe.pipeline;
+package net.kapitencraft.lang.compiler.exe;
 
-import net.kapitencraft.lang.compiler.exe.CompileStage;
-import net.kapitencraft.lang.compiler.exe.CompileStageExecutor;
 import net.kapitencraft.lang.compiler.exe.source.CompileSource;
 import net.kapitencraft.lang.compiler.exe.source.SourceTree;
 

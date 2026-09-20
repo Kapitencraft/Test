@@ -1,8 +1,10 @@
-package net.kapitencraft.lang.compiler.parser;
+package net.kapitencraft.lang.compiler.python.parser;
 
+import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
-import net.kapitencraft.lang.compiler.exe.JavaCompileSource;
+import net.kapitencraft.lang.compiler.exe.source.CompileSource;
 import net.kapitencraft.lang.compiler.exe.source.SourceTree;
+import net.kapitencraft.lang.compiler.java.parser.JavaHolderParser;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
@@ -13,7 +15,6 @@ import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.oop.AnnotationObj;
-import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
@@ -26,23 +27,18 @@ import java.util.stream.Collectors;
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 import static net.kapitencraft.lang.holder.token.TokenTypeCategory.*;
 
-public class ExprParser extends AbstractJavaParser {
-    private final List<ClassReference> fallback;
+public class PythonExprParser extends AbstractPythonParser {
+    private final List<ClassReference> fallback = new ArrayList<>();
     protected GenericStack generics = new GenericStack();
     private int anonymousCounter = 0; //counts how many anonymous classes have been created inside the class, to give each a unique name
 
-    public ExprParser(ErrorStorage errorStorage, SourceTree sourceSink, JavaCompileSource source) {
+    public PythonExprParser(ErrorStorage errorStorage, SourceTree sourceSink, CompileSource source) {
         super(errorStorage, sourceSink, source);
-        this.fallback = new ArrayList<>();
     }
 
     protected ClassReference currentFallback() {
         if (fallback.isEmpty()) throw new IllegalArgumentException("no fallback applied");
         return fallback.getLast();
-    }
-
-    public void pushGenerics(Generics generics) {
-        generics.pushToStack(this.generics);
     }
 
     public void pushFallback(ClassReference fallback) {
@@ -55,7 +51,7 @@ public class ExprParser extends AbstractJavaParser {
     }
 
     public Expr expression() {
-        if (match(SWITCH)) {
+        if (match(MATCH)) {
             return switchExpr();
         }
         if (match(IF)) {
@@ -579,7 +575,7 @@ public class ExprParser extends AbstractJavaParser {
             consumeBracketClose("constructors");
 
             if (match(C_BRACKET_O)) {
-                HolderParser hParser = new HolderParser(this.errorStorage, this.sourceSink, this.source);
+                JavaHolderParser hParser = new JavaHolderParser(this.errorStorage, this.sourceSink, this.source);
                 if (type.get().isFinal()) {
                     error(previous(), "can not extend final class");
                 }

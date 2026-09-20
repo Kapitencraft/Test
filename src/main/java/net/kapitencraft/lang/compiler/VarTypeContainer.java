@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.compiler.parser;
+package net.kapitencraft.lang.compiler;
 
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;

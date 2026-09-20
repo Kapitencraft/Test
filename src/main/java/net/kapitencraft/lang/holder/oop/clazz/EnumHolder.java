@@ -1,12 +1,11 @@
 package net.kapitencraft.lang.holder.oop.clazz;
 
 import com.google.common.collect.ImmutableMap;
-import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
-import net.kapitencraft.lang.compiler.parser.StmtParser;
-import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
+import net.kapitencraft.lang.compiler.exe.text.StmtParser;
+import net.kapitencraft.lang.compiler.java.parser.JavaStmtParser;
+import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -46,7 +45,7 @@ public record EnumHolder(ClassReference target, short modifiers,
     /**
      * construct this enum to a baked class
      */
-    public BakedClass construct(StmtParser stmtParser, VarTypeContainer parser, ErrorStorage logger) {
+    public BakedClass construct(StmtParser javaStmtParser, VarTypeContainer parser, ErrorStorage logger) {
 
         List<Stmt> statics = new ArrayList<>();
 
@@ -59,10 +58,10 @@ public record EnumHolder(ClassReference target, short modifiers,
                         literal(decl.name().lexemeAsLiteral()), //name
                         literal(new Token(TokenType.STR, String.valueOf(decl.ordinal()), new LiteralHolder(decl.ordinal(), VarTypeManager.INTEGER), decl.name().line(), decl.name().lineStartIndex()))
                 };
-                stmtParser.apply(new Token[0], parser);
+                javaStmtParser.apply(new Token[0], parser);
             } else {
-                stmtParser.apply(decl.arguments(), parser);
-                args = prefixEnumConstructorCallArgs(stmtParser.args(), decl);
+                javaStmtParser.apply(decl.arguments(), parser);
+                args = prefixEnumConstructorCallArgs(javaStmtParser.args(), decl);
             }
 
             Stmt.Expression expression = new Stmt.Expression();
@@ -124,9 +123,9 @@ public record EnumHolder(ClassReference target, short modifiers,
             short mods = fieldHolder.modifiers();
             Expr initializer = null;
             if (fieldHolder.body() != null) {
-                initializer = getFieldBody(stmtParser, parser, fieldHolder, statics);
+                initializer = getFieldBody(javaStmtParser, parser, fieldHolder, statics);
             } else if (Modifiers.isFinal(mods)) finalFields.add(fieldHolder.name().lexeme());
-            Annotation[] annotations = stmtParser.parseAnnotations(fieldHolder.annotations(), parser);
+            Annotation[] annotations = javaStmtParser.parseAnnotations(fieldHolder.annotations(), parser);
 
             CompileField fieldDecl = new CompileField(fieldHolder.name(), initializer, fieldHolder.type().getReference(), mods, annotations);
             fields.put(fieldHolder.name(), fieldDecl);
@@ -139,16 +138,16 @@ public record EnumHolder(ClassReference target, short modifiers,
         for (MethodHolder methodHolder : this.methodHolders()) {
             List<Stmt> body = null;
             if (!Modifiers.isAbstract(methodHolder.modifiers())) {
-                stmtParser.apply(methodHolder.body(), parser);
+                javaStmtParser.apply(methodHolder.body(), parser);
                 if (Modifiers.isStatic(methodHolder.modifiers()))
-                    stmtParser.applyStaticMethod(methodHolder.type().getReference(), methodHolder.generics());
+                    javaStmtParser.applyStaticMethod(methodHolder.type().getReference(), methodHolder.generics());
                 else
-                    stmtParser.applyMethod(VarTypeManager.ENUM, methodHolder.generics());
-                body = stmtParser.parse();
-                stmtParser.popMethod(methodHolder.closeBracket());
+                    javaStmtParser.applyMethod(VarTypeManager.ENUM, methodHolder.generics());
+                body = javaStmtParser.parse();
+                javaStmtParser.popMethod(methodHolder.closeBracket());
             }
 
-            Annotation[] annotations = stmtParser.parseAnnotations(methodHolder.annotations(), parser);
+            Annotation[] annotations = javaStmtParser.parseAnnotations(methodHolder.annotations(), parser);
 
             CompileCallable methodDecl = new CompileCallable(
                     methodHolder.type().getReference(),
@@ -193,16 +192,16 @@ public record EnumHolder(ClassReference target, short modifiers,
 
         List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
         for (ConstructorHolder enumConstructorHolder : this.constructorHolders()) {
-            stmtParser.apply(enumConstructorHolder.body(), parser);
-            stmtParser.applyMethod(ClassReference.of(VarTypeManager.VOID), enumConstructorHolder.generics());
-            List<Stmt> original = stmtParser.parse();
+            javaStmtParser.apply(enumConstructorHolder.body(), parser);
+            javaStmtParser.applyMethod(ClassReference.of(VarTypeManager.VOID), enumConstructorHolder.generics());
+            List<Stmt> original = javaStmtParser.parse();
             prefixEnumConstructorCall(original);
             this.checkFinalsPopulated(original, finalFields);
             this.prefixFieldInitializers(original, initializedFields);
-            Annotation[] annotations = stmtParser.parseAnnotations(enumConstructorHolder.annotations(), parser);
+            Annotation[] annotations = javaStmtParser.parseAnnotations(enumConstructorHolder.annotations(), parser);
 
             CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), enumConstructorHolder.extractParams(), enumConstructorHolder.extractThrown(), original, (short) 0, annotations);
-            stmtParser.popMethod(enumConstructorHolder.closeBracket());
+            javaStmtParser.popMethod(enumConstructorHolder.closeBracket());
             constructors.add(Pair.of(enumConstructorHolder.name(), constDecl));
         }
         if (constructors.isEmpty()) {
@@ -237,7 +236,7 @@ public record EnumHolder(ClassReference target, short modifiers,
                 pck(),
                 extractInterfaces(),
                 Modifiers.pack(true, true, false),
-                parseAnnotations(stmtParser, parser)
+                parseAnnotations(javaStmtParser, parser)
         );
     }
 

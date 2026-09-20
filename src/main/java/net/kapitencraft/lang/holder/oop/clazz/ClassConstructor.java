@@ -3,8 +3,9 @@ package net.kapitencraft.lang.holder.oop.clazz;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
-import net.kapitencraft.lang.compiler.parser.StmtParser;
-import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
+import net.kapitencraft.lang.compiler.exe.text.StmtParser;
+import net.kapitencraft.lang.compiler.java.parser.JavaStmtParser;
+import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -28,22 +29,17 @@ public interface ClassConstructor extends Validatable {
 
     ClassReference target();
 
-    Compiler.ClassBuilder construct(StmtParser stmtParser, VarTypeContainer parser, ErrorStorage logger);
+    Compiler.ClassBuilder construct(StmtParser javaStmtParser, VarTypeContainer parser, ErrorStorage logger);
 
     ScriptedClass createSkeleton(ErrorStorage logger);
-
-    default void applySkeleton(ErrorStorage logger) {
-        ScriptedClass skeleton = createSkeleton(logger);
-        this.target().setTarget(skeleton);
-    }
 
     Token name();
 
     String pck();
 
-    default @NotNull Expr getFieldBody(StmtParser stmtParser, VarTypeContainer parser, FieldHolder fieldHolder, List<Stmt> statics) {
-        stmtParser.apply(fieldHolder.body(), parser);
-        Expr initializer = stmtParser.expression();
+    default @NotNull Expr getFieldBody(StmtParser javaStmtParser, VarTypeContainer parser, FieldHolder fieldHolder, List<Stmt> statics) {
+        javaStmtParser.apply(fieldHolder.body(), parser);
+        Expr initializer = javaStmtParser.expression();
         if (Modifiers.isStatic(fieldHolder.modifiers())) {
             Stmt.Expression stmt1 = new Stmt.Expression();
             {

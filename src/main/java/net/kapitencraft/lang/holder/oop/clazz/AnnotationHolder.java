@@ -1,12 +1,11 @@
 package net.kapitencraft.lang.holder.oop.clazz;
 
 import com.google.common.collect.ImmutableMap;
-import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.compiler.analyser.SemanticAnalyser;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
-import net.kapitencraft.lang.compiler.parser.StmtParser;
-import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
+import net.kapitencraft.lang.compiler.exe.text.StmtParser;
+import net.kapitencraft.lang.compiler.java.parser.JavaStmtParser;
+import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.baked.BakedAnnotation;
@@ -27,15 +26,15 @@ public record AnnotationHolder(ClassReference target, short modifiers,
                                AnnotationObj[] annotations, Generics generics, String pck, Token name,
                                MethodHolder[] methodHolders) implements ClassConstructor {
 
-    public BakedAnnotation construct(StmtParser stmtParser, VarTypeContainer parser, ErrorStorage logger) {
+    public BakedAnnotation construct(StmtParser javaStmtParser, VarTypeContainer parser, ErrorStorage logger) {
         ImmutableMap.Builder<String, MethodWrapper> methods = new ImmutableMap.Builder<>();
         for (MethodHolder methodHolder : methodHolders()) {
             Expr val = null;
             if (!Modifiers.isAbstract(methodHolder.modifiers())) {
-                stmtParser.apply(methodHolder.body(), parser);
-                val = stmtParser.literalOrReference();
+                javaStmtParser.apply(methodHolder.body(), parser);
+                val = javaStmtParser.literalOrReference();
             }
-            Annotation[] annotations = stmtParser.parseAnnotations(methodHolder.annotations(), parser);
+            Annotation[] annotations = javaStmtParser.parseAnnotations(methodHolder.annotations(), parser);
 
             methods.put(methodHolder.name().lexeme(), new MethodWrapper(val, methodHolder.type().getReference(), annotations, methodHolder.modifiers()));
         }
@@ -45,7 +44,7 @@ public record AnnotationHolder(ClassReference target, short modifiers,
                 this.name(),
                 this.pck(),
                 methods.build(),
-                parseAnnotations(stmtParser, parser)
+                parseAnnotations(javaStmtParser, parser)
         );
     }
 

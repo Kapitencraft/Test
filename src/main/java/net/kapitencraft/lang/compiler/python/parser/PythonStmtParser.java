@@ -1,8 +1,10 @@
-package net.kapitencraft.lang.compiler.parser;
+package net.kapitencraft.lang.compiler.python.parser;
 
+import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
-import net.kapitencraft.lang.compiler.exe.JavaCompileSource;
+import net.kapitencraft.lang.compiler.exe.source.CompileSource;
 import net.kapitencraft.lang.compiler.exe.source.SourceTree;
+import net.kapitencraft.lang.compiler.exe.text.StmtParser;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -20,21 +22,15 @@ import java.util.*;
 
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
-public class StmtParser extends ExprParser {
-
-    public StmtParser(ErrorStorage errorStorage, SourceTree sourceSink, JavaCompileSource source) {
-        super(errorStorage, sourceSink, source);
-    }
+public class PythonStmtParser extends PythonExprParser implements StmtParser {
 
     private ClassReference funcRetType = VarTypeManager.VOID.reference();
     private final List<Boolean> seenReturn = new ArrayList<>();
     private int loopIndex = 0;
+    private ArrayDeque<Integer> indents = new ArrayDeque<>();
 
-    @Override
-    public void apply(Token[] toParse, VarTypeContainer targetAnalyser) {
-        super.apply(toParse, targetAnalyser);
-        seenReturn.clear(); //reset entire return stack
-        seenReturn.add(false);
+    public PythonStmtParser(ErrorStorage errorStorage, SourceTree sourceSink, CompileSource source) {
+        super(errorStorage, sourceSink, source);
     }
 
     private void seenReturn() {
@@ -65,7 +61,6 @@ public class StmtParser extends ExprParser {
             if (match(DOT)) {
                 Stmt.Expression expression = new Stmt.Expression();
                 expression.expression = parseObjAttributes(sourceClassReference.getReference());
-                consumeEndOfArg();
                 return expression;
             } else
                 return varDeclaration(false, sourceClassReference.getReference());
@@ -260,7 +255,16 @@ public class StmtParser extends ExprParser {
                 pushScope();
                 loopIndex++;
 
-                Stmt stmt = statement();
+                consumeColon("for");
+                consumeLineFeed("for");
+
+                int nextIndent = this.indents.peek() + 1;
+                this.indents.push(nextIndent);
+
+                Stmt stmt = parseIndentedStatement(nextIndent);
+
+                this.indents.pop();
+
                 stmt = mergeBody(stmt, popScopeStmt());
                 Stmt.ForEach forEach = new Stmt.ForEach();
                 forEach.type = VarTypeManager.VOID.reference();
@@ -301,17 +305,44 @@ public class StmtParser extends ExprParser {
         return aFor;
     }
 
+    private Stmt parseIndentedStatement(int indent) {
+        List<Stmt> stmts = new ArrayList<>();
+        while (true) {
+            int c = current;
+            int iCount = 0;
+            while (match(TAB) && iCount++ < indent);
+            if (iCount == indent) {
+                stmts.add(statement());
+            } else {
+                current = c;
+                break;
+            }
+        }
+
+        if (stmts.size() == 1) {
+            return stmts.getFirst();
+        }
+        Stmt.Block block = new Stmt.Block();
+        block.statements = stmts;
+        return block;
+    }
+
     private Stmt ifStatement() {
         Token keyword = previous();
-        consumeBracketOpen("if");
         Expr condition = expression();
-        consumeBracketClose("if condition");
 
         boolean allSeenReturn = true;
         boolean branchSeenReturn;
 
         pushScope();
-        Stmt thenBranch = statement();
+        consumeColon("if");
+        consumeLineFeed("if");
+
+        int nextIndent = this.indents.peek() + 1;
+        this.indents.push(nextIndent);
+
+        Stmt thenBranch = parseIndentedStatement(nextIndent);
+
         if (!(branchSeenReturn = this.seenReturn.getLast()))
             allSeenReturn = false;
         thenBranch = mergeBody(thenBranch, popScopeStmt());
@@ -322,7 +353,10 @@ public class StmtParser extends ExprParser {
             Expr elifCondition = expression();
             consumeBracketClose("elif condition");
             pushScope();
-            Stmt elifStmt = statement();
+            consumeColon("if");
+            consumeLineFeed("if");
+
+            Stmt elifStmt = parseIndentedStatement(nextIndent);
             elifStmt = mergeBody(elifStmt, popScopeStmt());
             boolean seenReturn = this.seenReturn.getLast();
             elifs.add(new ElifBranch(elifCondition, elifStmt, seenReturn));
@@ -333,7 +367,10 @@ public class StmtParser extends ExprParser {
         boolean elseBranchSeenReturn = false;
         if (match(ELSE)) {
             pushScope();
-            elseBranch = statement();
+            consumeColon("if");
+            consumeLineFeed("if");
+
+            elseBranch = parseIndentedStatement(nextIndent);
             if (!this.seenReturn.getLast() && allSeenReturn)
                 allSeenReturn = false;
             elseBranch = mergeBody(elseBranch, popScopeStmt());
@@ -342,6 +379,8 @@ public class StmtParser extends ExprParser {
 
         if (allSeenReturn)
             seenReturn();
+
+        indents.pop();
 
         Stmt.If anIf = new Stmt.If();
         anIf.condition = condition;
@@ -376,8 +415,16 @@ public class StmtParser extends ExprParser {
         consumeBracketClose("while condition");
         this.loopIndex++;
         this.pushScope();
-        Stmt body = statement();
+        consumeColon("if");
+        consumeLineFeed("if");
+
+        int nextIndent = this.indents.peek() + 1;
+        this.indents.push(nextIndent);
+
+        Stmt body = parseIndentedStatement(nextIndent);
         body = mergeBody(body, popScopeStmt());
+
+        this.indents.pop();
         this.loopIndex--;
 
         Stmt.While aWhile = new Stmt.While();
@@ -400,7 +447,7 @@ public class StmtParser extends ExprParser {
 
     private Stmt expressionStatement() {
         Expr expr = expression();
-        consumeEndOfArg();
+        consumeLineFeed("expression");
         Stmt.Expression stmt = new Stmt.Expression();
         stmt.expression = expr;
         return stmt;

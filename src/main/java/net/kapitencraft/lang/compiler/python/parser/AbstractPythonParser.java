@@ -1,10 +1,12 @@
-package net.kapitencraft.lang.compiler.parser;
+package net.kapitencraft.lang.compiler.python.parser;
 
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
-import net.kapitencraft.lang.compiler.exe.JavaCompileSource;
+import net.kapitencraft.lang.compiler.exe.source.CompileSource;
 import net.kapitencraft.lang.compiler.exe.source.SourceTree;
+import net.kapitencraft.lang.compiler.python.PythonCompilePipeline;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
@@ -27,7 +29,7 @@ import java.util.*;
 import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 @SuppressWarnings({"UnusedReturnValue"})
-public class AbstractJavaParser {
+public class AbstractPythonParser {
 
     private static final Map<TokenTypeCategory, TokenType[]> categoryLookup = createCategoryLookup();
 
@@ -46,9 +48,9 @@ public class AbstractJavaParser {
     protected final ErrorStorage errorStorage;
     protected boolean panicMode = false;
     protected final SourceTree sourceSink;
-    protected final JavaCompileSource source;
+    protected final CompileSource source;
 
-    public AbstractJavaParser(ErrorStorage errorStorage, SourceTree sourceSink, JavaCompileSource source) {
+    public AbstractPythonParser(ErrorStorage errorStorage, SourceTree sourceSink, CompileSource source) {
         this.errorStorage = errorStorage;
         this.sourceSink = sourceSink;
         this.source = source;
@@ -57,7 +59,7 @@ public class AbstractJavaParser {
     public void addInternal(ClassConstructor holder, ErrorStorage storage, VarTypeContainer parser) {
         SourceTree.DirectoryNode declaring = this.source.getDeclaring();
         String name = holder.name().lexeme();
-        JavaCompileSource compileSource = new JavaCompileSource(name, this.source.pck(), holder, storage, parser, declaring);
+        CompileSource compileSource = PythonCompilePipeline.INSTANCE.createSource(name, this.source.pck(), holder, storage, parser, declaring);
         sourceSink.addSource(declaring, name, compileSource);
         Compiler.dispatch(compileSource);
     }
@@ -125,7 +127,7 @@ public class AbstractJavaParser {
     }
 
     /**
-     * same as {@link AbstractJavaParser#check(TokenType) check} but consumes token
+     * same as {@link AbstractPythonParser#check(TokenType) check} but consumes token
      */
     protected boolean match(TokenType... types) {
         for (TokenType type : types) {
@@ -180,6 +182,29 @@ public class AbstractJavaParser {
 
     protected Token[] getCurlyEnclosedCode() {
         return getScopedCode(C_BRACKET_O, C_BRACKET_C);
+    }
+
+    protected Token[] getIndentedCode() {
+        List<Token> tokens = new ArrayList<>();
+        int cIndex = current;
+        while (!isAtEnd()) {
+            int iCount = 0;
+            while (match(TAB)) {
+                iCount++;
+            }
+            if (iCount >= 1) {
+                current -= (iCount - 1); //jump back to ensure relative indents are kept.
+                do {
+                    advance();
+                    tokens.add(peek());
+                } while (!isAtEnd() && !check(LINE_FEED));
+                cIndex = current;
+            } else {
+                current = cIndex;
+                break;
+            }
+        }
+        return tokens.toArray(new Token[0]);
     }
 
     protected Token[] getScopedCode(TokenType increase, TokenType decrease) {
@@ -294,6 +319,14 @@ public class AbstractJavaParser {
 
     protected Token consumeBracketOpen(String method) {
         return this.consume(BRACKET_O, "Expected '(' after " + method + ".");
+    }
+
+    protected Token consumeColon(String obj) {
+        return this.consume(COLON, "Expected ':' after " + obj + ".");
+    }
+
+    protected Token consumeLineFeed(String obj) {
+        return this.consume(LINE_FEED, "Expected '\n' after " + obj + ".");
     }
 
     protected Token consumeCurlyOpen(String obj) {

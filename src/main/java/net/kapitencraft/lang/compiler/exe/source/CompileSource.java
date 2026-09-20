@@ -2,12 +2,12 @@ package net.kapitencraft.lang.compiler.exe.source;
 
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.MethodLookup;
+import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
+import net.kapitencraft.lang.compiler.exe.CompilePipeline;
 import net.kapitencraft.lang.compiler.exe.CompileStage;
-import net.kapitencraft.lang.compiler.exe.pipeline.CompilePipeline;
-import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.load.ClassLoader;
 import net.kapitencraft.lang.holder.baked.BakedClass;
@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 public abstract class CompileSource {
+    private final SourceTree.DirectoryNode declaring;
     protected final String name, pck;
     protected final ClassReference reference;
     protected final File file;
@@ -31,7 +32,7 @@ public abstract class CompileSource {
     protected Compiler.ClassBuilder builder;
     protected CacheableClass target;
 
-    public CompileSource(String name, String pck, File file) {
+    public CompileSource(String name, String pck, File file, SourceTree.DirectoryNode declaring) {
         this.name = name;
         this.pck = pck;
         this.file = file;
@@ -46,9 +47,10 @@ public abstract class CompileSource {
         );
         this.varTypeContainer = new VarTypeContainer();
         this.reference = VarTypeManager.getOrCreateClass(name, pck);
+        this.declaring = declaring;
     }
 
-    public CompileSource(String name, String pck, ClassConstructor holder, ErrorStorage storage, VarTypeContainer parser) {
+    public CompileSource(String name, String pck, ClassConstructor holder, ErrorStorage storage, VarTypeContainer parser,  SourceTree.DirectoryNode declaring) {
         this.name = name;
         this.pck = pck;
         this.file = null;
@@ -57,6 +59,12 @@ public abstract class CompileSource {
         this.holder = holder;
         this.varTypeContainer = parser;
         this.reference = VarTypeManager.getOrCreateClass(name, pck);
+        this.declaring = declaring;
+    }
+
+    public void validate(SourceTree sourceTree) {
+        this.varTypeContainer.validate(this.storage);
+        this.holder.validate(this.storage);
     }
 
     public final void cache(SourceTree sourceTree) {
@@ -75,6 +83,11 @@ public abstract class CompileSource {
 
     public void applySkeleton(SourceTree sourceTree) {
         reference.setTarget(this.holder.createSkeleton(storage));
+    }
+
+    public void analyseSemantics(SourceTree sourceTree) {
+        if (builder != null)
+            builder.analyse();
     }
 
     public void finalizeLoad(SourceTree sourceTree) {
@@ -121,5 +134,9 @@ public abstract class CompileSource {
 
     public String pck() {
         return this.pck;
+    }
+
+    public SourceTree.DirectoryNode getDeclaring() {
+        return declaring;
     }
 }

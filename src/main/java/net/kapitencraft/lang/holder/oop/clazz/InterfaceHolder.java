@@ -3,8 +3,9 @@ package net.kapitencraft.lang.holder.oop.clazz;
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
-import net.kapitencraft.lang.compiler.parser.StmtParser;
-import net.kapitencraft.lang.compiler.parser.VarTypeContainer;
+import net.kapitencraft.lang.compiler.exe.text.StmtParser;
+import net.kapitencraft.lang.compiler.java.parser.JavaStmtParser;
+import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
@@ -36,15 +37,15 @@ public record InterfaceHolder(ClassReference target, short modifiers,
                               FieldHolder[] fieldHolders
 ) implements ClassConstructor {
 
-    public BakedInterface construct(StmtParser stmtParser, VarTypeContainer parser, ErrorStorage logger) {
+    public BakedInterface construct(StmtParser javaStmtParser, VarTypeContainer parser, ErrorStorage logger) {
         Map<String, CompileField> staticFields = new HashMap<>();
         List<Stmt> statics = new ArrayList<>();
         for (FieldHolder fieldHolder : fieldHolders()) {
             Expr initializer = null;
             if (fieldHolder.body() != null) {
-                initializer = getFieldBody(stmtParser, parser, fieldHolder, statics);
+                initializer = getFieldBody(javaStmtParser, parser, fieldHolder, statics);
             }
-            Annotation[] annotations = stmtParser.parseAnnotations(fieldHolder.annotations(), parser);
+            Annotation[] annotations = javaStmtParser.parseAnnotations(fieldHolder.annotations(), parser);
 
             short mods = fieldHolder.modifiers();
             CompileField fieldDecl = new CompileField(fieldHolder.name(), initializer, fieldHolder.type().getReference(), mods, annotations);
@@ -56,15 +57,15 @@ public record InterfaceHolder(ClassReference target, short modifiers,
         for (MethodHolder methodHolder : this.methodHolders()) {
             List<Stmt> body = null;
             if (!Modifiers.isAbstract(methodHolder.modifiers())) {
-                stmtParser.apply(methodHolder.body(), parser);
+                javaStmtParser.apply(methodHolder.body(), parser);
                 if (Modifiers.isStatic(methodHolder.modifiers()))
-                    stmtParser.applyStaticMethod(methodHolder.type().getReference(), methodHolder.generics());
+                    javaStmtParser.applyStaticMethod(methodHolder.type().getReference(), methodHolder.generics());
                 else
-                    stmtParser.applyMethod(methodHolder.type().getReference(), methodHolder.generics());
-                body = stmtParser.parse();
-                stmtParser.popMethod(methodHolder.closeBracket());
+                    javaStmtParser.applyMethod(methodHolder.type().getReference(), methodHolder.generics());
+                body = javaStmtParser.parse();
+                javaStmtParser.popMethod(methodHolder.closeBracket());
             }
-            Annotation[] annotations = stmtParser.parseAnnotations(methodHolder.annotations(), parser);
+            Annotation[] annotations = javaStmtParser.parseAnnotations(methodHolder.annotations(), parser);
 
             CompileCallable methodDecl = new CompileCallable(methodHolder.type().getReference(), methodHolder.extractParams(), methodHolder.extractThrown(), body, methodHolder.modifiers(), annotations);
             methods.add(Pair.of(methodHolder.name(), methodDecl));
@@ -74,7 +75,7 @@ public record InterfaceHolder(ClassReference target, short modifiers,
             ClassConstructor.addClinit(statics, methods);
         }
 
-        Annotation[] annotations = stmtParser.parseAnnotations(this.annotations(), parser);
+        Annotation[] annotations = javaStmtParser.parseAnnotations(this.annotations(), parser);
 
         return new BakedInterface(
                 logger, generics, target,
