@@ -165,11 +165,13 @@
           "name": "Token"
         },
         "ExprLambda": {
-          "params": "Token[]",
+          "keyword": "Token",
+          "params": "Pair<SourceReference, Token>[]",
           "value": "Expr"
         },
         "BlockLambda": {
-          "params": "Token[]",
+          "keyword": "Token",
+          "params": "Pair<SourceReference, Token>[]",
           "value": "Stmt.Block"
         }
       },
