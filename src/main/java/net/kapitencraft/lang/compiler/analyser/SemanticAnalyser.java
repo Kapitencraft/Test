@@ -12,6 +12,7 @@ import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.ast.SwitchKey;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
@@ -275,23 +276,23 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     //endregion
 
-    private void makeLambda(List<Stmt> body, Token keyword, Token[] params) {
+    private void makeLambda(List<Stmt> body, Token keyword, Pair<SourceReference, Token>[] params) {
         varAnalyser.push();
         MethodFrame frame = methodNames.peek();
-        Token name = keyword.asIdentifier(frame.name.lexeme() + "$lambda$" + frame.getAndIncrementLambdaCount());
+        Token name = keyword.asIdentifier( "lambda$" + frame.name.lexeme() + "$" + frame.getAndIncrementLambdaCount());
 
-        analyseBody(body, name, );
+        //analyseBody(body, name, );
 
-        CompileCallable callable = new CompileCallable(
-                type,
-                List.of(),
-                new ClassReference[0],
-                body,
-                Modifiers.pack(Modifiers.SYNTHETIC),
-                new Annotation[0],
-
-        );
-        methodAdditionSink.accept(Pair.of(name, callable));
+        //CompileCallable callable = new CompileCallable(
+        //        type,
+        //        List.of(),
+        //        new ClassReference[0],
+        //        body,
+        //        Modifiers.pack(Modifiers.SYNTHETIC),
+        //        new Annotation[0],
+//
+        //);
+        //methodAdditionSink.accept(Pair.of(name, callable));
     }
 
     //region error
@@ -644,7 +645,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         //TODO: analyse method graph
         List<ScriptedCallable> methodCandidates = findFunctionMethodCandidates();
 
-        makeLambda(List.of(stmt), expr.params);
+        makeLambda(List.of(stmt), expr.keyword, expr.params);
 
         return null;
     }
@@ -767,7 +768,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public ClassReference visitBlockLambdaExpr(Expr.BlockLambda expr) {
 
-        makeLambda(expr.value.statements, expr.params);
+        makeLambda(expr.value.statements, expr.keyword, expr.params);
         return null;
     }
 

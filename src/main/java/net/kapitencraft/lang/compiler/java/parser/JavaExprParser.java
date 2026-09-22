@@ -19,6 +19,7 @@ import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
+import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -671,9 +672,6 @@ public class JavaExprParser extends AbstractJavaParser {
 
         if (match(IDENTIFIER)) {
             Token previous = previous(); //the identifier just consumed
-            if (match(LAMBDA)) {
-                return makeLambda(List.of(previous));
-            }
             if (currentFallback().exists()) { //check if the parser has a class fallback available
                 ClassReference fallbackReference = currentFallback();
                 ScriptedClass fallback = fallbackReference.get(); //get said fallback
@@ -702,6 +700,9 @@ public class JavaExprParser extends AbstractJavaParser {
             if (reference.isPresent()) {
                 ClassReference target = reference.get().getReference();
                 if (match(IDENTIFIER)) {
+                    if (match(LAMBDA)) {
+                        return makeLambda(List.of(Pair.of(reference.get(), previous)));
+                    }
                     error(previous, "Declaration not allowed here");
                     panicMode = true;
                     return varRef(previous, (byte) -1);
@@ -722,16 +723,19 @@ public class JavaExprParser extends AbstractJavaParser {
 
         if (match(BRACKET_O)) {
             int startIdx = current;
-            if (match(IDENTIFIER)) {
-                if (check(COMMA) || check(LAMBDA)) {
-                    List<Token> args = new ArrayList<>();
-                    args.add(tokens[startIdx]);
+            Optional<SourceReference> reference = tryConsumeVarType(generics);
+            if (reference.isPresent()) {
+                if (match(IDENTIFIER)) {
+                    if (check(COMMA) || check(LAMBDA)) {
+                        List<Pair<SourceReference, Token>> args = new ArrayList<>();
+                        args.add(Pair.of(reference.get(), previous()));
 
-                    while (match(COMMA)) {
-                        args.add(consumeIdentifier());
+                        while (match(COMMA)) {
+                            args.add(Pair.of(consumeVarType(generics), consumeIdentifier()));
+                        }
+                        consume(LAMBDA, "'lambda' or '->' expected");
+                        return makeLambda(args);
                     }
-                    consume(LAMBDA, "'lambda' or '->' expected");
-                    return makeLambda(args);
                 }
             }
             current = startIdx;
@@ -745,14 +749,14 @@ public class JavaExprParser extends AbstractJavaParser {
         return varRef(Token.createNative("<unidentified>"), (byte) -1);
     }
 
-    private Expr makeLambda(List<Token> args) {
+    private Expr makeLambda(List<Pair<SourceReference, Token>> args) {
         if (match(C_BRACKET_O)) {
             if (this instanceof StmtParser stmtParser) {
                 List<Stmt> content = stmtParser.block("lambda");
                 Expr.BlockLambda lambda = new Expr.BlockLambda();
                 lambda.value = new Stmt.Block();
                 lambda.value.statements = content;
-                lambda.params = args.toArray(Token[]::new);
+                lambda.params = args.toArray(Pair[]::new);
                 return lambda;
             }
             //block lambda
@@ -760,7 +764,7 @@ public class JavaExprParser extends AbstractJavaParser {
         } else {
             Expr expr = expression();
             Expr.ExprLambda lambda = new Expr.ExprLambda();
-            lambda.params = args.toArray(Token[]::new);
+            lambda.params = args.toArray(Pair[]::new);
             lambda.value = expr;
             return lambda;
         }
