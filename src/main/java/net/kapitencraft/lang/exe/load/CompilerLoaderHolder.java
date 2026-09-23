@@ -55,7 +55,7 @@ public class CompilerLoaderHolder extends ClassLoaderHolder<CompilerLoaderHolder
         Lexer lexer = new Lexer(content, storage);
         List<Token> tokens = lexer.scanTokens();
         String fileName = file.getName().replace(".scr", "");
-        HolderParser parser = new HolderParser(storage);
+        HolderParser parser = new HolderParser(storage, pck());
         parser.apply(tokens.toArray(new Token[0]), varTypeContainer);
 
         String rootPath = Compiler.source.getAbsolutePath();

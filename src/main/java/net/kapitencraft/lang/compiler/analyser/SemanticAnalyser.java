@@ -1,7 +1,6 @@
 package net.kapitencraft.lang.compiler.analyser;
 
 import net.kapitencraft.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.algebra.OperationType;
@@ -10,7 +9,6 @@ import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.ast.SwitchKey;
-import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
@@ -26,7 +24,6 @@ import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -276,12 +273,25 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     //endregion
 
-    private void makeLambda(List<Stmt> body, Token keyword, Pair<SourceReference, Token>[] params) {
-        varAnalyser.push();
+    private void makeLambda(List<Stmt> body, List<ScriptedCallable> candidates, Token keyword, Pair<SourceReference, Token>[] params) {
         MethodFrame frame = methodNames.peek();
-        Token name = keyword.asIdentifier( "lambda$" + frame.name.lexeme() + "$" + frame.getAndIncrementLambdaCount());
+        Token name = keyword.asIdentifier("lambda$" + frame.name.lexeme() + "$" + frame.getAndIncrementLambdaCount());
 
-        //analyseBody(body, name, );
+        for (int i = 0; i < candidates.size(); i++) {
+            varAnalyser.push();
+            ScriptedCallable callable = candidates.get(i);
+            List<Pair<ClassReference, String>> methodParams = new ArrayList<>();
+            for (int i1 = 0; i1 < callable.argTypes().length; i1++) {
+                methodParams.add(Pair.of(callable.argTypes()[i1], params[i1].second().lexeme()));
+            }
+            analyseBody(body, name,
+                    callable.retType(),
+                    callable.thrown(),
+                    methodParams,
+                    null
+            );
+            varAnalyser.pop();
+        }
 
         //CompileCallable callable = new CompileCallable(
         //        type,
@@ -645,7 +655,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         //TODO: analyse method graph
         List<ScriptedCallable> methodCandidates = findFunctionMethodCandidates();
 
-        makeLambda(List.of(stmt), expr.keyword, expr.params);
+        makeLambda(List.of(stmt), methodCandidates, expr.keyword, expr.params);
 
         return null;
     }
@@ -768,7 +778,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public ClassReference visitBlockLambdaExpr(Expr.BlockLambda expr) {
 
-        makeLambda(expr.value.statements, expr.keyword, expr.params);
+        List<ScriptedCallable> candidates = findFunctionMethodCandidates();
+
+        makeLambda(expr.value.statements, candidates, expr.keyword, expr.params);
         return null;
     }
 

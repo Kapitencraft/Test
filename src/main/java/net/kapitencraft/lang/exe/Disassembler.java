@@ -57,7 +57,7 @@ public class Disassembler {
             case D_CONST -> doubleConstInstruction(opcode, chunk, offset);
             case F_CONST -> floatConstInstruction(opcode, chunk, offset);
             case NEW, S_CONST -> stringConstInstruction(opcode, chunk, offset);
-            case INVOKE_STATIC, INVOKE_VIRTUAL -> invoke(opcode, chunk, offset);
+            case INVOKE_STATIC, INVOKE_VIRTUAL, INVOKE_INTERFACE -> invoke(opcode, chunk, offset);
             case JUMP, JUMP_IF_FALSE -> jump(opcode, chunk, offset);
             case SWITCH -> switchInstruction(opcode, chunk, offset);
             case GET_FIELD, PUT_FIELD -> fieldOp(opcode, chunk, offset);

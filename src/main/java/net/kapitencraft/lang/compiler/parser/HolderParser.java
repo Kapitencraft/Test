@@ -32,10 +32,12 @@ import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 public class HolderParser extends AbstractParser {
     private GenericStack activeGenerics = new GenericStack();
-    private final Deque<String> activePackages = new ArrayDeque<>();
+    private final String pck;
+    private final ArrayDeque<String> anonymousNames = new ArrayDeque<>();
 
-    public HolderParser(ErrorStorage errorStorage) {
+    public HolderParser(ErrorStorage errorStorage, String pck) {
         super(errorStorage);
+        this.pck = pck;
     }
 
     //region imports & package
@@ -348,11 +350,11 @@ public class HolderParser extends AbstractParser {
 
         consumeCurlyOpen("class head");
 
-        activePackages.push(pckID + "." + name.lexeme());
+        anonymousNames.push(name.lexeme());
 
         ClassHolder h = parseClass(target, mods, stack, classGenerics, pckID, name, superClass, implemented);
         consumeCurlyClose("class");
-        activePackages.pop();
+        anonymousNames.pop();
         return h;
     }
 
@@ -440,7 +442,7 @@ public class HolderParser extends AbstractParser {
         }
 
         consumeCurlyOpen("enum");
-        activePackages.push(pckID + "." + name.lexeme());
+        anonymousNames.push(name.lexeme());
 
         List<EnumConstantHolder> enumConstantHolders = new ArrayList<>();
 
@@ -466,7 +468,7 @@ public class HolderParser extends AbstractParser {
         parseClassProperties(ModifierScope.Group.ENUM, methodHolders, constructorHolders, fieldHolders, target, pckID, name, true);
 
         consumeCurlyClose("enum");
-        activePackages.pop();
+        anonymousNames.pop();
 
         return new EnumHolder(
                 target, modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), pckID, name,
@@ -491,7 +493,7 @@ public class HolderParser extends AbstractParser {
         parser.addClass(SourceReference.from(name, target), originalName);
 
         consumeCurlyOpen("annotation");
-        activePackages.push(pckId + "." + name.lexeme());
+        anonymousNames.push(name.lexeme());
 
         List<MethodHolder> methodHolders = new ArrayList<>();
 
@@ -511,7 +513,7 @@ public class HolderParser extends AbstractParser {
         }
 
         consumeCurlyClose("annotation");
-        activePackages.pop();
+        anonymousNames.pop();
         return new AnnotationHolder(
                 target, mods.packModifiers(), mods.getAnnotations(), mods.getGenerics(), pckId, name,
                 methodHolders.toArray(new MethodHolder[0])
@@ -560,7 +562,7 @@ public class HolderParser extends AbstractParser {
             } while (match(COMMA));
         }
 
-        activePackages.push(pckID + "." + name.lexeme());
+        anonymousNames.push(name.lexeme());
 
         consumeCurlyOpen("class");
 
@@ -577,7 +579,7 @@ public class HolderParser extends AbstractParser {
 
         if (stack != null) activeGenerics = stack;
         else if (classGenerics != null) activeGenerics.pop();
-        activePackages.pop();
+        anonymousNames.pop();
         int modifiers = mods != null ? mods.packModifiers() : 0;
         AnnotationObj[] annotations = mods != null ? mods.getAnnotations() : new AnnotationObj[0];
         return new InterfaceHolder(target, modifiers,
