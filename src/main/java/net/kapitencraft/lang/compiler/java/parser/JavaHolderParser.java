@@ -161,7 +161,6 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
     }
 
     private static ClassReference getOrCreate(String name, String pck) {
-        System.out.printf("found class '%s' in %s\n", name, pck);
         return VarTypeManager.getOrCreateClass(name, pck);
     }
 

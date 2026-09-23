@@ -33,6 +33,7 @@ public class JavaExprParser extends AbstractJavaParser {
     private final List<ClassReference> fallback;
     protected GenericStack generics = new GenericStack();
     private int anonymousCounter = 0; //counts how many anonymous classes have been created inside the class, to give each a unique name
+    private final String pck;
 
     public JavaExprParser(ErrorStorage errorStorage, SourceTree sourceSink, CompileSource source) {
         super(errorStorage, sourceSink, source);
