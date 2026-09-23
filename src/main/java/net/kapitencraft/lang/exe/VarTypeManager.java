@@ -194,7 +194,7 @@ public class VarTypeManager {
     }
 
     public static ClassReference getOrCreateClass(String name, String pck) {
-        String[] packages = pck.split("[.]");
+        String[] packages = pck.split("\\.");
         Package pg = rootPackage();
         for (String aPackage : packages) {
             pg = pg.getOrCreatePackage(aPackage);

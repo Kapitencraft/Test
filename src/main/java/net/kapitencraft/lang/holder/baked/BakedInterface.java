@@ -59,7 +59,7 @@ public record BakedInterface(ErrorStorage logger, Generics generics, ClassRefere
         SemanticAnalyser analyser = new SemanticAnalyser(logger, this.methods::add);
 
         for (Pair<Token, CompileCallable> method : this.methods) {
-            method.second().analyseSemantics(analyser, this.target);
+            method.second().analyseSemantics(analyser, this.target, method.first());
         }
         for (CompileField value : staticFields.values()) {
             value.analyseSemantics(analyser);
