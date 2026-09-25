@@ -31,6 +31,7 @@ public class PythonExprParser extends AbstractPythonParser {
     private final List<ClassReference> fallback = new ArrayList<>();
     protected GenericStack generics = new GenericStack();
     private int anonymousCounter = 0; //counts how many anonymous classes have been created inside the class, to give each a unique name
+    protected int indents = 0;
 
     public PythonExprParser(ErrorStorage errorStorage, SourceTree sourceSink, CompileSource source) {
         super(errorStorage, sourceSink, source);
@@ -574,12 +575,13 @@ public class PythonExprParser extends AbstractPythonParser {
             Expr[] args = args();
             consumeBracketClose("constructors");
 
-            if (match(C_BRACKET_O)) {
+            if (match(COLON) && match(LINE_FEED)) {
+                indents++;
                 JavaHolderParser hParser = new JavaHolderParser(this.errorStorage, this.sourceSink, this.source);
                 if (type.get().isFinal()) {
                     error(previous(), "can not extend final class");
                 }
-                hParser.apply(getCurlyEnclosedCode(), this.parser);
+                hParser.apply(getIndentedCode(this.indents), this.parser);
                 String nameLiteral = String.valueOf(this.anonymousCounter++);
                 String pck = this.currentFallback().pck();
                 String outName = this.currentFallback().name() + "$" + nameLiteral;
@@ -600,8 +602,7 @@ public class PythonExprParser extends AbstractPythonParser {
                             this.parser
                     );
                 }
-
-                consumeCurlyClose("anonymous class");
+                indents--;
             } else if (type.get().isAbstract()) {
                 error(type.getToken(), "can not instantiate abstract class " + type.absoluteName());
             }

@@ -27,7 +27,6 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
     private ClassReference funcRetType = VarTypeManager.VOID.reference();
     private final List<Boolean> seenReturn = new ArrayList<>();
     private int loopIndex = 0;
-    private ArrayDeque<Integer> indents = new ArrayDeque<>();
 
     public PythonStmtParser(ErrorStorage errorStorage, SourceTree sourceSink, CompileSource source) {
         super(errorStorage, sourceSink, source);
@@ -255,15 +254,13 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
                 pushScope();
                 loopIndex++;
 
-                consumeColon("for");
-                consumeLineFeed("for");
+                consumeScopeOpen("for");
 
-                int nextIndent = this.indents.peek() + 1;
-                this.indents.push(nextIndent);
+                int nextIndent = this.indents++;
 
                 Stmt stmt = parseIndentedStatement(nextIndent);
 
-                this.indents.pop();
+                this.indents--;
 
                 stmt = mergeBody(stmt, popScopeStmt());
                 Stmt.ForEach forEach = new Stmt.ForEach();
@@ -335,11 +332,9 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
         boolean branchSeenReturn;
 
         pushScope();
-        consumeColon("if");
-        consumeLineFeed("if");
+        consumeScopeOpen("if");
 
-        int nextIndent = this.indents.peek() + 1;
-        this.indents.push(nextIndent);
+        int nextIndent = this.indents++;
 
         Stmt thenBranch = parseIndentedStatement(nextIndent);
 
@@ -353,8 +348,7 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
             Expr elifCondition = expression();
             consumeBracketClose("elif condition");
             pushScope();
-            consumeColon("if");
-            consumeLineFeed("if");
+            consumeScopeOpen("elif");
 
             Stmt elifStmt = parseIndentedStatement(nextIndent);
             elifStmt = mergeBody(elifStmt, popScopeStmt());
@@ -367,8 +361,7 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
         boolean elseBranchSeenReturn = false;
         if (match(ELSE)) {
             pushScope();
-            consumeColon("if");
-            consumeLineFeed("if");
+            consumeScopeOpen("else");
 
             elseBranch = parseIndentedStatement(nextIndent);
             if (!this.seenReturn.getLast() && allSeenReturn)
@@ -380,7 +373,7 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
         if (allSeenReturn)
             seenReturn();
 
-        indents.pop();
+        indents--;
 
         Stmt.If anIf = new Stmt.If();
         anIf.condition = condition;
@@ -415,16 +408,14 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
         consumeBracketClose("while condition");
         this.loopIndex++;
         this.pushScope();
-        consumeColon("if");
-        consumeLineFeed("if");
+        consumeScopeOpen("while");
 
-        int nextIndent = this.indents.peek() + 1;
-        this.indents.push(nextIndent);
+        int nextIndent = this.indents++;
 
         Stmt body = parseIndentedStatement(nextIndent);
         body = mergeBody(body, popScopeStmt());
 
-        this.indents.pop();
+        this.indents--;
         this.loopIndex--;
 
         Stmt.While aWhile = new Stmt.While();

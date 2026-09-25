@@ -203,8 +203,15 @@ public class PythonLexer implements Lexer {
             case '\t':
                 addToken(TAB);
             case ' ':
+                int spaceCount = 1;
+                while (!isAtEnd() && match(' ')) {
+                    spaceCount++;
+                }
+                while (spaceCount >= 4) {
+                    addToken(TAB);
+                    spaceCount -= 4;
+                }
             case '\r':
-                // Ignore whitespace.
                 break;
             case '\n':
                 addToken(LINE_FEED);

@@ -184,16 +184,17 @@ public class AbstractPythonParser {
         return getScopedCode(C_BRACKET_O, C_BRACKET_C);
     }
 
-    protected Token[] getIndentedCode() {
+    @SuppressWarnings("StatementWithEmptyBody")
+    protected Token[] getIndentedCode(int indents) {
         List<Token> tokens = new ArrayList<>();
         int cIndex = current;
         while (!isAtEnd()) {
             int iCount = 0;
+            while (match(LINE_FEED)); //ignore empty lines
             while (match(TAB)) {
                 iCount++;
             }
-            if (iCount >= 1) {
-                current -= (iCount - 1); //jump back to ensure relative indents are kept.
+            if (iCount >= indents) {
                 do {
                     advance();
                     tokens.add(peek());
@@ -319,6 +320,11 @@ public class AbstractPythonParser {
 
     protected Token consumeBracketOpen(String method) {
         return this.consume(BRACKET_O, "Expected '(' after " + method + ".");
+    }
+
+    protected void consumeScopeOpen(String name) {
+        consumeColon(name);
+        consumeLineFeed(name);
     }
 
     protected Token consumeColon(String obj) {

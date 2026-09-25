@@ -37,6 +37,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
     private GenericStack activeGenerics = new GenericStack();
     private final String pck;
     private final ArrayDeque<String> anonymousNames = new ArrayDeque<>();
+    private int indents = 0;
 
     public PythonHolderParser(ErrorStorage errorStorage, SourceTree sourceSink, CompileSource source) {
         super(errorStorage, sourceSink, source);
@@ -129,6 +130,8 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         List<Token> mainMethodCode = new ArrayList<>();
         List<MethodHolder> methods = new ArrayList<>();
         List<FieldHolder> fields = new ArrayList<>();
+
+        this.anonymousNames.push(fileName);
         while (!isAtEnd()) {
             //noinspection StatementWithEmptyBody
             while (!isAtEnd() && match(TAB, LINE_FEED));
@@ -148,8 +151,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
 
                     fields.addAll(fieldDecl(type, parser.annotations, name, parser.packModifiers()));
                 } else {
-                    Token name = consumeIdentifier();
-                    readClass(declaredPck, name.lexeme(), parser);
+                    readClass(declaredPck, null, parser);
                 }
                 continue;
             } else {
@@ -171,6 +173,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
                     mainMethodCode.toArray(new Token[0])
             ));
         }
+        this.anonymousNames.pop();
         return new ClassHolder(
                 target,
                 (short) 0,
@@ -198,27 +201,33 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
             AnnotationObj[] annotations = modifiers.getAnnotations();
             if (readClass(pckId, name.lexeme(), modifiers)) {
                 modifiers.generics.pushToStack(activeGenerics);
-                if (Objects.equals(advance().lexeme(), constructorName) && !check(IDENTIFIER)) {
-                    Token constName = previous();
-                    consumeBracketOpen("constructors");
-                    ConstructorHolder decl = constructorDecl(annotations, modifiers.getGenerics(), constName, asEnum);
-                    constructorHolders.add(decl);
-                } else {
-                    current--; //reset after advancing in line 199
+
+                if (match(FUNC)) {
+                    if (Objects.equals(advance().lexeme(), constructorName) && !check(IDENTIFIER)) {
+                        Token constName = previous();
+                        consumeBracketOpen("constructors");
+                        indents++;
+                        ConstructorHolder decl = constructorDecl(annotations, modifiers.getGenerics(), constName, asEnum);
+                        indents--;
+                        constructorHolders.add(decl);
+                        continue;
+                    }
+                    current--; //reset after advancing in line 205
                     SourceReference type = consumeVarType(activeGenerics);
                     Token elementName = consumeIdentifier();
-                    if (match(BRACKET_O)) {
-                        scope.method.check(this, modifiers);
-                        MethodHolder decl = funcDecl(type, modifiers, elementName);
-                        methodHolders.add(decl);
-                    } else {
-                        if (modifiers.generics.variables().length > 0) {
-                            error(modifiers.generics.variables()[0].name(), "generics not allowed here");
-                        }
-                        scope.field.check(this, modifiers);
-                        if (modifiers.isAbstract()) error(elementName, "fields may not be abstract");
-                        fieldHolders.addAll(fieldDecl(type, annotations, elementName, modifiers.packModifiers()));
+                    scope.method.check(this, modifiers);
+                    MethodHolder decl = funcDecl(type, modifiers, elementName);
+                    methodHolders.add(decl);
+                } else {
+                    consume(GLOBAL, "'global' expected");
+                    SourceReference type = consumeVarType(activeGenerics);
+                    Token elementName = consumeIdentifier();
+                    if (modifiers.generics.variables().length > 0) {
+                        error(modifiers.generics.variables()[0].name(), "generics not allowed here");
                     }
+                    scope.field.check(this, modifiers);
+                    if (modifiers.isAbstract()) error(elementName, "fields may not be abstract");
+                    fieldHolders.addAll(fieldDecl(type, annotations, elementName, modifiers.packModifiers()));
                 }
                 activeGenerics.pop();
             }
@@ -258,11 +267,11 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
             } while (match(COMMA));
         }
 
-        consumeCurlyOpen("method body");
+        consumeScopeOpen("method body");
 
-        Token[] code = getCurlyEnclosedCode();
+        Token[] code = getIndentedCode(indents);
 
-        Token endToken = consumeCurlyClose("method body");
+        Token endToken = peek();
 
         return new ConstructorHolder(annotation, generics, origin, endToken, parameters, thrown, code);
     }
@@ -293,7 +302,8 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
                 activeGenerics = new GenericStack();
             }
 
-            code = getIndentedCode();
+            code = getIndentedCode(indents++);
+            indents--;
 
             if (shadowed != null) activeGenerics = shadowed;
 
@@ -376,10 +386,13 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         }
 
         consumeColon("classBody");
+        consumeLineFeed("classBody");
+        indents++;
 
         anonymousNames.push(name.lexeme());
 
         ClassHolder h = parseClass(target, mods, stack, classGenerics, pckID, name, superClass, implemented);
+        indents--;
         anonymousNames.pop();
         return h;
     }
@@ -467,7 +480,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
             } while (match(COMMA));
         }
 
-        consumeCurlyOpen("enum");
+        consumeScopeOpen("enum");
         anonymousNames.push(name.lexeme());
 
         List<EnumConstantHolder> enumConstantHolders = new ArrayList<>();
@@ -590,7 +603,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
 
         anonymousNames.push(name.lexeme());
 
-        consumeCurlyOpen("interface");
+        consumeScopeOpen("interface");
 
         return parseInterface(target, pckID, name, stack, classGenerics, mods, parentInterfaces);
     }
@@ -638,7 +651,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         private Generics generics;
         private AnnotationObj[] annotations;
         private final Map<TokenType, List<TokenType>> illegalCombinations = new HashMap<>();
-        private final TokenType[] interrupt = {IDENTIFIER, CLASS, INTERFACE, ANNOTATION, ENUM, EOF};
+        private final TokenType[] interrupt = {IDENTIFIER, CLASS, INTERFACE, ANNOTATION, ENUM, EOF, FUNC, GLOBAL};
         private boolean defaultAbstract = false;
         private final boolean allowGenerics;
 
