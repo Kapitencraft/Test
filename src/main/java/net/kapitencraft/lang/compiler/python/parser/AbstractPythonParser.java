@@ -30,6 +30,7 @@ import static net.kapitencraft.lang.holder.token.TokenType.*;
 
 @SuppressWarnings({"UnusedReturnValue"})
 public class AbstractPythonParser {
+    protected int indents = 0;
 
     private static final Map<TokenTypeCategory, TokenType[]> categoryLookup = createCategoryLookup();
 
@@ -118,6 +119,12 @@ public class AbstractPythonParser {
         return Arrays.stream(types).anyMatch(this::check);
     }
 
+    protected boolean checkAtIndent(TokenType... types) {
+        if (isAtEnd()) return false;
+        skipIndent();
+        return check(types);
+    }
+
     protected boolean check(TokenTypeCategory category) {
         return check(categoryLookup.get(category));
     }
@@ -138,6 +145,12 @@ public class AbstractPythonParser {
         }
 
         return false;
+    }
+
+    protected boolean matchAtIndent(TokenType... types) {
+        if (isAtEnd()) return false;
+        skipIndent();
+        return match(types);
     }
 
     protected boolean isAtEnd() {
@@ -196,8 +209,7 @@ public class AbstractPythonParser {
             }
             if (iCount >= indents) {
                 do {
-                    advance();
-                    tokens.add(peek());
+                    tokens.add(advance());
                 } while (!isAtEnd() && !check(LINE_FEED));
                 cIndex = current;
             } else {
@@ -332,7 +344,7 @@ public class AbstractPythonParser {
     }
 
     protected Token consumeLineFeed(String obj) {
-        return this.consume(LINE_FEED, "Expected '\n' after " + obj + ".");
+        return this.consume(LINE_FEED, "Expected '\\n' after " + obj + ".");
     }
 
     protected Token consumeCurlyOpen(String obj) {
@@ -383,5 +395,17 @@ public class AbstractPythonParser {
 
             advance();
         }
+    }
+
+    protected boolean skipIndent() {
+        while (match(LINE_FEED)); //skip empty lines
+        int tabCount = 0;
+        while (match(TAB))
+            tabCount++;
+        if (tabCount > indents) {
+            errorF(peek(), "wrong indentation (expected: %s but got: %s", indents, tabCount);
+            return false;
+        }
+        return tabCount == indents;
     }
 }

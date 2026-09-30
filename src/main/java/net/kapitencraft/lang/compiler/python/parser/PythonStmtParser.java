@@ -53,8 +53,9 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
         if (seenReturn.getLast()) {
             error(peek(), "unreachable statement");
         }
-        if (match(FINAL)) return varDeclaration(true, consumeVarType(generics).getReference());
+        if (matchAtIndent(FINAL)) return varDeclaration(true, consumeVarType(generics).getReference());
 
+        skipIndent();
         Optional<SourceReference> type = tryConsumeVarType(generics);
         Stmt stmt = type.map(sourceClassReference -> {
             if (match(DOT)) {
@@ -438,7 +439,6 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
 
     private Stmt expressionStatement() {
         Expr expr = expression();
-        consumeLineFeed("expression");
         Stmt.Expression stmt = new Stmt.Expression();
         stmt.expression = expr;
         return stmt;

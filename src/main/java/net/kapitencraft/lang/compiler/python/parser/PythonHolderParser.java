@@ -37,7 +37,6 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
     private GenericStack activeGenerics = new GenericStack();
     private final String pck;
     private final ArrayDeque<String> anonymousNames = new ArrayDeque<>();
-    private int indents = 0;
 
     public PythonHolderParser(ErrorStorage errorStorage, SourceTree sourceSink, CompileSource source) {
         super(errorStorage, sourceSink, source);
@@ -133,9 +132,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
 
         this.anonymousNames.push(fileName);
         while (!isAtEnd()) {
-            //noinspection StatementWithEmptyBody
-            while (!isAtEnd() && match(TAB, LINE_FEED));
-            //skip any leading whitespace
+            skipIndent();
 
             if (check(TokenTypeCategory.ATT_MODIFIER) || check(TokenTypeCategory.ATT_KEYWORD)) {
                 ModifiersParser parser = MODS_NO_GENERICS;
@@ -151,7 +148,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
 
                     fields.addAll(fieldDecl(type, parser.annotations, name, parser.packModifiers()));
                 } else {
-                    readClass(declaredPck, null, parser);
+                    readClass(declaredPck, fileName, parser);
                 }
                 continue;
             } else {
@@ -197,40 +194,43 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         String constructorName = constructorHolders != null ? name.lexeme().contains("$") ? name.lexeme().substring(name.lexeme().lastIndexOf('$') + 1) : name.lexeme() : null;
         while (!isAtEnd()) {
             ModifiersParser modifiers = MODIFIERS;
-            modifiers.parse();
-            AnnotationObj[] annotations = modifiers.getAnnotations();
-            if (readClass(pckId, name.lexeme(), modifiers)) {
-                modifiers.generics.pushToStack(activeGenerics);
+            if (skipIndent()) {
+                modifiers.parse();
+                AnnotationObj[] annotations = modifiers.getAnnotations();
+                if (readClass(pckId, name.lexeme(), modifiers)) {
+                    modifiers.generics.pushToStack(activeGenerics);
 
-                if (match(FUNC)) {
-                    if (Objects.equals(advance().lexeme(), constructorName) && !check(IDENTIFIER)) {
-                        Token constName = previous();
-                        consumeBracketOpen("constructors");
-                        indents++;
-                        ConstructorHolder decl = constructorDecl(annotations, modifiers.getGenerics(), constName, asEnum);
-                        indents--;
-                        constructorHolders.add(decl);
-                        continue;
+                    if (match(FUNC)) {
+                        if (Objects.equals(advance().lexeme(), constructorName) && !check(IDENTIFIER)) {
+                            Token constName = previous();
+                            consumeBracketOpen("constructors");
+                            indents++;
+                            ConstructorHolder decl = constructorDecl(annotations, modifiers.getGenerics(), constName, asEnum);
+                            indents--;
+                            constructorHolders.add(decl);
+                            continue;
+                        }
+                        current--; //reset after advancing in line 205
+                        SourceReference type = consumeVarType(activeGenerics);
+                        Token elementName = consumeIdentifier();
+                        scope.method.check(this, modifiers);
+                        MethodHolder decl = funcDecl(type, modifiers, elementName);
+                        methodHolders.add(decl);
+                    } else {
+                        consume(GLOBAL, "'global' expected");
+                        SourceReference type = consumeVarType(activeGenerics);
+                        Token elementName = consumeIdentifier();
+                        if (modifiers.generics.variables().length > 0) {
+                            error(modifiers.generics.variables()[0].name(), "generics not allowed here");
+                        }
+                        scope.field.check(this, modifiers);
+                        if (modifiers.isAbstract()) error(elementName, "fields may not be abstract");
+                        fieldHolders.addAll(fieldDecl(type, annotations, elementName, modifiers.packModifiers()));
                     }
-                    current--; //reset after advancing in line 205
-                    SourceReference type = consumeVarType(activeGenerics);
-                    Token elementName = consumeIdentifier();
-                    scope.method.check(this, modifiers);
-                    MethodHolder decl = funcDecl(type, modifiers, elementName);
-                    methodHolders.add(decl);
-                } else {
-                    consume(GLOBAL, "'global' expected");
-                    SourceReference type = consumeVarType(activeGenerics);
-                    Token elementName = consumeIdentifier();
-                    if (modifiers.generics.variables().length > 0) {
-                        error(modifiers.generics.variables()[0].name(), "generics not allowed here");
-                    }
-                    scope.field.check(this, modifiers);
-                    if (modifiers.isAbstract()) error(elementName, "fields may not be abstract");
-                    fieldHolders.addAll(fieldDecl(type, annotations, elementName, modifiers.packModifiers()));
+                    activeGenerics.pop();
                 }
-                activeGenerics.pop();
-            }
+            } else
+                break;
         }
     }
 
@@ -385,8 +385,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
             } while (match(COMMA));
         }
 
-        consumeColon("classBody");
-        consumeLineFeed("classBody");
+        consumeScopeOpen("classBody");
         indents++;
 
         anonymousNames.push(name.lexeme());

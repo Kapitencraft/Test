@@ -31,7 +31,6 @@ public class PythonExprParser extends AbstractPythonParser {
     private final List<ClassReference> fallback = new ArrayList<>();
     protected GenericStack generics = new GenericStack();
     private int anonymousCounter = 0; //counts how many anonymous classes have been created inside the class, to give each a unique name
-    protected int indents = 0;
 
     public PythonExprParser(ErrorStorage errorStorage, SourceTree sourceSink, CompileSource source) {
         super(errorStorage, sourceSink, source);
