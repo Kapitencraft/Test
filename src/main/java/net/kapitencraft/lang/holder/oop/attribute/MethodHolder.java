@@ -1,5 +1,6 @@
 package net.kapitencraft.lang.holder.oop.attribute;
 
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
@@ -12,22 +13,24 @@ import net.kapitencraft.tool.Pair;
 import java.util.List;
 
 public record MethodHolder(short modifiers,
-                           AnnotationObj[] annotations, Generics generics, SourceReference type,
+                           AnnotationObj[] annotations, Generics generics, SourceReference returnType,
                            Token name, Token closeBracket, List<Pair<SourceReference, String>> params,
                            List<SourceReference> thrown,
-                           Token[] body) implements Validatable {
+                           Token[] body) implements Validatable, OperationHolder {
     public void validate(ErrorStorage logger) {
         Validatable.validateNullable(annotations, logger);
-        type.validate(logger);
+        returnType.validate(logger);
         params.forEach(p -> p.getFirst().validate(logger));
         thrown.forEach(s -> s.validate(logger));
     }
 
-    public List<Pair<ClassReference, String>> extractParams() {
-        return params.stream().map(p -> p.mapFirst(SourceReference::getReference)).toList();
+    @Override
+    public boolean isStatic() {
+        return Modifiers.isStatic(modifiers);
     }
 
-    public ClassReference[] extractThrown() {
-        return thrown.stream().map(SourceReference::getReference).toArray(ClassReference[]::new);
+    @Override
+    public ClassReference retType() {
+        return returnType.getReference();
     }
 }

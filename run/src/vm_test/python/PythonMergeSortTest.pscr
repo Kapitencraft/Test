@@ -1,0 +1,23 @@
+static func void moveElements(int[] array, int start, int end):
+    for int i in System.range(end-1, start-1, -1):
+        array[i+1] = array[i]
+
+static func void mergeSort(int[] array, int start, int end):
+    if end - start <= 1:
+        return
+    int middle = start + (end - start) / 2
+    //print(f"merge:start={start},end={end},middle={middle}")
+    mergeSort(array, start, middle)
+    mergeSort(array, middle, end)
+    int j = middle
+    for int i in System.range(start, j):
+        if array[i] > array[j]:
+            int c = array[j]
+            moveElements(array, i, j)
+            array[i] = c
+            j+=1
+    System.print(array)
+
+int[] s = new int[] {2, 7, 6, 1, 5, 4, 5, 6, 7, 1, 4, 6, 8, 0, 1, 4, 10, 12, 5, 6, 7, 9, 13, 16, 14, 15, 19, 21, 3, 4, 9, 8, 4}
+mergeSort(s, 0, s.length)
+System.print(s)

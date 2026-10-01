@@ -208,6 +208,10 @@ public class AbstractPythonParser {
                 iCount++;
             }
             if (iCount >= indents) {
+                //add line feed and indents
+                for (int i = cIndex; i < current; i++) {
+                    tokens.add(this.tokens[i]);
+                }
                 do {
                     tokens.add(advance());
                 } while (!isAtEnd() && !check(LINE_FEED));
@@ -254,12 +258,17 @@ public class AbstractPythonParser {
         }
         Token t = advance();
         ClassReference reference = parser.getClass(t.lexeme());
-        if (reference != null && !check(DOT)) {
-            AppliedGenerics declared = appliedGenerics(generics);
-            if (declared != null) reference = new AppliedGenericsReference(reference, declared);
+        if (reference != null) {
+            while (match(S_BRACKET_O)) {
+                consume(S_BRACKET_C, "']' expected");
+                reference = reference.array();
+            }
+            if (!check(DOT)) {
+                AppliedGenerics declared = appliedGenerics(generics);
+                if (declared != null) reference = new AppliedGenericsReference(reference, declared);
+            }
             return Optional.of(SourceReference.from(t, reference));
-        } else if (reference != null)
-            return Optional.of(SourceReference.from(t, reference));
+        }
         current--;
         return Optional.empty();
     }
@@ -359,8 +368,9 @@ public class AbstractPythonParser {
         return this.consume(BRACKET_C, "Expected ')' after " + method + ".");
     }
 
-    protected Token consumeEndOfArg() {
-        return this.consumeNoThrow(EOA, "';' expected");
+    protected void consumeEndOfArg() {
+        if (!isAtEnd())
+            this.consume(LINE_FEED, "';' expected");
     }
 
     protected void error(Token token, String message) {
@@ -403,7 +413,7 @@ public class AbstractPythonParser {
         while (match(TAB))
             tabCount++;
         if (tabCount > indents) {
-            errorF(peek(), "wrong indentation (expected: %s but got: %s", indents, tabCount);
+            errorF(peek(), "wrong indentation (expected: %s but got: %s)", indents, tabCount);
             return false;
         }
         return tabCount == indents;

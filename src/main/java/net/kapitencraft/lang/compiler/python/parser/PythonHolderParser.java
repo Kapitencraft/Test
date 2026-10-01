@@ -5,6 +5,8 @@ import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.exe.source.CompileSource;
 import net.kapitencraft.lang.compiler.exe.source.SourceTree;
 import net.kapitencraft.lang.compiler.exe.text.HolderParser;
+import net.kapitencraft.lang.compiler.python.PythonConstructorHolder;
+import net.kapitencraft.lang.compiler.python.PythonMethodHolder;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
@@ -12,10 +14,7 @@ import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsSourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.oop.AnnotationObj;
-import net.kapitencraft.lang.holder.oop.attribute.ConstructorHolder;
-import net.kapitencraft.lang.holder.oop.attribute.EnumConstantHolder;
-import net.kapitencraft.lang.holder.oop.attribute.FieldHolder;
-import net.kapitencraft.lang.holder.oop.attribute.MethodHolder;
+import net.kapitencraft.lang.holder.oop.attribute.*;
 import net.kapitencraft.lang.holder.oop.clazz.*;
 import net.kapitencraft.lang.holder.oop.generic.AppliedGenerics;
 import net.kapitencraft.lang.holder.oop.generic.Generic;
@@ -127,7 +126,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         ClassReference target = getOrCreate(fileName, declaredPck);
 
         List<Token> mainMethodCode = new ArrayList<>();
-        List<MethodHolder> methods = new ArrayList<>();
+        List<PythonMethodHolder> methods = new ArrayList<>();
         List<FieldHolder> fields = new ArrayList<>();
 
         this.anonymousNames.push(fileName);
@@ -154,11 +153,14 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
             } else {
                 while (!isAtEnd() && !check(LINE_FEED))
                     mainMethodCode.add(advance());
+                if (!isAtEnd()) {
+                    mainMethodCode.add(advance()); //add line feed
+                }
             }
         }
         if (!mainMethodCode.isEmpty()) {
             mainMethodCode.removeLast();
-            methods.add(new MethodHolder(
+            methods.add(new PythonMethodHolder(
                     Modifiers.pack(false, true, false),
                     new AnnotationObj[0],
                     new Generics(new Generic[0]),
@@ -167,7 +169,8 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
                     tokens[tokens.length - 1].after(),
                     List.of(Pair.of(SourceReference.from(null, VarTypeManager.STRING.array()), "args")),
                     List.of(),
-                    mainMethodCode.toArray(new Token[0])
+                    mainMethodCode.toArray(new Token[0]),
+                    0
             ));
         }
         this.anonymousNames.pop();
@@ -181,7 +184,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
                 SourceReference.from(null, VarTypeManager.OBJECT),
                 new SourceReference[0],
                 new ConstructorHolder[0],
-                methods.toArray(new MethodHolder[0]),
+                methods.toArray(new PythonMethodHolder[0]),
                 fields.toArray(new FieldHolder[0])
         );
     }
@@ -190,7 +193,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         return VarTypeManager.getOrCreateClass(name, pck);
     }
 
-    public void parseClassProperties(ModifierScope.Group scope, List<MethodHolder> methodHolders, @Nullable List<ConstructorHolder> constructorHolders, List<FieldHolder> fieldHolders, ClassReference target, String pckId, Token name, boolean asEnum) {
+    public void parseClassProperties(ModifierScope.Group scope, List<PythonMethodHolder> methodHolders, @Nullable List<PythonConstructorHolder> constructorHolders, List<FieldHolder> fieldHolders, ClassReference target, String pckId, Token name, boolean asEnum) {
         String constructorName = constructorHolders != null ? name.lexeme().contains("$") ? name.lexeme().substring(name.lexeme().lastIndexOf('$') + 1) : name.lexeme() : null;
         while (!isAtEnd()) {
             ModifiersParser modifiers = MODIFIERS;
@@ -205,7 +208,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
                             Token constName = previous();
                             consumeBracketOpen("constructors");
                             indents++;
-                            ConstructorHolder decl = constructorDecl(annotations, modifiers.getGenerics(), constName, asEnum);
+                            PythonConstructorHolder decl = constructorDecl(annotations, modifiers.getGenerics(), constName, asEnum);
                             indents--;
                             constructorHolders.add(decl);
                             continue;
@@ -214,7 +217,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
                         SourceReference type = consumeVarType(activeGenerics);
                         Token elementName = consumeIdentifier();
                         scope.method.check(this, modifiers);
-                        MethodHolder decl = funcDecl(type, modifiers, elementName);
+                        PythonMethodHolder decl = funcDecl(type, modifiers, elementName);
                         methodHolders.add(decl);
                     } else {
                         consume(GLOBAL, "'global' expected");
@@ -251,7 +254,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
     }
 
     //region attribute decl
-    private ConstructorHolder constructorDecl(AnnotationObj[] annotation, Generics generics, Token origin, boolean asEnum) {
+    private PythonConstructorHolder constructorDecl(AnnotationObj[] annotation, Generics generics, Token origin, boolean asEnum) {
         List<Pair<SourceReference, String>> parameters = parseParams();
         if (asEnum) { //add name and ordinal access
             parameters.add(0, Pair.of(SourceReference.from(origin, VarTypeManager.STRING), "$name"));
@@ -273,10 +276,11 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
 
         Token endToken = peek();
 
-        return new ConstructorHolder(annotation, generics, origin, endToken, parameters, thrown, code);
+        return new PythonConstructorHolder(annotation, generics, origin, endToken, parameters, thrown, code, indents);
     }
 
-    private MethodHolder funcDecl(SourceReference type, ModifiersParser modifiers, Token name) {
+    private PythonMethodHolder funcDecl(SourceReference type, ModifiersParser modifiers, Token name) {
+        consumeBracketOpen("params");
         List<Pair<SourceReference, String>> parameters = parseParams();
         consumeBracketClose("params");
 
@@ -302,13 +306,13 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
                 activeGenerics = new GenericStack();
             }
 
-            code = getIndentedCode(indents++);
+            code = getIndentedCode(++indents);
             indents--;
 
             if (shadowed != null) activeGenerics = shadowed;
 
         } else consumeEndOfArg();
-        return new MethodHolder(modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), type, name, endClose, parameters, thrown, code);
+        return new PythonMethodHolder(modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), type, name, endClose, parameters, thrown, code, indents + 1);
     }
 
     private List<FieldHolder> fieldDecl(SourceReference type, AnnotationObj[] annotations, Token name, short modifiers) {
@@ -397,8 +401,8 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
     }
 
     public ClassHolder parseClass(ClassReference target, @Nullable ModifiersParser mods, @Nullable GenericStack stack, @Nullable Generics classGenerics, String pckID, Token name, SourceReference superClass, List<SourceReference> implemented) {
-        List<MethodHolder> methodHolders = new ArrayList<>();
-        List<ConstructorHolder> constructorHolders = new ArrayList<>();
+        List<PythonMethodHolder> methodHolders = new ArrayList<>();
+        List<PythonConstructorHolder> constructorHolders = new ArrayList<>();
         List<FieldHolder> fieldHolders = new ArrayList<>();
 
         short modifiers = mods != null ? mods.packModifiers() : 0;
@@ -414,8 +418,8 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
                 pckID, name,
                 superClass,
                 implemented.toArray(new SourceReference[0]),
-                constructorHolders.toArray(new ConstructorHolder[0]),
-                methodHolders.toArray(new MethodHolder[0]),
+                constructorHolders.toArray(PythonConstructorHolder[]::new),
+                methodHolders.toArray(new PythonMethodHolder[0]),
                 fieldHolders.toArray(new FieldHolder[0])
         );
     }
@@ -499,8 +503,8 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
 
         if (!check(C_BRACKET_C)) consumeEndOfArg();
 
-        List<ConstructorHolder> constructorHolders = new ArrayList<>();
-        List<MethodHolder> methodHolders = new ArrayList<>();
+        List<PythonConstructorHolder> constructorHolders = new ArrayList<>();
+        List<PythonMethodHolder> methodHolders = new ArrayList<>();
         List<FieldHolder> fieldHolders = new ArrayList<>();
 
         parseClassProperties(ModifierScope.Group.ENUM, methodHolders, constructorHolders, fieldHolders, target, pckID, name, true);
@@ -511,8 +515,8 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         return new EnumHolder(
                 target, modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), pckID, name,
                 interfaces.toArray(new SourceReference[0]),
-                constructorHolders.toArray(new ConstructorHolder[0]),
-                methodHolders.toArray(new MethodHolder[0]),
+                constructorHolders.toArray(new PythonConstructorHolder[0]),
+                methodHolders.toArray(new PythonMethodHolder[0]),
                 fieldHolders.toArray(new FieldHolder[0]),
                 enumConstantHolders.toArray(new EnumConstantHolder[0])
         );
@@ -608,7 +612,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
     }
 
     public InterfaceHolder parseInterface(ClassReference target, String pckID, Token name, @Nullable GenericStack stack, @Nullable Generics classGenerics, @Nullable ModifiersParser mods, List<SourceReference> parentInterfaces) {
-        List<MethodHolder> methodHolders = new ArrayList<>();
+        List<PythonMethodHolder> methodHolders = new ArrayList<>();
         List<FieldHolder> fieldHolders = new ArrayList<>();
 
         parseClassProperties(ModifierScope.Group.INTERFACE, methodHolders, null, fieldHolders, target, pckID, name, false);
@@ -623,7 +627,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         return new InterfaceHolder(target, modifiers,
                 annotations, classGenerics, pckID, name,
                 parentInterfaces.toArray(new SourceReference[0]),
-                methodHolders.toArray(new MethodHolder[0]),
+                methodHolders.toArray(new PythonMethodHolder[0]),
                 fieldHolders.toArray(new FieldHolder[0])
         );
     }

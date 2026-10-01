@@ -222,7 +222,7 @@ public class GenerateAst {
             JsonObject object = jsonElement.getAsJsonObject();
             JsonArray paramStorage = object.getAsJsonArray("params");
             String[] params = paramStorage.asList().stream().map(JsonElement::getAsString).toArray(String[]::new);
-            String retType = GsonHelper.getAsString(object, "retType");
+            String retType = GsonHelper.getAsString(object, "returnType");
             String[] body = object.getAsJsonArray("body").asList().stream().map(JsonElement::getAsString).toArray(String[]::new);
             return new MethodDef(name, retType, params, body);
         }

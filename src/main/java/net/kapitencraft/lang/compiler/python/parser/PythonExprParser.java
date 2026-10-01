@@ -576,7 +576,7 @@ public class PythonExprParser extends AbstractPythonParser {
 
             if (match(COLON) && match(LINE_FEED)) {
                 indents++;
-                JavaHolderParser hParser = new JavaHolderParser(this.errorStorage, this.sourceSink, this.source);
+                PythonHolderParser hParser = new PythonHolderParser(this.errorStorage, this.sourceSink, this.source);
                 if (type.get().isFinal()) {
                     error(previous(), "can not extend final class");
                 }

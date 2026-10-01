@@ -186,7 +186,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         retainExprResult = true;
         TokenType type = expr.operator.type();
         //if (expr.left() instanceof Expr.Literal(Token leftLiteral) && expr.right() instanceof Expr.Literal(Token rightLiteral)) {
-        //    ClassReference reference = expr.retType();
+        //    ClassReference reference = expr.returnType();
         //    Object leftValue = leftLiteral.literal().value();
         //    Object rightValue = rightLiteral.literal().value();
         //    switch (type) {

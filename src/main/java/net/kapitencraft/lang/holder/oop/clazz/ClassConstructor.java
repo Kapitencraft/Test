@@ -37,9 +37,9 @@ public interface ClassConstructor extends Validatable {
 
     String pck();
 
-    default @NotNull Expr getFieldBody(StmtParser javaStmtParser, VarTypeContainer parser, FieldHolder fieldHolder, List<Stmt> statics) {
-        javaStmtParser.apply(fieldHolder.body(), parser);
-        Expr initializer = javaStmtParser.expression();
+    default @NotNull Expr getFieldBody(StmtParser stmtParser, VarTypeContainer parser, FieldHolder fieldHolder, List<Stmt> statics) {
+        stmtParser.apply(fieldHolder.body(), parser);
+        Expr initializer = stmtParser.expression();
         if (Modifiers.isStatic(fieldHolder.modifiers())) {
             Stmt.Expression stmt1 = new Stmt.Expression();
             {

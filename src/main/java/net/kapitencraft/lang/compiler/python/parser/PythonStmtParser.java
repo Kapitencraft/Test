@@ -5,6 +5,7 @@ import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.exe.source.CompileSource;
 import net.kapitencraft.lang.compiler.exe.source.SourceTree;
 import net.kapitencraft.lang.compiler.exe.text.StmtParser;
+import net.kapitencraft.lang.compiler.python.PythonOperationHolder;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -13,8 +14,10 @@ import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.oop.AnnotationObj;
+import net.kapitencraft.lang.holder.oop.attribute.OperationHolder;
 import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -186,7 +189,7 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
     private Stmt returnStatement() {
         Token keyword = previous();
         Expr value = null;
-        if (!check(EOA)) {
+        if (!check(LINE_FEED)) {
             value = expression();
         }
 
@@ -211,96 +214,29 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
     private Stmt forStatement() {
         Token keyword = previous();
 
-        consumeBracketOpen("for");
+        SourceReference varType = consumeVarType(generics);
 
-        Optional<SourceReference> type = tryConsumeVarType(generics);
+        Token name = consumeIdentifier();
 
-        Stmt initializer;
-        if (type.isPresent()) {
-            Token name = consumeIdentifier();
-            ClassReference reference = type.get().getReference();
-            if (match(COLON)) {
-                Expr init = expression();
-                consumeBracketClose("for");
-                pushScope();
-                loopIndex++;
+        consume(IN, "'in' expected");
 
-                Stmt stmt = statement();
-                stmt = mergeBody(stmt, popScopeStmt());
-                Stmt.ForEach forEach = new Stmt.ForEach();
-                forEach.type = reference;
-                forEach.name = name;
-                forEach.initializer = init;
-                forEach.body = stmt;
-                return forEach;
-            }
-            pushScope();
-            loopIndex++;
-            initializer = varDecl(false, reference, name);
-        } else if (match(EOA)) {
-            pushScope();
-            loopIndex++;
-            initializer = null;
-        } else if (parser.hasClass(peek().lexeme()) && match(IDENTIFIER)) {
-            pushScope();
-            loopIndex++;
-            initializer = varDeclaration(false, parser.getClass(previous().lexeme()));
-        } else {
-            if (match(IDENTIFIER) && check(COLON)) {
-                Token identifier = previous();
-                advance(); //consume colon
-                error(identifier, "Missing variable type");
-                Expr init = expression();
-                consumeBracketClose("for");
-                pushScope();
-                loopIndex++;
+        Expr expression = expression();
 
-                consumeScopeOpen("for");
-
-                int nextIndent = this.indents++;
-
-                Stmt stmt = parseIndentedStatement(nextIndent);
-
-                this.indents--;
-
-                stmt = mergeBody(stmt, popScopeStmt());
-                Stmt.ForEach forEach = new Stmt.ForEach();
-                forEach.type = VarTypeManager.VOID.reference();
-                forEach.name = identifier;
-                forEach.initializer = init;
-                forEach.body = stmt;
-                return forEach;
-            } else {
-                pushScope();
-                loopIndex++;
-                initializer = expressionStatement();
-            }
-        }
-
-        Expr condition = expression();
-        this.panicMode = false;
-        consumeEndOfArg();
-
-        Expr increment = null;
-        if (!check(BRACKET_C)) {
-            increment = expression();
-        }
-        consumeBracketClose("for clauses");
-
+        consumeScopeOpen("for");
         pushScope();
 
-        Stmt body = statement();
+        Stmt body = parseIndentedStatement(++indents);
+        indents--;
 
         loopIndex--;
         body = mergeBody(body, popScopeStmt());
 
-        Stmt.For aFor = new Stmt.For();
-        aFor.init = initializer;
-        aFor.condition = condition;
-        aFor.increment = increment;
-        aFor.body = body;
-        aFor.keyword = keyword;
-        return aFor;
+        Stmt.ForEach forEach = new Stmt.ForEach();
+        forEach.type = varType.getReference();
+        forEach.name = name;
+        forEach.body = body;
+        forEach.initializer = expression;
+        return forEach;
     }
 
     private Stmt parseIndentedStatement(int indent) {
@@ -310,7 +246,7 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
             int iCount = 0;
             while (match(TAB) && iCount++ < indent);
             if (iCount == indent) {
-                stmts.add(statement());
+                stmts.add(declaration());
             } else {
                 current = c;
                 break;
@@ -335,7 +271,7 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
         pushScope();
         consumeScopeOpen("if");
 
-        int nextIndent = this.indents++;
+        int nextIndent = ++this.indents;
 
         Stmt thenBranch = parseIndentedStatement(nextIndent);
 
@@ -411,7 +347,7 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
         this.pushScope();
         consumeScopeOpen("while");
 
-        int nextIndent = this.indents++;
+        int nextIndent = ++this.indents;
 
         Stmt body = parseIndentedStatement(nextIndent);
         body = mergeBody(body, popScopeStmt());
@@ -439,6 +375,8 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
 
     private Stmt expressionStatement() {
         Expr expr = expression();
+
+        consumeEndOfArg();
         Stmt.Expression stmt = new Stmt.Expression();
         stmt.expression = expr;
         return stmt;
@@ -458,9 +396,22 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
         return stmt;
     }
 
-    public void applyMethod(ClassReference funcRetType, @Nullable Generics generics) {
+    @Override
+    public void applyOperation(OperationHolder holder, VarTypeContainer parser) {
+        if (!(holder instanceof PythonOperationHolder pythonMethodHolder))
+            throw new IllegalArgumentException("holder must be a PythonMethodHolder");
+        this.indents = pythonMethodHolder.indent();
+        apply(holder.body(), parser);
+        if (holder.isStatic())
+            applyStaticMethod(holder.retType(), holder.generics());
+        else
+            applyMethod(holder.retType(), holder.generics());
+
+    }
+
+    public void applyMethod(ClassReference retType, @Nullable Generics generics) {
         this.pushScope();
-        this.funcRetType = funcRetType;
+        this.funcRetType = retType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
     }
@@ -473,9 +424,9 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
         funcRetType = VarTypeManager.VOID.reference();
     }
 
-    public void applyStaticMethod(ClassReference funcRetType, @Nullable Generics generics) {
+    public void applyStaticMethod(ClassReference retType, @Nullable Generics generics) {
         this.pushScope();
-        this.funcRetType = funcRetType;
+        this.funcRetType = retType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
 

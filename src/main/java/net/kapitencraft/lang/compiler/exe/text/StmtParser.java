@@ -6,6 +6,7 @@ import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.oop.AnnotationObj;
+import net.kapitencraft.lang.holder.oop.attribute.OperationHolder;
 import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
 
@@ -16,16 +17,17 @@ public interface StmtParser {
     void pushFallback(ClassReference classReference);
     void popFallback();
 
-
-    void apply(Token[] body, VarTypeContainer parser);
-
     Expr expression();
 
     Annotation[] parseAnnotations(AnnotationObj[] annotations, VarTypeContainer parser);
 
-    void applyStaticMethod(ClassReference reference, Generics generics);
+    void apply(Token[] body, VarTypeContainer parser);
 
-    void applyMethod(ClassReference reference, Generics generics);
+    void applyStaticMethod(ClassReference retType, Generics generics);
+
+    void applyMethod(ClassReference retType, Generics generics);
+
+    void applyOperation(OperationHolder holder, VarTypeContainer parser);
 
     List<Stmt> parse();
 

@@ -9,7 +9,7 @@ import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.oop.attribute.ConstructorHolder;
-import net.kapitencraft.lang.holder.oop.attribute.MethodHolder;
+import net.kapitencraft.lang.holder.oop.attribute.OperationHolder;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
@@ -30,8 +30,8 @@ public class SkeletonMethod implements ScriptedCallable {
         this.modifiers = modifiers;
     }
 
-    public static SkeletonMethod create(MethodHolder decl) {
-        return create(decl.params(), decl.thrown(), decl.type().getReference(), decl.modifiers());
+    public static SkeletonMethod create(OperationHolder decl) {
+        return create(decl.params(), decl.thrown(), decl.retType(), decl.modifiers());
     }
 
     private static SkeletonMethod create(List<? extends Pair<SourceReference, String>> params, List<SourceReference> thrown, ClassReference type, short modifiers) {
@@ -48,7 +48,7 @@ public class SkeletonMethod implements ScriptedCallable {
         );
     }
 
-    public static SkeletonMethod create(ConstructorHolder decl, ClassReference type) {
+    public static SkeletonMethod create(OperationHolder decl, ClassReference type) {
         return create(decl.params(), decl.thrown(), type, (short) 0);
     }
 
@@ -58,7 +58,7 @@ public class SkeletonMethod implements ScriptedCallable {
 
 
     public static SkeletonMethod fromJson(JsonObject object) {
-        ClassReference retType = VarTypeManager.parseType(new StringReader(GsonHelper.getAsString(object, "retType")));
+        ClassReference retType = VarTypeManager.parseType(new StringReader(GsonHelper.getAsString(object, "returnType")));
         ClassReference[] args = GsonHelper.getAsClassReferenceList(object, "params").toArray(ClassReference[]::new);
 
         ClassReference[] thrown = GsonHelper.getAsClassReferenceList(object, "thrown").toArray(ClassReference[]::new);

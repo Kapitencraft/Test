@@ -36,7 +36,7 @@ public class CompileCallable implements ScriptedCallable {
 
     public JsonObject save(CacheBuilder builder) {
         JsonObject object = new JsonObject();
-        object.addProperty("retType", VarTypeManager.getClassName(retType.get()));
+        object.addProperty("returnType", VarTypeManager.getClassName(retType.get()));
         {
             JsonArray array = new JsonArray();
             params.stream().map(Pair::getFirst).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);

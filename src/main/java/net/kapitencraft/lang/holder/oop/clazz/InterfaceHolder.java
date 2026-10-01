@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.exe.text.StmtParser;
-import net.kapitencraft.lang.compiler.java.parser.JavaStmtParser;
 import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -16,7 +15,7 @@ import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.oop.AnnotationObj;
 import net.kapitencraft.lang.holder.oop.Validatable;
 import net.kapitencraft.lang.holder.oop.attribute.FieldHolder;
-import net.kapitencraft.lang.holder.oop.attribute.MethodHolder;
+import net.kapitencraft.lang.holder.oop.attribute.OperationHolder;
 import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
@@ -33,7 +32,7 @@ import java.util.*;
 public record InterfaceHolder(ClassReference target, short modifiers,
                               AnnotationObj[] annotations, Generics generics, String pck, Token name,
                               SourceReference[] interfaces,
-                              MethodHolder[] methodHolders,
+                              OperationHolder[] methodHolders,
                               FieldHolder[] fieldHolders
 ) implements ClassConstructor {
 
@@ -54,20 +53,20 @@ public record InterfaceHolder(ClassReference target, short modifiers,
         }
 
         List<Pair<Token, CompileCallable>> methods = new ArrayList<>();
-        for (MethodHolder methodHolder : this.methodHolders()) {
+        for (OperationHolder methodHolder : this.methodHolders()) {
             List<Stmt> body = null;
             if (!Modifiers.isAbstract(methodHolder.modifiers())) {
                 javaStmtParser.apply(methodHolder.body(), parser);
                 if (Modifiers.isStatic(methodHolder.modifiers()))
-                    javaStmtParser.applyStaticMethod(methodHolder.type().getReference(), methodHolder.generics());
+                    javaStmtParser.applyStaticMethod(methodHolder.retType(), methodHolder.generics());
                 else
-                    javaStmtParser.applyMethod(methodHolder.type().getReference(), methodHolder.generics());
+                    javaStmtParser.applyMethod(methodHolder.retType(), methodHolder.generics());
                 body = javaStmtParser.parse();
                 javaStmtParser.popMethod(methodHolder.closeBracket());
             }
             Annotation[] annotations = javaStmtParser.parseAnnotations(methodHolder.annotations(), parser);
 
-            CompileCallable methodDecl = new CompileCallable(methodHolder.type().getReference(), methodHolder.extractParams(), methodHolder.extractThrown(), body, methodHolder.modifiers(), annotations);
+            CompileCallable methodDecl = new CompileCallable(methodHolder.retType(), methodHolder.extractParams(), methodHolder.extractThrown(), body, methodHolder.modifiers(), annotations);
             methods.add(Pair.of(methodHolder.name(), methodDecl));
         }
 
@@ -107,7 +106,7 @@ public record InterfaceHolder(ClassReference target, short modifiers,
         //methods
         Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
         Map<String, DataMethodContainer.Builder> staticMethods = new HashMap<>();
-        for (MethodHolder methodHolder : this.methodHolders()) {
+        for (OperationHolder methodHolder : this.methodHolders()) {
             if (Modifiers.isStatic(methodHolder.modifiers())) {
                 staticMethods.putIfAbsent(methodHolder.name().lexeme(), new DataMethodContainer.Builder(this.name()));
                 DataMethodContainer.Builder builder = staticMethods.get(methodHolder.name().lexeme());
@@ -136,7 +135,7 @@ public record InterfaceHolder(ClassReference target, short modifiers,
     public void validate(ErrorStorage logger) {
         Validatable.validateNullable(annotations, logger);
         Validatable.validateNullable(interfaces, logger);
-        for (MethodHolder methodHolder : methodHolders) methodHolder.validate(logger);
+        for (OperationHolder methodHolder : methodHolders) methodHolder.validate(logger);
         Validatable.validateNullable(fieldHolders, logger);
     }
 }

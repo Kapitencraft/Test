@@ -81,11 +81,16 @@ public abstract class TextBasedCompilePipeline implements CompilePipeline<TextBa
         }
 
         public void analyseSyntax(SourceTree sourceTree) {
-            StmtParser javaStmtParser = TextBasedCompilePipeline.this.createStmtParser(this.storage, sourceTree, this);
+            StmtParser stmtParser = TextBasedCompilePipeline.this.createStmtParser(this.storage, sourceTree, this);
 
-            javaStmtParser.pushFallback(this.holder.target());
-            builder = holder.construct(javaStmtParser, this.varTypeContainer, this.storage);
-            javaStmtParser.popFallback();
+            stmtParser.pushFallback(this.holder.target());
+            builder = holder.construct(stmtParser, this.varTypeContainer, this.storage);
+            stmtParser.popFallback();
+        }
+
+        @Override
+        public String toString() {
+            return "TextBasedCompilePipelineSource for " + TextBasedCompilePipeline.this.getFileExtension();
         }
     }
 }

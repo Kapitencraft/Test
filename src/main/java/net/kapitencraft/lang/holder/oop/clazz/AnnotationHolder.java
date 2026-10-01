@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.exe.text.StmtParser;
-import net.kapitencraft.lang.compiler.java.parser.JavaStmtParser;
 import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -36,7 +35,7 @@ public record AnnotationHolder(ClassReference target, short modifiers,
             }
             Annotation[] annotations = javaStmtParser.parseAnnotations(methodHolder.annotations(), parser);
 
-            methods.put(methodHolder.name().lexeme(), new MethodWrapper(val, methodHolder.type().getReference(), annotations, methodHolder.modifiers()));
+            methods.put(methodHolder.name().lexeme(), new MethodWrapper(val, methodHolder.returnType().getReference(), annotations, methodHolder.modifiers()));
         }
 
         return new BakedAnnotation(
@@ -53,7 +52,7 @@ public record AnnotationHolder(ClassReference target, short modifiers,
 
         ImmutableMap.Builder<String, AnnotationCallable> methods = new ImmutableMap.Builder<>();
         for (MethodHolder methodHolder : methodHolders()) {
-            methods.put(methodHolder.name().lexeme(), new SkeletonAnnotationMethod(methodHolder.type().getReference(), methodHolder.body().length > 0));
+            methods.put(methodHolder.name().lexeme(), new SkeletonAnnotationMethod(methodHolder.returnType().getReference(), methodHolder.body().length > 0));
         }
 
         return new SkeletonAnnotation(

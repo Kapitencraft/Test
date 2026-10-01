@@ -13,6 +13,7 @@ import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.oop.AnnotationObj;
+import net.kapitencraft.lang.holder.oop.attribute.OperationHolder;
 import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
@@ -37,6 +38,15 @@ public class JavaStmtParser extends JavaExprParser implements StmtParser {
         super.apply(toParse, targetAnalyser);
         seenReturn.clear(); //reset entire return stack
         seenReturn.add(false);
+    }
+
+    @Override
+    public void applyOperation(OperationHolder holder, VarTypeContainer  targetAnalyser) {
+        apply(holder.body(), targetAnalyser);
+        if (holder.isStatic())
+            applyStaticMethod(holder.retType(), holder.generics());
+        else
+            applyMethod(holder.retType(), holder.generics());
     }
 
     private void seenReturn() {
@@ -422,9 +432,9 @@ public class JavaStmtParser extends JavaExprParser implements StmtParser {
         return stmt;
     }
 
-    public void applyMethod(ClassReference funcRetType, @Nullable Generics generics) {
+    public void applyMethod(ClassReference retType, @Nullable Generics generics) {
         this.pushScope();
-        this.funcRetType = funcRetType;
+        this.funcRetType = retType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
     }
@@ -437,12 +447,11 @@ public class JavaStmtParser extends JavaExprParser implements StmtParser {
         funcRetType = VarTypeManager.VOID.reference();
     }
 
-    public void applyStaticMethod(ClassReference funcRetType, @Nullable Generics generics) {
+    public void applyStaticMethod(ClassReference retType, @Nullable Generics generics) {
         this.pushScope();
-        this.funcRetType = funcRetType;
+        this.funcRetType = retType;
         if (generics != null) generics.pushToStack(this.generics);
         else this.generics.push(Map.of());
-
     }
 
     public Annotation[] parseAnnotations(AnnotationObj[] annotations, VarTypeContainer container) {
