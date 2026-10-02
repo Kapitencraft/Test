@@ -9,6 +9,7 @@ import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
 import net.kapitencraft.lang.holder.ast.Expr;
+import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.ast.SwitchKey;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
@@ -18,6 +19,7 @@ import net.kapitencraft.lang.holder.oop.AnnotationObj;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
+import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -438,6 +440,7 @@ public class PythonExprParser extends AbstractPythonParser {
                 consumeEndOfArg();
             } else {
                 error(peek(), "unexpected token");
+                break;
             }
         }
 
@@ -692,11 +695,13 @@ public class PythonExprParser extends AbstractPythonParser {
             if (reference.isPresent()) {
                 ClassReference target = reference.get().getReference();
                 if (match(IDENTIFIER)) {
+                    if (match(LAMBDA)) {
+                        return makeLambda(List.of(Pair.of(reference.get(), previous)));
+                    }
                     error(previous, "Declaration not allowed here");
                     panicMode = true;
                     return varRef(previous, (byte) -1);
                 }
-                consumeDot();
                 return parseObjAttributes(target);
             }
             advance();
@@ -712,6 +717,23 @@ public class PythonExprParser extends AbstractPythonParser {
         );
 
         if (match(BRACKET_O)) {
+            int startIdx = current;
+            Optional<SourceReference> reference = tryConsumeVarType(generics);
+            if (reference.isPresent()) {
+                if (match(IDENTIFIER)) {
+                    if (check(COMMA) || check(LAMBDA)) {
+                        List<Pair<SourceReference, Token>> args = new ArrayList<>();
+                        args.add(Pair.of(reference.get(), previous()));
+
+                        while (match(COMMA)) {
+                            args.add(Pair.of(consumeVarType(generics), consumeIdentifier()));
+                        }
+                        consume(LAMBDA, "'lambda' or '->' expected");
+                        return makeLambda(args);
+                    }
+                }
+            }
+            current = startIdx;
             Expr expr = expression();
             consumeBracketClose("expression");
             return expr; //the grouping expression mustn't exist as a real AST entry
@@ -722,19 +744,58 @@ public class PythonExprParser extends AbstractPythonParser {
         return varRef(Token.createNative("<unidentified>"), (byte) -1);
     }
 
+    private Expr makeLambda(List<Pair<SourceReference, Token>> args) {
+        if (match(C_BRACKET_O)) {
+            if (this instanceof StmtParser stmtParser) {
+                List<Stmt> content = stmtParser.block("lambda");
+                Expr.BlockLambda lambda = new Expr.BlockLambda();
+                lambda.value = new Stmt.Block();
+                lambda.value.statements = content;
+                lambda.params = args.toArray(Pair[]::new);
+                return lambda;
+            }
+            //block lambda
+            throw new IllegalStateException("can not create block lambda from expr parser");
+        } else {
+            Expr expr = expression();
+            Expr.ExprLambda lambda = new Expr.ExprLambda();
+            lambda.params = args.toArray(Pair[]::new);
+            lambda.value = expr;
+            return lambda;
+        }
+    }
+
     private void consumeDot() {
         consume(DOT, "'.' expected");
     }
 
-    protected @NotNull Expr parseObjAttributes(ClassReference target) {
-        Token name = consumeIdentifier();
-        if (match(BRACKET_O)) return finishCall(name, target, null);
-        if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
-        if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
-        Expr.StaticGet get = new Expr.StaticGet();
-        get.target = target;
-        get.name = name;
-        return get;
+    protected @Nullable Expr parseObjAttributes(ClassReference target) {
+        if (match2(COLON, COLON)) return staticMethodRef(target);
+        if (match(DOT)) {
+            Token name = consumeIdentifier();
+            if (match(BRACKET_O)) return finishCall(name, target, null);
+            if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
+            if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
+            Expr.StaticGet get = new Expr.StaticGet();
+            get.target = target;
+            get.name = name;
+            return get;
+        }
+        return null;
+    }
+
+    private boolean match2(TokenType first, TokenType second) {
+        if (match(first) && match(second))
+            return true;
+        current--; //un-consume first token
+        return false;
+    }
+
+    private @NotNull Expr staticMethodRef(ClassReference target) {
+        Expr.StaticMethodRef methodRef = new Expr.StaticMethodRef();
+        methodRef.name = consumeIdentifier();
+        methodRef.obj = target;
+        return methodRef;
     }
 
     private Expr varRef(Token previous, byte ordinal) {

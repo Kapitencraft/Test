@@ -3,7 +3,6 @@ package net.kapitencraft.lang.holder.oop.clazz;
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
-import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.exe.text.StmtParser;
 import net.kapitencraft.lang.exe.VarTypeManager;

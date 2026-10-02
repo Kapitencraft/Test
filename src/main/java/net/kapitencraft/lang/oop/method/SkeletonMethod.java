@@ -32,7 +32,7 @@ public class SkeletonMethod implements ScriptedCallable {
     }
 
     public static SkeletonMethod create(OperationHolder decl, ClassReference declaring) {
-        return create(decl.params(), decl.thrown(), decl.retType(), declaring, decl.modifiers());
+        return create(decl.params(), decl.thrown(), decl.retType(), declaring, declaring, decl.modifiers());
     }
 
     private static SkeletonMethod create(List<? extends Pair<SourceReference, String>> params, List<SourceReference> thrown, ClassReference type, ClassReference declaring, int modifiers) {
@@ -51,7 +51,7 @@ public class SkeletonMethod implements ScriptedCallable {
     }
 
     public static SkeletonMethod create(OperationHolder decl, ClassReference type) {
-        return create(decl.params(), decl.thrown(), type, type, (short) 0);
+        return create(decl.params(), decl.thrown(), type, type, type, (short) 0);
     }
 
     public static SkeletonMethod createNative(ClassReference[] args, ClassReference[] thrown, ClassReference retType, int modifiers, ClassReference declaring) {
