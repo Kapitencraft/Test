@@ -4,6 +4,7 @@ import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.exe.source.CompileSource;
 import net.kapitencraft.lang.compiler.exe.source.SourceTree;
+import net.kapitencraft.lang.compiler.exe.text.StmtParser;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
@@ -17,6 +18,7 @@ import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.oop.AnnotationObj;
 import net.kapitencraft.lang.holder.oop.generic.Generics;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.tool.Pair;
@@ -33,7 +35,6 @@ public class JavaExprParser extends AbstractJavaParser {
     private final List<ClassReference> fallback;
     protected GenericStack generics = new GenericStack();
     private int anonymousCounter = 0; //counts how many anonymous classes have been created inside the class, to give each a unique name
-    private final String pck;
 
     public JavaExprParser(ErrorStorage errorStorage, SourceTree sourceSink, CompileSource source) {
         super(errorStorage, sourceSink, source);
@@ -405,7 +406,13 @@ public class JavaExprParser extends AbstractJavaParser {
             return unary;
         }
 
-        return call();
+        Expr call = call();
+
+        if (match2(COLON, COLON)) {
+            return instMethodRef(call);
+        }
+
+        return call;
     }
 
     private Expr switchExpr() {
@@ -672,6 +679,10 @@ public class JavaExprParser extends AbstractJavaParser {
         }
 
         if (match(IDENTIFIER)) {
+            if (match2(BRACKET_C, LAMBDA)) {
+                return makeLambda(List.of());
+            }
+
             Token previous = previous(); //the identifier just consumed
             if (currentFallback().exists()) { //check if the parser has a class fallback available
                 ClassReference fallbackReference = currentFallback();
@@ -723,6 +734,10 @@ public class JavaExprParser extends AbstractJavaParser {
         );
 
         if (match(BRACKET_O)) {
+            if (match2(BRACKET_C, LAMBDA)) {
+                return makeLambda(List.of());
+            }
+
             int startIdx = current;
             Optional<SourceReference> reference = tryConsumeVarType(generics);
             if (reference.isPresent()) {
@@ -752,7 +767,7 @@ public class JavaExprParser extends AbstractJavaParser {
 
     private Expr makeLambda(List<Pair<SourceReference, Token>> args) {
         if (match(C_BRACKET_O)) {
-            if (this instanceof StmtParser stmtParser) {
+            if (this instanceof JavaStmtParser stmtParser) {
                 List<Stmt> content = stmtParser.block("lambda");
                 Expr.BlockLambda lambda = new Expr.BlockLambda();
                 lambda.value = new Stmt.Block();
@@ -791,9 +806,11 @@ public class JavaExprParser extends AbstractJavaParser {
     }
 
     private boolean match2(TokenType first, TokenType second) {
-        if (match(first) && match(second))
-            return true;
-        current--; //un-consume first token
+        if (match(first)) {
+            if (match(second))
+                return true;
+            current--;
+        }
         return false;
     }
 
@@ -822,5 +839,12 @@ public class JavaExprParser extends AbstractJavaParser {
         call.declaring = objType;
         call.args = arguments;
         return call;
+    }
+
+    private Expr instMethodRef(Expr value) {
+        Expr.MethodRef methodRef = new Expr.MethodRef();
+        methodRef.obj = value;
+        methodRef.name = consumeIdentifier();
+        return methodRef;
     }
 }

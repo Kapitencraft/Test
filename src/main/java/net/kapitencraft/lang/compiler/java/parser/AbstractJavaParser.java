@@ -219,12 +219,13 @@ public class AbstractJavaParser {
         }
         Token t = advance();
         ClassReference reference = parser.getClass(t.lexeme());
-        if (reference != null && !check(DOT)) {
-            AppliedGenerics declared = appliedGenerics(generics);
-            if (declared != null) reference = new AppliedGenericsReference(reference, declared);
+        if (reference != null) {
+            if (!check(DOT)) {
+                AppliedGenerics declared = appliedGenerics(generics);
+                if (declared != null) reference = new AppliedGenericsReference(reference, declared);
+            }
             return Optional.of(SourceReference.from(t, reference));
-        } else if (reference != null)
-            return Optional.of(SourceReference.from(t, reference));
+        }
         current--;
         return Optional.empty();
     }

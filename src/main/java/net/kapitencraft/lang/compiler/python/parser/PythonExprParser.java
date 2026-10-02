@@ -4,7 +4,9 @@ import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.exe.source.CompileSource;
 import net.kapitencraft.lang.compiler.exe.source.SourceTree;
+import net.kapitencraft.lang.compiler.exe.text.StmtParser;
 import net.kapitencraft.lang.compiler.java.parser.JavaHolderParser;
+import net.kapitencraft.lang.compiler.java.parser.JavaStmtParser;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.LiteralHolder;
@@ -17,6 +19,7 @@ import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.oop.AnnotationObj;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.ScriptedField;
 import net.kapitencraft.tool.Pair;
@@ -399,7 +402,13 @@ public class PythonExprParser extends AbstractPythonParser {
             return unary;
         }
 
-        return call();
+        Expr call = call();
+
+        if (match2(COLON, COLON)) {
+            return instMethodRef(call);
+        }
+
+        return call;
     }
 
     private Expr switchExpr() {
@@ -667,6 +676,9 @@ public class PythonExprParser extends AbstractPythonParser {
 
         if (match(IDENTIFIER)) {
             Token previous = previous(); //the identifier just consumed
+            if (match2(COLON, COLON)) {
+                return instMethodRef(varRef(previous, (byte) -1));
+            }
             if (currentFallback().exists()) { //check if the parser has a class fallback available
                 ClassReference fallbackReference = currentFallback();
                 ScriptedClass fallback = fallbackReference.get(); //get said fallback
@@ -717,6 +729,7 @@ public class PythonExprParser extends AbstractPythonParser {
         );
 
         if (match(BRACKET_O)) {
+
             int startIdx = current;
             Optional<SourceReference> reference = tryConsumeVarType(generics);
             if (reference.isPresent()) {
@@ -746,7 +759,7 @@ public class PythonExprParser extends AbstractPythonParser {
 
     private Expr makeLambda(List<Pair<SourceReference, Token>> args) {
         if (match(C_BRACKET_O)) {
-            if (this instanceof StmtParser stmtParser) {
+            if (this instanceof PythonStmtParser stmtParser) {
                 List<Stmt> content = stmtParser.block("lambda");
                 Expr.BlockLambda lambda = new Expr.BlockLambda();
                 lambda.value = new Stmt.Block();
@@ -785,10 +798,20 @@ public class PythonExprParser extends AbstractPythonParser {
     }
 
     private boolean match2(TokenType first, TokenType second) {
-        if (match(first) && match(second))
-            return true;
-        current--; //un-consume first token
+        if (match(first)) {
+            if (match(second)) {
+                return true;
+            }
+            current--;
+        }
         return false;
+    }
+
+    private Expr instMethodRef(Expr value) {
+        Expr.MethodRef methodRef = new Expr.MethodRef();
+        methodRef.obj = value;
+        methodRef.name = consumeIdentifier();
+        return methodRef;
     }
 
     private @NotNull Expr staticMethodRef(ClassReference target) {

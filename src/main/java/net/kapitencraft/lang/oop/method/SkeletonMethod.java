@@ -8,7 +8,6 @@ import net.kapitencraft.lang.exe.load.ClassLoader;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
-import net.kapitencraft.lang.holder.oop.attribute.ConstructorHolder;
 import net.kapitencraft.lang.holder.oop.attribute.OperationHolder;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.GsonHelper;
@@ -32,7 +31,7 @@ public class SkeletonMethod implements ScriptedCallable {
     }
 
     public static SkeletonMethod create(OperationHolder decl, ClassReference declaring) {
-        return create(decl.params(), decl.thrown(), decl.retType(), declaring, declaring, decl.modifiers());
+        return create(decl.params(), decl.thrown(), decl.retType(), declaring, decl.modifiers());
     }
 
     private static SkeletonMethod create(List<? extends Pair<SourceReference, String>> params, List<SourceReference> thrown, ClassReference type, ClassReference declaring, int modifiers) {
@@ -50,8 +49,8 @@ public class SkeletonMethod implements ScriptedCallable {
         );
     }
 
-    public static SkeletonMethod create(OperationHolder decl, ClassReference type) {
-        return create(decl.params(), decl.thrown(), type, type, type, (short) 0);
+    public static SkeletonMethod createConstructor(OperationHolder decl, ClassReference type) {
+        return create(decl.params(), decl.thrown(), type, type, 0);
     }
 
     public static SkeletonMethod createNative(ClassReference[] args, ClassReference[] thrown, ClassReference retType, int modifiers, ClassReference declaring) {

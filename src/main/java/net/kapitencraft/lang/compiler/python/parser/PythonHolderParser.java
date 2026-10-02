@@ -14,7 +14,10 @@ import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsSourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.holder.oop.AnnotationObj;
-import net.kapitencraft.lang.holder.oop.attribute.*;
+import net.kapitencraft.lang.holder.oop.attribute.ConstructorHolder;
+import net.kapitencraft.lang.holder.oop.attribute.EnumConstantHolder;
+import net.kapitencraft.lang.holder.oop.attribute.FieldHolder;
+import net.kapitencraft.lang.holder.oop.attribute.MethodHolder;
 import net.kapitencraft.lang.holder.oop.clazz.*;
 import net.kapitencraft.lang.holder.oop.generic.AppliedGenerics;
 import net.kapitencraft.lang.holder.oop.generic.Generic;
@@ -161,7 +164,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         if (!mainMethodCode.isEmpty()) {
             mainMethodCode.removeLast();
             methods.add(new PythonMethodHolder(
-                    Modifiers.pack(false, true, false),
+                    Modifiers.pack(Modifiers.STATIC),
                     new AnnotationObj[0],
                     new Generics(new Generic[0]),
                     SourceReference.from(null, VarTypeManager.VOID.reference()),
@@ -291,7 +294,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
             } while (match(COMMA));
         }
 
-        short mods = modifiers.packModifiers();
+        int mods = modifiers.packModifiers();
 
         Token[] code = null;
         Token endClose = null;
@@ -315,7 +318,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         return new PythonMethodHolder(modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), type, name, endClose, parameters, thrown, code, indents + 1);
     }
 
-    private List<FieldHolder> fieldDecl(SourceReference type, AnnotationObj[] annotations, Token name, short modifiers) {
+    private List<FieldHolder> fieldDecl(SourceReference type, AnnotationObj[] annotations, Token name, int modifiers) {
         Token[] code = null;
         Token assign = null;
 
@@ -405,7 +408,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         List<PythonConstructorHolder> constructorHolders = new ArrayList<>();
         List<FieldHolder> fieldHolders = new ArrayList<>();
 
-        short modifiers = mods != null ? mods.packModifiers() : 0;
+        int modifiers = mods != null ? mods.packModifiers() : 0;
         AnnotationObj[] annotations = mods != null ? mods.getAnnotations() : new AnnotationObj[0];
 
         parseClassProperties(Modifiers.isAbstract(modifiers) ? ModifierScope.Group.ABSTRACT_CLASS : ModifierScope.Group.CLASS, methodHolders, constructorHolders, fieldHolders, target, pckID, name, false);
@@ -571,7 +574,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
             defaulted = true;
         }
         consumeEndOfArg();
-        return new MethodHolder(Modifiers.pack(false, false, !defaulted), annotations, null, type, elementName, null, List.of(), List.of(), defaultCode);
+        return new MethodHolder(!defaulted ? Modifiers.ABSTRACT : 0, annotations, null, type, elementName, null, List.of(), List.of(), defaultCode);
     }
 
     private InterfaceHolder interfaceDecl(ModifiersParser mods, @Nullable String namePrefix, String pckID, @Nullable String fileId) {
@@ -622,7 +625,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         if (stack != null) activeGenerics = stack;
         else if (classGenerics != null) activeGenerics.pop();
         anonymousNames.pop();
-        short modifiers = mods != null ? mods.packModifiers() : 0;
+        int modifiers = mods != null ? mods.packModifiers() : 0;
         AnnotationObj[] annotations = mods != null ? mods.getAnnotations() : new AnnotationObj[0];
         return new InterfaceHolder(target, modifiers,
                 annotations, classGenerics, pckID, name,
@@ -706,8 +709,16 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
             encountered.clear();
         }
 
-        private short packModifiers() {
-            return Modifiers.pack(isFinal(), isStatic(), isAbstract() && !isDefault());
+        private int packModifiers() {
+            int mods = 0;
+            if (isFinal())
+                mods |= Modifiers.FINAL;
+            if (isAbstract() && !isDefault())
+                mods |= Modifiers.ABSTRACT;
+            if (isStatic())
+                mods |= Modifiers.STATIC;
+
+            return mods;
         }
 
         private boolean isFinal() {

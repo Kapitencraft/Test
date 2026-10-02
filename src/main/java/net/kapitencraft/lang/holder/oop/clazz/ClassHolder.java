@@ -3,6 +3,7 @@ package net.kapitencraft.lang.holder.oop.clazz;
 import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.lang.compiler.VarTypeContainer;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.compiler.exe.text.StmtParser;
 import net.kapitencraft.lang.exe.VarTypeManager;
@@ -125,7 +126,7 @@ public record ClassHolder(ClassReference target, int modifiers,
         for (OperationHolder constructorHolder : this.constructorHolders()) {
             methods.putIfAbsent("<init>", new DataMethodContainer.Builder(this.name()));
             DataMethodContainer.Builder builder = methods.get("<init>");
-            builder.addMethod(logger, SkeletonMethod.create(constructorHolder, this.target), constructorHolder.name());
+            builder.addMethod(logger, SkeletonMethod.createConstructor(constructorHolder, this.target), constructorHolder.name());
         }
 
         return new SkeletonClass(

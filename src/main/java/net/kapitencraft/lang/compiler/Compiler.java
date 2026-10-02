@@ -13,7 +13,6 @@ import net.kapitencraft.lang.compiler.exe.source.CompileSource;
 import net.kapitencraft.lang.compiler.exe.source.SourceTree;
 import net.kapitencraft.lang.compiler.python.PythonCompilePipeline;
 import net.kapitencraft.lang.exe.load.ClassLoader;
-import net.kapitencraft.lang.exe.load.CompilerLoaderHolder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;

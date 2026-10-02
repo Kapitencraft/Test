@@ -32,7 +32,7 @@ public record ConstructorHolder(AnnotationObj[] annotations, Generics generics, 
     }
 
     @Override
-    public short modifiers() {
+    public int modifiers() {
         return 0;
     }
 }

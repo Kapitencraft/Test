@@ -2,6 +2,7 @@ package net.kapitencraft.lang.exe;
 
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.exe.natives.NativeClassLoader;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.GenericClassReference;

@@ -277,7 +277,7 @@ public record EnumHolder(ClassReference target, int modifiers,
         methods.putIfAbsent("<init>", new DataMethodContainer.Builder(this.name()));
         DataMethodContainer.Builder builder = methods.get("<init>");
         for (OperationHolder constructorHolder : this.constructorHolders()) {
-            builder.addMethod(logger, SkeletonMethod.create(constructorHolder, this.target), constructorHolder.name());
+            builder.addMethod(logger, SkeletonMethod.createConstructor(constructorHolder, this.target), constructorHolder.name());
         }
         if (builder.isEmpty()) {
             builder.addMethod(logger, SkeletonMethod.createNative(new ClassReference[]{

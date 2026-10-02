@@ -58,10 +58,9 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
         }
         if (matchAtIndent(FINAL)) return varDeclaration(true, consumeVarType(generics).getReference());
 
-        skipIndent();
         Optional<SourceReference> type = tryConsumeVarType(generics);
         Stmt stmt = type.map(sourceClassReference -> {
-            if (match(DOT)) {
+            if (check(DOT)) {
                 Stmt.Expression expression = new Stmt.Expression();
                 expression.expression = parseObjAttributes(sourceClassReference.getReference());
                 return expression;
@@ -362,7 +361,7 @@ public class PythonStmtParser extends PythonExprParser implements StmtParser {
         return aWhile;
     }
 
-    private List<Stmt> block(String name) {
+    protected List<Stmt> block(String name) {
         List<Stmt> statements = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {
