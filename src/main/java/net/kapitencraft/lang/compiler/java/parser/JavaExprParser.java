@@ -407,6 +407,22 @@ public class JavaExprParser extends AbstractJavaParser {
 
         Expr call = call();
 
+        Expr from = null, to = null, interval = null;
+        if (match(FROM))
+            from = expression();
+        if (match(TO))
+            to = expression();
+        if (match(INTERVAL))
+            interval = expression();
+        if (from != null || to != null || interval != null) {
+            Expr.Slice slice = new Expr.Slice();
+            slice.object = call;
+            slice.start = from;
+            slice.end = to;
+            slice.interval = interval;
+            return slice;
+        }
+
         if (match2(COLON, COLON)) {
             return instMethodRef(call);
         }
@@ -502,30 +518,7 @@ public class JavaExprParser extends AbstractJavaParser {
 
         while (check(S_BRACKET_O, BRACKET_O, DOT)) {
             if (match(S_BRACKET_O)) {
-                Token bracketO = previous();
-                if (match(COLON)) {
-                    Expr end = check(COLON) ? null : expression();
-                    consume(COLON, "':' expected");
-                    Expr interval = check(S_BRACKET_C) ? null : expression();
-                    if (end == null && interval == null) error(bracketO, "slice without any definition");
-                    consume(S_BRACKET_C, "']' expected");
-                    //expr = new Expr.Slice(expr, null, end, interval);
-                    continue;
-                }
                 Expr index = expression();
-                if (match(COLON)) {
-                    Expr end = check(COLON) ? null : expression();
-                    consume(COLON, "':' expected");
-                    Expr interval = check(S_BRACKET_C) ? null : expression();
-                    consume(S_BRACKET_C, "']' expected");
-                    Expr.Slice slice = new Expr.Slice();
-                    slice.object = expr;
-                    slice.start = index;
-                    slice.end = end;
-                    slice.interval = interval;
-                    expr = slice;
-                    continue;
-                }
                 consume(S_BRACKET_C, "']' expected");
                 Expr.ArrayGet get = new Expr.ArrayGet();
                 get.object = expr;

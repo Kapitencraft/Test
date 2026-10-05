@@ -5,8 +5,6 @@ import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.tool.Pair;
 
-import java.util.Map;
-
 public interface Expr {
 
     interface Visitor<R> {

@@ -182,7 +182,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     private MethodData analyseCall(Token name, ClassReference objType, Expr[] args) {
-        ClassReference[] argTypes = args(args);
+        ClassReference[] argTypes = args(args, objType.get().getMethods().get(name.lexeme()));
         ScriptedClass targetClass = objType.get();
 
         ScriptedCallable callable;
@@ -348,8 +348,15 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         return expr.accept(this);
     }
 
-    public ClassReference[] args(Expr[] args) {
-        return Arrays.stream(args).map(this::analyseExpr).toArray(ClassReference[]::new);
+    public ClassReference[] args(Expr[] args, @Nullable DataMethodContainer dataMethodContainer) {
+        Set<ClassReference>[] parameters = new Set[args.length];
+        if (dataMethodContainer == null) {
+            dataMethodContainer.methods()
+        }
+        ClassReference[] result = new ClassReference[args.length];
+        for (int i = 0; i < args.length; i++) {
+        }
+        return result;
     }
 
     public ClassReference checkArguments(Expr[] args, ClassReference[] argTypes, @Nullable ScriptedCallable target, @Nullable ClassReference obj, Token loc) {
@@ -715,7 +722,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitConstructorExpr(Expr.Constructor expr) {
-        ClassReference[] argTypes = args(expr.args);
+        ClassReference[] argTypes = args(expr.args, expr.target.get().getMethods().get("<init>"));
         ScriptedCallable callable = tryGetConstructorMethod(argTypes, expr.target.get(), expr.keyword);
 
         if (callable != null) {
@@ -896,6 +903,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitStaticMethodRefExpr(Expr.StaticMethodRef expr) {
+        List<ScriptedCallable> methodCandidates = findFunctionMethodCandidates();
+
         return null;
     }
 

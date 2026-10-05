@@ -175,9 +175,7 @@
           "value": "Stmt.Block"
         }
       },
-      "imports": [
-        "java.util.Map"
-      ],
+      "imports": [],
       "fields": {
         "retType": "ClassReference"
       },
