@@ -14,6 +14,7 @@ import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.lang.tool.Util;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
