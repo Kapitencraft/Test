@@ -356,9 +356,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         for (int i = 0; i < args.length; i++) {
             parameters[i] = new HashSet<>();
         }
-        for (int i = 0; i < dataMethodContainer.methods().length; i++) {
-            for (int i1 = 0; i1 < Math.min(args.length, dataMethodContainer.methods()[i].argTypes().length); i1++) {
-                parameters[i1].add(dataMethodContainer.methods()[i].argTypes()[i]);
+        for (ScriptedCallable method : dataMethodContainer.methods()) {
+            for (int i1 = 0; i1 < Math.min(args.length, method.argTypes().length); i1++) {
+                parameters[i1].add(method.argTypes()[i1]);
             }
         }
         ClassReference[] result = new ClassReference[args.length];
@@ -915,6 +915,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public ClassReference visitStaticMethodRefExpr(Expr.StaticMethodRef expr) {
         List<ScriptedCallable> methodCandidates = findFunctionMethodCandidates();
+
+        
 
         return null;
     }
