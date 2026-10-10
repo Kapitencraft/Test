@@ -672,7 +672,7 @@ public class JavaExprParser extends AbstractJavaParser {
 
         if (match(IDENTIFIER)) {
             if (match2(BRACKET_C, LAMBDA)) {
-                return makeLambda(List.of());
+                return makeLambda(List.of(), previous());
             }
 
             Token previous = previous(); //the identifier just consumed
@@ -705,7 +705,7 @@ public class JavaExprParser extends AbstractJavaParser {
                 ClassReference target = reference.get().getReference();
                 if (match(IDENTIFIER)) {
                     if (match(LAMBDA)) {
-                        return makeLambda(List.of(Pair.of(reference.get(), previous)));
+                        return makeLambda(List.of(Pair.of(reference.get(), previous)), previous());
                     }
                     error(previous, "Declaration not allowed here");
                     panicMode = true;
@@ -727,7 +727,7 @@ public class JavaExprParser extends AbstractJavaParser {
 
         if (match(BRACKET_O)) {
             if (match2(BRACKET_C, LAMBDA)) {
-                return makeLambda(List.of());
+                return makeLambda(List.of(), previous());
             }
 
             int startIdx = current;
@@ -742,7 +742,7 @@ public class JavaExprParser extends AbstractJavaParser {
                             args.add(Pair.of(consumeVarType(generics), consumeIdentifier()));
                         }
                         consume(LAMBDA, "'lambda' or '->' expected");
-                        return makeLambda(args);
+                        return makeLambda(args, previous());
                     }
                 }
             }
@@ -757,11 +757,12 @@ public class JavaExprParser extends AbstractJavaParser {
         return varRef(Token.createNative("<unidentified>"), (byte) -1);
     }
 
-    private Expr makeLambda(List<Pair<SourceReference, Token>> args) {
+    private Expr makeLambda(List<Pair<SourceReference, Token>> args, Token keyword) {
         if (match(C_BRACKET_O)) {
             if (this instanceof JavaStmtParser stmtParser) {
                 List<Stmt> content = stmtParser.block("lambda");
                 Expr.BlockLambda lambda = new Expr.BlockLambda();
+                lambda.keyword = keyword;
                 lambda.value = new Stmt.Block();
                 lambda.value.statements = content;
                 lambda.params = args.toArray(Pair[]::new);
@@ -772,6 +773,7 @@ public class JavaExprParser extends AbstractJavaParser {
         } else {
             Expr expr = expression();
             Expr.ExprLambda lambda = new Expr.ExprLambda();
+            lambda.keyword = keyword;
             lambda.params = args.toArray(Pair[]::new);
             lambda.value = expr;
             return lambda;

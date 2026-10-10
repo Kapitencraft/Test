@@ -109,7 +109,7 @@ public record EnumHolder(ClassReference target, int modifiers,
             valuesInit.name = keyword;
             stmt.expression = valuesInit;
         }
-        fields.put(keyword, new CompileField(keyword, valuesInit, target.array(), Modifiers.pack(Modifiers.FINAL, Modifiers.STATIC), new Annotation[0]));
+        fields.put(keyword, new CompileField(keyword, valuesInit, target.array(), Modifiers.pack(Modifiers.FINAL, Modifiers.STATIC, Modifiers.SYNTHETIC), new Annotation[0]));
         statics.add(stmt);
         //endregion
 
@@ -159,7 +159,7 @@ public record EnumHolder(ClassReference target, int modifiers,
                         List.of(),
                         new ClassReference[0],
                         statics,
-                        Modifiers.pack(Modifiers.FINAL, Modifiers.STATIC),
+                        Modifiers.pack(Modifiers.FINAL, Modifiers.STATIC, Modifiers.SYNTHETIC),
                         new Annotation[0],
                         this.target
                 )
@@ -178,7 +178,7 @@ public record EnumHolder(ClassReference target, int modifiers,
                         List.of(),
                         new ClassReference[0],
                         List.of(aReturn1),
-                        Modifiers.pack(Modifiers.STATIC),
+                        Modifiers.pack(Modifiers.STATIC, Modifiers.SYNTHETIC),
                         new Annotation[0],
                         this.target
                 )
@@ -222,7 +222,7 @@ public record EnumHolder(ClassReference target, int modifiers,
             constructors.add(Pair.of(this.name, new CompileCallable(VarTypeManager.VOID.reference(), List.of(
                     Pair.of(VarTypeManager.STRING, "$name"),
                     Pair.of(VarTypeManager.INTEGER.reference(), "$ordinal")
-            ), new ClassReference[0], List.of(stmt1, ret), (short) 0, new Annotation[0], target
+            ), new ClassReference[0], List.of(stmt1, ret), Modifiers.pack(Modifiers.SYNTHETIC), new Annotation[0], target
             )));
         }
 

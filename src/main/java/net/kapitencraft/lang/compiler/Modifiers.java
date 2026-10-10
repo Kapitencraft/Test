@@ -13,7 +13,6 @@ public interface Modifiers {
             ENUM = 0x4000
     ;
     //no access modifiers to worry about. yay!
-    //short has 16 bits. should be sufficient
 
     static boolean isFinal(int modifiers) {
         return (modifiers & FINAL) != 0;

@@ -54,4 +54,14 @@ public class GenericClassReference extends ClassReference {
         }
         return reference;
     }
+
+    @Override
+    public ClassReference applyGenericsFrom(ClassReference first) {
+        if (first instanceof AppliedGenericsReference appliedGenericsReference) {
+            GenericStack stack = new GenericStack();
+            appliedGenericsReference.push(stack, null);
+            return this.unwrap(stack);
+        }
+        return super.applyGenericsFrom(first);
+    }
 }

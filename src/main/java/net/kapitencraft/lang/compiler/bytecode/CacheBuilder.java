@@ -388,6 +388,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitStaticMethodRefExpr(Expr.StaticMethodRef expr) {
+
         return null;
     }
 

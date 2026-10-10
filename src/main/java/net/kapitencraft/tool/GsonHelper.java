@@ -655,8 +655,7 @@ public class GsonHelper {
 
         return paramData.asList().stream()
                 .map(JsonElement::getAsString)
-                .map(net.kapitencraft.tool.StringReader::new)
-                .map(VarTypeManager::parseType)
+                .map(VarTypeManager::directParseType)
                 .toList();
     }
 }

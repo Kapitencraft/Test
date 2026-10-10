@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.compiler.analyser;
 
 import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.compiler.Modifiers;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.exe.VarTypeManager;
 import net.kapitencraft.lang.exe.algebra.OperationType;
@@ -9,6 +10,7 @@ import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.ast.SwitchKey;
+import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.class_ref.generic.AppliedGenericsReference;
@@ -36,7 +38,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     //region expect
     private final ArrayDeque<Set<ClassReference>> activeArgs = new ArrayDeque<>();
     private ClassReference methodReturnType = VarTypeManager.VOID.reference();
-    private ArrayDeque<ClassReference[]> methodThrown = new ArrayDeque<>();
+    private final ArrayDeque<ClassReference[]> methodThrown = new ArrayDeque<>();
+    private ClassReference declaring;
 
     private boolean isExpected(ClassReference reference) {
         return activeArgs.isEmpty() || activeArgs.peek().contains(reference);
@@ -98,12 +101,12 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         errorF(loc, "unhandled exception: %s" + thrown.absoluteName());
     }
 
-    private List<ScriptedCallable> findFunctionMethodCandidates() {
-        List<ScriptedCallable> functionalMethodCandidates = new ArrayList<>();
+    private List<Pair<ClassReference, ScriptedCallable>> findFunctionMethodCandidates() {
+        List<Pair<ClassReference, ScriptedCallable>> functionalMethodCandidates = new ArrayList<>();
         for (ClassReference reference : activeArgs.peek()) {
             ScriptedCallable method = VarTypeManager.getFunctionalMethod(reference);
             if (method != null) {
-                functionalMethodCandidates.add(method);
+                functionalMethodCandidates.add(Pair.of(reference, method));
             }
         }
         return functionalMethodCandidates;
@@ -165,7 +168,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         this.varAnalyser.clear();
     }
 
-    public void analyseBody(List<Stmt> body, Token name, ClassReference retType, ClassReference[] thrown, List<Pair<ClassReference, String>> params, @Nullable ClassReference selfClass) {
+    public void analyseBody(List<Stmt> body, Token name, ClassReference retType, ClassReference[] thrown, List<Pair<ClassReference, String>> params, ClassReference declaring, @Nullable ClassReference selfClass) {
+        this.declaring = declaring;
         this.methodReturnType = retType;
         this.methodThrown.push(thrown);
         this.methodNames.push(new MethodFrame(name));
@@ -273,36 +277,62 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     //endregion
 
-    private void makeLambda(List<Stmt> body, List<ScriptedCallable> candidates, Token keyword, Pair<SourceReference, Token>[] params) {
+    private ClassReference makeLambda(List<Stmt> body, List<Pair<ClassReference, ScriptedCallable>> candidates, Token keyword, Pair<SourceReference, Token>[] params) {
         MethodFrame frame = methodNames.peek();
         Token name = keyword.asIdentifier("lambda$" + frame.name.lexeme() + "$" + frame.getAndIncrementLambdaCount());
 
-        for (int i = 0; i < candidates.size(); i++) {
+        if (candidates.size() == 1) {
             varAnalyser.push();
-            ScriptedCallable callable = candidates.get(i);
+            ScriptedCallable callable = candidates.getFirst().second();
             List<Pair<ClassReference, String>> methodParams = new ArrayList<>();
             for (int i1 = 0; i1 < callable.argTypes().length; i1++) {
                 methodParams.add(Pair.of(callable.argTypes()[i1], params[i1].second().lexeme()));
             }
+            ClassReference originalReturn = methodReturnType;
+            ClassReference retType = callable.retType().applyGenericsFrom(candidates.getFirst().first());
             analyseBody(body, name,
-                    callable.retType(),
+                    retType,
                     callable.thrown(),
                     methodParams,
+                    declaring,
                     null
             );
+            methodReturnType = originalReturn;
             varAnalyser.pop();
-        }
 
-        //CompileCallable callable = new CompileCallable(
-        //        type,
-        //        List.of(),
-        //        new ClassReference[0],
-        //        body,
-        //        Modifiers.pack(Modifiers.SYNTHETIC),
-        //        new Annotation[0],
-//
-        //);
-        //methodAdditionSink.accept(Pair.of(name, callable));
+            CompileCallable lambda = new CompileCallable(
+                    retType,
+                    List.copyOf(methodParams),
+                    new ClassReference[0],
+                    body,
+                    Modifiers.pack(Modifiers.SYNTHETIC, Modifiers.STATIC),
+                    new Annotation[0],
+                    declaring
+            );
+            methodAdditionSink.accept(Pair.of(name, lambda));
+
+            return candidates.getFirst().first();
+        } else {
+            for (int i = 0; i < candidates.size(); i++) {
+                varAnalyser.push();
+                ScriptedCallable callable = candidates.get(i).second();
+                List<Pair<ClassReference, String>> methodParams = new ArrayList<>();
+                for (int i1 = 0; i1 < callable.argTypes().length; i1++) {
+                    methodParams.add(Pair.of(callable.argTypes()[i1], params[i1].second().lexeme()));
+                }
+                ClassReference originalReturn = methodReturnType;
+                analyseBody(body, name,
+                        callable.retType().applyGenericsFrom(candidates.get(i).first()),
+                        callable.thrown(),
+                        methodParams,
+                        declaring,
+                        null
+                );
+                methodReturnType = originalReturn;
+                varAnalyser.pop();
+            }
+        }
+        return null;
     }
 
     //region error
@@ -337,7 +367,6 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     private final ErrorStorage errorStorage;
     //endregion
     private final Consumer<Pair<Token, CompileCallable>> methodAdditionSink;
-    private final AtomicInteger lambdaCount = new AtomicInteger(0);
 
     public SemanticAnalyser(ErrorStorage errorStorage, Consumer<Pair<Token, CompileCallable>> methodAdditionSink) {
         this.errorStorage = errorStorage;
@@ -565,20 +594,23 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         ClassReference type = analyseExpr(expr.obj);
         DataMethodContainer container = type.get().getMethods().get(expr.name.lexeme());
         if (container == null) {
-            errorF(expr.name, "unknown symbol: '%s'", expr.name.lexeme());
+            errorF(expr.name, "unknown symbol: method '%s'", expr.name.lexeme());
             return VarTypeManager.VOID.reference();
         } else {
-            List<ScriptedCallable> methodCandidates = findFunctionMethodCandidates();
-            for (ScriptedCallable methodCandidate : methodCandidates) {
-                for (ScriptedCallable method : container.methods()) {
-                    if (Util.matchArgs(methodCandidate.argTypes(), method.argTypes())) {
-                        //found candidate
-
-                        expr.retType = methodCandidate.declaringClass();
+            List<Pair<ClassReference, ScriptedCallable>> methodCandidates = findFunctionMethodCandidates();
+            for (ScriptedCallable method : container.methods()) {
+                for (Pair<ClassReference, ScriptedCallable> candidate : methodCandidates) {
+                    if (method.argTypes().length != candidate.second().argTypes().length)
+                        continue;
+                    GenericStack genericStack = new GenericStack();
+                    if (candidate.first() instanceof AppliedGenericsReference appliedGenericsReference)
+                        appliedGenericsReference.push(genericStack, null);
+                    if (Util.matchArgs(method.argTypes(), candidate.second().argTypes(), genericStack)) {
+                        return expr.retType = candidate.first();
                     }
                 }
             }
-            errorF(expr.name, "cannot resolve method '%s'", expr.name.lexeme());
+            errorF(expr.name, "unable to infer method reference: '%s'", expr.name.lexeme());
         }
         return null;
     }
@@ -669,13 +701,12 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public ClassReference visitExprLambdaExpr(Expr.ExprLambda expr) {
         Stmt.Return stmt = new Stmt.Return();
+        stmt.keyword = expr.keyword;
         stmt.value = expr.value;
         //TODO: analyse method graph
-        List<ScriptedCallable> methodCandidates = findFunctionMethodCandidates();
+        List<Pair<ClassReference, ScriptedCallable>> methodCandidates = findFunctionMethodCandidates();
 
-        makeLambda(List.of(stmt), methodCandidates, expr.keyword, expr.params);
-
-        return null;
+        return expr.retType = makeLambda(List.of(stmt), methodCandidates, expr.keyword, expr.params);
     }
 
     @Override
@@ -796,7 +827,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     @Override
     public ClassReference visitBlockLambdaExpr(Expr.BlockLambda expr) {
 
-        List<ScriptedCallable> candidates = findFunctionMethodCandidates();
+        List<Pair<ClassReference, ScriptedCallable>> candidates = findFunctionMethodCandidates();
 
         makeLambda(expr.value.statements, candidates, expr.keyword, expr.params);
         return null;
@@ -914,9 +945,28 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitStaticMethodRefExpr(Expr.StaticMethodRef expr) {
-        List<ScriptedCallable> methodCandidates = findFunctionMethodCandidates();
+        List<Pair<ClassReference, ScriptedCallable>> methodCandidates = findFunctionMethodCandidates();
 
-        
+        ScriptedClass scriptedClass = expr.obj.get();
+
+        DataMethodContainer methodContainer = scriptedClass.getMethods().get(expr.name.lexeme());
+
+        if (methodContainer != null) {
+            for (ScriptedCallable method : methodContainer.methods()) {
+                for (Pair<ClassReference, ScriptedCallable> candidate : methodCandidates) {
+                    if (method.argTypes().length != candidate.second().argTypes().length)
+                        continue;
+                    GenericStack genericStack = new GenericStack();
+                    if (candidate.first() instanceof AppliedGenericsReference appliedGenericsReference)
+                        appliedGenericsReference.push(genericStack, null);
+                    if (Util.matchArgs(method.argTypes(), candidate.second().argTypes(), genericStack)) {
+                        return expr.retType = candidate.first();
+                    }
+                }
+            }
+        } else {
+            errorF(expr.name, "unknown symbol: method '%s'", expr.name.lexeme());
+        }
 
         return null;
     }

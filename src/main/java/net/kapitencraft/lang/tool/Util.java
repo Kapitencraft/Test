@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
@@ -52,6 +53,19 @@ public class Util {
         return true;
     }
 
+    @Contract(pure = true)
+    public static boolean matchArgs(ClassReference[] got, ClassReference[] expected, GenericStack targetGenerics) {
+        if (got.length != expected.length) return false;
+        if (got.length == 0) return true;
+        for (int i = 0; i < got.length; i++) {
+            ClassReference gotType = got[i];
+            ClassReference expectedType = expected[i];
+            if (gotType == null || expectedType == null) return false;
+            if (!gotType.get(targetGenerics).is(expectedType.get())) return false;
+        }
+        return true;
+    }
+
     public static String getDescriptor(ClassReference[] args) {
         return Arrays.stream(args).map(ClassReference::name).collect(Collectors.joining(","));
     }
@@ -83,8 +97,8 @@ public class Util {
     }
 
     /**
-     * @param map the map to write
-     * @param keyMapper a function to convert each key of the map into an JsonElement
+     * @param map         the map to write
+     * @param keyMapper   a function to convert each key of the map into an JsonElement
      * @param valueMapper a function to convert each value of the map into an JsonElement
      * @return an JsonArray containing each entry of the map
      */
@@ -99,8 +113,8 @@ public class Util {
     }
 
     /**
-     * @param array the json array containing all map entries
-     * @param keyExtractor a function that extracts each map key out of the entry
+     * @param array          the json array containing all map entries
+     * @param keyExtractor   a function that extracts each map key out of the entry
      * @param valueExtractor a function that extracts each map value out of the entry
      * @return a MapStream containing all the entries extracted
      */
@@ -113,7 +127,7 @@ public class Util {
 
     public static <T> List<T> invert(List<T> parents) {
         List<T> inverted = new ArrayList<>();
-        for (int i = parents.size()-1; i >= 0; i--) {
+        for (int i = parents.size() - 1; i >= 0; i--) {
             inverted.add(parents.get(i));
         }
         return inverted;
@@ -152,7 +166,7 @@ public class Util {
         if (container == null)
             throw new IllegalStateException("unable to obtain method container for name '" + name + "' on class '" + targetClass.absoluteName() + "'");
         int match = 0;
-            ScriptedCallable matchEntry = container.methods()[0];
+        ScriptedCallable matchEntry = container.methods()[0];
         for (ScriptedCallable method : container.methods()) {
             ClassReference[] argTypes = method.argTypes();
             for (int i = 0; i < argTypes.length && i < args.length; i++) {
