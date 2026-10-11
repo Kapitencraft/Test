@@ -68,4 +68,9 @@ public class SwitchInstruction extends CodeInstruction implements JumpableInstru
     public int length() {
         return 5 + entries.size() * 6;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return false;
+    }
 }

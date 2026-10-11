@@ -14,6 +14,8 @@ import net.kapitencraft.tool.GsonHelper;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
     private final JsonObject data;
@@ -30,7 +32,7 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
             throw new RuntimeException(e);
         }
         String fileId = file.getPath().substring(12);
-        String[] packages = fileId.substring(0, fileId.length() - 5).split("\\\\");
+        String[] packages = fileId.substring(0, fileId.length() - 5).split("/");
         StringBuilder pck = new StringBuilder(packages[0]);
         for (int i = 1; i < packages.length - 1; i++) {
             pck.append(".");

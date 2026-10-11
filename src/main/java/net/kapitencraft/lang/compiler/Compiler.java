@@ -57,6 +57,7 @@ public class Compiler {
     public static void main(String[] args) {
         if (args.length > 0 && "-o".equals(args[0])) {
             optimize = true;
+            System.out.println("optimize enabled");
         }
 
         File cache = ClassLoader.cacheLoc;

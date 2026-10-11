@@ -26,6 +26,7 @@ public final class RuntimeClass implements ScriptedClass {
 
     private final GeneratedMethodMap methods;
 
+    @Deprecated //make lookup dynamic
     private final MethodLookup lookup;
 
     private final Map<String, RuntimeField> allFields;

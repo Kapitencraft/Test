@@ -105,5 +105,11 @@
     "output": [
       "1275", "42925"
     ]
+  },
+  {
+    "target": "vm_test.OOPTest",
+    "output": [
+      "A", "B"
+    ]
   }
 ]

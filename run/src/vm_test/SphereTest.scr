@@ -1,0 +1,16 @@
+package vm_test;
+
+class SphereTest {
+
+    static void main(String[] args) {
+        for (int x = -5; x <= 5; x++) {
+            for (int y = -5; y <= 5; y++) {
+                for (int z = -5; z <= 5; z++) {
+                    if (25 <= x ** 2 + y ** 2 + z ** 2 <= 25) {
+                        System.print("x: " + x + ", y: " + y + ", z: " + z);
+                    }
+                }
+            }
+        }
+    }
+}

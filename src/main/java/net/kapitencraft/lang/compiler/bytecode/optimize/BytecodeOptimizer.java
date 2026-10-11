@@ -15,7 +15,8 @@ public class BytecodeOptimizer {
             new MergeLocalInvokeOptimization(),
             new JumpMergeOptimization(), //merge jumps pointing to jumps
             new JumpIfFalseAfterFalseOptimization(), //merge jump_if_false directly after false
-            new JumpReturnMergeOptimization() //replace jump with return if jump points at return
+            new JumpReturnMergeOptimization(), //replace jump with return if jump points at return
+            new MergeEqualInstructionOptimization() //remove duplicate, equal instructions
     );
 
     //TODO check if vars are used and if they are used before an if, otherwise move it afterwards

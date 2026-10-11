@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+
 public class MethodLookup {
     private final List<Pair<ScriptedClass, AbstractMethodMap>> lookup;
     private final Map<String, ScriptedCallable> exposed;

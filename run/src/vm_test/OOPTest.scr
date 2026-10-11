@@ -1,0 +1,26 @@
+package vm_test;
+
+class OOPTest {
+
+    class A {
+        void write() {
+            System.print("A");
+        }
+    }
+
+    class B extends A {
+        void write() {
+            System.print("B");
+        }
+    }
+
+    class C extends A {
+    }
+
+    static void main(String[] args) {
+        A a = new C();
+        a.write();
+        a = new B();
+        a.write();
+    }
+}
