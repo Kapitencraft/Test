@@ -19,6 +19,7 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
     private final JsonObject data;
     private final ClassType type;
     public final String name;
+    private final String pck;
     final ClassReference reference;
 
     public VMLoaderHolder(File file) {
@@ -36,6 +37,7 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
             pck.append(packages[i]);
         }
         this.name = packages[packages.length-1];
+        this.pck = pck.toString();
         this.reference = new ClassReference(name, pck.toString());
         this.type = ClassType.valueOf(GsonHelper.getAsString(data, "TYPE").toUpperCase());
     }
@@ -44,9 +46,9 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
     public void applySkeleton()  {
 
         ScriptedClass skeleton = switch (type) {
-            case ENUM, CLASS -> SkeletonClass.fromCache(data, pck());
-            case INTERFACE -> SkeletonInterface.fromCache(data, pck());
-            case ANNOTATION -> SkeletonAnnotation.fromCache(data, pck());
+            case ENUM, CLASS -> SkeletonClass.fromCache(data, pck);
+            case INTERFACE -> SkeletonInterface.fromCache(data, pck);
+            case ANNOTATION -> SkeletonAnnotation.fromCache(data, pck);
         };
         this.reference.setTarget(skeleton);
     }
@@ -54,7 +56,7 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
     public ScriptedClass loadClass()  {
         ScriptedClass target;
         try {
-            target = RuntimeClass.load(data, pck());
+            target = RuntimeClass.load(data, pck);
             this.reference.setTarget(target);
             return target;
         } catch (Exception e) {

@@ -10,10 +10,6 @@ public abstract class ClassLoaderHolder<T extends ClassLoaderHolder<T>> {
         this.file = file;
     }
 
-    protected String pck() {
-        return ClassLoader.pck(file);
-    }
-
     public abstract void applySkeleton();
 
     @Override

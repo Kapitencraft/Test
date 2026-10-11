@@ -103,5 +103,15 @@
         "msg": "incompatible types: scripted.lang.String cannot be converted to scripted.lang.int"
       }
     ]
+  },
+  {
+    "target": "test.TestImport",
+    "output": [
+      {
+        "type": "error",
+        "line": 5,
+        "msg": "';' expected"
+      }
+    ]
   }
 ]

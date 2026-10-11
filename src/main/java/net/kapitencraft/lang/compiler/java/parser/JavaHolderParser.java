@@ -46,6 +46,10 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
     public void parseImports() {
         while (check(IMPORT)) {
             importStmt();
+            if (panicMode) {
+                synchronize();
+                panicMode = false;
+            }
         }
     }
 
@@ -65,7 +69,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
     private List<Token> readPackage() {
         List<Token> packages = new ArrayList<>();
         packages.add(consumeIdentifier());
-        while (!check(EOA, AS)) {
+        while (check(DOT)) {
             consume(DOT, "unexpected name");
             packages.add(consumeIdentifier());
         }

@@ -80,7 +80,7 @@ public class Compiler {
         ErrorStorage.overallErrorCount = 0;
         try {
             for (CompileStage stage : CompileStage.values()) {
-                if (stage == CompileStage.CACHING && cache == null) {
+                if (stage == CompileStage.CACHE && cache == null) {
                     if (logInfo)
                         System.out.println("Skipping step CACHING as there is no cache root provided");
                     continue;
@@ -90,7 +90,7 @@ public class Compiler {
                 if (logInfo)
                     System.out.printf("executing step %s\n", stage);
 
-                if (stage == CompileStage.CACHING && cache.exists())
+                if (stage == CompileStage.CACHE && cache.exists())
                     Util.delete(cache);
 
                 compileData.execute(stage, executor, logInfo);

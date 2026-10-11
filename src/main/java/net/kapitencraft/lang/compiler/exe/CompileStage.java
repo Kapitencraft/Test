@@ -8,5 +8,5 @@ public enum CompileStage {
     SEMANTIC_ANALYSIS,
     FINALIZE_LOAD,
     OPTIMIZE,
-    CACHING
+    CACHE
 }

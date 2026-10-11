@@ -26,7 +26,7 @@ public abstract class TextBasedCompilePipeline implements CompilePipeline<TextBa
             CompileStage.SEMANTIC_ANALYSIS, Source::analyseSemantics,
             CompileStage.FINALIZE_LOAD, Source::finalizeLoad,
             CompileStage.OPTIMIZE, Source::optimize,
-            CompileStage.CACHING, Source::cache
+            CompileStage.CACHE, Source::cache
     ));
 
     @Override

@@ -1,0 +1,6 @@
+package test;
+
+import test.TestLoopSyntax
+
+class TestImport {
+}
