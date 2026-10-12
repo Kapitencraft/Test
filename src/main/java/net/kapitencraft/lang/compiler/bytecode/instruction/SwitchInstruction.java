@@ -6,7 +6,6 @@ import net.kapitencraft.lang.compiler.bytecode.ByteCodeBuilder;
 
 import java.util.List;
 
-
 public class SwitchInstruction extends CodeInstruction implements JumpableInstruction {
     private final int size;
     private int target;
