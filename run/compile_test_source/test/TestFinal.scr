@@ -1,0 +1,28 @@
+package test;
+
+class TestFinal {
+    final int s;
+    final int five = 5;
+
+    class Test2 {
+        final int j;
+        final int b;
+
+        Test2() {
+            b = 4;
+        }
+    }
+
+    class Test3 {
+        final int a;
+        final int b;
+
+        Test3() {
+            a = 2;
+        }
+
+        Test3(int b) {
+            this.b = b;
+        }
+    }
+}

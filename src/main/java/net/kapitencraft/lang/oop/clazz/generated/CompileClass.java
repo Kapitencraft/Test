@@ -2,10 +2,12 @@ package net.kapitencraft.lang.oop.clazz.generated;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.field.CompileField;
@@ -81,6 +83,25 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
                     callable.optimize();
             }
         }
+    }
+
+    @Override
+    public void analyseFinals(FinalsPopulatedAnalyser analyser) {
+        List<CompileField> instanceFields = new ArrayList<>();
+        this.allFields.forEach((s, compileField) -> {
+            if (!compileField.isStatic())
+                instanceFields.add(compileField);
+        });
+        analyser.apply(instanceFields);
+        DataMethodContainer constructor = this.allMethods.get("<init>");
+        if (constructor != null) {
+            for (ScriptedCallable method : constructor.methods()) {
+                analyser.check((CompileCallable) method);
+            }
+        } else {
+            analyser.markAll();
+        }
+        analyser.flushErrors();
     }
 
     @Override

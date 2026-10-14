@@ -99,10 +99,10 @@ public abstract class CompileSource {
                 lookup.checkFinalMethods(storage, builder.methods());
             }
         }
-        //TODO get access to final fields
         FinalsPopulatedAnalyser analyser = new FinalsPopulatedAnalyser(this.storage);
 
         target = builder.build();
+        target.analyseFinals(analyser);
         this.holder.target().setTarget((ScriptedClass) target);
     }
 
