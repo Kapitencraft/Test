@@ -40,13 +40,6 @@ public record BakedClass(
             methods.get(method.getFirst().lexeme()).addMethod(logger, method.getSecond(), method.getFirst());
         }
 
-        List<Token> finalFields = new ArrayList<>();
-        fields.forEach((name, field) -> {
-            //if (field.isFinal() && !field.hasInit()) {
-            //    finalFields.add(name);
-            //}
-        });
-
         for (Pair<Token, CompileCallable> method : this.constructors()) {
             methods.putIfAbsent("<init>", new DataMethodContainer.Builder(this.name()));
             methods.get("<init>").addMethod(logger, method.getSecond(), method.getFirst());

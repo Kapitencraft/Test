@@ -1,6 +1,7 @@
 package net.kapitencraft.lang.oop.clazz;
 
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.exe.VarTypeManager;
@@ -22,4 +23,6 @@ public interface CacheableClass {
     }
 
     void optimize();
+
+    void analyseFinals(FinalsPopulatedAnalyser analyser);
 }

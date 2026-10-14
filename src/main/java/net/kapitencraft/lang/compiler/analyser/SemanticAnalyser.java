@@ -296,7 +296,6 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         }
 
         ClassReference type = target == null ? VarTypeManager.VOID.reference() : target.retType();
-        //TODO figure out how to extract gotten generics
         if (type instanceof GenericClassReference genericClassReference) {
             GenericStack genericStack = new GenericStack();
             if (obj instanceof AppliedGenericsReference reference) {

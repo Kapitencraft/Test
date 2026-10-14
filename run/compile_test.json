@@ -105,6 +105,31 @@
     ]
   },
   {
+    "target": "test.TestFinal",
+    "output": [
+      {
+        "type": "error",
+        "line": 4,
+        "msg": "field 's' might not have been initialized"
+      },
+      {
+        "type": "error",
+        "line": 8,
+        "msg": "field 'j' might not have been initialized"
+      },
+      {
+        "type": "error",
+        "line": 17,
+        "msg": "field 'a' might not have been initialized"
+      },
+      {
+        "type": "error",
+        "line": 18,
+        "msg": "field 'b' might not have been initialized"
+      }
+    ]
+  },
+  {
     "target": "test.TestImport",
     "output": [
       {

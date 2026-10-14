@@ -2,6 +2,7 @@ package net.kapitencraft.lang.oop.method;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.lang.compiler.ast_optimize.ASTOptimizer;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
@@ -114,5 +115,11 @@ public class CompileCallable implements ScriptedCallable {
     public void optimize() {
         if (!this.isAbstract())
             ASTOptimizer.optimize(this.body);
+    }
+
+    public void checkFinalsPopulated(FinalsPopulatedAnalyser finalsPopulatedAnalyser) {
+        for (Stmt stmt : this.body) {
+            finalsPopulatedAnalyser.analyse(stmt);
+        }
     }
 }

@@ -8,23 +8,29 @@ import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.lang.holder.ast.SwitchKey;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.oop.field.CompileField;
+import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.tool.Pair;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import javax.naming.ldap.UnsolicitedNotification;
+import java.util.*;
 
 public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final ErrorStorage errorStorage;
+    //TODO add scopes
+    private final Map<String, Entry> states = new LinkedHashMap<>(); //ensure order equals creation order
+    private final List<Token> errorPoints = new ArrayList<>();
 
     public FinalsPopulatedAnalyser(ErrorStorage errorStorage) {
         this.errorStorage = errorStorage;
     }
 
-    public void apply(List<String> requireValue) {
-        for (String s : requireValue) {
-            this.states.put(s, Status.NOT_ASSIGNED);
+    public void apply(List<CompileField> fields) {
+        for (CompileField field : fields) {
+            Token name = field.getName();
+            this.states.put(name.lexeme(), new Entry(name, field.getInit() != null));
         }
+        this.errorPoints.clear();
     }
 
     private void errorAssigned(Token name) {
@@ -35,13 +41,61 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
         errorStorage.error(loc, s);
     }
 
-    private enum Status {
-        ASSIGNED,
-        NOT_ASSIGNED
+    public void check(CompileCallable method) {
+        this.reset();
+        method.checkFinalsPopulated(this);
+        for (Entry value : this.states.values()) {
+            if (!value.isAssigned())
+                errorPoints.add(value.name);
+        }
     }
 
-    //TODO add scopes
-    private final Map<String, Status> states = new LinkedHashMap<>(); //ensure order equals creation order
+    private void reset() {
+        for (Entry value : this.states.values()) {
+            value.assigned = false;
+        }
+    }
+
+    public void flushErrors() {
+        this.errorPoints.sort(Comparator.comparingInt(Token::line));
+        for (Token errorPoint : this.errorPoints) {
+            error(errorPoint, "field '" + errorPoint.lexeme() + "' might not have been initialized");
+        }
+    }
+
+    public void markAll() {
+        for (Entry value : this.states.values()) {
+            if (!value.isAssigned())
+                this.errorPoints.add(value.name);
+        }
+    }
+
+    private static class Entry {
+        private final Token name;
+        private boolean assigned = false;
+        private final boolean preAssigned;
+
+        private Entry(Token name, boolean preAssigned) {
+            this.name = name;
+            this.preAssigned = preAssigned;
+        }
+
+        private void setAssigned() {
+            this.assigned = true;
+        }
+
+        private void reset() {
+            this.assigned = false;
+        }
+
+        private boolean isAssigned() {
+            return this.assigned || preAssigned;
+        }
+
+        public Token getName() {
+            return name;
+        }
+    }
 
     private void analyseIfNN(Expr value) {
         if (value != null) {
@@ -53,12 +107,22 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
         expr.accept(this);
     }
 
-    private void analyse(Stmt stmt) {
+    public void analyse(Stmt stmt) {
         stmt.accept(this);
     }
 
     @Override
     public Void visitSingleIdentifierExpr(Expr.SingleIdentifier expr) {
+        if (expr.type != null) {
+            //type is set to null when the SI is supposed to be interpreted as a local access.
+            String lexeme = expr.name.lexeme();
+            if (this.states.containsKey(lexeme)) {
+                Entry entry = this.states.get(lexeme);
+                if (entry.isAssigned())
+                    errorAssigned(expr.name);
+                entry.setAssigned();
+            }
+        }
         return null;
     }
 
@@ -66,9 +130,9 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     public Void visitSetExpr(Expr.Set expr) {
         //TODO
         String lexeme = expr.name.lexeme();
-        if (states.get(lexeme) == Status.ASSIGNED)
+        if (states.get(lexeme).isAssigned())
             errorAssigned(expr.name);
-        states.put(lexeme, Status.ASSIGNED);
+        states.get(lexeme).setAssigned();
         analyse(expr.value);
         analyse(expr.object);
         return null;
@@ -143,7 +207,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     @Override
     public Void visitSpecialSetExpr(Expr.SpecialSet expr) {
         String name = expr.name.lexeme();
-        if (states.get(name) == Status.ASSIGNED) {
+        if (states.get(name).isAssigned()) {
             errorAssigned(expr.name);
         } else {
             error(expr.name, "can not read unassigned final field");
@@ -164,7 +228,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     public Void visitIdentifierSpecialAssignExpr(Expr.IdentifierSpecialAssign expr) {
         if (expr.type != null && !expr.isStatic) {
             String name = expr.name.lexeme();
-            if (states.get(name) == Status.ASSIGNED) {
+            if (states.containsKey(name) && states.get(name).isAssigned()) {
                 errorAssigned(expr.name);
             }
         }
@@ -232,6 +296,16 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitIdentifierAssignExpr(Expr.IdentifierAssign expr) {
+        if (expr.type != null) {
+            //type is set to null when the SI is supposed to be interpreted as a local access.
+            String lexeme = expr.name.lexeme();
+            if (this.states.containsKey(lexeme)) {
+                Entry entry = this.states.get(lexeme);
+                if (entry.isAssigned())
+                    errorAssigned(expr.name);
+                entry.setAssigned();
+            }
+        }
         analyse(expr.value);
         return null;
     }
