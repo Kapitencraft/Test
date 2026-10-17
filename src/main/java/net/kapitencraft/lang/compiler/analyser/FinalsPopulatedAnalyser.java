@@ -1,6 +1,5 @@
 package net.kapitencraft.lang.compiler.analyser;
 
-import net.kapitencraft.lang.compiler.Compiler;
 import net.kapitencraft.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.lang.holder.ast.ElifBranch;
 import net.kapitencraft.lang.holder.ast.Expr;
@@ -12,7 +11,6 @@ import net.kapitencraft.lang.oop.field.CompileField;
 import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.tool.Pair;
 
-import javax.naming.ldap.UnsolicitedNotification;
 import java.util.*;
 
 public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
@@ -128,7 +126,6 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitSetExpr(Expr.Set expr) {
-        //TODO
         String lexeme = expr.name.lexeme();
         if (states.get(lexeme).isAssigned())
             errorAssigned(expr.name);

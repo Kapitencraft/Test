@@ -79,7 +79,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     public JsonObject cacheClass(CacheableClass loxClass) {
-        return loxClass.save(this); //TODO convert to entirely bytecode later
+        return loxClass.save(this);
     }
 
     public JsonArray cacheAnnotations(Annotation[] annotations) {
