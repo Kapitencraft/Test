@@ -331,7 +331,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
         ClassReference target = getOrCreate(name.lexeme(), pckID);
 
         parser.addClass(SourceReference.from(name, target), originalName);
-        SourceReference superClass = SourceReference.from(null, VarTypeManager.OBJECT);
+        SourceReference superClass = SourceReference.createNative(VarTypeManager.OBJECT);
         Generics classGenerics = generics();
 
         GenericStack stack = null;

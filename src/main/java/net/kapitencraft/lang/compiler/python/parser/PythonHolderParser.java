@@ -164,10 +164,10 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
                     Modifiers.pack(false, true, false),
                     new AnnotationObj[0],
                     new Generics(new Generic[0]),
-                    SourceReference.from(null, VarTypeManager.VOID.reference()),
+                    SourceReference.createNative(VarTypeManager.VOID.reference()),
                     Token.createNative("main"),
                     tokens[tokens.length - 1].after(),
-                    List.of(Pair.of(SourceReference.from(null, VarTypeManager.STRING.array()), "args")),
+                    List.of(Pair.of(SourceReference.createNative(VarTypeManager.STRING.array()), "args")),
                     List.of(),
                     mainMethodCode.toArray(new Token[0]),
                     0
@@ -181,7 +181,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
                 new Generics(new Generic[0]),
                 declaredPck,
                 Token.createNative(fileName),
-                SourceReference.from(null, VarTypeManager.OBJECT),
+                SourceReference.createNative(VarTypeManager.OBJECT),
                 new SourceReference[0],
                 new ConstructorHolder[0],
                 methods.toArray(new PythonMethodHolder[0]),
@@ -367,7 +367,7 @@ public class PythonHolderParser extends AbstractPythonParser implements HolderPa
         ClassReference target = getOrCreate(name.lexeme(), pckID);
 
         parser.addClass(SourceReference.from(name, target), originalName);
-        SourceReference superClass = SourceReference.from(null, VarTypeManager.OBJECT);
+        SourceReference superClass = SourceReference.createNative(VarTypeManager.OBJECT);
         Generics classGenerics = generics();
 
         GenericStack stack = null;

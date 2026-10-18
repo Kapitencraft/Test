@@ -6,6 +6,8 @@ import net.kapitencraft.lang.holder.oop.Validatable;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
+import java.util.zip.CRC32;
+
 public class SourceReference implements Validatable {
     private final Token nameToken;
     private final ClassReference reference;
@@ -27,6 +29,10 @@ public class SourceReference implements Validatable {
 
     public void setTarget(ScriptedClass target) {
         reference.setTarget(target);
+    }
+
+    public static SourceReference createNative(ClassReference type) {
+        return new SourceReference(type.name(), Token.createNative(type.name()), type);
     }
 
     public static SourceReference from(Token name, ClassReference other) {
