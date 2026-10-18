@@ -27,8 +27,8 @@ import java.util.Map.Entry;
 import java.util.stream.Collector;
 import javax.annotation.Nullable;
 
-import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.scripted.lang.exe.VarTypeManager;
+import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import org.jetbrains.annotations.Contract;
 
 public class GsonHelper {

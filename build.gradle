@@ -36,7 +36,7 @@ tasks.register('langJar', Jar) {
 }
 
 tasks.register('generateAst', JavaExec) {
-    mainClass = 'net.kapitencraft.lang.tool.GenerateAst'
+    mainClass = 'net.kapitencraft.scripted.lang.tool.GenerateAst'
 
     classpath = sourceSets.main.runtimeClasspath
 
@@ -44,7 +44,7 @@ tasks.register('generateAst', JavaExec) {
 }
 
 tasks.register('classLoader', JavaExec) {
-    mainClass = 'net.kapitencraft.lang.run.load.ClassLoader'
+    mainClass = 'net.kapitencraft.scripted.lang.run.load.ClassLoader'
 
     classpath = sourceSets.main.runtimeClasspath
 
@@ -52,7 +52,7 @@ tasks.register('classLoader', JavaExec) {
 }
 
 tasks.register('compile', JavaExec) {
-    mainClass = 'net.kapitencraft.lang.compiler.Compiler'
+    mainClass = 'net.kapitencraft.scripted.lang.compiler.Compiler'
 
     classpath = sourceSets.main.runtimeClasspath
 
