@@ -26,7 +26,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     public void apply(List<CompileField> fields) {
         for (CompileField field : fields) {
             Token name = field.getName();
-            this.states.put(name.lexeme(), new Entry(name, field.getInit() != null));
+            this.states.put(name.lexeme(), new Entry(name, field.getInit() != null || !field.isFinal()));
         }
         this.errorPoints.clear();
     }
@@ -144,7 +144,8 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitCallExpr(Expr.Call expr) {
-        analyse(expr.object);
+        if (expr.object != null)
+            analyse(expr.object);
         for (Expr arg : expr.args) {
             analyse(arg);
         }
@@ -293,8 +294,8 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitIdentifierAssignExpr(Expr.IdentifierAssign expr) {
-        if (expr.type != null) {
-            //type is set to null when the SI is supposed to be interpreted as a local access.
+        if (expr.fieldOwner != null) {
+            //fieldOwner is set to null when the SI is supposed to be interpreted as a local access.
             String lexeme = expr.name.lexeme();
             if (this.states.containsKey(lexeme)) {
                 Entry entry = this.states.get(lexeme);

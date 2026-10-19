@@ -1,0 +1,11 @@
+package vm_test;
+
+class VariableTest {
+
+    static void main(String[] args) {
+        int a = 5;
+
+        int b = 3;
+        System.print(a);
+    }
+}
