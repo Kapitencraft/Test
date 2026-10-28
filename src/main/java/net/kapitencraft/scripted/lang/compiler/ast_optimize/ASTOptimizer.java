@@ -16,7 +16,7 @@ public class ASTOptimizer {
 
     public static void optimize(List<Stmt> code) {
         for (ASTOptimization optimization : optimizations) {
-            optimization.optimize(code);
+            optimization.optimizeBlock(code);
         }
     }
 }

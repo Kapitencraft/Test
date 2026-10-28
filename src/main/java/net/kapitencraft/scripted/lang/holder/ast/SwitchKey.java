@@ -6,7 +6,7 @@ import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 
 public abstract class SwitchKey {
     private final Token source;
-    public final Expr expr;
+    public Expr expr;
     public int index;
 
     protected SwitchKey(Token source, Expr expr) {

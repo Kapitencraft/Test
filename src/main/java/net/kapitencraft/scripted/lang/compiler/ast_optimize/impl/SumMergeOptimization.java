@@ -1,17 +1,14 @@
 package net.kapitencraft.scripted.lang.compiler.ast_optimize.impl;
 
+import net.kapitencraft.scripted.lang.compiler.ast_optimize.StmtASTOptimization;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.holder.LiteralHolder;
 import net.kapitencraft.scripted.lang.holder.ast.Expr;
 import net.kapitencraft.scripted.lang.holder.ast.Stmt;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.holder.token.TokenType;
-import org.jetbrains.annotations.Nullable;
 
-public class SumMergeOptimization extends SingleNodeOptimization<Stmt.For> {
-    public SumMergeOptimization() {
-        super(Stmt.For.class);
-    }
+public class SumMergeOptimization extends StmtASTOptimization {
 
     //int sum = 0;
     //for (int i = 0; i <= n; i++) {
@@ -26,17 +23,16 @@ public class SumMergeOptimization extends SingleNodeOptimization<Stmt.For> {
     //}
     //->
     //sum = n * (n + 1) * (2n + 1) / 6
-
     @Override
-    @Nullable Stmt optimize(Stmt.For value) {
-        Stmt body = value.body;
+    public Stmt visitForStmt(Stmt.For stmt) {
+        Stmt body = stmt.body;
         if (body instanceof Stmt.Block block) {
             if (block.statements.size() == 2) //can't ignore the `ClearLocals` call afterwards
                 body = block.statements.getFirst();
             else
-                return null;
+                return super.visitForStmt(stmt);
         }
-        if (value.init instanceof Stmt.VarDecl varDecl &&
+        if (stmt.init instanceof Stmt.VarDecl varDecl &&
                 varDecl.initializer instanceof Expr.Literal literal &&
                 literal.retType.is(VarTypeManager.INTEGER) &&
                 (
@@ -46,13 +42,13 @@ public class SumMergeOptimization extends SingleNodeOptimization<Stmt.For> {
         ) {
             int iteratorVarIndex = varDecl.localId;
 
-            if (value.condition instanceof Expr.Binary condition &&
+            if (stmt.condition instanceof Expr.Binary condition &&
                     condition.operator.type() == TokenType.LEQUAL &&
                     condition.left instanceof Expr.SingleIdentifier sIL &&
                     sIL.type == null && sIL.ordinal == iteratorVarIndex
             ) {
                 Expr end = condition.right; //upper limit
-                if (value.increment instanceof Expr.IdentifierSpecialAssign assign &&
+                if (stmt.increment instanceof Expr.IdentifierSpecialAssign assign &&
                         assign.type == null && assign.ordinal == iteratorVarIndex &&
                         assign.assignType.type() == TokenType.GROW
                 ) {
@@ -86,7 +82,7 @@ public class SumMergeOptimization extends SingleNodeOptimization<Stmt.For> {
                             div1.retType = VarTypeManager.INTEGER.reference();
                             div1.executor = VarTypeManager.INTEGER.reference();
                             identifierAssign.value = div1;
-                            return body;
+                            return body; //updated the value with object references
                         }
                         if (identifierAssign.value instanceof Expr.Binary binary) {
                             if (binary.left instanceof Expr.SingleIdentifier var &&
@@ -153,6 +149,6 @@ public class SumMergeOptimization extends SingleNodeOptimization<Stmt.For> {
                 }
             }
         }
-        return null;
+        return super.visitForStmt(stmt);
     }
 }

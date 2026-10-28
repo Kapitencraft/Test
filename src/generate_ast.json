@@ -227,9 +227,9 @@
           "type": "Token"
         },
         "Try": {
-          "body": "Block",
-          "catches": "Pair<Pair<ClassReference[],Token>,Block>[]",
-          "finale": "Block"
+          "body": "Stmt",
+          "catches": "Pair<Pair<ClassReference[],Token>,Stmt>[]",
+          "finale": "Stmt"
         },
         "ClearLocals": {
           "amount": "int"

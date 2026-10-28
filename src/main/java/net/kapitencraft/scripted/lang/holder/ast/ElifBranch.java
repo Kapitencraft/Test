@@ -1,8 +1,8 @@
 package net.kapitencraft.scripted.lang.holder.ast;
 
 public final class ElifBranch {
-    public final Expr condition;
-    public final Stmt body;
+    public Expr condition;
+    public Stmt body;
     public boolean ended;
 
     public ElifBranch(Expr condition, Stmt body, boolean ended) {

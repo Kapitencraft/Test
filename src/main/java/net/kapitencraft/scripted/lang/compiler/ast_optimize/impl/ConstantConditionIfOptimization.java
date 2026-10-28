@@ -1,34 +1,31 @@
 package net.kapitencraft.scripted.lang.compiler.ast_optimize.impl;
 
+import net.kapitencraft.scripted.lang.compiler.ast_optimize.StmtASTOptimization;
 import net.kapitencraft.scripted.lang.holder.ast.ElifBranch;
 import net.kapitencraft.scripted.lang.holder.ast.Expr;
 import net.kapitencraft.scripted.lang.holder.ast.Stmt;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConstantConditionIfOptimization extends SingleNodeOptimization<Stmt.If> {
-    public ConstantConditionIfOptimization() {
-        super(Stmt.If.class);
-    }
+public class ConstantConditionIfOptimization extends StmtASTOptimization {
 
     @Override
-    @Nullable Stmt optimize(Stmt.If value) {
-        if (value.condition instanceof Expr.Literal literal) {
+    public Stmt visitIfStmt(Stmt.If stmt) {
+        if (stmt.condition instanceof Expr.Literal literal) {
             if (((boolean) literal.literal.literal().value())) {
-                return value.thenBranch;
+                return optimize(stmt.thenBranch);
             }
-            if (value.elifs.length > 0) {
+            if (stmt.elifs.length > 0) {
                 List<ElifBranch> remaining = new ArrayList<>();
-                for (int i = 0; i < value.elifs.length; i++) {
-                    ElifBranch branch = value.elifs[i];
+                for (int i = 0; i < stmt.elifs.length; i++) {
+                    ElifBranch branch = stmt.elifs[i];
                     if (branch.condition instanceof Expr.Literal branchLiteral) {
                         if (!((boolean) branchLiteral.literal.literal().value())) {
                             continue;
                         }
                         if (remaining.isEmpty())
-                            return branch.body;
+                            return optimize(branch.body);
                     }
                     remaining.add(branch);
                 }
@@ -36,18 +33,18 @@ public class ConstantConditionIfOptimization extends SingleNodeOptimization<Stmt
                     Stmt.If newIf = new Stmt.If();
                     ElifBranch first = remaining.getFirst();
                     newIf.condition = first.condition;
-                    newIf.thenBranch = first.body;
+                    newIf.thenBranch = optimize(first.body);
                     newIf.branchSeenReturn = first.ended;
                     remaining.removeFirst();
                     newIf.elifs = remaining.toArray(new ElifBranch[0]);
-                    newIf.elseBranch = value.elseBranch;
-                    newIf.elseBranchSeenReturn = value.elseBranchSeenReturn;
-                    newIf.keyword = value.keyword;
+                    newIf.elseBranch = optimize(stmt.elseBranch);
+                    newIf.elseBranchSeenReturn = stmt.elseBranchSeenReturn;
+                    newIf.keyword = stmt.keyword;
                     return newIf;
                 }
             }
-            return value.elseBranch;
+            return optimize(stmt.elseBranch);
         }
-        return value;
+        return super.visitIfStmt(stmt);
     }
 }

@@ -1,6 +1,6 @@
 package net.kapitencraft.scripted.lang.compiler.ast_optimize.impl;
 
-import net.kapitencraft.scripted.lang.compiler.ast_optimize.ASTOptimization;
+import net.kapitencraft.scripted.lang.compiler.ast_optimize.ExprASTOptimization;
 import net.kapitencraft.scripted.lang.holder.ast.Expr;
 import net.kapitencraft.scripted.lang.holder.ast.Stmt;
 import net.kapitencraft.tool.Pair;
@@ -8,50 +8,48 @@ import net.kapitencraft.tool.Pair;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
-public class CleanUnusedLocalsOptimization implements ASTOptimization {
+public class CleanUnusedLocalsOptimization extends ExprASTOptimization {
 
     //TODO
-
     @Override
-    public void optimize(List<Stmt> code) {
+    public Stmt optimizeBlock(List<Stmt> statements) {
         VarUseFinder finder = new VarUseFinder();
         int i = 0;
         List<Integer> used = new ArrayList<>();
-        while (i < code.size()) {
-            Stmt stmt = code.get(i);
+        while (i < statements.size()) {
+            Stmt stmt = statements.get(i);
             if (stmt instanceof Stmt.VarDecl varDecl) {
                 finder.setTargetName(varDecl.name.lexeme());
                 int j = i + 1;
-                while (j < code.size()) {
-                    if (finder.check(code.get(j))) {
+                while (j < statements.size()) {
+                    if (finder.check(statements.get(j))) {
                         used.add(varDecl.localId);
                         break;
                     }
                     j++;
                 }
-                if (j == code.size()) {
+                if (j == statements.size()) {
                     //unused can be removed
                     if (varDecl.initializer != null) {
                         Stmt.Expression expression = new Stmt.Expression();
                         expression.expression = varDecl.initializer;
-                        code.set(i, expression);
+                        statements.set(i, expression);
                     } else {
-                        code.remove(i);
+                        statements.remove(i);
                     }
                 }
-            } else
-                optimizeRecursive(stmt);
+            }
             i++;
         }
         int[] mapper = new int[used.getLast()];
+        Arrays.fill(mapper, -1); //use -1 as filler value as it isn't a possible ordinal
         int lI = 0;
         //'used' array is in order of var creation as code was searched linearly. locals can therefore be ordered ascending
         for (Integer integer : used) {
             mapper[integer] = lI++;
         }
-
+        return super.optimizeBlock(statements);
     }
 
     private static class VarUseFinder implements Expr.Visitor<Boolean>, Stmt.Visitor<Boolean> {

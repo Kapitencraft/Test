@@ -1,19 +1,18 @@
 package net.kapitencraft.scripted.lang.compiler.ast_optimize.impl;
 
-import net.kapitencraft.scripted.lang.compiler.ast_optimize.ASTOptimization;
+import net.kapitencraft.scripted.lang.compiler.ast_optimize.ExprASTOptimization;
 import net.kapitencraft.scripted.lang.holder.ast.Stmt;
 
 import java.util.List;
 
-public class VarMutationMergeOptimization implements ASTOptimization {
+//TODO
+public class VarMutationMergeOptimization extends ExprASTOptimization {
     @Override
-    public void optimize(List<Stmt> code) {
+    public Stmt optimizeBlock(List<Stmt> code) {
         for (int i = 0; i < code.size(); i++) {
             Stmt stmt = code.get(i);
-            optimizeRecursive(stmt);
-
-
         }
+        return super.optimizeBlock(code);
     }
 
     //i += 5
