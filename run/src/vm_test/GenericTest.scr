@@ -10,7 +10,6 @@ class GenericTest {
         System.print(GenericTest.test(abcd.get()));
         printValue(GenericTest::value);
         printValue(() -> 20);
-        printValue(abcd::get);
     }
 
     static <T> T create(T in) {

@@ -9,9 +9,6 @@ class FieldTest {
         this.a = a;
     }
 
-    FieldTest() {
-    }
-
     void appendC(String cTarget) {
         c += cTarget;
     }

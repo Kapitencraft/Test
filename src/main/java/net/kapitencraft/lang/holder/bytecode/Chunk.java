@@ -274,7 +274,7 @@ public record Chunk(byte[] code, byte[] constants, ExceptionHandler[] handlers, 
      * @param startOp the start ip
      * @param endOp the end ip
      * @param handlerOp the code executed when this handler matches the thrown exception
-     * @param catchType the type of error to be caught
+     * @param catchType the exe of error to be caught
      */
     public record ExceptionHandler(int startOp, int endOp, int handlerOp, int catchType) {
 

@@ -64,8 +64,8 @@ public class VarTypeManager {
     public static final ClassReference RETENTION = getAnnotationClass("Retention");
 
     /**
-     * attempts to get a functional method (e.g. a lambda method) from the type
-     * @param reference the type to check
+     * attempts to get a functional method (e.g. a lambda method) from the exe
+     * @param reference the exe to check
      * @return the found method, or null if it doesn't exist
      */
     public static @Nullable ScriptedCallable getFunctionalMethod(ClassReference reference) {
@@ -289,7 +289,7 @@ public class VarTypeManager {
             case "V" -> VarTypeManager.VOID.reference();
             default -> {
                 if (name.startsWith("[")) {
-                    yield directParseType(name.substring(1));
+                    yield directParseType(name.substring(1)).array();
                 } else if (name.startsWith("L")) {
                     yield getClassForName(name.substring(1, name.length() - 1).replace("/", "."));
                 }

@@ -1,8 +1,8 @@
 package net.kapitencraft.lang.holder.ast;
 
-import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.tool.Pair;
 
 public interface Expr {
@@ -154,6 +154,7 @@ public interface Expr {
 
     class MethodRef implements Expr {
         public Expr obj;
+        public String signature;
         public Token name;
         public ClassReference retType;
 
@@ -280,6 +281,8 @@ public interface Expr {
     class ExprLambda implements Expr {
         public Token keyword;
         public Pair<SourceReference, Token>[] params;
+        public int captureCount;
+        public String signature;
         public Expr value;
         public ClassReference retType;
 
@@ -428,6 +431,8 @@ public interface Expr {
     class BlockLambda implements Expr {
         public Token keyword;
         public Pair<SourceReference, Token>[] params;
+        public int captureCount;
+        public String signature;
         public Stmt.Block value;
         public ClassReference retType;
 
@@ -514,6 +519,7 @@ public interface Expr {
 
     class StaticMethodRef implements Expr {
         public ClassReference obj;
+        public String signature;
         public Token name;
         public ClassReference retType;
 

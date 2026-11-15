@@ -2,10 +2,7 @@ package net.kapitencraft.lang.compiler.bytecode;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.bytecode.instruction.IncrementIntVarInstruction;
-import net.kapitencraft.lang.compiler.bytecode.instruction.StaticFieldAccessInstruction;
-import net.kapitencraft.lang.compiler.bytecode.instruction.SwitchInstruction;
-import net.kapitencraft.lang.compiler.bytecode.instruction.TraceDebugInstruction;
+import net.kapitencraft.lang.compiler.bytecode.instruction.*;
 import net.kapitencraft.lang.compiler.bytecode.instruction.constant.DoubleConstantInstruction;
 import net.kapitencraft.lang.compiler.bytecode.instruction.constant.FloatConstantInstruction;
 import net.kapitencraft.lang.exe.Opcode;
@@ -322,6 +319,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitBlockLambdaExpr(Expr.BlockLambda expr) {
+        byteCodeBuilder.changeLineIfNecessary(expr.keyword);
+        byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, expr.captureCount));
         return null;
     }
 
@@ -388,7 +387,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitStaticMethodRefExpr(Expr.StaticMethodRef expr) {
-
+        byteCodeBuilder.changeLineIfNecessary(expr.name);
+        byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, 0));
         return null;
     }
 
@@ -515,6 +515,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitExprLambdaExpr(Expr.ExprLambda expr) {
+        byteCodeBuilder.changeLineIfNecessary(expr.keyword);
+        byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, expr.captureCount));
         return null;
     }
 
@@ -648,6 +650,8 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitMethodRefExpr(Expr.MethodRef expr) {
+        byteCodeBuilder.changeLineIfNecessary(expr.name);
+        byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, 1));
         return null;
     }
 

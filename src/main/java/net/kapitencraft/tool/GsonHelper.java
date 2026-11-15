@@ -35,8 +35,6 @@ public class GsonHelper {
 
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-
-
     /**
      * @return a collector to collect the JsonElements into a JsonArray
      */
@@ -89,7 +87,7 @@ public class GsonHelper {
     }
 
     /**
-     * Does the given JsonObject contain a field with the given name whose type is primitive (String, Java primitive, or
+     * Does the given JsonObject contain a field with the given name whose exe is primitive (String, Java primitive, or
      * Java primitive wrapper)?
      */
     public static boolean isValidPrimitive(JsonObject pJson, String pMemberName) {
@@ -465,7 +463,7 @@ public class GsonHelper {
     }
 
     /**
-     * Gets a human-readable description of the given JsonElement's type.  For example: "a number (4)"
+     * Gets a human-readable description of the given JsonElement's exe.  For example: "a number (4)"
      */
     public static String getType(@Nullable JsonElement pJson) {
         String s = String.valueOf(pJson);

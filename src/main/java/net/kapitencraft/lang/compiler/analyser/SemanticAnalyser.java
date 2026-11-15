@@ -26,6 +26,7 @@ import net.kapitencraft.lang.oop.method.CompileCallable;
 import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -277,7 +278,8 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     //endregion
 
-    private ClassReference makeLambda(List<Stmt> body, List<Pair<ClassReference, ScriptedCallable>> candidates, Token keyword, Pair<SourceReference, Token>[] params) {
+    @NotNull
+    private LambdaInfo makeLambda(List<Stmt> body, List<Pair<ClassReference, ScriptedCallable>> candidates, Token keyword, Pair<SourceReference, Token>[] params) {
         MethodFrame frame = methodNames.peek();
         Token name = keyword.asIdentifier("lambda$" + frame.name.lexeme() + "$" + frame.getAndIncrementLambdaCount());
 
@@ -285,8 +287,10 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             varAnalyser.push();
             ScriptedCallable callable = candidates.getFirst().second();
             List<Pair<ClassReference, String>> methodParams = new ArrayList<>();
+            List<ClassReference> lambdaParams = new ArrayList<>();
             for (int i1 = 0; i1 < callable.argTypes().length; i1++) {
                 methodParams.add(Pair.of(callable.argTypes()[i1], params[i1].second().lexeme()));
+                lambdaParams.add(callable.argTypes()[i1]);
             }
             ClassReference originalReturn = methodReturnType;
             ClassReference retType = callable.retType().applyGenericsFrom(candidates.getFirst().first());
@@ -311,7 +315,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             );
             methodAdditionSink.accept(Pair.of(name, lambda));
 
-            return candidates.getFirst().first();
+            return new LambdaInfo(lambdaParams.toArray(new ClassReference[0]), name.lexeme(), candidates.getFirst().first());
         } else {
             for (int i = 0; i < candidates.size(); i++) {
                 varAnalyser.push();
@@ -332,7 +336,11 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                 varAnalyser.pop();
             }
         }
-        return null;
+        return new LambdaInfo(new ClassReference[0], "<empty>", VarTypeManager.VOID.reference());
+    }
+
+    private record LambdaInfo(ClassReference[] lambdaArgs, String name, ClassReference declaring) {
+
     }
 
     //region error
@@ -605,6 +613,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                     if (candidate.first() instanceof AppliedGenericsReference appliedGenericsReference)
                         appliedGenericsReference.push(genericStack, null);
                     if (Util.matchArgs(method.argTypes(), candidate.second().argTypes(), genericStack)) {
+                        expr.signature = VarTypeManager.getMethodSignature(type.get(), expr.name.lexeme(), candidate.second().argTypes());
                         return expr.retType = candidate.first();
                     }
                 }
@@ -705,7 +714,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         //TODO: analyse method graph
         List<Pair<ClassReference, ScriptedCallable>> methodCandidates = findFunctionMethodCandidates();
 
-        return expr.retType = makeLambda(List.of(stmt), methodCandidates, expr.keyword, expr.params);
+        LambdaInfo lambdaInfo = makeLambda(List.of(stmt), methodCandidates, expr.keyword, expr.params);
+        expr.signature = VarTypeManager.getMethodSignature(declaring.get(), lambdaInfo.name, lambdaInfo.lambdaArgs);
+        return expr.retType = lambdaInfo.declaring;
     }
 
     @Override
@@ -828,8 +839,9 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         List<Pair<ClassReference, ScriptedCallable>> candidates = findFunctionMethodCandidates();
 
-        makeLambda(expr.value.statements, candidates, expr.keyword, expr.params);
-        return null;
+        LambdaInfo lambdaInfo = makeLambda(expr.value.statements, candidates, expr.keyword, expr.params);
+        expr.signature = VarTypeManager.getMethodSignature(declaring.get(), lambdaInfo.name, lambdaInfo.lambdaArgs);
+        return expr.retType = lambdaInfo.declaring;
     }
 
     @Override
@@ -959,6 +971,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
                     if (candidate.first() instanceof AppliedGenericsReference appliedGenericsReference)
                         appliedGenericsReference.push(genericStack, null);
                     if (Util.matchArgs(method.argTypes(), candidate.second().argTypes(), genericStack)) {
+                        expr.signature = VarTypeManager.getMethodSignature(expr.obj.get(), expr.name.lexeme(), candidate.second().argTypes());
                         return expr.retType = candidate.first();
                     }
                 }

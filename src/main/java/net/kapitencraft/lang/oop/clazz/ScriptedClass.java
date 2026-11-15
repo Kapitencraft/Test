@@ -43,8 +43,8 @@ public interface ScriptedClass {
 
     /**
      * @param type  the operation
-     * @param other the other type
-     * @return the resulting type or {@link VarTypeManager#VOID}, if this operation is not possible (must return {@link VarTypeManager#BOOLEAN} or {@link VarTypeManager#VOID} for comparators)
+     * @param other the other exe
+     * @return the resulting exe or {@link VarTypeManager#VOID}, if this operation is not possible (must return {@link VarTypeManager#BOOLEAN} or {@link VarTypeManager#VOID} for comparators)
      * <br><br>API note: it's recommended to call {@code super.checkOperation(...)} due to the given equality check
      * @deprecated create an overload method for it instead
      */
@@ -118,7 +118,7 @@ public interface ScriptedClass {
     //region method
 
     /**
-     * @param signature the signature of the method, without declaring class or return type
+     * @param signature the signature of the method, without declaring class or return exe
      * @return the method for the signature or null if it couldn't be found
      */
     ScriptedCallable getMethod(String signature);

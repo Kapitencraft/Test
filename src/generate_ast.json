@@ -167,15 +167,22 @@
         "ExprLambda": {
           "keyword": "Token",
           "params": "Pair<SourceReference, Token>[]",
+          "captureCount": "int",
+          "signature": "String",
           "value": "Expr"
         },
         "BlockLambda": {
           "keyword": "Token",
           "params": "Pair<SourceReference, Token>[]",
+          "captureCount": "int",
+          "signature": "String",
           "value": "Stmt.Block"
         }
       },
-      "imports": [],
+      "imports": [
+        "net.kapitencraft.lang.holder.class_ref.SourceReference",
+        "net.kapitencraft.tool.Pair"
+      ],
       "fields": {
         "retType": "ClassReference"
       },

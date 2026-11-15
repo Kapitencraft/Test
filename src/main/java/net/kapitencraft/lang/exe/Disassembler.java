@@ -57,7 +57,8 @@ public class Disassembler {
             case D_CONST -> doubleConstInstruction(opcode, chunk, offset);
             case F_CONST -> floatConstInstruction(opcode, chunk, offset);
             case NEW, S_CONST -> stringConstInstruction(opcode, chunk, offset);
-            case INVOKE_STATIC, INVOKE_VIRTUAL, INVOKE_INTERFACE -> invoke(opcode, chunk, offset);
+            case INVOKE_STATIC, INVOKE_VIRTUAL -> invoke(opcode, chunk, offset);
+            case INVOKE_DYNAMIC -> invokeDynamic(opcode, chunk, offset);
             case JUMP, JUMP_IF_FALSE -> jump(opcode, chunk, offset);
             case SWITCH -> switchInstruction(opcode, chunk, offset);
             case GET_FIELD, PUT_FIELD -> fieldOp(opcode, chunk, offset);
@@ -142,6 +143,13 @@ public class Disassembler {
         String signature = VirtualMachine.constString(chunk.constants(), id);
         System.out.printf("%-16s %4d '%s'\n", opcode, id, signature);
         return offset + 3;
+    }
+
+    private static int invokeDynamic(Opcode opcode, Chunk chunk, int offset) {
+        int id = read2b(chunk.code(), offset + 1);
+        String signature = VirtualMachine.constString(chunk.constants(), id);
+        System.out.printf("%-16s %4d '%s', capturing %s variables\n", opcode, id, signature, chunk.code()[offset + 3]);
+        return offset + 4;
     }
 
     private static int fieldOp(Opcode opcode, Chunk chunk, int offset) {

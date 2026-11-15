@@ -1,5 +1,7 @@
 package net.kapitencraft.lang.exe;
 
+import net.kapitencraft.lang.exe.lambda.ScriptedCallSite;
+import net.kapitencraft.lang.exe.lambda.ScriptedMethodHandle;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.holder.bytecode.LocalVariableTable;
 import net.kapitencraft.lang.func.ScriptedCallable;
@@ -12,7 +14,10 @@ import net.kapitencraft.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.StringReader;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.lang.invoke.CallSite;
 import java.util.*;
 
 public class VirtualMachine {
@@ -180,7 +185,7 @@ public class VirtualMachine {
                         callStackTop = 0;
                         stackIndex = 0;
                     }
-                }, () -> System.err.printf("could not find executable main method inside class '%s'", target.absoluteName()));
+                }, () -> System.err.printf("could not find executable main method inside class '%s'\n", target.absoluteName()));
     }
 
     public static void run() {
@@ -191,7 +196,7 @@ public class VirtualMachine {
                 if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s Executing %s\n", visualStackSize(), o);
                 else if (DEBUG == DebugType.STACK) System.out.printf("[DEBUG]: %10s %s|\n", o, " ".repeat(stackIndex));
                 switch (o) {
-                    //region control-flow
+                    //region flow-control
                     case POP -> stackIndex--; //pops the highest stack element
                     case POP_2 -> stackIndex -= 2; //pops the 2 highest stack elements
                     case DUP -> stack[stackIndex] = stack[stackIndex++ - 1]; //duplicates the highest stack element
@@ -231,6 +236,23 @@ public class VirtualMachine {
                         stack[stackIndex++] = obj;
                         stack[stackIndex++] = obj1;
                     }
+                    case JUMP -> ip = read2Byte();
+                    case JUMP_IF_FALSE -> {
+                        if (!(boolean) pop()) ip = read2Byte();
+                        else ip += 2;
+                    }
+                    case RETURN -> {
+                        if (--callStackTop > 0) {
+                            popCallNoArg();
+                        } else
+                            break func;
+                    }
+                    case RETURN_ARG -> {
+                        if (--callStackTop > 0) {
+                            popCall();
+                        } else
+                            break func;
+                    }
                     //endregion
                     case TRACE -> {
                         TraceTable table;
@@ -243,8 +265,9 @@ public class VirtualMachine {
                         }
                         table.lookup(stackBottom);
                     }
+                    //region invoke
                     case INVOKE_STATIC -> {
-                        String execute = constString(constants, read2Byte());
+                        String execute = readString();
                         StringReader reader = new StringReader(execute);
                         ScriptedClass type = VarTypeManager.flatParse(reader);
                         if (invokeStaticInitIfNecessary(type, 3)) continue;
@@ -266,7 +289,7 @@ public class VirtualMachine {
                             pushCall(new CallFrame(execute, callable, callableStackTop));
                     }
                     case INVOKE_VIRTUAL -> {
-                        String execute = constString(constants, read2Byte());
+                        String execute = readString();
                         StringReader reader = new StringReader(execute);
                         ScriptedClass type = VarTypeManager.flatParse(reader);
                         if (invokeStaticInitIfNecessary(type, 3)) continue;
@@ -274,37 +297,58 @@ public class VirtualMachine {
                         ScriptedCallable referenceCallable = type.getMethod(reader.getRemaining());
 
                         int length = referenceCallable.argTypes().length + 1; //reference object
-                        int callableStackTop = stackIndex - length;
-                        ClassInstance instance = (ClassInstance) stack[callableStackTop];
+                        int stackTop = stackIndex - length;
+
+                        Object reference = stack[stackTop];
+                        if (reference instanceof ScriptedCallSite(ScriptedMethodHandle handle, Object[] args)) {
+                            if (args.length > 0) {
+                                //coping over call site arguments below lambda arguments to ensure method references are resolved correctly
+                                for (int i = 0; i < args.length; i++) {
+                                    stack[stackIndex - i + args.length] = stack[stackIndex - i];
+                                }
+                                System.arraycopy(args, 0, stack, stackTop, args.length);
+                            }
+                            pushCall(new CallFrame(handle.signature(), handle.exe(), stackTop));
+                            break;
+                        }
+                        ClassInstance instance = (ClassInstance) reference;
                         ScriptedCallable callable = instance.getType().getMethod(reader.getRemaining()); //virtual invoke of the method
 
                         if (callable.isNative()) {
                             if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]: calling native: %s\n", execute);
                             Object[] args = new Object[length];
-                            System.arraycopy(stack, callableStackTop, args, 0, length);
-                            stackIndex = callableStackTop; //reset stack index
+                            System.arraycopy(stack, stackTop, args, 0, length);
+                            stackIndex = stackTop; //reset stack index
                             Object object = callable.call(args);
                             if (callable.retType().is(VarTypeManager.VOID)) break;
                             push(object);
                         } else
-                            pushCall(new CallFrame(execute, callable, callableStackTop));
+                            pushCall(new CallFrame(execute, callable, stackTop));
                     }
-                    case INVOKE_INTERFACE -> {
-                        String execute = constString(constants, read2Byte());
-                        StringReader reader = new StringReader(execute);
+                    case INVOKE_DYNAMIC -> {
+                        String signature = readString();
+                        StringReader reader = new StringReader(signature);
                         ScriptedClass type = VarTypeManager.flatParse(reader);
                         if (invokeStaticInitIfNecessary(type, 3)) continue;
 
-                        ScriptedCallable callable = type.getMethod(reader.getRemaining());
+                        ScriptedCallable referenceCallable = type.getMethod(reader.getRemaining());
+                        //more like: create dynamic
+                        int captureCount = readByte();
 
-                        int length = callable.argTypes().length;
-                        ClassInstance instance = (ClassInstance) stack[stackIndex - length];
+                        Object[] captures = new Object[captureCount];
+                        if (captureCount > 0) {
+                            System.arraycopy(stack, stackIndex - captureCount, captures, 0, captureCount);
+                        }
 
-                        ScriptedClass instanceType = instance.getType();
-                        instanceType.getMethods();
+                        ScriptedMethodHandle handle = new ScriptedMethodHandle(referenceCallable, signature);
+
+                        ScriptedCallSite site = new ScriptedCallSite(handle, captures);
+                        //TODO deal with virtual call sites
+                        push(site);
                     }
+                    //endregion
                     case INSTANCEOF -> {
-                        ScriptedClass reference = VarTypeManager.directFlatParse(constString(constants, read2Byte()));
+                        ScriptedClass reference = VarTypeManager.directFlatParse(readString());
                         ClassInstance value = (ClassInstance) pop();
                         push(reference.isChildOf(value.getType()));
                     }
@@ -312,32 +356,10 @@ public class VirtualMachine {
                         if (!handleException((ClassInstance) pop())) return;
                     }
                     case NEW -> {
-                        ScriptedClass reference = VarTypeManager.directFlatParse(constString(constants, read2Byte()));
+                        ScriptedClass reference = VarTypeManager.directFlatParse(readString());
                         push(new DynamicClassInstance(reference));
                     }
-                    case IA_NEW -> push(new int[(int) pop()]);
-                    case DA_NEW -> push(new double[(int) pop()]);
-                    case CA_NEW -> push(new char[(int) pop()]);
-                    case FA_NEW -> push(new float[(int) pop()]);
-                    case RA_NEW -> push(new Object[(int) pop()]);
-                    case RETURN -> {
-                        if (--callStackTop > 0) {
-                            popCallNoArg();
-                        } else
-                            break func;
-                    }
-                    case RETURN_ARG -> {
-                        if (--callStackTop > 0) {
-                            popCall();
-                        } else
-                            break func;
-                    }
                     case SLICE -> slice();
-                    case JUMP -> ip = read2Byte();
-                    case JUMP_IF_FALSE -> {
-                        if (!(boolean) pop()) ip = read2Byte();
-                        else ip += 2;
-                    }
                     case ARRAY_LENGTH -> push(arrayLength(pop()));
                     case GET -> get(readByte());
                     case GET_0 -> get(0);
@@ -365,7 +387,7 @@ public class VirtualMachine {
                     case I_CONST -> push(constInt(constants, read2Byte()));
                     case D_CONST -> push(constDouble(constants, read2Byte()));
                     case F_CONST -> push(constFloat(constants, read2Byte()));
-                    case S_CONST -> push(NativeClassLoader.wrapString(constString(constants, read2Byte())));
+                    case S_CONST -> push(NativeClassLoader.wrapString(readString()));
                     //endregion
                     case CONCENTRATION -> {
                         Object object = pop();
@@ -483,6 +505,12 @@ public class VirtualMachine {
                         push(value1 - value2);
                     }
                     //endregion
+                    //region array
+                    case IA_NEW -> push(new int[(int) pop()]);
+                    case DA_NEW -> push(new double[(int) pop()]);
+                    case CA_NEW -> push(new char[(int) pop()]);
+                    case FA_NEW -> push(new float[(int) pop()]);
+                    case RA_NEW -> push(new Object[(int) pop()]);
                     case IA_LOAD -> push(((int[]) pop())[(int) pop()]);
                     case DA_LOAD -> push(((double[]) pop())[(int) pop()]);
                     case CA_LOAD -> push(((char[]) pop())[(int) pop()]);
@@ -513,6 +541,7 @@ public class VirtualMachine {
                         int idx = (int) pop();
                         ((Object[]) pop())[idx] = val;
                     }
+                    //endregion
                     //region compare
                     case EQUAL -> push(pop() == pop());
                     case NEQUAL -> push(pop() != pop());
@@ -608,28 +637,28 @@ public class VirtualMachine {
                     case GET_FIELD -> {
                         ClassInstance instance = (ClassInstance) pop();
                         if (invokeStaticInitIfNecessary(instance.getType(), 1)) continue;
-                        String s = constString(constants, read2Byte());
+                        String s = readString();
                         push(instance.getField(s));
                     }
                     case GET_STATIC -> {
-                        String c = constString(constants, read2Byte());
+                        String c = readString();
                         ScriptedClass scriptedClass = VarTypeManager.directFlatParse(c);
                         if (invokeStaticInitIfNecessary(scriptedClass, 3)) continue;
-                        String field = constString(constants, read2Byte());
+                        String field = readString();
                         push(scriptedClass.getStaticField(field));
                     }
                     case PUT_FIELD -> {
                         Object value = pop();
                         ClassInstance instance = (ClassInstance) pop();
                         if (invokeStaticInitIfNecessary(instance.getType(), 1)) continue;
-                        String s = constString(constants, read2Byte());
+                        String s = readString();
                         instance.assignField(s, value);
                     }
                     case PUT_STATIC -> {
-                        String c = constString(constants, read2Byte());
+                        String c = readString();
                         ScriptedClass scriptedClass = VarTypeManager.directFlatParse(c);
                         if (invokeStaticInitIfNecessary(scriptedClass, 3)) continue;
-                        String field = constString(constants, read2Byte());
+                        String field = readString();
                         scriptedClass.setStaticField(field, pop());
                     }
                     default -> throw new IllegalArgumentException("unknown opcode: " + o);
@@ -640,6 +669,10 @@ public class VirtualMachine {
                     return;
             }
         }
+    }
+
+    private static @NotNull String readString() {
+        return constString(constants, read2Byte());
     }
 
     private static byte[] readLocals(int pos) {
