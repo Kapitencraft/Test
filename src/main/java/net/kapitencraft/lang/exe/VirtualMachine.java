@@ -290,6 +290,8 @@ public class VirtualMachine {
 
                         Object reference = stack[stackTop];
                         if (reference instanceof ScriptedCallSite(ScriptedMethodHandle handle, Object[] args)) {
+                            StringReader handleSignatureReader = new StringReader(handle.signature());
+                            VarTypeManager.flatParse(handleSignatureReader);
                             if (args.length > 0) {
                                 //coping over call site arguments below lambda arguments to ensure method references are resolved correctly
                                 for (int i = 0; i < args.length; i++) {
@@ -297,7 +299,11 @@ public class VirtualMachine {
                                 }
                                 System.arraycopy(args, 0, stack, stackTop, args.length);
                             }
-                            pushCall(new CallFrame(handle.signature(), handle.exe(), stackTop));
+                            ScriptedCallable callable = handle.exe();
+                            if (handle.kind() == 1) {
+                                callable = ((ClassInstance) args[0]).getType().getMethod(handleSignatureReader.getRemaining());
+                            }
+                            pushCall(new CallFrame(handle.signature(), callable, stackTop));
                             break;
                         }
                         ClassInstance instance = (ClassInstance) reference;
@@ -320,7 +326,7 @@ public class VirtualMachine {
                             System.arraycopy(stack, stackIndex - captureCount, captures, 0, captureCount);
                         }
 
-                        ScriptedMethodHandle handle = new ScriptedMethodHandle(referenceCallable, signature);
+                        ScriptedMethodHandle handle = new ScriptedMethodHandle(referenceCallable, signature, readByte());
 
                         ScriptedCallSite site = new ScriptedCallSite(handle, captures);
                         //TODO deal with virtual call sites

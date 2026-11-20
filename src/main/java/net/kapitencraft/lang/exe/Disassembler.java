@@ -148,7 +148,8 @@ public class Disassembler {
     private static int invokeDynamic(Opcode opcode, Chunk chunk, int offset) {
         int id = read2b(chunk.code(), offset + 1);
         String signature = VirtualMachine.constString(chunk.constants(), id);
-        System.out.printf("%-16s %4d '%s', capturing %s variables\n", opcode, id, signature, chunk.code()[offset + 3]);
+        String type = chunk.code()[offset + 4] > 0 ? "virtual" : "static";
+        System.out.printf("%-16s %4d '%s', capturing %s variables, %s\n", opcode, id, signature, chunk.code()[offset + 3], type);
         return offset + 4;
     }
 

@@ -7,11 +7,13 @@ import net.kapitencraft.lang.holder.bytecode.Chunk;
 public class InvokeDynamicInstruction extends CodeInstruction {
     private final String methodSig;
     private final int captureCount;
+    private final int kind; //0 = invoke static, 1 = invoke virtual
 
-    public InvokeDynamicInstruction(String methodSig, int captureCount) {
+    public InvokeDynamicInstruction(String methodSig, int captureCount, int kind) {
         super(Opcode.INVOKE_DYNAMIC);
         this.methodSig = methodSig;
         this.captureCount = captureCount;
+        this.kind = kind;
     }
 
     @Override
@@ -19,11 +21,12 @@ public class InvokeDynamicInstruction extends CodeInstruction {
         super.save(builder, ips);
         builder.injectString(methodSig);
         builder.addArg(captureCount);
+        builder.addArg(kind);
     }
 
     @Override
     public int length() {
-        return 5;
+        return 6;
     }
 
     @Override
