@@ -15,9 +15,7 @@ import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.StringReader;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.lang.invoke.CallSite;
 import java.util.*;
 
 public class VirtualMachine {
@@ -277,16 +275,7 @@ public class VirtualMachine {
                         if (!callable.isStatic()) length++; //remove callee too
                         int callableStackTop = stackIndex - length;
 
-                        if (callable.isNative()) {
-                            if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]: calling native: %s\n", execute);
-                            Object[] args = new Object[length];
-                            System.arraycopy(stack, callableStackTop, args, 0, length);
-                            stackIndex = callableStackTop; //reset stack index
-                            Object object = callable.call(args);
-                            if (callable.retType().is(VarTypeManager.VOID)) break;
-                            push(object);
-                        } else
-                            pushCall(new CallFrame(execute, callable, callableStackTop));
+                        invokeCallable(callable, execute, new Object[length], callableStackTop, length);
                     }
                     case INVOKE_VIRTUAL -> {
                         String execute = readString();
@@ -314,16 +303,7 @@ public class VirtualMachine {
                         ClassInstance instance = (ClassInstance) reference;
                         ScriptedCallable callable = instance.getType().getMethod(reader.getRemaining()); //virtual invoke of the method
 
-                        if (callable.isNative()) {
-                            if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]: calling native: %s\n", execute);
-                            Object[] args = new Object[length];
-                            System.arraycopy(stack, stackTop, args, 0, length);
-                            stackIndex = stackTop; //reset stack index
-                            Object object = callable.call(args);
-                            if (callable.retType().is(VarTypeManager.VOID)) break;
-                            push(object);
-                        } else
-                            pushCall(new CallFrame(execute, callable, stackTop));
+                        invokeCallable(callable, execute, new Object[length], stackTop, length);
                     }
                     case INVOKE_DYNAMIC -> {
                         String signature = readString();
@@ -360,7 +340,7 @@ public class VirtualMachine {
                         push(new DynamicClassInstance(reference));
                     }
                     case SLICE -> slice();
-                    case ARRAY_LENGTH -> push(arrayLength(pop()));
+                    //region local vars
                     case GET -> get(readByte());
                     case GET_0 -> get(0);
                     case GET_1 -> get(1);
@@ -369,6 +349,7 @@ public class VirtualMachine {
                     case ASSIGN_0 -> assign(0);
                     case ASSIGN_1 -> assign(1);
                     case ASSIGN_2 -> assign(2);
+                    //endregion
                     //region const
                     case NULL -> push(null);
                     case TRUE -> push(true);
@@ -506,6 +487,7 @@ public class VirtualMachine {
                     }
                     //endregion
                     //region array
+                    case ARRAY_LENGTH -> push(arrayLength(pop()));
                     case IA_NEW -> push(new int[(int) pop()]);
                     case DA_NEW -> push(new double[(int) pop()]);
                     case CA_NEW -> push(new char[(int) pop()]);
@@ -634,6 +616,7 @@ public class VirtualMachine {
                             if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s Default Switch Branch\n", visualStackSize());
                         }
                     }
+                    //region object IO
                     case GET_FIELD -> {
                         ClassInstance instance = (ClassInstance) pop();
                         if (invokeStaticInitIfNecessary(instance.getType(), 1)) continue;
@@ -661,6 +644,7 @@ public class VirtualMachine {
                         String field = readString();
                         scriptedClass.setStaticField(field, pop());
                     }
+                    //endregion
                     default -> throw new IllegalArgumentException("unknown opcode: " + o);
                 }
             } catch (Throwable t) {
@@ -669,6 +653,18 @@ public class VirtualMachine {
                     return;
             }
         }
+    }
+
+    private static void invokeCallable(ScriptedCallable callable, String execute, Object[] args, int callableStackTop, int length1) {
+        if (callable.isNative()) {
+            if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]: calling native: %s\n", execute);
+            System.arraycopy(stack, callableStackTop, args, 0, length1);
+            stackIndex = callableStackTop; //reset stack index
+            Object object = callable.call(args);
+            if (callable.retType().is(VarTypeManager.VOID)) return;
+            push(object);
+        } else
+            pushCall(new CallFrame(execute, callable, callableStackTop));
     }
 
     private static @NotNull String readString() {
