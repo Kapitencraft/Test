@@ -663,7 +663,7 @@ public class VirtualMachine {
 
     private static void invokeCallable(ScriptedCallable callable, String execute, Object[] args, int callableStackTop, int length1) {
         if (callable.isNative()) {
-            if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]: calling native: %s\n", execute);
+            if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s calling native: %s\n", visualStackSize(), execute);
             System.arraycopy(stack, callableStackTop, args, 0, length1);
             stackIndex = callableStackTop; //reset stack index
             Object object = callable.call(args);
