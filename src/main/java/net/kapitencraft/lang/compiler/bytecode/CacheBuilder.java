@@ -320,7 +320,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitBlockLambdaExpr(Expr.BlockLambda expr) {
         byteCodeBuilder.changeLineIfNecessary(expr.keyword);
-        byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, expr.captureCount, 0));
+        for (Expr capture : expr.captures) {
+            cache(capture);
+        }
+        byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, expr.captures.length, 0));
         return null;
     }
 
@@ -516,7 +519,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitExprLambdaExpr(Expr.ExprLambda expr) {
         byteCodeBuilder.changeLineIfNecessary(expr.keyword);
-        byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, expr.captureCount, 0));
+        for (Expr capture : expr.captures) {
+            cache(capture);
+        }
+        byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, expr.captures.length, 0));
         return null;
     }
 
@@ -651,6 +657,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitMethodRefExpr(Expr.MethodRef expr) {
         byteCodeBuilder.changeLineIfNecessary(expr.name);
+        cache(expr.obj);
         byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, 1, 1));
         return null;
     }

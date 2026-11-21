@@ -167,14 +167,14 @@
         "ExprLambda": {
           "keyword": "Token",
           "params": "Pair<SourceReference, Token>[]",
-          "captureCount": "int",
+          "captures": "Expr[]",
           "signature": "String",
           "value": "Expr"
         },
         "BlockLambda": {
           "keyword": "Token",
           "params": "Pair<SourceReference, Token>[]",
-          "captureCount": "int",
+          "captures": "Expr[]",
           "signature": "String",
           "value": "Stmt.Block"
         }

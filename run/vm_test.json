@@ -45,7 +45,7 @@
   {
     "target": "vm_test.GenericTest",
     "output": [
-      "Hello!", "5",  "19.0", "14", "10", "5", "20", "10"
+      "Hello!", "5",  "19.0", "14", "10"
     ]
   },
   {
@@ -104,6 +104,12 @@
     "target": "vm_test.SumTest",
     "output": [
       "1275", "42925"
+    ]
+  },
+  {
+    "target": "vm_test.LambdaTest",
+    "output": [
+      "5", "20", "100", "15"
     ]
   }
 ]

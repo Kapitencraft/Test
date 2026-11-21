@@ -2,15 +2,15 @@ package net.kapitencraft.lang.exe;
 
 import net.kapitencraft.lang.exe.lambda.ScriptedCallSite;
 import net.kapitencraft.lang.exe.lambda.ScriptedMethodHandle;
+import net.kapitencraft.lang.exe.natives.NativeClassInstance;
+import net.kapitencraft.lang.exe.natives.NativeClassLoader;
+import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.bytecode.Chunk;
 import net.kapitencraft.lang.holder.bytecode.LocalVariableTable;
-import net.kapitencraft.lang.func.ScriptedCallable;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.lang.oop.clazz.inst.DynamicClassInstance;
-import net.kapitencraft.lang.exe.natives.NativeClassInstance;
-import net.kapitencraft.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.lang.tool.Util;
 import net.kapitencraft.tool.StringReader;
 import org.jetbrains.annotations.Contract;
@@ -43,6 +43,7 @@ public class VirtualMachine {
         private final ScriptedCallable callable;
         private final byte[] code, constants;
         private final int stackBottom;
+        private int stackIndex;
         private final Chunk.ExceptionHandler[] handlers;
         private int ip;
 
@@ -192,7 +193,7 @@ public class VirtualMachine {
             try {
                 Opcode o = Opcode.byId(readByte());
                 if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s Executing %s\n", visualStackSize(), o);
-                else if (DEBUG == DebugType.STACK) System.out.printf("[DEBUG]: %10s %s|\n", o, " ".repeat(stackIndex));
+                else if (DEBUG == DebugType.STACK) System.out.printf("[DEBUG]: %15s %s\n", o, getStackSnapshot());
                 switch (o) {
                     //region flow-control
                     case POP -> stackIndex--; //pops the highest stack element
@@ -275,6 +276,7 @@ public class VirtualMachine {
                         if (!callable.isStatic()) length++; //remove callee too
                         int callableStackTop = stackIndex - length;
 
+                        frame.stackIndex = callableStackTop;
                         invokeCallable(callable, execute, new Object[length], callableStackTop, length);
                     }
                     case INVOKE_VIRTUAL -> {
@@ -288,10 +290,12 @@ public class VirtualMachine {
                         int length = referenceCallable.argTypes().length + 1; //reference object
                         int stackTop = stackIndex - length;
 
+                        frame.stackIndex = stackTop;
                         Object reference = stack[stackTop];
                         if (reference instanceof ScriptedCallSite(ScriptedMethodHandle handle, Object[] args)) {
                             StringReader handleSignatureReader = new StringReader(handle.signature());
                             VarTypeManager.flatParse(handleSignatureReader);
+                            stackTop++; //don't add the call site to the next frame
                             if (args.length > 0) {
                                 //coping over call site arguments below lambda arguments to ensure method references are resolved correctly
                                 for (int i = 0; i < args.length; i++) {
@@ -325,11 +329,11 @@ public class VirtualMachine {
                         if (captureCount > 0) {
                             System.arraycopy(stack, stackIndex - captureCount, captures, 0, captureCount);
                         }
+                        stackIndex -= captureCount; //pop all captured variables
 
                         ScriptedMethodHandle handle = new ScriptedMethodHandle(referenceCallable, signature, readByte());
 
                         ScriptedCallSite site = new ScriptedCallSite(handle, captures);
-                        //TODO deal with virtual call sites
                         push(site);
                     }
                     //endregion
@@ -386,7 +390,7 @@ public class VirtualMachine {
                     case IIRC -> { //index, const
                         int idx = readByte();
                         int val = readByte();
-                        stack[stackBottom + idx] = ((int) stack[stackBottom + idx]) +  val;
+                        stack[stackBottom + idx] = ((int) stack[stackBottom + idx]) + val;
                     }
                     case I_SH_L -> {
                         int val2 = (int) pop();
@@ -608,7 +612,8 @@ public class VirtualMachine {
                             int obj = read4bWithOffset(idx * 6);
                             if (obj == entry) {
                                 ip = read2ByteWithOffset(idx * 6 + 4);
-                                if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s Switch Branch %s\n", visualStackSize(), obj);
+                                if (DEBUG == DebugType.OPERATIONS)
+                                    System.out.printf("[DEBUG]:%s Switch Branch %s\n", visualStackSize(), obj);
                                 break;
                             }
                             if (obj < entry)
@@ -619,7 +624,8 @@ public class VirtualMachine {
                         }
                         if (lLoc >= uLoc) {
                             ip = defaultPos;
-                            if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s Default Switch Branch\n", visualStackSize());
+                            if (DEBUG == DebugType.OPERATIONS)
+                                System.out.printf("[DEBUG]:%s Default Switch Branch\n", visualStackSize());
                         }
                     }
                     //region object IO
@@ -661,9 +667,22 @@ public class VirtualMachine {
         }
     }
 
+    private static String getStackSnapshot() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+        for (int i = stackBottom; i < stackIndex; i++) {
+            builder.append(Interpreter.stringify(stack[i]));
+            if (i < stackIndex - 1)
+                builder.append(", ");
+        }
+        builder.append("]");
+        return builder.toString();
+    }
+
     private static void invokeCallable(ScriptedCallable callable, String execute, Object[] args, int callableStackTop, int length1) {
         if (callable.isNative()) {
-            if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s calling native: %s\n", visualStackSize(), execute);
+            if (DEBUG == DebugType.OPERATIONS)
+                System.out.printf("[DEBUG]:%s calling native: %s\n", visualStackSize(), execute);
             System.arraycopy(stack, callableStackTop, args, 0, length1);
             stackIndex = callableStackTop; //reset stack index
             Object object = callable.call(args);
@@ -694,6 +713,7 @@ public class VirtualMachine {
         ScriptedCallable method = scriptedClass.getMethod("<clinit>()");
         if (method != null) {
             ip -= opcodeOffset; //reset to the last invoked Opcode, to prevent ip corruption
+            frame.stackIndex = stackIndex;
             pushCall(new CallFrame(VarTypeManager.getClassName(scriptedClass) + "<clinit>", method, stackIndex));
             return true;
         }
@@ -772,7 +792,7 @@ public class VirtualMachine {
         }
         T[] out = (T[]) new Object[(max - min) / interval];
         int index = 0;
-        for (int i = min; i < max; i+=interval) {
+        for (int i = min; i < max; i += interval) {
             out[index] = array[i];
             index++;
         }
@@ -790,35 +810,39 @@ public class VirtualMachine {
 
     private static void get(int i) {
         push(stack[stackBottom + i]);
-        if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s GET: %s (%s)\n", visualStackSize(), i, frame.callable.getChunk().localVariableTable().get(ip, i).first());
+        if (DEBUG == DebugType.OPERATIONS)
+            System.out.printf("[DEBUG]:%s GET: %s (%s)\n", visualStackSize(), i, frame.callable.getChunk().localVariableTable().get(ip, i).first());
     }
 
     private static void assign(int i) {
         stack[stackBottom + i] = pop();
-        if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s ASSIGN: %s (%s)\n", visualStackSize(), i, frame.callable.getChunk().localVariableTable().get(ip, i).first());
+        if (DEBUG == DebugType.OPERATIONS)
+            System.out.printf("[DEBUG]:%s ASSIGN: %s (%s)\n", visualStackSize(), i, frame.callable.getChunk().localVariableTable().get(ip, i).first());
     }
 
     //region flow-control
     private static void popCall() {
         Object o = pop();
-        stackIndex = stackBottom;
-        push(o);
         frame = callStack[callStackTop - 1];
         ip = frame.ip;
+        stackIndex = frame.stackIndex;
+        push(o);
         code = frame.code;
         constants = frame.constants;
         stackBottom = frame.stackBottom;
-        if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s POP_CALL (@%3d): stackIndex=%3d\n", visualStackSize(), callStackTop, frame.stackBottom);
+        if (DEBUG == DebugType.OPERATIONS)
+            System.out.printf("[DEBUG]:%s POP_CALL (@%3d): stackIndex=%3d\n", visualStackSize(), callStackTop, stackIndex);
     }
 
     private static void popCallNoArg() {
-        stackIndex = stackBottom;
         frame = callStack[callStackTop - 1];
+        stackIndex = frame.stackIndex;
         ip = frame.ip;
         code = frame.code;
         constants = frame.constants;
         stackBottom = frame.stackBottom;
-        if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s POP_CALL_NO_ARG (@%3d): stackIndex=%3d\n", visualStackSize(), callStackTop, frame.stackBottom);
+        if (DEBUG == DebugType.OPERATIONS)
+            System.out.printf("[DEBUG]:%s POP_CALL_NO_ARG (@%3d): stackIndex=%3d\n", visualStackSize(), callStackTop, stackIndex);
     }
 
     private static void init(CallFrame callFrame) {
@@ -836,17 +860,20 @@ public class VirtualMachine {
         code = callFrame.code;
         constants = callFrame.constants;
         stackBottom = callFrame.stackBottom;
-        if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s PUSH_CALL (@%3d): stackIndex=%3d, name=%s\n", visualStackSize(), callStackTop - 1, callFrame.stackBottom, callFrame.signature);
+        if (DEBUG == DebugType.OPERATIONS)
+            System.out.printf("[DEBUG]:%s PUSH_CALL (@%3d): stackIndex=%3d, name=%s\n", visualStackSize(), callStackTop - 1, callFrame.stackBottom, callFrame.signature);
     }
 
     private static void push(Object o) {
         stack[stackIndex++] = o;
-        if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s PUSH (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(o));
+        if (DEBUG == DebugType.OPERATIONS)
+            System.out.printf("[DEBUG]:%s PUSH (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(o));
     }
 
     @Contract()
     private static Object pop() {
-        if (DEBUG == DebugType.OPERATIONS) System.out.printf("[DEBUG]:%s POP  (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(stack[stackIndex - 1]));
+        if (DEBUG == DebugType.OPERATIONS)
+            System.out.printf("[DEBUG]:%s POP  (@%3d): %s\n", visualStackSize(), stackIndex - 1, Util.objToString(stack[stackIndex - 1]));
         return stack[--stackIndex];
     }
     //endregion

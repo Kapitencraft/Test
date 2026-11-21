@@ -150,7 +150,7 @@ public class Disassembler {
         String signature = VirtualMachine.constString(chunk.constants(), id);
         String type = chunk.code()[offset + 4] > 0 ? "virtual" : "static";
         System.out.printf("%-16s %4d '%s', capturing %s variables, %s\n", opcode, id, signature, chunk.code()[offset + 3], type);
-        return offset + 4;
+        return offset + 5;
     }
 
     private static int fieldOp(Opcode opcode, Chunk chunk, int offset) {

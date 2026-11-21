@@ -281,7 +281,7 @@ public interface Expr {
     class ExprLambda implements Expr {
         public Token keyword;
         public Pair<SourceReference, Token>[] params;
-        public int captureCount;
+        public Expr[] captures;
         public String signature;
         public Expr value;
         public ClassReference retType;
@@ -431,7 +431,7 @@ public interface Expr {
     class BlockLambda implements Expr {
         public Token keyword;
         public Pair<SourceReference, Token>[] params;
-        public int captureCount;
+        public Expr[] captures;
         public String signature;
         public Stmt.Block value;
         public ClassReference retType;
