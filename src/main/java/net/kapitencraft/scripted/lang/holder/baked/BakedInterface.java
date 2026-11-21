@@ -17,10 +17,11 @@ import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public record BakedInterface(ErrorStorage logger, Generics generics, ClassReference target,
-                             Pair<Token, CompileCallable>[] methods,
+                             List<Pair<Token, CompileCallable>> methods,
                              Map<String, CompileField> staticFields, ClassReference[] interfaces,
                              Token name, String pck,
                              Annotation[] annotations
@@ -31,9 +32,9 @@ public record BakedInterface(ErrorStorage logger, Generics generics, ClassRefere
 
         Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
         for (Pair<Token, CompileCallable> method : this.methods()) {
-            methods.putIfAbsent(method.getFirst().lexeme(), new DataMethodContainer.Builder(this.name()));
-            DataMethodContainer.Builder builder = methods.get(method.getFirst().lexeme());
-            builder.addMethod(logger, method.getSecond(), method.getFirst());
+            methods.putIfAbsent(method.first().lexeme(), new DataMethodContainer.Builder(this.name()));
+            DataMethodContainer.Builder builder = methods.get(method.first().lexeme());
+            builder.addMethod(logger, method.second(), method.first());
         }
 
         return new CompileClass(
@@ -55,10 +56,10 @@ public record BakedInterface(ErrorStorage logger, Generics generics, ClassRefere
 
     @Override
     public void analyse() {
-        SemanticAnalyser analyser = new SemanticAnalyser(logger);
+        SemanticAnalyser analyser = new SemanticAnalyser(logger, this.methods::add);
 
         for (Pair<Token, CompileCallable> method : this.methods) {
-            method.getSecond().analyseSemantics(analyser, this.target);
+            method.second().analyseSemantics(analyser, this.target, method.first());
         }
         for (CompileField value : staticFields.values()) {
             value.analyseSemantics(analyser);

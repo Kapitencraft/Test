@@ -3,7 +3,7 @@ package vm_test;
 class ArrayTest {
 
     static void main(String[] args) {
-        for (String s : args[2::]) {
+        for (String s : args from 2) {
             System.print(s);
         }
         args[0] = "Element A";

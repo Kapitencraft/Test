@@ -21,12 +21,12 @@ public record BakedClass(
         ErrorStorage logger,
         Generics generics,
         ClassReference target,
-        Pair<Token, CompileCallable>[] methods,
-        Pair<Token, CompileCallable>[] constructors,
+        List<Pair<Token, CompileCallable>> methods,
+        List<Pair<Token, CompileCallable>> constructors,
         Map<Token, CompileField> fields,
         ClassReference superclass, Token name, String pck,
         ClassReference[] interfaces,
-        short modifiers,
+        int modifiers,
         Annotation[] annotations
 ) implements Compiler.ClassBuilder {
 
@@ -34,13 +34,13 @@ public record BakedClass(
     public CompileClass build() {
         Map<String, DataMethodContainer.Builder> methods = new HashMap<>();
         for (Pair<Token, CompileCallable> method : this.methods()) {
-            methods.putIfAbsent(method.getFirst().lexeme(), new DataMethodContainer.Builder(this.name()));
-            methods.get(method.getFirst().lexeme()).addMethod(logger, method.getSecond(), method.getFirst());
+            methods.putIfAbsent(method.first().lexeme(), new DataMethodContainer.Builder(this.name()));
+            methods.get(method.first().lexeme()).addMethod(logger, method.second(), method.first());
         }
 
         for (Pair<Token, CompileCallable> method : this.constructors()) {
             methods.putIfAbsent("<init>", new DataMethodContainer.Builder(this.name()));
-            methods.get("<init>").addMethod(logger, method.getSecond(), method.getFirst());
+            methods.get("<init>").addMethod(logger, method.second(), method.first());
         }
 
         return new CompileClass(
@@ -57,13 +57,16 @@ public record BakedClass(
 
     @Override
     public void analyse() {
-        SemanticAnalyser analyser = new SemanticAnalyser(this.logger);
+        SemanticAnalyser analyser = new SemanticAnalyser(this.logger, this.methods::add);
 
-        for (Pair<Token, CompileCallable> method : this.methods) {
-            method.getSecond().analyseSemantics(analyser, this.target);
+        List<Pair<Token, CompileCallable>> pairs = this.methods;
+        //must be iterator loop due to the nature of the analyser being able to append synthetic (lambda) methods
+        for (int i = 0; i < pairs.size(); i++) {
+            Pair<Token, CompileCallable> method = pairs.get(i);
+            method.second().analyseSemantics(analyser, this.target, method.first());
         }
         for (Pair<Token, CompileCallable> constructor : this.constructors) {
-            constructor.getSecond().analyseSemantics(analyser, this.target);
+            constructor.second().analyseSemantics(analyser, this.target, constructor.first());
         }
         for (CompileField value : this.fields.values()) {
             value.analyseSemantics(analyser);

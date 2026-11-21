@@ -13,7 +13,7 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.List;
 
-public record PythonMethodHolder(short modifiers,
+public record PythonMethodHolder(int modifiers,
                                 AnnotationObj[] annotations, Generics generics, SourceReference returnType,
                                 Token name, Token closeBracket, List<Pair<SourceReference, String>> params,
                                 List<SourceReference> thrown,
@@ -21,7 +21,7 @@ public record PythonMethodHolder(short modifiers,
     public void validate(ErrorStorage logger) {
         Validatable.validateNullable(annotations, logger);
         returnType.validate(logger);
-        params.forEach(p -> p.getFirst().validate(logger));
+        params.forEach(p -> p.first().validate(logger));
         thrown.forEach(s -> s.validate(logger));
     }
 

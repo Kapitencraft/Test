@@ -153,10 +153,35 @@
           "entries": "Expr[]",
           "types": "Token[]",
           "dataType": "ClassReference"
+        },
+        "MethodRef": {
+          "obj": "Expr",
+          "signature": "String",
+          "name": "Token"
+        },
+        "StaticMethodRef": {
+          "obj": "ClassReference",
+          "signature": "String",
+          "name": "Token"
+        },
+        "ExprLambda": {
+          "keyword": "Token",
+          "params": "Pair<SourceReference, Token>[]",
+          "captures": "Expr[]",
+          "signature": "String",
+          "value": "Expr"
+        },
+        "BlockLambda": {
+          "keyword": "Token",
+          "params": "Pair<SourceReference, Token>[]",
+          "captures": "Expr[]",
+          "signature": "String",
+          "value": "Stmt.Block"
         }
       },
       "imports": [
-        "java.util.Map"
+        "net.kapitencraft.lang.holder.class_ref.SourceReference",
+        "net.kapitencraft.tool.Pair"
       ],
       "fields": {
         "retType": "ClassReference"

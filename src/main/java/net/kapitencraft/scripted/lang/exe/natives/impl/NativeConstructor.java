@@ -1,10 +1,10 @@
 package net.kapitencraft.scripted.lang.exe.natives.impl;
 
+import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.exe.VirtualMachine;
+import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
-import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -15,11 +15,16 @@ public class NativeConstructor implements ScriptedCallable {
     private final ClassReference[] thrown;
     private final Constructor<?> constructor;
 
-    public NativeConstructor(ClassReference type, ClassReference[] args, ClassReference[] thrown, Constructor<?> constructor) {
+    public NativeConstructor(ClassReference type, ClassReference[] args, ClassReference[] thrown, Constructor<?> constructor, ClassReference declaring) {
         this.type = type;
         this.args = args;
         this.thrown = thrown;
         this.constructor = constructor;
+    }
+
+    @Override
+    public ClassReference declaringClass() {
+        return this.type;
     }
 
     @Override

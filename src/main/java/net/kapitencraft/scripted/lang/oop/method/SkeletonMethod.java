@@ -12,7 +12,6 @@ import net.kapitencraft.scripted.lang.holder.oop.attribute.OperationHolder;
 import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.Pair;
-import net.kapitencraft.tool.StringReader;
 
 import java.util.List;
 
@@ -20,50 +19,55 @@ public class SkeletonMethod implements ScriptedCallable {
     private final ClassReference[] args;
     private final ClassReference[] thrown;
     private final ClassReference retType;
-    private final short modifiers;
+    private final int modifiers;
+    private final ClassReference declaring;
 
-    public SkeletonMethod(ClassReference[] args, ClassReference[] thrown, ClassReference retType, short modifiers) {
+    public SkeletonMethod(ClassReference[] args, ClassReference[] thrown, ClassReference retType, int modifiers, ClassReference declaring) {
         this.args = args;
         this.thrown = thrown;
         this.retType = retType;
         this.modifiers = modifiers;
+        this.declaring = declaring;
     }
 
-    public static SkeletonMethod create(OperationHolder decl) {
-        return create(decl.params(), decl.thrown(), decl.retType(), decl.modifiers());
+    public static SkeletonMethod create(OperationHolder decl, ClassReference declaring) {
+        return create(decl.params(), decl.thrown(), decl.retType(), declaring, decl.modifiers());
     }
 
-    private static SkeletonMethod create(List<? extends Pair<SourceReference, String>> params, List<SourceReference> thrown, ClassReference type, short modifiers) {
+    private static SkeletonMethod create(List<? extends Pair<SourceReference, String>> params, List<SourceReference> thrown, ClassReference type, ClassReference declaring, int modifiers) {
         return new SkeletonMethod(
                 params.stream()
-                        .map(Pair::getFirst)
+                        .map(Pair::first)
                         .map(SourceReference::getReference)
                         .toArray(ClassReference[]::new),
                 thrown.stream()
                         .map(SourceReference::getReference)
                         .toArray(ClassReference[]::new),
                 type,
-                modifiers
+                modifiers,
+                declaring
         );
     }
 
-    public static SkeletonMethod create(OperationHolder decl, ClassReference type) {
-        return create(decl.params(), decl.thrown(), type, (short) 0);
+    public static SkeletonMethod createConstructor(OperationHolder decl, ClassReference type) {
+        return create(decl.params(), decl.thrown(), type, type, 0);
     }
 
-    public static SkeletonMethod createNative(ClassReference[] args, ClassReference[] thrown, ClassReference retType, short modifiers) {
-        return new SkeletonMethod(args, thrown, retType, modifiers);
+    public static SkeletonMethod createNative(ClassReference[] args, ClassReference[] thrown, ClassReference retType, int modifiers, ClassReference declaring) {
+        return new SkeletonMethod(args, thrown, retType, modifiers, declaring);
     }
 
 
     public static SkeletonMethod fromJson(JsonObject object) {
-        ClassReference retType = VarTypeManager.parseType(new StringReader(GsonHelper.getAsString(object, "returnType")));
+        ClassReference retType = ClassLoader.loadClassReference(object, "returnType");
         ClassReference[] args = GsonHelper.getAsClassReferenceList(object, "params").toArray(ClassReference[]::new);
 
         ClassReference[] thrown = GsonHelper.getAsClassReferenceList(object, "thrown").toArray(ClassReference[]::new);
 
         short modifiers = object.has("modifiers") ? GsonHelper.getAsShort(object, "modifiers") : 0;
-        return new SkeletonMethod(args, thrown, retType, modifiers);
+
+        ClassReference declaring = ClassLoader.loadClassReference(object, "declaring");
+        return new SkeletonMethod(args, thrown, retType, modifiers, declaring);
     }
 
     public static ImmutableMap<String, DataMethodContainer> readFromCache(JsonObject data, String subElementName) {
@@ -111,5 +115,10 @@ public class SkeletonMethod implements ScriptedCallable {
     @Override
     public ClassReference[] thrown() {
         return thrown;
+    }
+
+    @Override
+    public ClassReference declaringClass() {
+        return declaring;
     }
 }

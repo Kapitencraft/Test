@@ -14,8 +14,8 @@ import net.kapitencraft.tool.Pair;
 import java.util.List;
 
 public record PythonConstructorHolder(AnnotationObj[] annotations, Generics generics, Token name, Token closeBracket,
-                                     List<Pair<SourceReference, String>> params, List<SourceReference> thrown,
-                                     Token[] body, int indent) implements OperationHolder, PythonOperationHolder {
+                                      List<Pair<SourceReference, String>> params, List<SourceReference> thrown,
+                                      Token[] body, int indent) implements OperationHolder, PythonOperationHolder {
     @Override
     public ClassReference retType() {
         return VarTypeManager.VOID.reference();
@@ -27,14 +27,14 @@ public record PythonConstructorHolder(AnnotationObj[] annotations, Generics gene
     }
 
     @Override
-    public short modifiers() {
+    public int modifiers() {
         return 0;
     }
 
     @Override
     public void validate(ErrorStorage logger) {
         Validatable.validateNullable(annotations, logger);
-        params.forEach(p -> p.getFirst().validate(logger));
+        params.forEach(p -> p.first().validate(logger));
         thrown.forEach(s -> s.validate(logger));
     }
 }

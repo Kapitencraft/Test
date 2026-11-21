@@ -1,12 +1,13 @@
 package net.kapitencraft.scripted.lang.oop.method;
 
 import com.google.gson.JsonObject;
+import net.kapitencraft.scripted.lang.compiler.Modifiers;
+import net.kapitencraft.scripted.lang.exe.VarTypeManager;
+import net.kapitencraft.scripted.lang.exe.load.ClassLoader;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
-import net.kapitencraft.scripted.lang.compiler.Modifiers;
-import net.kapitencraft.scripted.lang.func.ScriptedCallable;
-import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.scripted.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.StringReader;
 
@@ -19,14 +20,16 @@ public class RuntimeCallable implements ScriptedCallable {
     private final Chunk body;
     private final short modifiers;
     private final Annotation[] annotations;
+    private final ClassReference declaring;
 
-    public RuntimeCallable(ClassReference retType, List<ClassReference> params, List<ClassReference> thrown, Chunk body, short modifiers, Annotation[] annotations) {
+    public RuntimeCallable(ClassReference retType, List<ClassReference> params, List<ClassReference> thrown, Chunk body, short modifiers, Annotation[] annotations, ClassReference declaring) {
         this.retType = retType;
         this.params = params.toArray(ClassReference[]::new);
         this.thrown = thrown.toArray(ClassReference[]::new);
         this.body = body;
         this.modifiers = modifiers;
         this.annotations = annotations;
+        this.declaring = declaring;
     }
 
     public static RuntimeCallable load(JsonObject data) {
@@ -40,11 +43,13 @@ public class RuntimeCallable implements ScriptedCallable {
 
         Chunk b;
         if (Modifiers.isAbstract(modifiers)) b = null;
-        else b  = Chunk.load(GsonHelper.getAsJsonObject(data, "body"));
+        else b = Chunk.load(GsonHelper.getAsJsonObject(data, "body"));
 
         Annotation[] annotations = Annotation.readAnnotations(data);
 
-        return new RuntimeCallable(retType, params, thrown, b, modifiers, annotations);
+        ClassReference declaring = ClassLoader.loadClassReference(data, "declaring");
+
+        return new RuntimeCallable(retType, params, thrown, b, modifiers, annotations, declaring);
     }
 
     @Override
@@ -90,5 +95,10 @@ public class RuntimeCallable implements ScriptedCallable {
     @Override
     public ClassReference[] thrown() {
         return thrown;
+    }
+
+    @Override
+    public ClassReference declaringClass() {
+        return declaring;
     }
 }

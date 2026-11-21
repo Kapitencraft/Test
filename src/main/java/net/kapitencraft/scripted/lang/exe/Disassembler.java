@@ -58,6 +58,7 @@ public class Disassembler {
             case F_CONST -> floatConstInstruction(opcode, chunk, offset);
             case NEW, S_CONST -> stringConstInstruction(opcode, chunk, offset);
             case INVOKE_STATIC, INVOKE_VIRTUAL -> invoke(opcode, chunk, offset);
+            case INVOKE_DYNAMIC -> invokeDynamic(opcode, chunk, offset);
             case JUMP, JUMP_IF_FALSE -> jump(opcode, chunk, offset);
             case SWITCH -> switchInstruction(opcode, chunk, offset);
             case GET_FIELD, PUT_FIELD -> fieldOp(opcode, chunk, offset);
@@ -102,7 +103,7 @@ public class Disassembler {
         }
         String log = Arrays.stream(ordinalIds).mapToObj(i -> {
             Pair<String, String> local = local(chunk, offset, i);
-            return local.getFirst() + ": " + local.getSecond();
+            return local.first() + ": " + local.second();
         }).collect(Collectors.joining(", ", "[", "]"));
         System.out.printf("%-16s %s\n", "DEBUG_TRACE", log);
         return offset + 3;
@@ -133,7 +134,7 @@ public class Disassembler {
 
     private static int defVar(Opcode opcode, Chunk chunk, int offset, int ordinal) {
         Pair<String, String> pair = chunk.localVariableTable().get(offset, ordinal);
-        System.out.printf("%-16s %4d: \"%s\" -> %s\n", opcode, ordinal, pair.getFirst(), pair.getSecond());
+        System.out.printf("%-16s %4d: \"%s\" -> %s\n", opcode, ordinal, pair.first(), pair.second());
         return offset + 1;
     }
 
@@ -142,6 +143,14 @@ public class Disassembler {
         String signature = VirtualMachine.constString(chunk.constants(), id);
         System.out.printf("%-16s %4d '%s'\n", opcode, id, signature);
         return offset + 3;
+    }
+
+    private static int invokeDynamic(Opcode opcode, Chunk chunk, int offset) {
+        int id = read2b(chunk.code(), offset + 1);
+        String signature = VirtualMachine.constString(chunk.constants(), id);
+        String type = chunk.code()[offset + 4] > 0 ? "virtual" : "static";
+        System.out.printf("%-16s %4d '%s', capturing %s variables, %s\n", opcode, id, signature, chunk.code()[offset + 3], type);
+        return offset + 5;
     }
 
     private static int fieldOp(Opcode opcode, Chunk chunk, int offset) {

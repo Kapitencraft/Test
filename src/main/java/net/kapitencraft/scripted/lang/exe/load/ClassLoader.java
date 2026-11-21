@@ -159,7 +159,7 @@ public class ClassLoader {
     }
 
     public static ClassReference loadClassReference(JsonObject object, String elementName) {
-        return VarTypeManager.getClassOrError(GsonHelper.getAsString(object, elementName));
+        return VarTypeManager.directParseType(GsonHelper.getAsString(object, elementName));
     }
 
     public static String[] loadInterfaces(JsonObject data) {
@@ -168,7 +168,7 @@ public class ClassLoader {
 
     public static String pck(File file) {
         String path = file.getPath().replace(cacheLoc.getPath(), "").replace(".scrc", "");
-        List<String> pckData = new ArrayList<>(List.of(path.split("\\\\")));
+        List<String> pckData = new ArrayList<>(List.of(path.split("/")));
         pckData = pckData.subList(1, pckData.size() - 1);
         return String.join(".", pckData);
     }

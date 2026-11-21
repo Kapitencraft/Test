@@ -94,7 +94,7 @@ public class MathMain {
     }
 
     private static void swap(int[] numbers, int p) {
-        swap(numbers, p, p+1);
+        swap(numbers, p, p + 1);
     }
 
     private static void swap(int[] numbers, int i1, int i2) {
@@ -150,6 +150,18 @@ public class MathMain {
                         "slope": %-4s
                     }
                     """.formatted(altitude, value, slope);
+        }
+    }
+
+    public static int dontAddIntegers(int a, int b) {
+        Random random = new Random();
+        byte[] data = new byte[4];
+        while (true) {
+            random.nextBytes(data);
+            int i = ((((((data[0] & 0xFF) << 8) | (data[1] & 0xFF)) << 8) | (data[2] & 0xFF)) << 8) | (data[3] & 0xFF);
+            if (i - a - b == 0) {
+                return i;
+            }
         }
     }
 }

@@ -1,0 +1,37 @@
+package vm_test;
+
+class LambdaTest {
+    static void main(String[] args) {
+
+        printValue(LambdaTest::value);
+        printValue(() -> 20);
+        IntGetterWrapper wrapper = new IntGetterWrapper(100);
+        printValue(wrapper::get);
+        int v = 15;
+        printValue(() -> v);
+    }
+
+    static int value() {
+        return 5;
+    }
+
+    static void printValue(IntGetter supplier) {
+        System.print(supplier.get());
+    }
+
+    interface IntGetter {
+        int get();
+    }
+
+    class IntGetterWrapper {
+        final int i;
+
+        IntGetterWrapper(int i) {
+            this.i = i;
+        }
+
+        int get() {
+            return i;
+        }
+    }
+}

@@ -17,7 +17,7 @@ public record ConstructorHolder(AnnotationObj[] annotations, Generics generics, 
                                 Token[] body) implements OperationHolder {
     public void validate(ErrorStorage logger) {
         Validatable.validateNullable(annotations, logger);
-        params.forEach(p -> p.getFirst().validate(logger));
+        params.forEach(p -> p.first().validate(logger));
         thrown.forEach(s -> s.validate(logger));
     }
 
@@ -32,7 +32,7 @@ public record ConstructorHolder(AnnotationObj[] annotations, Generics generics, 
     }
 
     @Override
-    public short modifiers() {
+    public int modifiers() {
         return 0;
     }
 }

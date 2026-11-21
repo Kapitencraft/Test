@@ -19,7 +19,7 @@ public interface OperationHolder extends Validatable {
 
     boolean isStatic();
 
-    short modifiers();
+    int modifiers();
 
     Token closeBracket();
 

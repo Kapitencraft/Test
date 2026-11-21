@@ -25,8 +25,10 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     public void apply(List<CompileField> fields) {
         for (CompileField field : fields) {
+            if (!field.isFinal())
+                continue;
             Token name = field.getName();
-            this.states.put(name.lexeme(), new Entry(name, field.getInit() != null || !field.isFinal()));
+            this.states.put(name.lexeme(), new Entry(name, field.getInit() != null));
         }
         this.errorPoints.clear();
     }
@@ -144,7 +146,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
 
     @Override
     public Void visitCallExpr(Expr.Call expr) {
-        if (expr.object != null)
+        if (expr.virtual)
             analyse(expr.object);
         for (Expr arg : expr.args) {
             analyse(arg);
@@ -170,6 +172,12 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     @Override
     public Void visitCastCheckExpr(Expr.CastCheck expr) {
         analyse(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitMethodRefExpr(Expr.MethodRef expr) {
+        analyse(expr.obj);
         return null;
     }
 
@@ -205,12 +213,17 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     @Override
     public Void visitSpecialSetExpr(Expr.SpecialSet expr) {
         String name = expr.name.lexeme();
-        if (states.get(name).isAssigned()) {
+        if (states.containsKey(name) && states.get(name).isAssigned()) {
             errorAssigned(expr.name);
         } else {
             error(expr.name, "can not read unassigned final field");
         }
         analyse(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitExprLambdaExpr(Expr.ExprLambda expr) {
         return null;
     }
 
@@ -262,6 +275,11 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     }
 
     @Override
+    public Void visitBlockLambdaExpr(Expr.BlockLambda expr) {
+        return null;
+    }
+
+    @Override
     public Void visitStaticGetExpr(Expr.StaticGet expr) {
         //doesn't need to do anything
         return null;
@@ -289,6 +307,11 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     @Override
     public Void visitGetExpr(Expr.Get expr) {
         analyse(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitStaticMethodRefExpr(Expr.StaticMethodRef expr) {
         return null;
     }
 
@@ -379,7 +402,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     public Void visitTryStmt(Stmt.Try stmt) {
         analyse(stmt.body);
         for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches) {
-            analyse(aCatch.getSecond());
+            analyse(aCatch.second());
         }
         return null;
     }

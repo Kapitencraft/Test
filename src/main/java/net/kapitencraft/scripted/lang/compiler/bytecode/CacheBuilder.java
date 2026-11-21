@@ -321,6 +321,16 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitBlockLambdaExpr(Expr.BlockLambda expr) {
+        byteCodeBuilder.changeLineIfNecessary(expr.keyword);
+        for (Expr capture : expr.captures) {
+            cache(capture);
+        }
+        byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, expr.captures.length, 0));
+        return null;
+    }
+
+    @Override
     public Void visitCallExpr(Expr.Call expr) {
         if (expr.object != null) {
             //object is NOT POPED from the stack. keep it before the args
@@ -378,6 +388,13 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             byteCodeBuilder.addSimple(Opcode.POP);
             ignoredExprResult = true;
         }
+        return null;
+    }
+
+    @Override
+    public Void visitStaticMethodRefExpr(Expr.StaticMethodRef expr) {
+        byteCodeBuilder.changeLineIfNecessary(expr.name);
+        byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, 0, 0));
         return null;
     }
 
@@ -499,6 +516,16 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         specialAssign(expr.retType, expr.assignType, Opcode.GET_FIELD, Opcode.PUT_FIELD,
                 o -> byteCodeBuilder.addStringInstruction(o, expr.name.lexeme())
         );
+        return null;
+    }
+
+    @Override
+    public Void visitExprLambdaExpr(Expr.ExprLambda expr) {
+        byteCodeBuilder.changeLineIfNecessary(expr.keyword);
+        for (Expr capture : expr.captures) {
+            cache(capture);
+        }
+        byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, expr.captures.length, 0));
         return null;
     }
 
@@ -627,6 +654,14 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (expr.patternVarName != null)
             byteCodeBuilder.addSimple(Opcode.DUP);
         byteCodeBuilder.addStringInstruction(Opcode.INSTANCEOF, VarTypeManager.getClassName(expr.targetType));
+        return null;
+    }
+
+    @Override
+    public Void visitMethodRefExpr(Expr.MethodRef expr) {
+        byteCodeBuilder.changeLineIfNecessary(expr.name);
+        cache(expr.obj);
+        byteCodeBuilder.add(new InvokeDynamicInstruction(expr.signature, 1, 1));
         return null;
     }
 
@@ -1019,11 +1054,11 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         List<Integer> jumps = new ArrayList<>();
         jumps.add(byteCodeBuilder.addJump());
         for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches) {
-            for (ClassReference reference : aCatch.getFirst().getFirst()) {
+            for (ClassReference reference : aCatch.first().first()) {
                 byteCodeBuilder.addExceptionHandler(handlerStart, handlerEnd, VarTypeManager.getClassName(reference.get()));
             }
             retainExprResult = false;
-            cache(aCatch.getSecond());
+            cache(aCatch.second());
             jumps.add(byteCodeBuilder.addJump());
         }
         if (stmt.finale != null) {

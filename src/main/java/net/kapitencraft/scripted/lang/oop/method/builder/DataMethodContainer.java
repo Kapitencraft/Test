@@ -13,6 +13,7 @@ import net.kapitencraft.scripted.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.scripted.lang.tool.Util;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -55,18 +56,6 @@ public record DataMethodContainer(ScriptedCallable[] methods) implements MethodC
             }
         }
         return array;
-    }
-
-    public ScriptedCallable getMethodByOrdinal(int ordinal) {
-        if (ordinal == -1) return methods[0]; //default
-        return methods[ordinal];
-    }
-
-    public int getMethodOrdinal(ClassReference[] types) {
-        for (int i = 0; i < methods.length; i++) {
-            if (Util.matchArgs(types, methods[i].argTypes())) return i;
-        }
-        return -1;
     }
 
     public static class Builder {

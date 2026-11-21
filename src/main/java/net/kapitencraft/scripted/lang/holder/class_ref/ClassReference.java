@@ -61,7 +61,7 @@ public class ClassReference implements Supplier<ScriptedClass> {
     }
 
     public boolean isChildOf(ClassReference other) {
-        return get().isChildOf(other.get());
+        return this.is(other) || get().isChildOf(other.get());
     }
 
     public ClassReference array() {
@@ -84,5 +84,9 @@ public class ClassReference implements Supplier<ScriptedClass> {
     @Override
     public boolean equals(Object obj) {
         return super.equals(obj) || obj instanceof ClassReference cR && Objects.equals(cR.target, this.target);
+    }
+
+    public ClassReference applyGenericsFrom(ClassReference first) {
+        return this;
     }
 }

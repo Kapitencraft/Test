@@ -2,6 +2,7 @@ package net.kapitencraft.scripted.lang.oop.method;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.scripted.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.scripted.lang.compiler.ast_optimize.ASTOptimizer;
 import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
@@ -13,6 +14,7 @@ import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.ast.Stmt;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
 
 import java.util.Arrays;
@@ -23,16 +25,18 @@ public class CompileCallable implements ScriptedCallable {
     private final List<Pair<ClassReference, String>> params;
     private final ClassReference[] thrown;
     private final List<Stmt> body;
-    private final short modifiers;
+    private final int modifiers;
     private final Annotation[] annotations;
+    private final ClassReference declaring;
 
-    public CompileCallable(ClassReference retType, List<Pair<ClassReference, String>> params, ClassReference[] thrown, List<Stmt> body, short modifiers, Annotation[] annotations) {
+    public CompileCallable(ClassReference retType, List<Pair<ClassReference, String>> params, ClassReference[] thrown, List<Stmt> body, int modifiers, Annotation[] annotations, ClassReference declaring) {
         this.retType = retType;
         this.params = params;
         this.thrown = thrown;
         this.body = body;
         this.modifiers = modifiers;
         this.annotations = annotations;
+        this.declaring = declaring;
     }
 
     public JsonObject save(CacheBuilder builder) {
@@ -40,7 +44,7 @@ public class CompileCallable implements ScriptedCallable {
         object.addProperty("returnType", VarTypeManager.getClassName(retType.get()));
         {
             JsonArray array = new JsonArray();
-            params.stream().map(Pair::getFirst).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
+            params.stream().map(Pair::first).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
             object.add("params", array);
         }
         {
@@ -58,7 +62,7 @@ public class CompileCallable implements ScriptedCallable {
             }
             for (int i = 0; i < this.params.size(); i++) {
                 Pair<? extends ClassReference, String> param = this.params.get(i);
-                chunk.addLocal(rIndex + i, param.getFirst(), param.getSecond());
+                chunk.addLocal(rIndex + i, param.first(), param.second());
             }
             for (Stmt compileStmt : body) {
                 builder.cache(compileStmt);
@@ -69,12 +73,15 @@ public class CompileCallable implements ScriptedCallable {
         if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);
 
         object.add("annotations", builder.cacheAnnotations(this.annotations));
+        object.addProperty("declaring", VarTypeManager.getClassName(declaring));
         return object;
     }
 
-    public void analyseSemantics(SemanticAnalyser analyser, ClassReference declaring) {
-        if (!isAbstract())
-            analyser.analyseBody(body, this.retType, this.thrown, params, isStatic() ? null : declaring);
+    public void analyseSemantics(SemanticAnalyser analyser, ClassReference declaring, Token name) {
+        if (!isAbstract()) {
+            analyser.clear();
+            analyser.analyseBody(body, name, this.retType, this.thrown, params, declaring, isStatic() ? null : declaring);
+        }
     }
 
     @Override
@@ -98,13 +105,18 @@ public class CompileCallable implements ScriptedCallable {
     }
 
     @Override
+    public ClassReference declaringClass() {
+        return this.declaring;
+    }
+
+    @Override
     public ClassReference retType() {
         return retType;
     }
 
     @Override
     public ClassReference[] argTypes() {
-        return params.stream().map(Pair::getFirst).toArray(ClassReference[]::new);
+        return params.stream().map(Pair::first).toArray(ClassReference[]::new);
     }
 
     @Override

@@ -111,5 +111,11 @@
     "output": [
       "A", "B"
     ]
+  },
+  {
+    "target": "vm_test.LambdaTest",
+    "output": [
+      "5", "20", "100", "15"
+    ]
   }
 ]

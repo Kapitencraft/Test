@@ -21,13 +21,13 @@ public class NativeClassImpl implements ScriptedClass {
     private final Map<String, NativeField> fields;
     private final ClassReference superclass;
     private final ClassReference[] interfaces;
-    private final short modifiers;
+    private final int modifiers;
     private final String name, pck;
 
     @ApiStatus.Internal
     public NativeClassImpl(String name, String pck,
                            Map<String, DataMethodContainer> methods, Map<String, NativeField> fields,
-                           ClassReference superclass, ClassReference[] interfaces, short modifiers) {
+                           ClassReference superclass, ClassReference[] interfaces, int modifiers) {
         this.name = name;
         this.pck = pck;
         this.methods = new GeneratedMethodMap(methods);
@@ -68,7 +68,7 @@ public class NativeClassImpl implements ScriptedClass {
     }
 
     @Override
-    public short getModifiers() {
+    public int getModifiers() {
         return modifiers;
     }
 

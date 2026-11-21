@@ -86,7 +86,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
     }
 
     private AnnotationObj parseAnnotationObject() {
-        SourceReference cInst = consumeVarTypeNoArray(GenericStack.EMPTY);
+        SourceReference cInst = consumeVarTypeNoArray();
         Token[] properties = new Token[0];
         if (match(BRACKET_O)) {
             properties = getBracketEnclosedCode();
@@ -211,7 +211,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
                     error(peek(), "Can't have more than 255 params.");
                 }
 
-                SourceReference pType = consumeVarType(activeGenerics);
+                SourceReference pType = consumeVarType();
                 Token pName = consume(IDENTIFIER, "Expected parameter name.");
                 parameters.add(Pair.of(pType, pName.lexeme()));
             } while (match(COMMA));
@@ -232,7 +232,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
         List<SourceReference> thrown = new ArrayList<>();
         if (match(THROWS)) {
             do {
-                thrown.add(consumeVarType(activeGenerics));
+                thrown.add(consumeVarType());
             } while (match(COMMA));
         }
 
@@ -252,11 +252,11 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
         List<SourceReference> thrown = new ArrayList<>();
         if (match(THROWS)) {
             do {
-                thrown.add(consumeVarType(activeGenerics));
+                thrown.add(consumeVarType());
             } while (match(COMMA));
         }
 
-        short mods = modifiers.packModifiers();
+        int mods = modifiers.packModifiers();
 
         Token[] code = null;
         Token endClose = null;
@@ -279,7 +279,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
         return new MethodHolder(modifiers.packModifiers(), modifiers.getAnnotations(), modifiers.getGenerics(), type, name, endClose, parameters, thrown, code);
     }
 
-    private List<FieldHolder> fieldDecl(SourceReference type, AnnotationObj[] annotations, Token name, short modifiers) {
+    private List<FieldHolder> fieldDecl(SourceReference type, AnnotationObj[] annotations, Token name, int modifiers) {
         Token[] code = null;
         Token assign = null;
 
@@ -368,7 +368,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
         List<ConstructorHolder> constructorHolders = new ArrayList<>();
         List<FieldHolder> fieldHolders = new ArrayList<>();
 
-        short modifiers = mods != null ? mods.packModifiers() : 0;
+        int modifiers = mods != null ? mods.packModifiers() : 0;
         AnnotationObj[] annotations = mods != null ? mods.getAnnotations() : new AnnotationObj[0];
 
         parseClassProperties(Modifiers.isAbstract(modifiers) ? ModifierScope.Group.ABSTRACT_CLASS : ModifierScope.Group.CLASS, methodHolders, constructorHolders, fieldHolders, target, pckID, name, false);
@@ -534,7 +534,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
             defaulted = true;
         }
         consumeEndOfArg();
-        return new MethodHolder(Modifiers.pack(false, false, !defaulted), annotations, null, type, elementName, null, List.of(), List.of(), defaultCode);
+        return new MethodHolder(Modifiers.pack(Modifiers.ABSTRACT), annotations, null, type, elementName, null, List.of(), List.of(), defaultCode);
     }
 
     private InterfaceHolder interfaceDecl(ModifiersParser mods, @Nullable String namePrefix, String pckID, @Nullable String fileId) {
@@ -585,7 +585,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
         if (stack != null) activeGenerics = stack;
         else if (classGenerics != null) activeGenerics.pop();
         anonymousNames.pop();
-        short modifiers = mods != null ? mods.packModifiers() : 0;
+        int modifiers = mods != null ? mods.packModifiers() : 0;
         AnnotationObj[] annotations = mods != null ? mods.getAnnotations() : new AnnotationObj[0];
         return new InterfaceHolder(target, modifiers,
                 annotations, classGenerics, pckID, name,
@@ -669,8 +669,12 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
             encountered.clear();
         }
 
-        private short packModifiers() {
-            return Modifiers.pack(isFinal(), isStatic(), isAbstract() && !isDefault());
+        private int packModifiers() {
+            int[] modifiers = new int[3];
+            if (isFinal()) modifiers[0] = Modifiers.FINAL;
+            if (isStatic()) modifiers[1] = Modifiers.STATIC;
+            if (isAbstract() && !isDefault()) modifiers[2] = Modifiers.ABSTRACT;
+            return Modifiers.pack(modifiers);
         }
 
         private boolean isFinal() {
@@ -753,7 +757,7 @@ public class JavaHolderParser extends AbstractJavaParser implements HolderParser
 
     @NotNull
     protected SourceReference consumeVarType() {
-        SourceReference sourceReference = consumeVarTypeNoArray(activeGenerics);
+        SourceReference sourceReference = consumeVarTypeNoArray();
         ClassReference reference = sourceReference.getReference();
         Token last = sourceReference.getToken();
         AppliedGenerics appliedGenerics = appliedGenerics(activeGenerics);

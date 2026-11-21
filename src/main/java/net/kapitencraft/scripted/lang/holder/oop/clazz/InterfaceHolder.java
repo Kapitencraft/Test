@@ -29,7 +29,7 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.*;
 
-public record InterfaceHolder(ClassReference target, short modifiers,
+public record InterfaceHolder(ClassReference target, int modifiers,
                               AnnotationObj[] annotations, Generics generics, String pck, Token name,
                               SourceReference[] interfaces,
                               OperationHolder[] methodHolders,
@@ -46,7 +46,7 @@ public record InterfaceHolder(ClassReference target, short modifiers,
             }
             Annotation[] annotations = javaStmtParser.parseAnnotations(fieldHolder.annotations(), parser);
 
-            short mods = fieldHolder.modifiers();
+            int mods = fieldHolder.modifiers();
             CompileField fieldDecl = new CompileField(fieldHolder.name(), initializer, fieldHolder.type().getReference(), mods, annotations);
             if (Modifiers.isStatic(fieldHolder.modifiers())) staticFields.put(fieldHolder.name().lexeme(), fieldDecl);
             else logger.error(fieldHolder.name(), "fields on interfaces must be static");
@@ -66,19 +66,25 @@ public record InterfaceHolder(ClassReference target, short modifiers,
             }
             Annotation[] annotations = javaStmtParser.parseAnnotations(methodHolder.annotations(), parser);
 
-            CompileCallable methodDecl = new CompileCallable(methodHolder.retType(), methodHolder.extractParams(), methodHolder.extractThrown(), body, methodHolder.modifiers(), annotations);
+            CompileCallable methodDecl = new CompileCallable(
+                    methodHolder.retType(),
+                    methodHolder.extractParams(),
+                    methodHolder.extractThrown(), body,
+                    methodHolder.modifiers(), annotations,
+                    target
+            );
             methods.add(Pair.of(methodHolder.name(), methodDecl));
         }
 
         if (!statics.isEmpty()) {
-            ClassConstructor.addClinit(statics, methods);
+            ClassConstructor.addClinit(statics, methods, target);
         }
 
         Annotation[] annotations = javaStmtParser.parseAnnotations(this.annotations(), parser);
 
         return new BakedInterface(
                 logger, generics, target,
-                methods.toArray(new Pair[0]),
+                methods,
                 staticFields,
                 extractInterfaces(),
                 name,
@@ -110,11 +116,11 @@ public record InterfaceHolder(ClassReference target, short modifiers,
             if (Modifiers.isStatic(methodHolder.modifiers())) {
                 staticMethods.putIfAbsent(methodHolder.name().lexeme(), new DataMethodContainer.Builder(this.name()));
                 DataMethodContainer.Builder builder = staticMethods.get(methodHolder.name().lexeme());
-                builder.addMethod(logger, SkeletonMethod.create(methodHolder), methodHolder.name());
+                builder.addMethod(logger, SkeletonMethod.create(methodHolder, target), methodHolder.name());
             } else {
                 methods.putIfAbsent(methodHolder.name().lexeme(), new DataMethodContainer.Builder(this.name()));
                 DataMethodContainer.Builder builder = methods.get(methodHolder.name().lexeme());
-                builder.addMethod(logger, SkeletonMethod.create(methodHolder), methodHolder.name());
+                builder.addMethod(logger, SkeletonMethod.create(methodHolder, target), methodHolder.name());
             }
         }
 

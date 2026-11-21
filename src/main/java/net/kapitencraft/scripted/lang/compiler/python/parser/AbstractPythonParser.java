@@ -370,7 +370,7 @@ public class AbstractPythonParser {
 
     protected void consumeEndOfArg() {
         if (!isAtEnd())
-            this.consume(LINE_FEED, "';' expected");
+            this.consume(LINE_FEED, "'\\n' expected");
     }
 
     protected void error(Token token, String message) {
@@ -409,9 +409,12 @@ public class AbstractPythonParser {
 
     protected boolean skipIndent() {
         while (match(LINE_FEED)); //skip empty lines
-        int tabCount = 0;
-        while (match(TAB))
-            tabCount++;
+        int tabCount;
+        do {
+            tabCount = 0;
+            while (match(TAB))
+                tabCount++;
+        } while (match(LINE_FEED));
         if (tabCount > indents) {
             errorF(peek(), "wrong indentation (expected: %s but got: %s)", indents, tabCount);
             return false;

@@ -31,7 +31,7 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.*;
 
-public record EnumHolder(ClassReference target, short modifiers,
+public record EnumHolder(ClassReference target, int modifiers,
                          AnnotationObj[] annotations, Generics generics, String pck, Token name,
                          SourceReference[] interfaces,
                          OperationHolder[] constructorHolders,
@@ -109,14 +109,14 @@ public record EnumHolder(ClassReference target, short modifiers,
             valuesInit.name = keyword;
             stmt.expression = valuesInit;
         }
-        fields.put(keyword, new CompileField(keyword, valuesInit, target.array(), Modifiers.pack(true, true, false), new Annotation[0]));
+        fields.put(keyword, new CompileField(keyword, valuesInit, target.array(), Modifiers.pack(Modifiers.FINAL, Modifiers.STATIC, Modifiers.SYNTHETIC), new Annotation[0]));
         statics.add(stmt);
         //endregion
 
         List<String> finalFields = new ArrayList<>();
         List<CompileField> initializedFields = new ArrayList<>(); //store initialized Fields to add them in each constructor
         for (FieldHolder fieldHolder : fieldHolders()) {
-            short mods = fieldHolder.modifiers();
+            int mods = fieldHolder.modifiers();
             Expr initializer = null;
             if (fieldHolder.body() != null) {
                 initializer = getFieldBody(stmtParser, parser, fieldHolder, statics);
@@ -145,7 +145,8 @@ public record EnumHolder(ClassReference target, short modifiers,
                     methodHolder.retType(),
                     methodHolder.extractParams(),
                     methodHolder.extractThrown(),
-                    body, methodHolder.modifiers(), annotations
+                    body, methodHolder.modifiers(), annotations,
+                    this.target
             );
             methods.add(Pair.of(methodHolder.name(), methodDecl));
         }
@@ -158,8 +159,9 @@ public record EnumHolder(ClassReference target, short modifiers,
                         List.of(),
                         new ClassReference[0],
                         statics,
-                        Modifiers.pack(true, true, false),
-                        new Annotation[0]
+                        Modifiers.pack(Modifiers.FINAL, Modifiers.STATIC, Modifiers.SYNTHETIC),
+                        new Annotation[0],
+                        this.target
                 )
         ));
 
@@ -176,8 +178,9 @@ public record EnumHolder(ClassReference target, short modifiers,
                         List.of(),
                         new ClassReference[0],
                         List.of(aReturn1),
-                        Modifiers.pack(false, true, false),
-                        new Annotation[0]
+                        Modifiers.pack(Modifiers.STATIC, Modifiers.SYNTHETIC),
+                        new Annotation[0],
+                        this.target
                 )
         ));
         //endregion
@@ -191,14 +194,21 @@ public record EnumHolder(ClassReference target, short modifiers,
             this.prefixFieldInitializers(original, initializedFields);
             Annotation[] annotations = stmtParser.parseAnnotations(enumConstructorHolder.annotations(), parser);
 
-            CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), enumConstructorHolder.extractParams(), enumConstructorHolder.extractThrown(), original, (short) 0, annotations);
+            CompileCallable constDecl = new CompileCallable(
+                    VarTypeManager.VOID.reference(),
+                    enumConstructorHolder.extractParams(),
+                    enumConstructorHolder.extractThrown(),
+                    original, 0,
+                    annotations,
+                    target
+            );
             stmtParser.popMethod(enumConstructorHolder.closeBracket());
             constructors.add(Pair.of(enumConstructorHolder.name(), constDecl));
         }
         if (constructors.isEmpty()) {
             Expr.Call body = new Expr.Call();
             body.object = varRef(Token.createNative("super"), (byte) 0);
-            body.args = new Expr[] {
+            body.args = new Expr[]{
                     varRef(Token.createNative("$name"), (byte) 1),
                     varRef(Token.createNative("$ordinal"), (byte) 2)
             };
@@ -212,21 +222,22 @@ public record EnumHolder(ClassReference target, short modifiers,
             constructors.add(Pair.of(this.name, new CompileCallable(VarTypeManager.VOID.reference(), List.of(
                     Pair.of(VarTypeManager.STRING, "$name"),
                     Pair.of(VarTypeManager.INTEGER.reference(), "$ordinal")
-            ), new ClassReference[0], List.of(stmt1, ret), (short) 0, new Annotation[0])));
+            ), new ClassReference[0], List.of(stmt1, ret), Modifiers.pack(Modifiers.SYNTHETIC), new Annotation[0], target
+            )));
         }
 
         return new BakedClass(
                 logger,
                 new Generics(new Generic[0]),
                 target(),
-                methods.toArray(Pair[]::new),
-                constructors.toArray(Pair[]::new),
+                methods,
+                constructors,
                 fields,
                 VarTypeManager.ENUM,
                 name(),
                 pck(),
                 extractInterfaces(),
-                Modifiers.pack(true, true, false),
+                Modifiers.pack(Modifiers.FINAL, Modifiers.STATIC),
                 parseAnnotations(stmtParser, parser)
         );
     }
@@ -245,11 +256,11 @@ public record EnumHolder(ClassReference target, short modifiers,
 
         if (this.enumConstantHolders() != null) {
             for (EnumConstantHolder constant : this.enumConstantHolders()) {
-                SkeletonField field = new SkeletonField(target, Modifiers.pack(true, true, false));
+                SkeletonField field = new SkeletonField(target, Modifiers.SF);
                 fields.put(constant.name().lexeme(), field);
             }
 
-            fields.put("$VALUES", new SkeletonField(target.array(), Modifiers.pack(true, true, false)));
+            fields.put("$VALUES", new SkeletonField(target.array(), Modifiers.SF));
         }
 
         //methods
@@ -257,22 +268,22 @@ public record EnumHolder(ClassReference target, short modifiers,
         for (OperationHolder methodHolder : this.methodHolders()) {
             methods.putIfAbsent(methodHolder.name().lexeme(), new DataMethodContainer.Builder(this.name()));
             DataMethodContainer.Builder builder = methods.get(methodHolder.name().lexeme());
-            builder.addMethod(logger, SkeletonMethod.create(methodHolder), methodHolder.name());
+            builder.addMethod(logger, SkeletonMethod.create(methodHolder, target), methodHolder.name());
         }
         methods.computeIfAbsent("values", s -> new DataMethodContainer.Builder(this.name()))
-                .addMethod(logger, new SkeletonMethod(new ClassReference[0], new ClassReference[0], target.array(), Modifiers.pack(false, true, false)), Token.createNative("values"));
+                .addMethod(logger, new SkeletonMethod(new ClassReference[0], new ClassReference[0], target.array(), Modifiers.pack(Modifiers.STATIC), target), Token.createNative("values"));
 
         //constructors
         methods.putIfAbsent("<init>", new DataMethodContainer.Builder(this.name()));
         DataMethodContainer.Builder builder = methods.get("<init>");
         for (OperationHolder constructorHolder : this.constructorHolders()) {
-            builder.addMethod(logger, SkeletonMethod.create(constructorHolder, this.target), constructorHolder.name());
+            builder.addMethod(logger, SkeletonMethod.createConstructor(constructorHolder, this.target), constructorHolder.name());
         }
         if (builder.isEmpty()) {
             builder.addMethod(logger, SkeletonMethod.createNative(new ClassReference[]{
                     VarTypeManager.STRING,
                     VarTypeManager.INTEGER.reference()
-            }, new ClassReference[0], VarTypeManager.VOID.reference(), (short) 0), Token.createNative("<init>"));
+            }, new ClassReference[0], VarTypeManager.VOID.reference(), 0, target), Token.createNative("<init>"));
         }
 
         return new SkeletonClass(

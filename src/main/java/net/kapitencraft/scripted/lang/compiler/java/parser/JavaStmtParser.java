@@ -74,13 +74,14 @@ public class JavaStmtParser extends JavaExprParser implements StmtParser {
 
         Optional<SourceReference> type = tryConsumeVarType(generics);
         Stmt stmt = type.map(sourceClassReference -> {
-            if (match(DOT)) {
+            Expr expr = parseObjAttributes(sourceClassReference.getReference());
+            if (expr != null) {
                 Stmt.Expression expression = new Stmt.Expression();
-                expression.expression = parseObjAttributes(sourceClassReference.getReference());
+                expression.expression = expr;
                 consumeEndOfArg();
                 return expression;
-            } else
-                return varDeclaration(false, sourceClassReference.getReference());
+            }
+            return varDeclaration(false, sourceClassReference.getReference());
         }).orElseGet(this::statement);
         if (panicMode)
             synchronize();
@@ -399,7 +400,7 @@ public class JavaStmtParser extends JavaExprParser implements StmtParser {
         return aWhile;
     }
 
-    private List<Stmt> block(String name) {
+    protected List<Stmt> block(String name) {
         List<Stmt> statements = new ArrayList<>();
 
         while (!check(C_BRACKET_C) && !isAtEnd()) {

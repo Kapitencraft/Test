@@ -21,7 +21,7 @@ import net.kapitencraft.scripted.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.scripted.lang.oop.method.annotation.SkeletonAnnotationMethod;
 import org.jetbrains.annotations.Nullable;
 
-public record AnnotationHolder(ClassReference target, short modifiers,
+public record AnnotationHolder(ClassReference target, int modifiers,
                                AnnotationObj[] annotations, Generics generics, String pck, Token name,
                                MethodHolder[] methodHolders) implements ClassConstructor {
 
@@ -52,7 +52,7 @@ public record AnnotationHolder(ClassReference target, short modifiers,
 
         ImmutableMap.Builder<String, AnnotationCallable> methods = new ImmutableMap.Builder<>();
         for (MethodHolder methodHolder : methodHolders()) {
-            methods.put(methodHolder.name().lexeme(), new SkeletonAnnotationMethod(methodHolder.returnType().getReference(), methodHolder.body().length > 0));
+            methods.put(methodHolder.name().lexeme(), new SkeletonAnnotationMethod(methodHolder.returnType().getReference(), methodHolder.body().length > 0, target));
         }
 
         return new SkeletonAnnotation(
@@ -68,7 +68,7 @@ public record AnnotationHolder(ClassReference target, short modifiers,
     }
 
     public record MethodWrapper(@Nullable Expr val, ClassReference retType, Annotation[] annotations,
-                                short modifiers) implements ScriptedCallable {
+                                int modifiers) implements ScriptedCallable {
 
         @Override
         public ClassReference[] argTypes() {
@@ -98,6 +98,11 @@ public record AnnotationHolder(ClassReference target, short modifiers,
         @Override
         public ClassReference[] thrown() {
             return new ClassReference[0];
+        }
+
+        @Override
+        public ClassReference declaringClass() {
+            return null;
         }
     }
 }

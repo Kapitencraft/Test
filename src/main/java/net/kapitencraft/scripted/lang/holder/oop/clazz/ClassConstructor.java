@@ -67,7 +67,7 @@ public interface ClassConstructor extends Validatable {
         return annotations.toArray(Annotation[]::new);
     }
 
-    static void addClinit(List<Stmt> statics, List<Pair<Token, CompileCallable>> methods) {
+    static void addClinit(List<Stmt> statics, List<Pair<Token, CompileCallable>> methods, ClassReference target) {
         Stmt.Return aReturn = new Stmt.Return();
         aReturn.keyword = Token.createNative("return");
         statics.add(aReturn);
@@ -78,8 +78,9 @@ public interface ClassConstructor extends Validatable {
                         List.of(),
                         new ClassReference[0],
                         statics,
-                        Modifiers.pack(true, true, false),
-                        new Annotation[0]
+                        Modifiers.SF,
+                        new Annotation[0],
+                        target
                 )
         ));
     }

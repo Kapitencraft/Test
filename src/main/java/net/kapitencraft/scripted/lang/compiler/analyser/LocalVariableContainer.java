@@ -1,8 +1,12 @@
 package net.kapitencraft.scripted.lang.compiler.analyser;
 
+import net.kapitencraft.lang.holder.ast.Expr;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
+import net.kapitencraft.lang.holder.token.Token;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class LocalVariableContainer {
@@ -55,6 +59,21 @@ public class LocalVariableContainer {
 
     public void setHasValue(byte ordinal) {
         locals[ordinal & 255].assigned = true;
+    }
+
+    public List<Expr.SingleIdentifier> createReferencesForValues(List<Token> captured) {
+        List<Expr.SingleIdentifier> out = new ArrayList<>();
+        for (Token capture : captured) {
+            FetchResult result = get(capture.lexeme());
+            if (result != FetchResult.FAIL) {
+                Expr.SingleIdentifier identifier = new Expr.SingleIdentifier();
+                identifier.name = capture;
+                identifier.ordinal = result.ordinal;
+                identifier.retType = result.type;
+                out.add(identifier);
+            }
+        }
+        return out;
     }
 
     private static final class Local {

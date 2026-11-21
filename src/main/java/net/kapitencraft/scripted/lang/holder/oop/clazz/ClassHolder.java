@@ -29,7 +29,7 @@ import net.kapitencraft.tool.Pair;
 
 import java.util.*;
 
-public record ClassHolder(ClassReference target, short modifiers,
+public record ClassHolder(ClassReference target, int modifiers,
                           AnnotationObj[] annotations, Generics generics, String pck, Token name,
                           SourceReference parent,
                           SourceReference[] interfaces,
@@ -48,7 +48,7 @@ public record ClassHolder(ClassReference target, short modifiers,
             }
             Annotation[] annotations = stmtParser.parseAnnotations(fieldHolder.annotations(), parser);
 
-            short mods = fieldHolder.modifiers();
+            int mods = fieldHolder.modifiers();
             CompileField fieldDecl = new CompileField(fieldHolder.name(), initializer, fieldHolder.type().getReference(), mods, annotations);
             fields.put(fieldHolder.name(), fieldDecl);
         }
@@ -63,12 +63,12 @@ public record ClassHolder(ClassReference target, short modifiers,
             }
             Annotation[] annotations = stmtParser.parseAnnotations(methodHolder.annotations(), parser);
 
-            CompileCallable methodDecl = new CompileCallable(methodHolder.retType(), methodHolder.extractParams(), methodHolder.extractThrown(), body, methodHolder.modifiers(), annotations);
+            CompileCallable methodDecl = new CompileCallable(methodHolder.retType(), methodHolder.extractParams(), methodHolder.extractThrown(), body, methodHolder.modifiers(), annotations, this.target);
             methods.add(Pair.of(methodHolder.name(), methodDecl));
         }
 
         if (!statics.isEmpty()) {
-            ClassConstructor.addClinit(statics, methods);
+            ClassConstructor.addClinit(statics, methods, this.target);
         }
 
         List<Pair<Token, CompileCallable>> constructors = new ArrayList<>();
@@ -77,7 +77,7 @@ public record ClassHolder(ClassReference target, short modifiers,
             List<Stmt> body = stmtParser.parse();
             Annotation[] annotations = stmtParser.parseAnnotations(constructorHolder.annotations(), parser);
 
-            CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), constructorHolder.extractParams(), constructorHolder.extractThrown(), body, (short) 0, annotations);
+            CompileCallable constDecl = new CompileCallable(VarTypeManager.VOID.reference(), constructorHolder.extractParams(), constructorHolder.extractThrown(), body, 0, annotations, this.target);
             stmtParser.popMethod(constructorHolder.closeBracket());
             constructors.add(Pair.of(constructorHolder.name(), constDecl));
         }
@@ -88,8 +88,8 @@ public record ClassHolder(ClassReference target, short modifiers,
                 logger,
                 generics,
                 this.target(),
-                methods.toArray(new Pair[0]),
-                constructors.toArray(new Pair[0]),
+                methods,
+                constructors,
                 fields,
                 this.parent.getReference(),
                 this.name(),
@@ -117,16 +117,16 @@ public record ClassHolder(ClassReference target, short modifiers,
         for (OperationHolder methodHolder : this.methodHolders()) {
             methods.putIfAbsent(methodHolder.name().lexeme(), new DataMethodContainer.Builder(this.name()));
             DataMethodContainer.Builder builder = methods.get(methodHolder.name().lexeme());
-            builder.addMethod(logger, SkeletonMethod.create(methodHolder), methodHolder.name());
+            builder.addMethod(logger, SkeletonMethod.create(methodHolder, target), methodHolder.name());
         }
         methods.computeIfAbsent("values", s -> new DataMethodContainer.Builder(this.name()))
-                .addMethod(logger, new SkeletonMethod(new ClassReference[0], new ClassReference[0], target.array(), Modifiers.pack(false, true, false)), Token.createNative("values"));
+                .addMethod(logger, new SkeletonMethod(new ClassReference[0], new ClassReference[0], target.array(), Modifiers.pack(Modifiers.STATIC), target), Token.createNative("values"));
 
         //constructors
         for (OperationHolder constructorHolder : this.constructorHolders()) {
             methods.putIfAbsent("<init>", new DataMethodContainer.Builder(this.name()));
             DataMethodContainer.Builder builder = methods.get("<init>");
-            builder.addMethod(logger, SkeletonMethod.create(constructorHolder, this.target), constructorHolder.name());
+            builder.addMethod(logger, SkeletonMethod.createConstructor(constructorHolder, this.target), constructorHolder.name());
         }
 
         return new SkeletonClass(

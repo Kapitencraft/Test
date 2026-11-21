@@ -3,6 +3,7 @@ package net.kapitencraft.scripted.lang.compiler;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.scripted.lang.compiler.analyser.LocationAnalyser;
 import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.scripted.lang.compiler.error.ErrorStorage;
@@ -139,7 +140,7 @@ public class Compiler {
 
         Token name();
 
-        Pair<Token, CompileCallable>[] methods();
+        List<Pair<Token, CompileCallable>> methods();
 
         ClassReference[] interfaces();
 

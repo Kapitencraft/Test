@@ -124,4 +124,8 @@ public class ErrorStorage {
     public boolean hadError() {
         return errorCount > 0;
     }
+
+    public ErrorStorage copy() {
+        return new ErrorStorage(this.lines, this.fileLoc);
+    }
 }

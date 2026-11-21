@@ -10,8 +10,6 @@ public class Interpreter {
 
     public static final Scanner in = new Scanner(System.in);
 
-    public static boolean suppressClassLoad = false;
-
     public static long millisAtStart;
 
     public static void start() {

@@ -86,7 +86,7 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public short getModifiers() {
+    public int getModifiers() {
         return Modifiers.ANNOTATION;
     }
 

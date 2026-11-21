@@ -7,10 +7,12 @@ import org.jetbrains.annotations.Nullable;
 public class AnnotationCallable implements ScriptedCallable {
     private final ClassReference type;
     private final @Nullable Object value;
+    private final ClassReference declaring;
 
-    public AnnotationCallable(ClassReference type, @Nullable Object value) {
+    public AnnotationCallable(ClassReference type, @Nullable Object value, ClassReference declaring) {
         this.type = type;
         this.value = value;
+        this.declaring = declaring;
     }
 
     @Override
@@ -55,5 +57,10 @@ public class AnnotationCallable implements ScriptedCallable {
     @Override
     public ClassReference[] thrown() {
         return new ClassReference[0];
+    }
+
+    @Override
+    public ClassReference declaringClass() {
+        return declaring;
     }
 }

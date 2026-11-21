@@ -8,6 +8,7 @@ import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.LiteralHolder;
 import net.kapitencraft.scripted.lang.holder.ast.Expr;
+import net.kapitencraft.lang.holder.ast.Stmt;
 import net.kapitencraft.scripted.lang.holder.ast.SwitchKey;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
@@ -16,8 +17,10 @@ import net.kapitencraft.scripted.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.scripted.lang.holder.oop.AnnotationObj;
 import net.kapitencraft.scripted.lang.holder.oop.generic.Generics;
 import net.kapitencraft.scripted.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.token.TokenType;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.scripted.lang.oop.field.ScriptedField;
+import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -402,7 +405,29 @@ public class JavaExprParser extends AbstractJavaParser {
             return unary;
         }
 
-        return call();
+        Expr call = call();
+
+        Expr from = null, to = null, interval = null;
+        if (match(FROM))
+            from = expression();
+        if (match(TO))
+            to = expression();
+        if (match(INTERVAL))
+            interval = expression();
+        if (from != null || to != null || interval != null) {
+            Expr.Slice slice = new Expr.Slice();
+            slice.object = call;
+            slice.start = from;
+            slice.end = to;
+            slice.interval = interval;
+            return slice;
+        }
+
+        if (match2(COLON, COLON)) {
+            return instMethodRef(call);
+        }
+
+        return call;
     }
 
     private Expr switchExpr() {
@@ -443,6 +468,7 @@ public class JavaExprParser extends AbstractJavaParser {
                 consumeEndOfArg();
             } else {
                 error(peek(), "unexpected token");
+                break;
             }
         }
 
@@ -492,30 +518,7 @@ public class JavaExprParser extends AbstractJavaParser {
 
         while (check(S_BRACKET_O, BRACKET_O, DOT)) {
             if (match(S_BRACKET_O)) {
-                Token bracketO = previous();
-                if (match(COLON)) {
-                    Expr end = check(COLON) ? null : expression();
-                    consume(COLON, "':' expected");
-                    Expr interval = check(S_BRACKET_C) ? null : expression();
-                    if (end == null && interval == null) error(bracketO, "slice without any definition");
-                    consume(S_BRACKET_C, "']' expected");
-                    //expr = new Expr.Slice(expr, null, end, interval);
-                    continue;
-                }
                 Expr index = expression();
-                if (match(COLON)) {
-                    Expr end = check(COLON) ? null : expression();
-                    consume(COLON, "':' expected");
-                    Expr interval = check(S_BRACKET_C) ? null : expression();
-                    consume(S_BRACKET_C, "']' expected");
-                    Expr.Slice slice = new Expr.Slice();
-                    slice.object = expr;
-                    slice.start = index;
-                    slice.end = end;
-                    slice.interval = interval;
-                    expr = slice;
-                    continue;
-                }
                 consume(S_BRACKET_C, "']' expected");
                 Expr.ArrayGet get = new Expr.ArrayGet();
                 get.object = expr;
@@ -668,6 +671,10 @@ public class JavaExprParser extends AbstractJavaParser {
         }
 
         if (match(IDENTIFIER)) {
+            if (match2(BRACKET_C, LAMBDA)) {
+                return makeLambda(List.of(), previous());
+            }
+
             Token previous = previous(); //the identifier just consumed
             if (currentFallback().exists()) { //check if the parser has a class fallback available
                 ClassReference fallbackReference = currentFallback();
@@ -697,11 +704,13 @@ public class JavaExprParser extends AbstractJavaParser {
             if (reference.isPresent()) {
                 ClassReference target = reference.get().getReference();
                 if (match(IDENTIFIER)) {
+                    if (match(LAMBDA)) {
+                        return makeLambda(List.of(Pair.of(reference.get(), previous)), previous());
+                    }
                     error(previous, "Declaration not allowed here");
                     panicMode = true;
                     return varRef(previous, (byte) -1);
                 }
-                consumeDot();
                 return parseObjAttributes(target);
             }
             advance();
@@ -717,6 +726,27 @@ public class JavaExprParser extends AbstractJavaParser {
         );
 
         if (match(BRACKET_O)) {
+            if (match2(BRACKET_C, LAMBDA)) {
+                return makeLambda(List.of(), previous());
+            }
+
+            int startIdx = current;
+            Optional<SourceReference> reference = tryConsumeVarType(generics);
+            if (reference.isPresent()) {
+                if (match(IDENTIFIER)) {
+                    if (check(COMMA) || check(LAMBDA)) {
+                        List<Pair<SourceReference, Token>> args = new ArrayList<>();
+                        args.add(Pair.of(reference.get(), previous()));
+
+                        while (match(COMMA)) {
+                            args.add(Pair.of(consumeVarType(generics), consumeIdentifier()));
+                        }
+                        consume(LAMBDA, "'lambda' or '->' expected");
+                        return makeLambda(args, previous());
+                    }
+                }
+            }
+            current = startIdx;
             Expr expr = expression();
             consumeBracketClose("expression");
             return expr; //the grouping expression mustn't exist as a real AST entry
@@ -727,19 +757,62 @@ public class JavaExprParser extends AbstractJavaParser {
         return varRef(Token.createNative("<unidentified>"), (byte) -1);
     }
 
+    private Expr makeLambda(List<Pair<SourceReference, Token>> args, Token keyword) {
+        if (match(C_BRACKET_O)) {
+            if (this instanceof JavaStmtParser stmtParser) {
+                List<Stmt> content = stmtParser.block("lambda");
+                Expr.BlockLambda lambda = new Expr.BlockLambda();
+                lambda.keyword = keyword;
+                lambda.value = new Stmt.Block();
+                lambda.value.statements = content;
+                lambda.params = args.toArray(Pair[]::new);
+                return lambda;
+            }
+            //block lambda
+            throw new IllegalStateException("can not create block lambda from expr parser");
+        } else {
+            Expr expr = expression();
+            Expr.ExprLambda lambda = new Expr.ExprLambda();
+            lambda.keyword = keyword;
+            lambda.params = args.toArray(Pair[]::new);
+            lambda.value = expr;
+            return lambda;
+        }
+    }
+
     private void consumeDot() {
         consume(DOT, "'.' expected");
     }
 
-    protected @NotNull Expr parseObjAttributes(ClassReference target) {
-        Token name = consumeIdentifier();
-        if (match(BRACKET_O)) return finishCall(name, target, null);
-        if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
-        if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
-        Expr.StaticGet get = new Expr.StaticGet();
-        get.target = target;
-        get.name = name;
-        return get;
+    protected @Nullable Expr parseObjAttributes(ClassReference target) {
+        if (match2(COLON, COLON)) return staticMethodRef(target);
+        if (match(DOT)) {
+            Token name = consumeIdentifier();
+            if (match(BRACKET_O)) return finishCall(name, target, null);
+            if (match(ASSIGN) || match(OPERATION_ASSIGN)) return staticAssign(target, name);
+            if (match(GROW, SHRINK)) return staticSpecialAssign(target, name);
+            Expr.StaticGet get = new Expr.StaticGet();
+            get.target = target;
+            get.name = name;
+            return get;
+        }
+        return null;
+    }
+
+    private boolean match2(TokenType first, TokenType second) {
+        if (match(first)) {
+            if (match(second))
+                return true;
+            current--;
+        }
+        return false;
+    }
+
+    private @NotNull Expr staticMethodRef(ClassReference target) {
+        Expr.StaticMethodRef methodRef = new Expr.StaticMethodRef();
+        methodRef.name = consumeIdentifier();
+        methodRef.obj = target;
+        return methodRef;
     }
 
     private Expr varRef(Token previous, byte ordinal) {
@@ -760,5 +833,12 @@ public class JavaExprParser extends AbstractJavaParser {
         call.declaring = objType;
         call.args = arguments;
         return call;
+    }
+
+    private Expr instMethodRef(Expr value) {
+        Expr.MethodRef methodRef = new Expr.MethodRef();
+        methodRef.obj = value;
+        methodRef.name = consumeIdentifier();
+        return methodRef;
     }
 }

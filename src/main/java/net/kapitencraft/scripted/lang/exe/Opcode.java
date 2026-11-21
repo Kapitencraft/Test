@@ -21,6 +21,7 @@ public enum Opcode {
     I_SH_L(-1), I_SH_R(-1),
     IIRC,
     INVOKE_VIRTUAL(false, -1), INVOKE_STATIC(false, -1),
+    INVOKE_DYNAMIC(false, -1), //used to create method handles for lambda methods
     CONCENTRATION(-1), D2F,
     INSTANCEOF,
     NOT,

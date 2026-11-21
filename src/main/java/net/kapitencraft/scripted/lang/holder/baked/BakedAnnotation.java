@@ -15,6 +15,7 @@ import net.kapitencraft.scripted.lang.oop.method.annotation.CompileAnnotationCal
 import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
 
+import java.util.List;
 import java.util.Map;
 
 public record BakedAnnotation(
@@ -28,7 +29,7 @@ public record BakedAnnotation(
     public CompileClass build() {
 
         ImmutableMap.Builder<String, DataMethodContainer> builder = new ImmutableMap.Builder<>();
-        methodWrappers.forEach((string, wrapper) -> builder.put(string, new DataMethodContainer(new ScriptedCallable[]{new CompileAnnotationCallable(wrapper.retType(), wrapper.val(), wrapper.annotations())})));
+        methodWrappers.forEach((string, wrapper) -> builder.put(string, new DataMethodContainer(new ScriptedCallable[]{new CompileAnnotationCallable(wrapper.retType(), wrapper.val(), wrapper.annotations(), target)})));
 
         return new CompileClass(
                 builder.build(), Map.of(), VarTypeManager.OBJECT,
@@ -42,8 +43,8 @@ public record BakedAnnotation(
     }
 
     @Override
-    public Pair<Token, CompileCallable>[] methods() {
-        return new Pair[0];
+    public List<Pair<Token, CompileCallable>> methods() {
+        return List.of();
     }
 
     @Override

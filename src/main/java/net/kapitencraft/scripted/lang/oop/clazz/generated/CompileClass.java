@@ -2,11 +2,13 @@ package net.kapitencraft.scripted.lang.oop.clazz.generated;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.scripted.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.scripted.lang.oop.field.CompileField;
@@ -30,7 +32,7 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
     private final String name;
     private final String packageRepresentation;
 
-    private final short modifiers;
+    private final int modifiers;
 
     private final Annotation[] annotations;
 
@@ -38,7 +40,7 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
                         Map<String, CompileField> fields,
                         ClassReference superclass, String name, String packageRepresentation,
                         ClassReference[] implemented,
-                        short modifiers, Annotation[] annotations) {
+                        int modifiers, Annotation[] annotations) {
         this.methods = new GeneratedMethodMap(methods);
         this.allMethods = methods;
         this.allFields = fields;
@@ -162,7 +164,7 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
     }
 
     @Override
-    public short getModifiers() {
+    public int getModifiers() {
         return 0;
     }
 
