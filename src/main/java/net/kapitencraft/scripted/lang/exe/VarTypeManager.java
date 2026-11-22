@@ -11,6 +11,7 @@ import net.kapitencraft.scripted.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
+import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.scripted.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.scripted.lang.oop.clazz.primitive.*;
 import net.kapitencraft.tool.StringReader;

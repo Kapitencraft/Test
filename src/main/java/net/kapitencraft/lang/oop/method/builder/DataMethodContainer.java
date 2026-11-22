@@ -1,0 +1,79 @@
+package net.kapitencraft.lang.oop.method.builder;
+
+import com.google.common.collect.ImmutableMap;
+import net.kapitencraft.lang.compiler.Compiler;
+import net.kapitencraft.lang.exe.ScriptedCallable;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.tool.Util;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public record DataMethodContainer(ScriptedCallable[] methods) implements MethodContainer {
+
+    public int size() {
+        return methods.length;
+    }
+
+    public static DataMethodContainer of(ScriptedCallable... methods) {
+        return new DataMethodContainer(methods);
+    }
+
+    public ScriptedCallable getMethod(ClassReference[] expectedArgs) {
+        for (ScriptedCallable method : methods) {
+            if (Util.matchArgs(method.argTypes(), expectedArgs)) return method;
+        }
+        //just going to make it easier for myself xD
+        return methods[0];
+    }
+
+    public ScriptedCallable getMethodByOrdinal(int ordinal) {
+        if (ordinal == -1) return methods[0]; //default
+        return methods[ordinal];
+    }
+
+    public int getMethodOrdinal(ClassReference[] types) {
+        for (int i = 0; i < methods.length; i++) {
+            if (Util.matchArgs(types, methods[i].argTypes())) return i;
+        }
+        return -1;
+    }
+
+    public static class Builder {
+        private final Token className;
+        private final List<ScriptedCallable> methods = new ArrayList<>();
+
+        public Builder(Token className) {
+            this.className = className;
+        }
+
+        public void addMethod(Compiler.ErrorStorage errorStorage, ScriptedCallable callable, Token methodName) {
+            List<? extends ClassReference[]> appliedTypes = methods.stream().map(ScriptedCallable::argTypes).toList();
+            ClassReference[] argTypes = callable.argTypes();
+            for (ClassReference[] appliedType : appliedTypes) {
+                if (Util.matchArgs(argTypes, appliedType)) {
+                    errorStorage.errorF(methodName, "method %s(%s) is already defined in class %s", methodName.lexeme(), Util.getDescriptor(argTypes), className.lexeme());
+                    return;
+                }
+            }
+            methods.add(callable);
+        }
+
+        public DataMethodContainer create() {
+            return new DataMethodContainer(methods.toArray(new ScriptedCallable[0]));
+        }
+
+        public boolean isEmpty() {
+            return this.methods.isEmpty();
+        }
+    }
+
+    public static Map<String, DataMethodContainer> bakeBuilders(Map<String, Builder> builders) {
+        Map<String, DataMethodContainer> map = new HashMap<>();
+        builders.forEach((name, builder) -> map.put(name, builder.create()));
+        return ImmutableMap.copyOf(map);
+    }
+}

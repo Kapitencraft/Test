@@ -14,8 +14,6 @@ public abstract class ClassLoaderHolder<T extends ClassLoaderHolder<T>> {
         return ClassLoader.pck(file);
     }
 
-    public abstract void applySkeleton();
-
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;

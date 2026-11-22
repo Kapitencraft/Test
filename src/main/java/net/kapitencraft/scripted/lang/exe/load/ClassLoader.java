@@ -13,6 +13,8 @@ import net.kapitencraft.scripted.lang.oop.Package;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.lang.oop.clazz.generated.RuntimeClass;
 import net.kapitencraft.lang.oop.method.RuntimeCallable;
+import net.kapitencraft.lang.oop.clazz.generated.RuntimeClass;
+import net.kapitencraft.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.GsonHelper;
 

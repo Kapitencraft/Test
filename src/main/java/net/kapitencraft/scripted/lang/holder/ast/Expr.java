@@ -1,301 +1,40 @@
-package net.kapitencraft.scripted.lang.holder.ast;
+package net.kapitencraft.lang.holder.ast;
 
-import net.kapitencraft.scripted.lang.holder.token.Token;
-import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.scripted.lang.holder.class_ref.SourceReference;
-import net.kapitencraft.tool.Pair;
+import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import java.util.Map;
 
 public interface Expr {
 
     interface Visitor<R> {
-        R visitSetExpr(Set expr);
-        R visitArraySpecialExpr(ArraySpecial expr);
-        R visitLogicalExpr(Logical expr);
-        R visitIdentifierSpecialAssignExpr(IdentifierSpecialAssign expr);
-        R visitComparisonChainExpr(ComparisonChain expr);
-        R visitCastCheckExpr(CastCheck expr);
-        R visitMethodRefExpr(MethodRef expr);
-        R visitIdentifierAssignExpr(IdentifierAssign expr);
-        R visitArrayGetExpr(ArrayGet expr);
-        R visitLiteralExpr(Literal expr);
-        R visitArrayConstructorExpr(ArrayConstructor expr);
-        R visitStaticSpecialExpr(StaticSpecial expr);
-        R visitSpecialSetExpr(SpecialSet expr);
-        R visitExprLambdaExpr(ExprLambda expr);
         R visitCallExpr(Call expr);
+        R visitSetExpr(Set expr);
         R visitArraySetExpr(ArraySet expr);
+        R visitArraySpecialExpr(ArraySpecial expr);
         R visitSingleIdentifierExpr(SingleIdentifier expr);
         R visitConstructorExpr(Constructor expr);
         R visitStaticSetExpr(StaticSet expr);
+        R visitLogicalExpr(Logical expr);
+        R visitIdentifierSpecialAssignExpr(IdentifierSpecialAssign expr);
         R visitUnaryExpr(Unary expr);
+        R visitComparisonChainExpr(ComparisonChain expr);
         R visitWhenExpr(When expr);
-        R visitBlockLambdaExpr(BlockLambda expr);
+        R visitCastCheckExpr(CastCheck expr);
         R visitStaticGetExpr(StaticGet expr);
         R visitSwitchExpr(Switch expr);
+        R visitIdentifierAssignExpr(IdentifierAssign expr);
         R visitSliceExpr(Slice expr);
         R visitGetExpr(Get expr);
-        R visitStaticMethodRefExpr(StaticMethodRef expr);
+        R visitArrayGetExpr(ArrayGet expr);
+        R visitLiteralExpr(Literal expr);
+        R visitArrayConstructorExpr(ArrayConstructor expr);
         R visitBinaryExpr(Binary expr);
+        R visitStaticSpecialExpr(StaticSpecial expr);
+        R visitSpecialSetExpr(SpecialSet expr);
     }
 
     <R> R accept(Visitor<R> visitor);
     ClassReference retType();
-
-    class Set implements Expr {
-        public Expr object;
-        public Token name;
-        public Expr value;
-        public Token assignType;
-        public ClassReference executor;
-        public String signature;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitSetExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class ArraySpecial implements Expr {
-        public Expr object;
-        public Expr index;
-        public Token assignType;
-        public ClassReference executor;
-        public String signature;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitArraySpecialExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class Logical implements Expr {
-        public Expr left;
-        public Token operator;
-        public Expr right;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitLogicalExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class IdentifierSpecialAssign implements Expr {
-        public Token name;
-        public Token assignType;
-        public int ordinal;
-        public ClassReference executor;
-        public String signature;
-        public ClassReference type;
-        public boolean isStatic;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitIdentifierSpecialAssignExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class ComparisonChain implements Expr {
-        public Expr[] entries;
-        public Token[] types;
-        public ClassReference dataType;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitComparisonChainExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class CastCheck implements Expr {
-        public Expr object;
-        public ClassReference targetType;
-        public Token patternVarName;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitCastCheckExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class MethodRef implements Expr {
-        public Expr obj;
-        public String signature;
-        public Token name;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitMethodRefExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class IdentifierAssign implements Expr {
-        public Token name;
-        public Expr value;
-        public Token type;
-        public byte ordinal;
-        public ClassReference executor;
-        public String signature;
-        public ClassReference fieldOwner;
-        public boolean isStatic;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitIdentifierAssignExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class ArrayGet implements Expr {
-        public Expr object;
-        public Expr index;
-        public ClassReference componentType;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitArrayGetExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class Literal implements Expr {
-        public Token literal;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitLiteralExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class ArrayConstructor implements Expr {
-        public Token keyword;
-        public ClassReference compoundType;
-        public Expr size;
-        public Expr[] obj;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitArrayConstructorExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class StaticSpecial implements Expr {
-        public ClassReference target;
-        public Token name;
-        public Token assignType;
-        public ClassReference executor;
-        public String signature;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitStaticSpecialExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class SpecialSet implements Expr {
-        public Expr object;
-        public Token name;
-        public Token assignType;
-        public String signature;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitSpecialSetExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
-
-    class ExprLambda implements Expr {
-        public Token keyword;
-        public Pair<SourceReference, Token>[] params;
-        public Expr[] captures;
-        public String signature;
-        public Expr value;
-        public ClassReference retType;
-
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitExprLambdaExpr(this);
-        }
-
-        @Override
-        public ClassReference retType() {
-            return this.retType;
-        }
-    }
 
     class Call implements Expr {
         public Expr object;
@@ -310,7 +49,27 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitCallExpr(this);
         }
+        
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+        }
+    }
 
+    class Set implements Expr {
+        public Expr object;
+        public Token name;
+        public Expr value;
+        public Token assignType;
+        public ClassReference executor;
+        public String signature;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitSetExpr(this);
+        }
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -331,7 +90,26 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitArraySetExpr(this);
         }
+        
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+        }
+    }
 
+    class ArraySpecial implements Expr {
+        public Expr object;
+        public Expr index;
+        public Token assignType;
+        public ClassReference executor;
+        public String signature;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitArraySpecialExpr(this);
+        }
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -349,7 +127,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSingleIdentifierExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -367,7 +145,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitConstructorExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -387,7 +165,45 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitStaticSetExpr(this);
         }
+        
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+        }
+    }
 
+    class Logical implements Expr {
+        public Expr left;
+        public Token operator;
+        public Expr right;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitLogicalExpr(this);
+        }
+        
+        @Override
+        public ClassReference retType() {
+            return this.retType;
+        }
+    }
+
+    class IdentifierSpecialAssign implements Expr {
+        public Token name;
+        public Token assignType;
+        public int ordinal;
+        public ClassReference executor;
+        public String signature;
+        public ClassReference type;
+        public boolean isStatic;
+        public ClassReference retType;
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitIdentifierSpecialAssignExpr(this);
+        }
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -404,7 +220,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitUnaryExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -421,7 +237,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitComparisonChainExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -438,26 +254,24 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitWhenExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
         }
     }
 
-    class BlockLambda implements Expr {
-        public Token keyword;
-        public Pair<SourceReference, Token>[] params;
-        public Expr[] captures;
-        public String signature;
-        public Stmt.Block value;
+    class CastCheck implements Expr {
+        public Expr object;
+        public ClassReference targetType;
+        public Token patternVarName;
         public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitBlockLambdaExpr(this);
+            return visitor.visitCastCheckExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -473,7 +287,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitStaticGetExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -492,7 +306,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSwitchExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -514,7 +328,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitIdentifierAssignExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -532,7 +346,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSliceExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -549,7 +363,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitGetExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -566,7 +380,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitArrayGetExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -581,24 +395,25 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLiteralExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
         }
     }
 
-    class StaticMethodRef implements Expr {
-        public ClassReference obj;
-        public String signature;
-        public Token name;
+    class ArrayConstructor implements Expr {
+        public Token keyword;
+        public ClassReference compoundType;
+        public Expr size;
+        public Expr[] obj;
         public ClassReference retType;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitStaticMethodRefExpr(this);
+            return visitor.visitArrayConstructorExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -617,7 +432,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitBinaryExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -636,7 +451,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitStaticSpecialExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;
@@ -655,7 +470,7 @@ public interface Expr {
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitSpecialSetExpr(this);
         }
-
+        
         @Override
         public ClassReference retType() {
             return this.retType;

@@ -323,8 +323,7 @@ public class VirtualMachine {
                         StringReader reader = new StringReader(signature);
                         ScriptedClass type = VarTypeManager.flatParse(reader);
                         if (invokeStaticInitIfNecessary(type, 3)) continue;
-
-                        ScriptedCallable referenceCallable = type.getMethod(reader.getRemaining());
+                        ScriptedCallable referenceCallable = type.getMethod(info.nameAndType.descriptor().value());
                         //more like: create dynamic
                         int captureCount = readByte();
 

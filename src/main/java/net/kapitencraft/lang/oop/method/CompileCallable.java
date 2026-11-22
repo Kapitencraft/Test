@@ -12,7 +12,6 @@ import net.kapitencraft.lang.holder.bytecode.LineNumberTable;
 import net.kapitencraft.lang.holder.bytecode.LocalVariableTable;
 import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.run.VarTypeManager;
 import net.kapitencraft.tool.Pair;
 
 import java.util.List;
@@ -55,6 +54,15 @@ public class CompileCallable implements ScriptedCallable {
             this.lineNumberTable = chunkBuilder.getLineNumbers();
             this.localVariableTable = chunkBuilder.getLocals();
         }
+        if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);
+
+        object.add("annotations", builder.cacheAnnotations(this.annotations));
+        return object;
+    }
+
+    public void analyseSemantics(SemanticAnalyser analyser, ClassReference declaring) {
+        if (!isAbstract())
+            analyser.analyseBody(body, this.retType, this.thrown, params, isStatic() ? null : declaring);
     }
 
     @Override
@@ -90,6 +98,19 @@ public class CompileCallable implements ScriptedCallable {
     @Override
     public ClassReference[] argTypes() {
         return params.stream().map(Pair::left).toArray(ClassReference[]::new);
+    }
+
+    @Override
+    public Chunk getChunk() {
+        return code;
+    }
+
+    public LineNumberTable getLNT() {
+        return this.lineNumberTable;
+    }
+
+    public LocalVariableTable getLVT() {
+        return this.localVariableTable;
     }
 
     @Override
