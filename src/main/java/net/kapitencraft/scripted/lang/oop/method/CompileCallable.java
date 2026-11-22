@@ -2,7 +2,6 @@ package net.kapitencraft.scripted.lang.oop.method;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.scripted.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.scripted.lang.compiler.ast_optimize.ASTOptimizer;
 import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
@@ -14,7 +13,7 @@ import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.ast.Stmt;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
 
 import java.util.Arrays;

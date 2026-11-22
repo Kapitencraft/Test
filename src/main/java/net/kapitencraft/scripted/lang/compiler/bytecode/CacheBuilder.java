@@ -2,10 +2,7 @@ package net.kapitencraft.scripted.lang.compiler.bytecode;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.IncrementIntVarInstruction;
-import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.StaticFieldAccessInstruction;
-import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.SwitchInstruction;
-import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.TraceDebugInstruction;
+import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.*;
 import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.constant.DoubleConstantInstruction;
 import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.constant.FloatConstantInstruction;
 import net.kapitencraft.scripted.lang.exe.Opcode;

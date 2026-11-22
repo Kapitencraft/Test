@@ -1,11 +1,13 @@
 package net.kapitencraft.scripted.lang.tool;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
+import net.kapitencraft.scripted.lang.holder.ast.Stmt;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.generic.GenericStack;
+import net.kapitencraft.scripted.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
@@ -217,5 +219,10 @@ public class Util {
             }
         }
         return o.toString();
+    }
+
+    @SafeVarargs
+    public static <T> List<T> newModifyableList(T... elements) {
+        return new ArrayList<>(List.of(elements));
     }
 }

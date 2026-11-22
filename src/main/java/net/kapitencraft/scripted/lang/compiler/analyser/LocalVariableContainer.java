@@ -1,9 +1,9 @@
 package net.kapitencraft.scripted.lang.compiler.analyser;
 
-import net.kapitencraft.lang.holder.ast.Expr;
+import net.kapitencraft.scripted.lang.holder.ast.Expr;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.holder.token.Token;
+import net.kapitencraft.scripted.lang.holder.token.Token;
 
 import java.util.ArrayList;
 import java.util.List;

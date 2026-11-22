@@ -110,6 +110,7 @@ public class SourceTree {
                         .whenComplete((v, ex) -> {
                             if (ex != null) {
                                 System.err.printf("error in thread: %s: %s\n", source, ex.getMessage());
+                                ex.printStackTrace(System.err);
                                 System.exit(1);
                             }
                             int done = completed.incrementAndGet();

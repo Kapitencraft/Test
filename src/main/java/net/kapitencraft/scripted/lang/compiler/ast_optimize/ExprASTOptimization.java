@@ -8,10 +8,11 @@ import net.kapitencraft.scripted.lang.holder.ast.Stmt;
 import net.kapitencraft.scripted.lang.holder.ast.SwitchKey;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.holder.token.TokenType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class ExprASTOptimization implements Expr.Visitor<Expr>, Stmt.Visitor<Stmt>, ASTOptimization {
+public class ExprASTOptimization implements Expr.Visitor<@NotNull Expr>, Stmt.Visitor<@NotNull Stmt>, ASTOptimization {
 
     protected Expr.Literal createNumber(int value) {
         Expr.Literal literal = new Expr.Literal();
@@ -33,16 +34,33 @@ public class ExprASTOptimization implements Expr.Visitor<Expr>, Stmt.Visitor<Stm
         return expr.accept(this);
     }
 
+    private Expr optimizeIfNonNull(Expr object) {
+        if (object != null)
+            return optimize(object);
+        return null;
+    }
+
+    private void optimizeArray(Expr[] array) {
+        for (int i = 0; i < array.length; i++) {
+            array[i] = optimize(array[i]);
+        }
+    }
+
     protected Stmt optimize(Stmt stmt) {
         return stmt.accept(this);
     }
 
+    private Stmt optimizeIfNonNull(Stmt object) {
+        if (object != null)
+            return optimize(object);
+        return null;
+    }
+
     @Override
     public Expr visitCallExpr(Expr.Call expr) {
-        expr.object = optimize(expr.object);
-        for (int i = 0; i < expr.args.length; i++) {
-            expr.args[i] = optimize(expr.args[i]);
-        }
+        if (expr.virtual)
+            expr.object = optimize(expr.object);
+        optimizeArray(expr.args);
         return expr;
     }
 
@@ -56,7 +74,7 @@ public class ExprASTOptimization implements Expr.Visitor<Expr>, Stmt.Visitor<Stm
     @Override
     public Expr visitArraySetExpr(Expr.ArraySet expr) {
         expr.index = optimize(expr.index);
-        expr.object = optimize(expr.index);
+        expr.object = optimize(expr.object);
         expr.value = optimize(expr.value);
         return expr;
     }
@@ -75,9 +93,7 @@ public class ExprASTOptimization implements Expr.Visitor<Expr>, Stmt.Visitor<Stm
 
     @Override
     public Expr visitConstructorExpr(Expr.Constructor expr) {
-        for (int i = 0; i < expr.args.length; i++) {
-            expr.args[i] = optimize(expr.args[i]);
-        }
+        optimizeArray(expr.args);
         return expr;
 
     }
@@ -110,9 +126,7 @@ public class ExprASTOptimization implements Expr.Visitor<Expr>, Stmt.Visitor<Stm
 
     @Override
     public Expr visitComparisonChainExpr(Expr.ComparisonChain expr) {
-        for (int i = 0; i < expr.entries.length; i++) {
-            expr.entries[i] = optimize(expr.entries[i]);
-        }
+        optimizeArray(expr.entries);
         return expr;
     }
 
@@ -125,8 +139,19 @@ public class ExprASTOptimization implements Expr.Visitor<Expr>, Stmt.Visitor<Stm
     }
 
     @Override
+    public Expr visitBlockLambdaExpr(Expr.BlockLambda expr) {
+        return expr;
+    }
+
+    @Override
     public Expr visitCastCheckExpr(Expr.CastCheck expr) {
         expr.object = optimize(expr.object);
+        return expr;
+    }
+
+    @Override
+    public Expr visitMethodRefExpr(Expr.MethodRef expr) {
+        expr.obj = optimize(expr.obj);
         return expr;
     }
 
@@ -142,7 +167,7 @@ public class ExprASTOptimization implements Expr.Visitor<Expr>, Stmt.Visitor<Stm
             SwitchKey param = expr.params[i];
             param.expr = optimize(param.expr);
         }
-        expr.defaulted = optimize(expr.defaulted);
+        expr.defaulted = optimizeIfNonNull(expr.defaulted);
         return expr;
     }
 
@@ -155,15 +180,20 @@ public class ExprASTOptimization implements Expr.Visitor<Expr>, Stmt.Visitor<Stm
     @Override
     public Expr visitSliceExpr(Expr.Slice expr) {
         expr.object = optimize(expr.object);
-        expr.start = optimize(expr.start);
-        expr.end = optimize(expr.end);
-        expr.interval = optimize(expr.interval);
+        expr.start = optimizeIfNonNull(expr.start);
+        expr.end = optimizeIfNonNull(expr.end);
+        expr.interval = optimizeIfNonNull(expr.interval);
         return expr;
     }
 
     @Override
     public Expr visitGetExpr(Expr.Get expr) {
         expr.object = optimize(expr.object);
+        return expr;
+    }
+
+    @Override
+    public Expr visitStaticMethodRefExpr(Expr.StaticMethodRef expr) {
         return expr;
     }
 
@@ -184,9 +214,7 @@ public class ExprASTOptimization implements Expr.Visitor<Expr>, Stmt.Visitor<Stm
         if (expr.size != null) {
             expr.size = optimize(expr.size);
         } else {
-            for (int i = 0; i < expr.obj.length; i++) {
-                expr.obj[i] = optimize(expr.obj[i]);
-            }
+            optimizeArray(expr.obj);
         }
         return expr;
     }
@@ -210,8 +238,14 @@ public class ExprASTOptimization implements Expr.Visitor<Expr>, Stmt.Visitor<Stm
     }
 
     @Override
+    public Expr visitExprLambdaExpr(Expr.ExprLambda expr) {
+        optimizeArray(expr.captures);
+        return expr;
+    }
+
+    @Override
     public Stmt visitReturnStmt(Stmt.Return stmt) {
-        stmt.value = optimize(stmt.value);
+        stmt.value = optimizeIfNonNull(stmt.value);
         return stmt;
     }
 
@@ -251,9 +285,7 @@ public class ExprASTOptimization implements Expr.Visitor<Expr>, Stmt.Visitor<Stm
 
     @Override
     public Stmt visitVarDeclStmt(Stmt.VarDecl stmt) {
-        if (stmt.initializer != null) {
-            stmt.initializer = optimize(stmt.initializer);
-        }
+        stmt.initializer = optimizeIfNonNull(stmt.initializer);
         return stmt;
     }
 
@@ -283,16 +315,12 @@ public class ExprASTOptimization implements Expr.Visitor<Expr>, Stmt.Visitor<Stm
     @Override
     public Stmt visitIfStmt(Stmt.If stmt) {
         stmt.condition = optimize(stmt.condition);
-        if (stmt.thenBranch != null) {
-            stmt.thenBranch = optimize(stmt.thenBranch);
-        }
+        stmt.thenBranch = optimizeIfNonNull(stmt.thenBranch);
         for (ElifBranch elif : stmt.elifs) {
             elif.condition = optimize(elif.condition);
             elif.body = optimize(elif.body);
         }
-        if (stmt.elseBranch != null) {
-            stmt.elseBranch = optimize(stmt.elseBranch);
-        }
+        stmt.elseBranch = optimizeIfNonNull(stmt.elseBranch);
         return stmt;
     }
 

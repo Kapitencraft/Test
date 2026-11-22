@@ -15,6 +15,7 @@ import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public record BakedClass(

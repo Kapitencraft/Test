@@ -15,9 +15,9 @@ import net.kapitencraft.scripted.lang.holder.class_ref.generic.AppliedGenericsSo
 import net.kapitencraft.scripted.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.scripted.lang.holder.oop.AnnotationObj;
 import net.kapitencraft.scripted.lang.holder.oop.attribute.ConstructorHolder;
-import net.kapitencraft.lang.holder.oop.attribute.EnumConstantHolder;
-import net.kapitencraft.lang.holder.oop.attribute.FieldHolder;
-import net.kapitencraft.lang.holder.oop.attribute.MethodHolder;
+import net.kapitencraft.scripted.lang.holder.oop.attribute.EnumConstantHolder;
+import net.kapitencraft.scripted.lang.holder.oop.attribute.FieldHolder;
+import net.kapitencraft.scripted.lang.holder.oop.attribute.MethodHolder;
 import net.kapitencraft.scripted.lang.holder.oop.clazz.*;
 import net.kapitencraft.scripted.lang.holder.oop.generic.AppliedGenerics;
 import net.kapitencraft.scripted.lang.holder.oop.generic.Generic;

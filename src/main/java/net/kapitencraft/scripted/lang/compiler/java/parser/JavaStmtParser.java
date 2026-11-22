@@ -16,6 +16,7 @@ import net.kapitencraft.scripted.lang.holder.oop.AnnotationObj;
 import net.kapitencraft.scripted.lang.holder.oop.attribute.OperationHolder;
 import net.kapitencraft.scripted.lang.holder.oop.generic.Generics;
 import net.kapitencraft.scripted.lang.holder.token.Token;
+import net.kapitencraft.scripted.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -420,7 +421,7 @@ public class JavaStmtParser extends JavaExprParser implements StmtParser {
     }
 
     public List<Stmt> parse() {
-        if (tokens.length == 0) return List.of(returnStmt(Token.createNative("return")));
+        if (tokens.length == 0) return Util.newModifyableList(returnStmt(Token.createNative("return")));
         List<Stmt> stmts = new ArrayList<>();
         while (!isAtEnd()) stmts.add(declaration());
         if (!seenReturn.getLast()) stmts.add(returnStmt(Token.createNative("return")));

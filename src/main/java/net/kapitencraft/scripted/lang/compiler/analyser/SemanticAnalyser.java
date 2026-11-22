@@ -1,7 +1,7 @@
 package net.kapitencraft.scripted.lang.compiler.analyser;
 
 import net.kapitencraft.scripted.lang.compiler.Compiler;
-import net.kapitencraft.lang.compiler.Modifiers;
+import net.kapitencraft.scripted.lang.compiler.Modifiers;
 import net.kapitencraft.scripted.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.exe.algebra.OperationType;
@@ -10,9 +10,9 @@ import net.kapitencraft.scripted.lang.holder.ast.ElifBranch;
 import net.kapitencraft.scripted.lang.holder.ast.Expr;
 import net.kapitencraft.scripted.lang.holder.ast.Stmt;
 import net.kapitencraft.scripted.lang.holder.ast.SwitchKey;
-import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
+import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.class_ref.SourceReference;
+import net.kapitencraft.scripted.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.scripted.lang.holder.class_ref.generic.AppliedGenericsReference;
 import net.kapitencraft.scripted.lang.holder.class_ref.generic.GenericClassReference;
 import net.kapitencraft.scripted.lang.holder.class_ref.generic.GenericStack;
@@ -22,7 +22,7 @@ import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.holder.token.TokenType;
 import net.kapitencraft.scripted.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.method.CompileCallable;
+import net.kapitencraft.scripted.lang.oop.method.CompileCallable;
 import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.scripted.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
@@ -741,7 +741,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
         //TODO: analyse method graph
         List<Pair<ClassReference, ScriptedCallable>> methodCandidates = findFunctionMethodCandidates();
 
-        LambdaInfo lambdaInfo = makeLambda(List.of(stmt), methodCandidates, expr.keyword, expr.params);
+        LambdaInfo lambdaInfo = makeLambda(Util.newModifyableList(stmt), methodCandidates, expr.keyword, expr.params);
         expr.signature = VarTypeManager.getMethodSignature(declaring.get(), lambdaInfo.name, lambdaInfo.lambdaArgs);
         expr.captures = lambdaInfo.localCaptures.toArray(new Expr[0]);
         return expr.retType = lambdaInfo.declaring;

@@ -27,6 +27,7 @@ import net.kapitencraft.scripted.lang.oop.field.SkeletonField;
 import net.kapitencraft.scripted.lang.oop.method.CompileCallable;
 import net.kapitencraft.scripted.lang.oop.method.SkeletonMethod;
 import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.scripted.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 
 import java.util.*;
@@ -177,7 +178,7 @@ public record EnumHolder(ClassReference target, int modifiers,
                         target.array(),
                         List.of(),
                         new ClassReference[0],
-                        List.of(aReturn1),
+                        Util.newModifyableList(aReturn1),
                         Modifiers.pack(Modifiers.STATIC, Modifiers.SYNTHETIC),
                         new Annotation[0],
                         this.target
@@ -222,7 +223,7 @@ public record EnumHolder(ClassReference target, int modifiers,
             constructors.add(Pair.of(this.name, new CompileCallable(VarTypeManager.VOID.reference(), List.of(
                     Pair.of(VarTypeManager.STRING, "$name"),
                     Pair.of(VarTypeManager.INTEGER.reference(), "$ordinal")
-            ), new ClassReference[0], List.of(stmt1, ret), Modifiers.pack(Modifiers.SYNTHETIC), new Annotation[0], target
+            ), new ClassReference[0], Util.newModifyableList(stmt1, ret), Modifiers.pack(Modifiers.SYNTHETIC), new Annotation[0], target
             )));
         }
 

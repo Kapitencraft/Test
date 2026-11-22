@@ -8,6 +8,7 @@ import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.LiteralHolder;
 import net.kapitencraft.scripted.lang.holder.ast.Expr;
+import net.kapitencraft.scripted.lang.holder.ast.Stmt;
 import net.kapitencraft.scripted.lang.holder.ast.SwitchKey;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
@@ -15,8 +16,10 @@ import net.kapitencraft.scripted.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.scripted.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.scripted.lang.holder.oop.AnnotationObj;
 import net.kapitencraft.scripted.lang.holder.token.Token;
+import net.kapitencraft.scripted.lang.holder.token.TokenType;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.scripted.lang.oop.field.ScriptedField;
+import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -1,14 +1,16 @@
 package net.kapitencraft.scripted.lang.exe;
 
+import net.kapitencraft.scripted.lang.exe.lambda.ScriptedCallSite;
+import net.kapitencraft.scripted.lang.exe.lambda.ScriptedMethodHandle;
+import net.kapitencraft.scripted.lang.exe.natives.NativeClassInstance;
+import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
 import net.kapitencraft.scripted.lang.holder.bytecode.LocalVariableTable;
-import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.scripted.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.scripted.lang.oop.clazz.inst.DynamicClassInstance;
-import net.kapitencraft.scripted.lang.exe.natives.NativeClassInstance;
-import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.scripted.lang.tool.Util;
 import net.kapitencraft.tool.StringReader;
 import org.jetbrains.annotations.Contract;

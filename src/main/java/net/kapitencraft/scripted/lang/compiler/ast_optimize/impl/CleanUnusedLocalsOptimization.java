@@ -42,12 +42,14 @@ public class CleanUnusedLocalsOptimization extends ExprASTOptimization {
             }
             i++;
         }
-        int[] mapper = new int[used.getLast()];
-        Arrays.fill(mapper, -1); //use -1 as filler value as it isn't a possible ordinal
-        int lI = 0;
-        //'used' array is in order of var creation as code was searched linearly. locals can therefore be ordered ascending
-        for (Integer integer : used) {
-            mapper[integer] = lI++;
+        if (!used.isEmpty()) {
+            int[] mapper = new int[used.getLast() + 1];
+            Arrays.fill(mapper, -1); //use -1 as filler value as it isn't a possible ordinal
+            int lI = 0;
+            //'used' array is in order of var creation as code was searched linearly. locals can therefore be ordered ascending
+            for (Integer integer : used) {
+                mapper[integer] = lI++;
+            }
         }
         return super.optimizeBlock(statements);
     }
@@ -128,8 +130,18 @@ public class CleanUnusedLocalsOptimization extends ExprASTOptimization {
         }
 
         @Override
+        public Boolean visitBlockLambdaExpr(Expr.BlockLambda expr) {
+            return Arrays.stream(expr.captures).anyMatch(this::check);
+        }
+
+        @Override
         public Boolean visitCastCheckExpr(Expr.CastCheck expr) {
             return check(expr.object);
+        }
+
+        @Override
+        public Boolean visitMethodRefExpr(Expr.MethodRef expr) {
+            return check(expr.obj);
         }
 
         @Override
@@ -163,6 +175,11 @@ public class CleanUnusedLocalsOptimization extends ExprASTOptimization {
         }
 
         @Override
+        public Boolean visitStaticMethodRefExpr(Expr.StaticMethodRef expr) {
+            return false;
+        }
+
+        @Override
         public Boolean visitArrayGetExpr(Expr.ArrayGet expr) {
             return check(expr.object) || check(expr.index);
         }
@@ -190,6 +207,11 @@ public class CleanUnusedLocalsOptimization extends ExprASTOptimization {
         @Override
         public Boolean visitSpecialSetExpr(Expr.SpecialSet expr) {
             return false;
+        }
+
+        @Override
+        public Boolean visitExprLambdaExpr(Expr.ExprLambda expr) {
+            return Arrays.stream(expr.captures).anyMatch(this::check);
         }
 
         @Override
@@ -239,7 +261,7 @@ public class CleanUnusedLocalsOptimization extends ExprASTOptimization {
 
         @Override
         public Boolean visitTryStmt(Stmt.Try stmt) {
-            return check(stmt.body) || check(stmt.finale) || Arrays.stream(stmt.catches).map(Pair::getSecond).anyMatch(this::check);
+            return check(stmt.body) || check(stmt.finale) || Arrays.stream(stmt.catches).map(Pair::second).anyMatch(this::check);
         }
 
         @Override

@@ -7,7 +7,7 @@ import net.kapitencraft.scripted.lang.exe.load.ClassLoader;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
-import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.tool.StringReader;
 

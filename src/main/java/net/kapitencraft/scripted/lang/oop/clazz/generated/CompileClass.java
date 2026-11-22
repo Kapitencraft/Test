@@ -2,13 +2,12 @@ package net.kapitencraft.scripted.lang.oop.clazz.generated;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.kapitencraft.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.scripted.lang.compiler.analyser.FinalsPopulatedAnalyser;
-import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder;
+import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
+import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.scripted.lang.oop.field.CompileField;
@@ -16,10 +15,12 @@ import net.kapitencraft.scripted.lang.oop.method.CompileCallable;
 import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.scripted.lang.oop.method.map.AbstractMethodMap;
 import net.kapitencraft.scripted.lang.oop.method.map.GeneratedMethodMap;
-import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public final class CompileClass implements CacheableClass, ScriptedClass {
     private final GeneratedMethodMap methods;

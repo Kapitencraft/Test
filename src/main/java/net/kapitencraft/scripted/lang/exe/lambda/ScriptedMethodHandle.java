@@ -1,6 +1,6 @@
-package net.kapitencraft.lang.exe.lambda;
+package net.kapitencraft.scripted.lang.exe.lambda;
 
-import net.kapitencraft.lang.func.ScriptedCallable;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 
 public record ScriptedMethodHandle(ScriptedCallable exe, String signature, int kind) {
 }
