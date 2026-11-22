@@ -1,8 +1,8 @@
-package net.kapitencraft.lang.compiler.bytecode;
+package net.kapitencraft.scripted.lang.compiler.bytecode;
 
-import net.kapitencraft.lang.holder.bytecode.attributes.AttributeInfo;
-import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolEntry;
-import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantUtf8Info;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.AttributeInfo;
+import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.ConstantPoolEntry;
+import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.ConstantUtf8Info;
 
 public class BytecodeBuffer {
     private final CacheBuffer bytes;

@@ -1,9 +1,9 @@
 package net.kapitencraft.scripted.lang.oop.clazz;
 
 import net.kapitencraft.scripted.lang.compiler.Modifiers;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.exe.algebra.OperationType;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.oop.attribute.EnumConstantHolder;
@@ -102,8 +102,8 @@ public interface ScriptedClass {
         return null;
     }
 
-    default Map<String, ? extends ScriptedField> getFields() {
-        return superclass() != null ? superclass().get().getFields() : Map.of();
+    default Map<String, ? extends ScriptedField> fields() {
+        return superclass() != null ? superclass().get().fields() : Map.of();
     }
 
     default boolean is(ScriptedClass other) {
@@ -149,7 +149,7 @@ public interface ScriptedClass {
      * @return the method for the signature or null if it couldn't be found
      */
     default ScriptedCallable getMethod(String signature) {
-        return getMethods().getMethod(signature);
+        return methods().getMethod(signature);
     }
 
     /**
@@ -159,13 +159,13 @@ public interface ScriptedClass {
      * @return whether a method with the given name could be found on this class specifically
      */
     default boolean hasMethod(String name) {
-        return getMethods().has(name);
+        return methods().has(name);
     }
 
     /**
      * @return the method map of this class
      */
-    AbstractMethodMap getMethods();
+    AbstractMethodMap methods();
 
     //endregion
     //region annotations
@@ -185,22 +185,22 @@ public interface ScriptedClass {
     //region MODIFIERS
 
     @Contract(pure = true)
-    int getModifiers();
+    int modifiers();
 
     default boolean isInterface() {
-        return (getModifiers() & Modifiers.INTERFACE) != 0;
+        return (modifiers() & Modifiers.INTERFACE) != 0;
     }
 
     default boolean isAbstract() {
-        return Modifiers.isAbstract(getModifiers());
+        return Modifiers.isAbstract(modifiers());
     }
 
     default boolean isFinal() {
-        return Modifiers.isFinal(getModifiers());
+        return Modifiers.isFinal(modifiers());
     }
 
     default boolean isAnnotation() {
-        return (getModifiers() & Modifiers.ANNOTATION) != 0;
+        return (modifiers() & Modifiers.ANNOTATION) != 0;
     }
 
     default @Nullable Generics getGenerics() {

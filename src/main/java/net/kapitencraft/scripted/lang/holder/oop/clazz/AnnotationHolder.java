@@ -1,12 +1,14 @@
 package net.kapitencraft.scripted.lang.holder.oop.clazz;
 
 import com.google.common.collect.ImmutableMap;
+import net.kapitencraft.scripted.lang.compiler.Compiler;
 import net.kapitencraft.scripted.lang.compiler.Modifiers;
 import net.kapitencraft.scripted.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.scripted.lang.compiler.exe.text.StmtParser;
 import net.kapitencraft.scripted.lang.compiler.VarTypeContainer;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.ast.Expr;
+import net.kapitencraft.scripted.lang.holder.ast.Stmt;
 import net.kapitencraft.scripted.lang.holder.baked.BakedAnnotation;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
@@ -17,9 +19,13 @@ import net.kapitencraft.scripted.lang.holder.oop.generic.Generics;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.scripted.lang.oop.clazz.skeleton.SkeletonAnnotation;
+import net.kapitencraft.scripted.lang.oop.method.CompileCallable;
 import net.kapitencraft.scripted.lang.oop.method.annotation.AnnotationCallable;
 import net.kapitencraft.scripted.lang.oop.method.annotation.SkeletonAnnotationMethod;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public record AnnotationHolder(ClassReference target, int modifiers,
                                AnnotationObj[] annotations, Generics generics, String pck, Token name,
@@ -103,6 +109,23 @@ public record AnnotationHolder(ClassReference target, int modifiers,
         @Override
         public ClassReference declaringClass() {
             return null;
+        }
+
+        public ScriptedCallable toCallable(ClassReference target) {
+            List<Stmt> code = new ArrayList<>();
+            int mods = Modifiers.ANNOTATION;
+            if (this.val != null) {
+                Stmt.Return ret = new Stmt.Return();
+                ret.value = this.val;
+                ret.keyword = Compiler.LOCATION_ANALYSER.find(this.val);
+                code.add(ret);
+            } else
+                mods |= Modifiers.ABSTRACT;
+
+            return new CompileCallable(this.retType(), List.of(), new ClassReference[0],
+                    code, mods, this.annotations(),
+                    target
+            );
         }
     }
 }

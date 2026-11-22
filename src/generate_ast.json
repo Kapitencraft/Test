@@ -273,7 +273,7 @@
     }
   },
   "imports": [
-    "net.kapitencraft.lang.holder.token.Token",
-    "net.kapitencraft.lang.holder.class_ref.ClassReference"
+    "net.kapitencraft.scripted.lang.holder.token.Token",
+    "net.kapitencraft.scripted.lang.holder.class_ref.ClassReference"
   ]
 }

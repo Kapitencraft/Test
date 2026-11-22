@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.holder.bytecode.const_pool;
+package net.kapitencraft.scripted.lang.holder.bytecode.const_pool;
 
 public class ConstantPoolReader {
     private final ConstantPoolEntry[] entries;

@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.scripted.lang.compiler.Modifiers;
 import net.kapitencraft.scripted.lang.exe.load.ClassLoader;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.scripted.lang.holder.oop.attribute.OperationHolder;
@@ -113,7 +113,7 @@ public class SkeletonMethod implements ScriptedCallable {
     }
 
     @Override
-    public short modifiers() {
+    public int modifiers() {
         return modifiers;
     }
 

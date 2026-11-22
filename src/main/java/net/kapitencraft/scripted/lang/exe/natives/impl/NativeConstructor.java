@@ -1,5 +1,6 @@
 package net.kapitencraft.scripted.lang.exe.natives.impl;
 
+import net.kapitencraft.scripted.lang.compiler.Modifiers;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.exe.VirtualMachine;
 import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
@@ -63,8 +64,8 @@ public class NativeConstructor implements ScriptedCallable {
     }
 
     @Override
-    public short modifiers() {
-        return Modifiers.pack(false, false, false);
+    public int modifiers() {
+        return Modifiers.pack(Modifiers.NATIVE);
     }
 
     @Override

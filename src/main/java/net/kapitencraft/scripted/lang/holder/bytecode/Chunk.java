@@ -1,15 +1,13 @@
 package net.kapitencraft.scripted.lang.holder.bytecode;
 
-import net.kapitencraft.scripted.lang.bytecode.compile.CacheBuffer;
-import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.ConstantPoolBuilder;
 import net.kapitencraft.scripted.lang.exe.Opcode;
-import net.kapitencraft.scripted.lang.compiler.ConstantPoolBuilder;
-import net.kapitencraft.scripted.lang.compiler.Synthesizer;
-import net.kapitencraft.scripted.lang.compiler.ConstantPoolBuilder;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
+import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.*;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
-import net.kapitencraft.tool.GsonHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +15,7 @@ import java.util.List;
 public record Chunk(byte[] code, ExceptionHandler[] handlers) {
 
     /**
-     * a builder for the chunk, used inside {@link net.kapitencraft.lang.compiler.bytecode.CacheBuilder CacheBuilder} to create json format of the chunk
+     * a builder for the chunk, used inside {@link net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder CacheBuilder} to create json format of the chunk
      */
     public static class Builder {
         private final List<ExceptionHandler> handlers;

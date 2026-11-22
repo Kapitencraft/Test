@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.exe.load.ClassLoader;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.oop.attribute.EnumConstantHolder;
@@ -131,7 +131,7 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public Map<String, SkeletonField> getFields() {
+    public Map<String, SkeletonField> fields() {
         return fields;
     }
 
@@ -146,7 +146,7 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public int getModifiers() {
+    public int modifiers() {
         return modifiers;
     }
 
@@ -156,7 +156,7 @@ public class SkeletonClass implements ScriptedClass {
     }
 
     @Override
-    public GeneratedMethodMap getMethods() {
+    public GeneratedMethodMap methods() {
         return methods;
     }
 

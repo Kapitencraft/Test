@@ -1,8 +1,8 @@
 package net.kapitencraft.scripted.lang.oop.clazz;
 
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.class_ref.PrimitiveClassReference;
 import net.kapitencraft.scripted.lang.oop.method.map.GeneratedMethodMap;
@@ -77,12 +77,12 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public Map<String, ? extends ScriptedField> getFields() {
+    public Map<String, ? extends ScriptedField> fields() {
         return Map.of();
     }
 
     @Override
-    public int getModifiers() {
+    public int modifiers() {
         return 0;
     }
 
@@ -92,7 +92,7 @@ public abstract class PrimitiveClass implements ScriptedClass {
     }
 
     @Override
-    public GeneratedMethodMap getMethods() {
+    public GeneratedMethodMap methods() {
         return null;
     }
 

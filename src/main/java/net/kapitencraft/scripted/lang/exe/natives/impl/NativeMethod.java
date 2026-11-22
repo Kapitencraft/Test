@@ -3,12 +3,10 @@ package net.kapitencraft.scripted.lang.exe.natives.impl;
 import net.kapitencraft.scripted.lang.exe.VirtualMachine;
 import net.kapitencraft.scripted.lang.compiler.Modifiers;
 import net.kapitencraft.scripted.lang.exe.natives.NativeClassInstance;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.oop.clazz.PrimitiveClass;
-import net.kapitencraft.lang.oop.clazz.ScriptedClass;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -75,7 +73,7 @@ public class NativeMethod implements ScriptedCallable {
     }
 
     @Override
-    public short modifiers() {
+    public int modifiers() {
         return modifiers;
     }
 

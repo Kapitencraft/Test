@@ -1,10 +1,11 @@
-package net.kapitencraft.lang.holder.bytecode.const_pool;
+package net.kapitencraft.scripted.lang.holder.bytecode.const_pool;
 
-import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
-import net.kapitencraft.lang.compiler.bytecode.ConstantPoolBuilder;
-import net.kapitencraft.lang.exe.load.BytecodeReader;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.ConstantPoolBuilder;
+import net.kapitencraft.scripted.lang.exe.lambda.ScriptedMethodHandle;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
 
-public class ConstantMethodHandleInfo implements ConstantPoolEntry {
+public class ConstantMethodHandleInfo implements LoadableCPEntry {
     private byte kind;
     private ConstantObjRefInfo obj;
 
@@ -15,9 +16,18 @@ public class ConstantMethodHandleInfo implements ConstantPoolEntry {
         cpReader.add(info);
     }
 
+    public byte getKind() {
+        return kind;
+    }
+
     @Override
     public ConstantPoolEntry.Baked bake(ConstantPoolBuilder builder) {
         return new Baked(kind, builder.addEntry(obj));
+    }
+
+    @Override
+    public Object load() {
+        return new ScriptedMethodHandle(obj.getMethod(), obj.asMethodSignature(), kind);
     }
 
     public record Baked(byte kind, int objIndex) implements ConstantPoolEntry.Baked {

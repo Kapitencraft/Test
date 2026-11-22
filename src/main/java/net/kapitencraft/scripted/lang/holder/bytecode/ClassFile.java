@@ -1,22 +1,22 @@
-package net.kapitencraft.lang.holder.bytecode;
+package net.kapitencraft.scripted.lang.holder.bytecode;
 
-import net.kapitencraft.lang.compiler.bytecode.BytecodeBuffer;
-import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
-import net.kapitencraft.lang.compiler.bytecode.CacheBuilder;
-import net.kapitencraft.lang.compiler.bytecode.ConstantPoolBuilder;
-import net.kapitencraft.lang.exe.ScriptedCallable;
-import net.kapitencraft.lang.exe.VarTypeManager;
-import net.kapitencraft.lang.exe.load.BytecodeReader;
-import net.kapitencraft.lang.holder.bytecode.annotation.Annotation;
-import net.kapitencraft.lang.holder.bytecode.attributes.AttributeInfo;
-import net.kapitencraft.lang.holder.bytecode.attributes.SourceFileAttributeInfo;
-import net.kapitencraft.lang.holder.bytecode.const_pool.*;
-import net.kapitencraft.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
-import net.kapitencraft.lang.oop.clazz.generated.RuntimeClass;
-import net.kapitencraft.lang.oop.field.RuntimeField;
-import net.kapitencraft.lang.oop.method.RuntimeCallable;
-import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.BytecodeBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder;
+import net.kapitencraft.scripted.lang.compiler.bytecode.ConstantPoolBuilder;
+import net.kapitencraft.scripted.lang.exe.VarTypeManager;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
+import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.AttributeInfo;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.SourceFileAttributeInfo;
+import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.*;
+import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.scripted.lang.oop.clazz.generated.CompileClass;
+import net.kapitencraft.scripted.lang.oop.clazz.generated.RuntimeClass;
+import net.kapitencraft.scripted.lang.oop.field.RuntimeField;
+import net.kapitencraft.scripted.lang.oop.method.RuntimeCallable;
+import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 
 import java.util.*;
 

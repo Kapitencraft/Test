@@ -1,7 +1,7 @@
 package net.kapitencraft.scripted.lang.oop.method.map;
 
-import net.kapitencraft.lang.exe.ScriptedCallable;
-import net.kapitencraft.lang.oop.method.builder.DataMethodContainer;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
+import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;

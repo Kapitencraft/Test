@@ -32,14 +32,6 @@ public class CompileField implements ScriptedField {
         return type;
     }
 
-    public JsonElement cache(Synthesizer cacheBuilder) {
-        JsonObject object = new JsonObject();
-        object.addProperty("type", VarTypeManager.getClassName(type));
-        object.addProperty("modifiers", this.modifiers);
-        object.add("annotations", cacheBuilder.cacheAnnotations(this.annotations));
-        return object;
-    }
-
     public void analyseSemantics(SemanticAnalyser analyser) {
         if (this.init != null) {
             ClassReference initType = analyser.analyseExpr(this.init);

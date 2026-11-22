@@ -2,9 +2,9 @@ package net.kapitencraft.scripted.lang.oop.clazz.skeleton;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.compiler.Modifiers;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.oop.clazz.AbstractAnnotationClass;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
@@ -86,7 +86,7 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public int getModifiers() {
+    public int modifiers() {
         return Modifiers.ANNOTATION;
     }
 
@@ -96,7 +96,7 @@ public class SkeletonAnnotation implements AbstractAnnotationClass {
     }
 
     @Override
-    public AbstractMethodMap getMethods() {
+    public AbstractMethodMap methods() {
         return methods;
     }
 

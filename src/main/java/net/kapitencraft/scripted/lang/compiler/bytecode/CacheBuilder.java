@@ -2,11 +2,15 @@ package net.kapitencraft.scripted.lang.compiler.bytecode;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.*;
+import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.IncrementIntVarInstruction;
+import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.InvokeDynamicInstruction;
+import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.SwitchInstruction;
+import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.TraceDebugInstruction;
 import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.constant.DoubleConstantInstruction;
 import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.constant.FloatConstantInstruction;
 import net.kapitencraft.scripted.lang.exe.Opcode;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
+import net.kapitencraft.scripted.lang.exe.algebra.OperationType;
 import net.kapitencraft.scripted.lang.exe.natives.NativeClassInstance;
 import net.kapitencraft.scripted.lang.holder.LiteralHolder;
 import net.kapitencraft.scripted.lang.holder.ast.ElifBranch;
@@ -15,10 +19,10 @@ import net.kapitencraft.scripted.lang.holder.ast.Stmt;
 import net.kapitencraft.scripted.lang.holder.ast.SwitchKey;
 import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.AttributeInfo;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.holder.token.TokenType;
-import net.kapitencraft.scripted.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -119,7 +123,12 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     public Chunk.Builder reset() {
         this.byteCodeBuilder.reset();
+        this.constantPoolBuilder.clearBootstrap();
         return new Chunk.Builder(this.constantPoolBuilder);
+    }
+
+    public AttributeInfo buildBootstrapMethods() {
+        return this.constantPoolBuilder.buildBootstrapMethods();
     }
 
     private record AssignOperators(Opcode get, Opcode assign) {
@@ -1049,7 +1058,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         int handlerEnd = byteCodeBuilder.size();
         List<Integer> jumps = new ArrayList<>();
         jumps.add(byteCodeBuilder.addJump());
-        for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches) {
+        for (Pair<Pair<ClassReference[], Token>, Stmt> aCatch : stmt.catches) {
             for (ClassReference reference : aCatch.first().first()) {
                 byteCodeBuilder.addExceptionHandler(handlerStart, handlerEnd, VarTypeManager.getClassName(reference.get()));
             }

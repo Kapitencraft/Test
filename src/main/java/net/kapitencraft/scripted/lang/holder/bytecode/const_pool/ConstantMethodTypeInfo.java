@@ -1,19 +1,30 @@
-package net.kapitencraft.lang.holder.bytecode.const_pool;
+package net.kapitencraft.scripted.lang.holder.bytecode.const_pool;
 
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.ConstantPoolBuilder;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
 
-public class ConstantMethodTypeInfo implements ConstantPoolEntry {
-    private ConstantUtf8Info descriptor;
+public record ConstantMethodTypeInfo(ConstantUtf8Info descriptor) implements ConstantPoolEntry {
 
     @Override
-    public byte getTag() {
-        return 16;
+    public ConstantPoolEntry.Baked bake(ConstantPoolBuilder builder) {
+        return new Baked(builder.addEntry(descriptor));
     }
 
-    @Override
-    public void write(CacheBuffer buffer) {
-        short d = buffer.writeEntry(descriptor);
-        buffer.writeByte(getTag());
-        buffer.writeShort(d);
+    public static void read(BytecodeReader reader, ConstantPoolReader cpReader) {
+        ConstantMethodTypeInfo info = new ConstantMethodTypeInfo(reader.readCpEntry());
+        cpReader.add(info);
+    }
+
+    public record Baked(int descriptorIndex) implements ConstantPoolEntry.Baked {
+        @Override
+        public byte getTag() {
+            return 16;
+        }
+
+        @Override
+        public void write(CacheBuffer buffer) {
+            buffer.writeShort(descriptorIndex);
+        }
     }
 }

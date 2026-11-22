@@ -1,22 +1,34 @@
-package net.kapitencraft.lang.holder.bytecode.const_pool;
+package net.kapitencraft.scripted.lang.holder.bytecode.const_pool;
 
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.ConstantPoolBuilder;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
 
-public class ConstantFloatInfo implements ConstantPoolEntry {
-    private final float value;
+public record ConstantFloatInfo(float value) implements LoadableCPEntry {
 
-    public ConstantFloatInfo(float value) {
-        this.value = value;
+    public static void read(BytecodeReader reader, ConstantPoolReader cpReader) {
+        cpReader.add(new ConstantFloatInfo(Float.intBitsToFloat(reader.read4b())));
     }
 
     @Override
-    public byte getTag() {
-        return 4;
+    public ConstantPoolEntry.Baked bake(ConstantPoolBuilder builder) {
+        return new Baked(value);
     }
 
     @Override
-    public void write(CacheBuffer buffer) {
-        buffer.writeByte(getTag());
-        buffer.writeInt(Float.floatToIntBits(value));
+    public Object load() {
+        return value;
+    }
+
+    public record Baked(float value) implements ConstantPoolEntry.Baked {
+        @Override
+        public byte getTag() {
+            return 4;
+        }
+
+        @Override
+        public void write(CacheBuffer buffer) {
+            buffer.writeInt(Float.floatToIntBits(value));
+        }
     }
 }

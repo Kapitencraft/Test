@@ -1,10 +1,10 @@
-package net.kapitencraft.lang.compiler.bytecode.instruction;
+package net.kapitencraft.scripted.lang.compiler.bytecode.instruction;
 
-import net.kapitencraft.lang.compiler.bytecode.ByteCodeBuilder;
-import net.kapitencraft.lang.exe.Opcode;
-import net.kapitencraft.lang.holder.bytecode.Chunk;
-import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantClassInfo;
-import net.kapitencraft.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.scripted.lang.compiler.bytecode.ByteCodeBuilder;
+import net.kapitencraft.scripted.lang.exe.Opcode;
+import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
+import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.ConstantClassInfo;
+import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 
 public class WithClassInfoInstruction extends CodeInstruction {
     private final ClassReference owner;

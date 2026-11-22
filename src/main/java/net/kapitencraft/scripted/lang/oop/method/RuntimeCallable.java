@@ -1,15 +1,13 @@
 package net.kapitencraft.scripted.lang.oop.method;
 
-import com.google.gson.JsonObject;
-import net.kapitencraft.scripted.lang.compiler.Modifiers;
-import net.kapitencraft.scripted.lang.exe.VarTypeManager;
-import net.kapitencraft.scripted.lang.exe.load.ClassLoader;
+import com.google.common.collect.Multimap;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.AttributeInfo;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.AttributeOwner;
+import net.kapitencraft.scripted.lang.compiler.Modifiers;
 import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.tool.GsonHelper;
-import net.kapitencraft.tool.StringReader;
 
 import java.util.Collection;
 import java.util.List;
@@ -19,12 +17,12 @@ public class RuntimeCallable implements ScriptedCallable, AttributeOwner {
     private final ClassReference[] params;
     private final ClassReference[] thrown;
     private final Chunk body;
-    private final short modifiers;
+    private final int modifiers;
     private final Annotation[] annotations;
     private final ClassReference declaring;
     private final Multimap<String, AttributeInfo> attributes;
 
-    public RuntimeCallable(ClassReference retType, List<ClassReference> params, List<ClassReference> thrown, Chunk body, short modifiers, Annotation[] annotations, ClassReference declaring, AttributeInfo[] attributes) {
+    public RuntimeCallable(ClassReference retType, List<ClassReference> params, List<ClassReference> thrown, Chunk body, int modifiers, Annotation[] annotations, ClassReference declaring, AttributeInfo[] attributes) {
         this.retType = retType;
         this.params = params.toArray(ClassReference[]::new);
         this.thrown = thrown.toArray(ClassReference[]::new);
@@ -71,7 +69,7 @@ public class RuntimeCallable implements ScriptedCallable, AttributeOwner {
     }
 
     @Override
-    public short modifiers() {
+    public int modifiers() {
         return modifiers;
     }
 

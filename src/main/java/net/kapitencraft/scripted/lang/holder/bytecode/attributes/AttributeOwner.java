@@ -1,4 +1,4 @@
-package net.kapitencraft.lang.holder.bytecode.attributes;
+package net.kapitencraft.scripted.lang.holder.bytecode.attributes;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;

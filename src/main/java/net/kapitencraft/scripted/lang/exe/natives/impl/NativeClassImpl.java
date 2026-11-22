@@ -2,7 +2,6 @@ package net.kapitencraft.scripted.lang.exe.natives.impl;
 
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
@@ -16,35 +15,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 
 @ApiStatus.Internal
-public class NativeClassImpl implements ScriptedClass {
-    private final GeneratedMethodMap methods;
-    private final Map<String, NativeField> fields;
-    private final ClassReference superclass;
-    private final ClassReference[] interfaces;
-    private final int modifiers;
-    private final String name, pck;
-
+public record NativeClassImpl(String name, String pck,
+                              GeneratedMethodMap methods, Map<String, NativeField> fields, ClassReference superclass,
+                              ClassReference[] interfaces, int modifiers) implements ScriptedClass {
     @ApiStatus.Internal
     public NativeClassImpl(String name, String pck,
                            Map<String, DataMethodContainer> methods, Map<String, NativeField> fields,
                            ClassReference superclass, ClassReference[] interfaces, int modifiers) {
-        this.name = name;
-        this.pck = pck;
-        this.methods = new GeneratedMethodMap(methods);
-        this.fields = fields;
-        this.superclass = superclass;
-        this.interfaces = interfaces;
-        this.modifiers = modifiers;
-    }
-
-    @Override
-    public String name() {
-        return name;
-    }
-
-    @Override
-    public String pck() {
-        return pck;
+        this(name, pck, new GeneratedMethodMap(methods), fields, superclass, interfaces, modifiers);
     }
 
     @Override
@@ -63,28 +41,8 @@ public class NativeClassImpl implements ScriptedClass {
     }
 
     @Override
-    public int getModifiers() {
-        return modifiers;
-    }
-
-    @Override
-    public Map<String, NativeField> getFields() {
-        return fields;
-    }
-
-    @Override
-    public GeneratedMethodMap getMethods() {
-        return methods;
-    }
-
-    @Override
     public Annotation[] annotations() {
         return new Annotation[0];
-    }
-
-    @Override
-    public ClassReference[] interfaces() {
-        return interfaces;
     }
 
     @Override

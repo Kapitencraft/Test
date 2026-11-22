@@ -1,25 +1,55 @@
-package net.kapitencraft.lang.holder.bytecode.const_pool;
+package net.kapitencraft.scripted.lang.holder.bytecode.const_pool;
 
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.ConstantPoolBuilder;
+import net.kapitencraft.scripted.lang.exe.VarTypeManager;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
+import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
+import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 
-public class ConstantClassInfo implements ConstantPoolEntry {
-    private ConstantUtf8Info target; //Utf8 Info
-
+/**
+ * @param target Utf8 Info
+ */
+public record ConstantClassInfo(ConstantUtf8Info target) implements ConstantPoolEntry {
     public static ConstantClassInfo create(String classLoc) {
-        ConstantClassInfo info = new ConstantClassInfo();
-        info.target = ConstantUtf8Info.create(classLoc);
-        return info;
+        return new ConstantClassInfo(ConstantUtf8Info.create(classLoc));
+    }
+
+    public static ConstantClassInfo create(ClassReference reference) {
+        return create(VarTypeManager.getClassName(reference));
     }
 
     @Override
-    public byte getTag() {
-        return 7;
+    public ConstantPoolEntry.Baked bake(ConstantPoolBuilder builder) {
+        return new Baked(builder.addEntry(target));
     }
 
-    @Override
-    public void write(CacheBuffer buffer) {
-        short t = buffer.writeEntry(target);
-        buffer.writeByte(this.getTag());
-        buffer.writeShort(t);
+    public static void read(BytecodeReader reader, ConstantPoolReader cpReader) {
+        ConstantClassInfo info = new ConstantClassInfo(reader.readCpEntry());
+        cpReader.add(info);
+    }
+
+    public record Baked(int target) implements ConstantPoolEntry.Baked {
+        @Override
+        public byte getTag() {
+            return 7;
+        }
+
+        @Override
+        public void write(CacheBuffer buffer) {
+            buffer.writeShort(target);
+        }
+    }
+
+    public ClassReference toReference() {
+        return VarTypeManager.directParseType(this.target.value());
+    }
+
+    public ScriptedClass parse() {
+        return VarTypeManager.directFlatParse(this.target.value());
+    }
+
+    public String getValue() {
+        return this.target.value();
     }
 }

@@ -1,13 +1,8 @@
 package net.kapitencraft.scripted.lang.exe.load;
 
-import net.kapitencraft.lang.holder.bytecode.ClassFile;
+import net.kapitencraft.scripted.lang.holder.bytecode.ClassFile;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.scripted.lang.oop.clazz.ClassType;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.scripted.lang.oop.clazz.skeleton.SkeletonAnnotation;
-import net.kapitencraft.scripted.lang.oop.clazz.skeleton.SkeletonClass;
-import net.kapitencraft.scripted.lang.oop.clazz.skeleton.SkeletonInterface;
-import net.kapitencraft.tool.GsonHelper;
 
 import java.io.File;
 import java.io.FileInputStream;

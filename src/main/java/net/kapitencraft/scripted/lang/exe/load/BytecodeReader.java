@@ -1,7 +1,7 @@
-package net.kapitencraft.lang.exe.load;
+package net.kapitencraft.scripted.lang.exe.load;
 
-import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolEntry;
-import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolReader;
+import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.ConstantPoolEntry;
+import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.ConstantPoolReader;
 
 import java.io.InputStream;
 

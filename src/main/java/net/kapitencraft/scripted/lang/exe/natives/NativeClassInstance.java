@@ -26,12 +26,12 @@ public class NativeClassInstance implements ClassInstance {
 
     @Override
     public void assignField(String name, Object val) {
-        type.getFields().get(name).set(obj, NativeClassLoader.extractNative(val));
+        type.fields().get(name).set(obj, NativeClassLoader.extractNative(val));
     }
 
     @Override
     public Object getField(String name) {
-        return type.getFields().get(name).get(obj);
+        return type.fields().get(name).get(obj);
     }
 
     @Override

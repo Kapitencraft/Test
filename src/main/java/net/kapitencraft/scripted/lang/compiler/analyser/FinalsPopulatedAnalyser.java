@@ -401,7 +401,7 @@ public class FinalsPopulatedAnalyser implements Expr.Visitor<Void>, Stmt.Visitor
     @Override
     public Void visitTryStmt(Stmt.Try stmt) {
         analyse(stmt.body);
-        for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches) {
+        for (Pair<Pair<ClassReference[], Token>, Stmt> aCatch : stmt.catches) {
             analyse(aCatch.second());
         }
         return null;

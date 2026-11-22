@@ -1,6 +1,6 @@
 package net.kapitencraft.scripted.lang.compiler.bytecode;
 
-import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolEntry;
+import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.ConstantPoolEntry;
 
 import java.io.IOException;
 import java.io.OutputStream;

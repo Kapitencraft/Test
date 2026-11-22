@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class GenerateAst {
-    public static final String DIRECTORY = "src/main/java/net/kapitencraft/lang/holder/ast";
+    public static final String DIRECTORY = "src/main/java/net/kapitencraft/scripted/lang/holder/ast";
     private static final String SOURCE = "src/generate_ast.json";
 
     public static void main(String[] args) throws IOException {

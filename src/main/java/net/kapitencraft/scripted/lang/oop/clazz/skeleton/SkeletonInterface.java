@@ -5,7 +5,7 @@ import com.google.gson.JsonObject;
 import net.kapitencraft.scripted.lang.compiler.Modifiers;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.exe.load.ClassLoader;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.oop.generic.Generics;
@@ -103,12 +103,12 @@ public class SkeletonInterface implements ScriptedClass {
     }
 
     @Override
-    public int getModifiers() {
+    public int modifiers() {
         return Modifiers.INTERFACE;
     }
 
     @Override
-    public GeneratedMethodMap getMethods() {
+    public GeneratedMethodMap methods() {
         return methods;
     }
 

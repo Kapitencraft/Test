@@ -1,12 +1,15 @@
-package net.kapitencraft.lang.holder.bytecode.attributes;
+package net.kapitencraft.scripted.lang.holder.bytecode.attributes;
 
-import net.kapitencraft.lang.bytecode.compile.BytecodeBuilder;
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
-import net.kapitencraft.lang.bytecode.storage.LineNumberTable;
-import net.kapitencraft.tool.Pair;
+import net.kapitencraft.scripted.lang.compiler.bytecode.BytecodeBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
+import net.kapitencraft.scripted.lang.holder.bytecode.LineNumberTable;
 
-public class LineNumberTableAttributeInfo implements AttributeInfo {
-    LineNumberTable table;
+public record LineNumberTableAttributeInfo(LineNumberTable table) implements AttributeInfo {
+
+    public static AttributeInfo read(BytecodeReader reader) {
+        return new LineNumberTableAttributeInfo(LineNumberTable.read(reader));
+    }
 
     @Override
     public String name() {
@@ -19,11 +22,7 @@ public class LineNumberTableAttributeInfo implements AttributeInfo {
     }
 
     @Override
-    public void write(CacheBuffer buffer, BytecodeBuilder bytecodeBuilder) {
-        for (Pair<Integer, Integer> line : table.lines()) {
-            //pc = left, line = right
-            buffer.writeShort(line.left());
-            buffer.writeShort(line.right());
-        }
+    public void write(CacheBuffer buffer, BytecodeBuffer bytecodeBuilder) {
+        table.write(buffer);
     }
 }

@@ -1,8 +1,8 @@
-package net.kapitencraft.lang.holder.bytecode.const_pool;
+package net.kapitencraft.scripted.lang.holder.bytecode.const_pool;
 
-import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
-import net.kapitencraft.lang.compiler.bytecode.ConstantPoolBuilder;
-import net.kapitencraft.lang.exe.load.BytecodeReader;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.ConstantPoolBuilder;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
 
 public record ConstantTraceLocalsInfo(byte[] data) implements ConstantPoolEntry {
 

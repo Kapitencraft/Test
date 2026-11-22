@@ -5,7 +5,7 @@ import net.kapitencraft.scripted.lang.compiler.Modifiers;
 import net.kapitencraft.scripted.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.exe.algebra.OperationType;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.ast.ElifBranch;
 import net.kapitencraft.scripted.lang.holder.ast.Expr;
 import net.kapitencraft.scripted.lang.holder.ast.Stmt;
@@ -185,7 +185,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     private MethodData analyseCall(Token name, ClassReference objType, Expr[] args) {
-        ClassReference[] argTypes = args(args, objType.get().getMethods().get(name.lexeme()));
+        ClassReference[] argTypes = args(args, objType.get().methods().get(name.lexeme()));
         ScriptedClass targetClass = objType.get();
 
         ScriptedCallable callable;
@@ -210,7 +210,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
     }
 
     private ScriptedCallable tryGetConstructorMethod(ClassReference[] argTypes, ScriptedClass scriptedClass, Token loc) {
-        DataMethodContainer container = scriptedClass.getMethods().get("<init>");
+        DataMethodContainer container = scriptedClass.methods().get("<init>");
         if (container == null) {
             if (argTypes.length > 0) {
                 errorF(loc, "constructor for %s cannot be applied to given types;", loc.lexeme());
@@ -628,7 +628,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
             errorF(expr.name, "unknown symbol: method '%s'", expr.name.lexeme());
             return VarTypeManager.VOID.reference();
         }
-        DataMethodContainer container = type.get().getMethods().get(expr.name.lexeme());
+        DataMethodContainer container = type.get().methods().get(expr.name.lexeme());
         List<Pair<ClassReference, ScriptedCallable>> methodCandidates = findFunctionMethodCandidates();
         for (ScriptedCallable method : container.methods()) {
             for (Pair<ClassReference, ScriptedCallable> candidate : methodCandidates) {
@@ -802,7 +802,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
     @Override
     public ClassReference visitConstructorExpr(Expr.Constructor expr) {
-        ClassReference[] argTypes = args(expr.args, expr.target.get().getMethods().get("<init>"));
+        ClassReference[] argTypes = args(expr.args, expr.target.get().methods().get("<init>"));
         ScriptedCallable callable = tryGetConstructorMethod(argTypes, expr.target.get(), expr.keyword);
 
         if (callable != null) {
@@ -989,7 +989,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         ScriptedClass scriptedClass = expr.obj.get();
 
-        DataMethodContainer methodContainer = scriptedClass.getMethods().get(expr.name.lexeme());
+        DataMethodContainer methodContainer = scriptedClass.methods().get(expr.name.lexeme());
 
         if (methodContainer != null) {
             for (ScriptedCallable method : methodContainer.methods()) {
@@ -1210,7 +1210,7 @@ public class SemanticAnalyser implements Stmt.Visitor<Void>, Expr.Visitor<ClassR
 
         methodThrown.pop();
 
-        for (Pair<Pair<ClassReference[], Token>, Stmt.Block> aCatch : stmt.catches) {
+        for (Pair<Pair<ClassReference[], Token>, Stmt> aCatch : stmt.catches) {
             pushScope();
             tryCreateVar(aCatch.first().second(), VarTypeManager.THROWABLE, true, false);
             analyseStmt(aCatch.second());

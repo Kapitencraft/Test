@@ -1,18 +1,11 @@
 package net.kapitencraft.scripted.lang.oop.method.builder;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.scripted.lang.compiler.error.ErrorStorage;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.scripted.lang.oop.method.CompileCallable;
-import net.kapitencraft.scripted.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.scripted.lang.holder.token.Token;
-import net.kapitencraft.tool.GsonHelper;
 import net.kapitencraft.scripted.lang.tool.Util;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;

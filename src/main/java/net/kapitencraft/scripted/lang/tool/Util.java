@@ -1,11 +1,9 @@
 package net.kapitencraft.scripted.lang.tool;
 
-import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
-import net.kapitencraft.scripted.lang.holder.ast.Stmt;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.class_ref.generic.GenericStack;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
@@ -152,7 +150,7 @@ public class Util {
     }
 
     public static ScriptedCallable getVirtualMethod(ScriptedClass targetClass, String method, ClassReference[] args) {
-        DataMethodContainer container = targetClass.getMethods().get(method);
+        DataMethodContainer container = targetClass.methods().get(method);
         ScriptedCallable m;
         if (container == null || (m = container.getMethod(args)) == null) {
             return getVirtualMethod(targetClass.superclass().get(), method, args);
@@ -164,7 +162,7 @@ public class Util {
         if (!targetClass.hasMethod(name)) {
             return null;
         }
-        DataMethodContainer container = targetClass.getMethods().get(name);
+        DataMethodContainer container = targetClass.methods().get(name);
         if (container == null)
             throw new IllegalStateException("unable to obtain method container for name '" + name + "' on class '" + targetClass.absoluteName() + "'");
         int match = 0;

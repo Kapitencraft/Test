@@ -126,9 +126,9 @@ public interface Stmt {
     }
 
     class Try implements Stmt {
-        public Block body;
-        public Pair<Pair<ClassReference[],Token>,Block>[] catches;
-        public Block finale;
+        public Stmt body;
+        public Pair<Pair<ClassReference[],Token>,Stmt>[] catches;
+        public Stmt finale;
 
         @Override
         public <R> R accept(Visitor<R> visitor) {

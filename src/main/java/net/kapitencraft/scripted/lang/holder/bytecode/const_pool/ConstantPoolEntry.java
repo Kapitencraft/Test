@@ -1,10 +1,16 @@
-package net.kapitencraft.lang.holder.bytecode.const_pool;
+package net.kapitencraft.scripted.lang.holder.bytecode.const_pool;
 
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.ConstantPoolBuilder;
 
 public interface ConstantPoolEntry {
 
-    byte getTag();
+    Baked bake(ConstantPoolBuilder builder);
 
-    void write(CacheBuffer buffer);
+    interface Baked {
+
+        byte getTag();
+
+        void write(CacheBuffer buffer);
+    }
 }

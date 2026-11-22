@@ -1,7 +1,7 @@
 package net.kapitencraft.scripted.lang.exe;
 
-import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.class_ref.SourceReference;
 import net.kapitencraft.scripted.lang.holder.class_ref.generic.GenericClassReference;
@@ -9,9 +9,6 @@ import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.oop.Package;
 import net.kapitencraft.scripted.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
-import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
-import net.kapitencraft.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.scripted.lang.oop.clazz.inst.DynamicClassInstance;
 import net.kapitencraft.scripted.lang.oop.clazz.primitive.*;
 import net.kapitencraft.tool.StringReader;
@@ -73,7 +70,7 @@ public class VarTypeManager {
     public static @Nullable ScriptedCallable getFunctionalMethod(ClassReference reference) {
         if (reference.get().isInterface()) {
             List<ScriptedCallable> candidates = new ArrayList<>();
-            reference.get().getMethods().asMap().forEach((s, container) -> {
+            reference.get().methods().asMap().forEach((s, container) -> {
                 for (ScriptedCallable method : container.methods()) {
                     if (method.isAbstract()) {
                         candidates.add(method);
@@ -247,6 +244,10 @@ public class VarTypeManager {
     public static String getClassName(ClassReference reference) {
         if (reference.exists()) return getClassName(reference.get());
         else return "L" + reference.absoluteName().replaceAll("\\.", "/") + ";";
+    }
+
+    public static String getMethodSignature(ScriptedClass target, String name, ClassReference[] argTypes) {
+        return getClassName(target) + getMethodSignatureNoTarget(name, argTypes);
     }
 
     public static String getMethodSignatureNoTarget(String name, ClassReference[] argTypes) {

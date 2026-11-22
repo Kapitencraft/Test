@@ -107,7 +107,7 @@ public class JavaExprParser extends AbstractJavaParser {
         }
         Map<String, ScriptedCallable> annotationMethods = new HashMap<>();
 
-        type.getMethods().asMap().forEach((s, dataMethodContainer) ->
+        type.methods().asMap().forEach((s, dataMethodContainer) ->
                 annotationMethods.put(s, dataMethodContainer.methods()[0])
         );
 
@@ -430,6 +430,13 @@ public class JavaExprParser extends AbstractJavaParser {
         return call;
     }
 
+    private Expr instMethodRef(Expr value) {
+        Expr.MethodRef methodRef = new Expr.MethodRef();
+        methodRef.obj = value;
+        methodRef.name = consumeIdentifier();
+        return methodRef;
+    }
+
     private Expr switchExpr() {
         Token keyword = previous();
         consumeBracketOpen("switch");
@@ -690,7 +697,7 @@ public class JavaExprParser extends AbstractJavaParser {
                 } else {
                     ScriptedClass declaring = fallback.getFieldDeclaring(name);
                     if (declaring != null) {
-                        ScriptedField field = declaring.getFields().get(name);
+                        ScriptedField field = declaring.fields().get(name);
                         Expr.SingleIdentifier identifier = new Expr.SingleIdentifier();
                         identifier.type = fallbackReference;
                         identifier.name = previous;
@@ -833,12 +840,5 @@ public class JavaExprParser extends AbstractJavaParser {
         call.declaring = objType;
         call.args = arguments;
         return call;
-    }
-
-    private Expr instMethodRef(Expr value) {
-        Expr.MethodRef methodRef = new Expr.MethodRef();
-        methodRef.obj = value;
-        methodRef.name = consumeIdentifier();
-        return methodRef;
     }
 }

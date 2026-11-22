@@ -1,22 +1,21 @@
 package net.kapitencraft.scripted.lang.oop.method;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import net.kapitencraft.scripted.lang.compiler.analyser.FinalsPopulatedAnalyser;
-import net.kapitencraft.scripted.lang.compiler.ast_optimize.ASTOptimizer;
-import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
-import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
-import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder;
 import net.kapitencraft.scripted.lang.compiler.Modifiers;
+import net.kapitencraft.scripted.lang.compiler.analyser.FinalsPopulatedAnalyser;
 import net.kapitencraft.scripted.lang.compiler.analyser.SemanticAnalyser;
+import net.kapitencraft.scripted.lang.compiler.ast_optimize.ASTOptimizer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuilder;
+import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.ast.Stmt;
+import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
+import net.kapitencraft.scripted.lang.holder.bytecode.LineNumberTable;
+import net.kapitencraft.scripted.lang.holder.bytecode.LocalVariableTable;
+import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
-import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.tool.Pair;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class CompileCallable implements ScriptedCallable {
@@ -27,6 +26,8 @@ public class CompileCallable implements ScriptedCallable {
     private final int modifiers;
     private final Annotation[] annotations;
     private Chunk code;
+    private LineNumberTable lineNumberTable;
+    private LocalVariableTable localVariableTable;
     private final ClassReference declaring;
 
     public CompileCallable(ClassReference retType, List<Pair<ClassReference, String>> params, ClassReference[] thrown, List<Stmt> body, int modifiers, Annotation[] annotations, ClassReference declaring) {
@@ -39,42 +40,26 @@ public class CompileCallable implements ScriptedCallable {
         this.declaring = declaring;
     }
 
-    public JsonObject save(CacheBuilder builder) {
-        JsonObject object = new JsonObject();
-        object.addProperty("returnType", VarTypeManager.getClassName(retType.get()));
-        {
-            JsonArray array = new JsonArray();
-            params.stream().map(Pair::first).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
-            object.add("params", array);
-        }
-        {
-            JsonArray array = new JsonArray();
-            Arrays.stream(thrown).map(ClassReference::get).map(VarTypeManager::getClassName).forEach(array::add);
-            object.add("thrown", array);
-        }
+    public void build(CacheBuilder builder) {
         if (!isAbstract()) {
-            Chunk.Builder chunk = new Chunk.Builder();
-            builder.reset();
+            Chunk.Builder chunkBuilder = builder.reset();
             int rIndex = 0;
             if (!isStatic()) {
-                chunk.addLocal(0, VarTypeManager.VOID.reference(), "this");
+                chunkBuilder.addLocal(0, VarTypeManager.VOID.reference(), "this");
                 rIndex++;
             }
             for (int i = 0; i < this.params.size(); i++) {
                 Pair<? extends ClassReference, String> param = this.params.get(i);
-                chunk.addLocal(rIndex + i, param.first(), param.second());
+                chunkBuilder.addLocal(rIndex + i, param.first(), param.second());
             }
             for (Stmt compileStmt : body) {
                 builder.cache(compileStmt);
             }
-            builder.build(chunk);
-            this.code = chunk.build();
+            builder.build(chunkBuilder);
+            this.code = chunkBuilder.build();
+            this.lineNumberTable = chunkBuilder.getLineNumbers();
+            this.localVariableTable = chunkBuilder.getLocals();
         }
-        if (this.modifiers != 0) object.addProperty("modifiers", this.modifiers);
-
-        object.add("annotations", builder.cacheAnnotations(this.annotations));
-        object.addProperty("declaring", VarTypeManager.getClassName(declaring));
-        return object;
     }
 
     public void analyseSemantics(SemanticAnalyser analyser, ClassReference declaring, Token name) {
@@ -105,7 +90,7 @@ public class CompileCallable implements ScriptedCallable {
     }
 
     @Override
-    public short modifiers() {
+    public int modifiers() {
         return modifiers;
     }
 
@@ -132,6 +117,14 @@ public class CompileCallable implements ScriptedCallable {
     @Override
     public Chunk getChunk() {
         return code;
+    }
+
+    public LineNumberTable getLNT() {
+        return this.lineNumberTable;
+    }
+
+    public LocalVariableTable getLVT() {
+        return this.localVariableTable;
     }
 
     public void optimize() {

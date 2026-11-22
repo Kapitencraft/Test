@@ -6,17 +6,20 @@ import net.kapitencraft.scripted.lang.exe.natives.NativeClassInstance;
 import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
-import net.kapitencraft.lang.holder.bytecode.attributes.LineNumberTableAttributeInfo;
-import net.kapitencraft.lang.holder.bytecode.attributes.LocalVariableTableAttributeInfo;
 import net.kapitencraft.scripted.lang.holder.bytecode.LocalVariableTable;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.CodeAttributeInfo;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.LineNumberTableAttributeInfo;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.LocalVariableTableAttributeInfo;
+import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.*;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.scripted.lang.oop.clazz.generated.RuntimeClass;
 import net.kapitencraft.scripted.lang.oop.clazz.inst.ClassInstance;
 import net.kapitencraft.scripted.lang.oop.clazz.inst.DynamicClassInstance;
+import net.kapitencraft.scripted.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.scripted.lang.tool.Util;
 import net.kapitencraft.tool.StringReader;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -292,7 +295,7 @@ public class VirtualMachine {
 
                         frame.stackIndex = stackTop;
                         Object reference = stack[stackTop];
-                        if (reference instanceof ScriptedCallSite(ScriptedMethodHandle handle, Object[] args)) {
+                        if (reference instanceof ScriptedCallSite(ScriptedMethodHandle handle, RuntimeClass lambdaType, Object[] args)) {
                             StringReader handleSignatureReader = new StringReader(handle.signature());
                             VarTypeManager.flatParse(handleSignatureReader);
                             stackTop++; //don't add the call site to the next frame
@@ -304,10 +307,13 @@ public class VirtualMachine {
                                 System.arraycopy(args, 0, stack, stackTop, args.length);
                             }
                             ScriptedCallable callable = handle.exe();
+                            RuntimeClass owner = lambdaType;
                             if (handle.kind() == 1) {
-                                callable = ((ClassInstance) args[0]).getType().getMethod(handleSignatureReader.getRemaining());
+                                ScriptedClass scriptedClass = ((ClassInstance) args[0]).getType();
+                                owner = (RuntimeClass) scriptedClass;
+                                callable = scriptedClass.getMethod(handleSignatureReader.getRemaining());
                             }
-                            pushCall(new CallFrame(handle.signature(), callable, stackTop));
+                            pushCall(new CallFrame(handle.signature(), owner, (RuntimeCallable) callable, stackTop));
                             break;
                         }
                         ClassInstance instance = (ClassInstance) reference;
@@ -316,12 +322,11 @@ public class VirtualMachine {
 
                         ScriptedCallable callable = objType.getMethod(signature); //virtual invoke of the method
 
-                        executeCall(objType, callable, info.nameAndType, length, callableStackTop);
+                        executeCall(objType, callable, info.nameAndType, length, stackTop);
                     }
                     case INVOKE_DYNAMIC -> {
-                        String signature = readString();
-                        StringReader reader = new StringReader(signature);
-                        ScriptedClass type = VarTypeManager.flatParse(reader);
+                        ConstantObjRefInfo info = owner.getConstant(read2Byte());
+                        ScriptedClass type = info.clazz.parse();
                         if (invokeStaticInitIfNecessary(type, 3)) continue;
                         ScriptedCallable referenceCallable = type.getMethod(info.nameAndType.descriptor().value());
                         //more like: create dynamic
@@ -333,9 +338,9 @@ public class VirtualMachine {
                         }
                         stackIndex -= captureCount; //pop all captured variables
 
-                        ScriptedMethodHandle handle = new ScriptedMethodHandle(referenceCallable, signature, readByte());
+                        ScriptedMethodHandle handle = new ScriptedMethodHandle(referenceCallable, info.asMethodSignature(), readByte());
 
-                        ScriptedCallSite site = new ScriptedCallSite(handle, captures);
+                        ScriptedCallSite site = new ScriptedCallSite(handle, (RuntimeClass) type, captures);
                         push(site);
                     }
                     //endregion
@@ -382,7 +387,8 @@ public class VirtualMachine {
                     case I_CONST -> push(owner.<ConstantIntegerInfo>getConstant(read2Byte()).value());
                     case D_CONST -> push(owner.<ConstantDoubleInfo>getConstant(read2Byte()).value());
                     case F_CONST -> push(owner.<ConstantFloatInfo>getConstant(read2Byte()).value());
-                    case S_CONST -> push(NativeClassLoader.wrapString(owner.<ConstantStringInfo>getConstant(read2Byte()).string.value()));
+                    case S_CONST ->
+                            push(NativeClassLoader.wrapString(owner.<ConstantStringInfo>getConstant(read2Byte()).string.value()));
                     //endregion
                     case CONCENTRATION -> {
                         Object object = pop();
@@ -695,10 +701,6 @@ public class VirtualMachine {
         }
         builder.append("]");
         return builder.toString();
-    }
-
-    private static @NotNull String readString() {
-        return constString(constants, read2Byte());
     }
 
     private static byte[] readLocals(int pos) {

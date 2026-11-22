@@ -3,9 +3,9 @@ package net.kapitencraft.scripted.lang.exe.natives;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.compiler.Modifiers;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.oop.clazz.PrimitiveClass;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
@@ -335,7 +335,7 @@ public class NativeClassLoader {
             }
 
             @Override
-            public AbstractMethodMap getMethods() {
+            public AbstractMethodMap methods() {
                 return null;
             }
 
@@ -345,7 +345,7 @@ public class NativeClassLoader {
             }
 
             @Override
-            public int getModifiers() {
+            public int modifiers() {
                 return 0;
             }
 

@@ -1,14 +1,16 @@
 package net.kapitencraft.scripted.lang.exe;
 
 import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
-import net.kapitencraft.lang.holder.bytecode.attributes.LocalVariableTableAttributeInfo;
-import net.kapitencraft.lang.holder.bytecode.const_pool.*;
-import net.kapitencraft.lang.oop.clazz.generated.RuntimeClass;
-import net.kapitencraft.lang.oop.method.RuntimeCallable;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.BootstrapMethodsAttributeInfo;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.LocalVariableTableAttributeInfo;
+import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.*;
+import net.kapitencraft.scripted.lang.oop.clazz.generated.RuntimeClass;
+import net.kapitencraft.scripted.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Contract;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -65,7 +67,7 @@ public class Disassembler {
             case S_CONST -> stringConstInstruction(opcode, code, offset, classOwner);
             case NEW, INSTANCEOF -> classReferenceInstruction(opcode, code, offset, classOwner);
             case INVOKE_STATIC, INVOKE_VIRTUAL -> invoke(opcode, code, offset, classOwner);
-            case INVOKE_DYNAMIC -> invokeDynamic(opcode, chunk, offset);
+            case INVOKE_DYNAMIC -> invokeDynamic(opcode, code, offset, classOwner);
             case JUMP, JUMP_IF_FALSE -> jump(opcode, code, offset);
             case SWITCH -> switchInstruction(opcode, code, offset);
             case GET_FIELD, PUT_FIELD -> fieldOp(opcode, code, offset, classOwner);
@@ -108,7 +110,7 @@ public class Disassembler {
         List<String> values = new ArrayList<>();
         for (byte b : data) {
             Pair<String, String> local = local(methodOwner, offset, b);
-            values.add(local.getFirst() + ": " + local.getSecond());
+            values.add(local.first() + ": " + local.second());
         }
         String log = values.stream().collect(Collectors.joining(", ", "[", "]"));
         System.out.printf("%-16s %s\n", "DEBUG_TRACE", log);
@@ -152,11 +154,11 @@ public class Disassembler {
         return offset + 3;
     }
 
-    private static int invokeDynamic(Opcode opcode, Chunk chunk, int offset) {
-        int id = read2b(chunk.code(), offset + 1);
-        String signature = VirtualMachine.constString(chunk.constants(), id);
-        String type = chunk.code()[offset + 4] > 0 ? "virtual" : "static";
-        System.out.printf("%-16s %4d '%s', capturing %s variables, %s\n", opcode, id, signature, chunk.code()[offset + 3], type);
+    private static int invokeDynamic(Opcode opcode, byte[] code, int offset, RuntimeClass owner) {
+        int id = read2b(code, offset + 1);
+        ConstantInvokeDynamicInfo info = owner.getConstant(id);
+        String type = info.getHandle().getKind() == 5 ? "virtual" : "static";
+        System.out.printf("%-16s %4d '%s', capturing %s variable(s), %s\n", opcode, id, info.getNameAndTypeInfo().descriptor(), info.getCaptureCount(), type);
         return offset + 5;
     }
 

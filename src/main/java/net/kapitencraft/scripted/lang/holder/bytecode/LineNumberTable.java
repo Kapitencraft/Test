@@ -1,7 +1,7 @@
 package net.kapitencraft.scripted.lang.holder.bytecode;
 
-import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
-import net.kapitencraft.lang.exe.load.BytecodeReader;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
 import net.kapitencraft.tool.Pair;
 
 import java.util.ArrayList;
@@ -19,8 +19,8 @@ public record LineNumberTable(Pair<Integer, Integer>[] lines) {
         buffer.writeShort(lines.length);
         for (Pair<Integer, Integer> line : lines()) {
             //pc = left, line = right
-            buffer.writeShort(line.getFirst());
-            buffer.writeShort(line.getSecond());
+            buffer.writeShort(line.first());
+            buffer.writeShort(line.second());
         }
     }
 

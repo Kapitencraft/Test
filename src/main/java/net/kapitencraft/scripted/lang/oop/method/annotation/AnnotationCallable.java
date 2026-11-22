@@ -1,7 +1,7 @@
 package net.kapitencraft.scripted.lang.oop.method.annotation;
 
 import net.kapitencraft.scripted.lang.compiler.Modifiers;
-import net.kapitencraft.lang.exe.ScriptedCallable;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import org.jetbrains.annotations.Nullable;
 
@@ -56,8 +56,8 @@ public class AnnotationCallable implements ScriptedCallable {
     }
 
     @Override
-    public short modifiers() {
-        return Modifiers.pack(true, false, value == null);
+    public int modifiers() {
+        return Modifiers.pack(Modifiers.FINAL, isAbstract() ? Modifiers.ABSTRACT : 0);
     }
 
     @Override

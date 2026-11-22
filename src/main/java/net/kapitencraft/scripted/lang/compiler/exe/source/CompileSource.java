@@ -15,6 +15,7 @@ import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.oop.clazz.ClassConstructor;
 import net.kapitencraft.scripted.lang.oop.clazz.CacheableClass;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
+import net.kapitencraft.scripted.lang.oop.clazz.generated.CompileClass;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +31,7 @@ public abstract class CompileSource {
     protected final VarTypeContainer varTypeContainer;
     protected ClassConstructor holder;
     protected Compiler.ClassBuilder builder;
-    protected CacheableClass target;
+    protected CompileClass target;
 
     public CompileSource(String name, String pck, File file, SourceTree.DirectoryNode declaring) {
         this.name = name;
@@ -71,7 +72,6 @@ public abstract class CompileSource {
         try {
             Compiler.cache(
                     ClassLoader.cacheLoc,
-                    new CacheBuilder(), //MUST under ALL CIRCUMSTANCES be thread-save. create a new object per class
                     target.pck().replace(".", "/"),
                     target,
                     target.name()

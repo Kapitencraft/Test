@@ -1,11 +1,10 @@
-package net.kapitencraft.lang.holder.bytecode.attributes;
+package net.kapitencraft.scripted.lang.holder.bytecode.attributes;
 
-import net.kapitencraft.lang.compiler.bytecode.BytecodeBuffer;
-import net.kapitencraft.lang.compiler.bytecode.CacheBuffer;
-import net.kapitencraft.lang.exe.load.BytecodeReader;
+import net.kapitencraft.scripted.lang.compiler.bytecode.BytecodeBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
 
 public class AnnotationDefaultAttributeInfo implements AttributeInfo {
-
 
     public static AttributeInfo read(BytecodeReader reader) {
         return new AnnotationDefaultAttributeInfo();

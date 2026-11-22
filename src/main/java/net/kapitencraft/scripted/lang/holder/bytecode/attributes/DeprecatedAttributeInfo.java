@@ -1,9 +1,14 @@
-package net.kapitencraft.lang.holder.bytecode.attributes;
+package net.kapitencraft.scripted.lang.holder.bytecode.attributes;
 
-import net.kapitencraft.lang.bytecode.compile.BytecodeBuilder;
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.BytecodeBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
 
 public class DeprecatedAttributeInfo implements AttributeInfo {
+    public static AttributeInfo read(BytecodeReader reader) {
+        return new DeprecatedAttributeInfo();
+    }
+
     @Override
     public String name() {
         return "Deprecated";
@@ -15,6 +20,6 @@ public class DeprecatedAttributeInfo implements AttributeInfo {
     }
 
     @Override
-    public void write(CacheBuffer buffer, BytecodeBuilder bytecodeBuilder) {
+    public void write(CacheBuffer buffer, BytecodeBuffer bytecodeBuilder) {
     }
 }

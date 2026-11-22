@@ -1,7 +1,7 @@
 package net.kapitencraft.scripted.lang.compiler;
 
 import net.kapitencraft.scripted.lang.compiler.error.ErrorStorage;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
@@ -93,7 +93,7 @@ public class MethodLookup {
             addInterfaces(parent, allParents::add);
             allParents.add(parent);
         }
-        List<Pair<ScriptedClass, AbstractMethodMap>> lookup = allParents.stream().collect(Util.toPairList(Function.identity(), ScriptedClass::getMethods));
+        List<Pair<ScriptedClass, AbstractMethodMap>> lookup = allParents.stream().collect(Util.toPairList(Function.identity(), ScriptedClass::methods));
         return new MethodLookup(lookup);
     }
 

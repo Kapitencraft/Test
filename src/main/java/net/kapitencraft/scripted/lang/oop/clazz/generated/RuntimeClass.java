@@ -1,10 +1,10 @@
 package net.kapitencraft.scripted.lang.oop.clazz.generated;
 
 import com.google.common.collect.Multimap;
-import net.kapitencraft.lang.compiler.MethodLookup;
+import net.kapitencraft.scripted.lang.compiler.MethodLookup;
 import net.kapitencraft.scripted.lang.compiler.Modifiers;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.bytecode.attributes.AttributeInfo;
 import net.kapitencraft.scripted.lang.holder.bytecode.attributes.AttributeOwner;
@@ -14,7 +14,7 @@ import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 import net.kapitencraft.scripted.lang.oop.field.RuntimeField;
 import net.kapitencraft.scripted.lang.oop.field.ScriptedField;
 import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
-import net.kapitencraft.lang.oop.method.map.GeneratedMethodMap;
+import net.kapitencraft.scripted.lang.oop.method.map.GeneratedMethodMap;
 import net.kapitencraft.scripted.lang.tool.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -57,6 +57,7 @@ public final class RuntimeClass implements ScriptedClass, AttributeOwner {
         this.implemented = implemented;
         this.modifiers = modifiers;
         this.attributes = AttributeOwner.createLookup(attributes);
+        this.lookup = MethodLookup.createFromClass(this);
         this.annotations = annotations;
     }
 
@@ -65,8 +66,13 @@ public final class RuntimeClass implements ScriptedClass, AttributeOwner {
     }
 
     @Override
+    public ScriptedCallable getMethod(String signature) {
+        return lookup.get(signature);
+    }
+
+    @Override
     public @NotNull ClassReference getFieldType(String name) {
-        return Optional.ofNullable(getFields().get(name)).map(ScriptedField::type).orElse(ScriptedClass.super.getFieldType(name));
+        return Optional.ofNullable(fields().get(name)).map(ScriptedField::type).orElse(ScriptedClass.super.getFieldType(name));
     }
 
     @Override
@@ -75,8 +81,8 @@ public final class RuntimeClass implements ScriptedClass, AttributeOwner {
     }
 
     @Override
-    public Map<String, ? extends ScriptedField> getFields() {
-        return Util.mergeMaps(ScriptedClass.super.getFields(), allFields);
+    public Map<String, ? extends ScriptedField> fields() {
+        return Util.mergeMaps(ScriptedClass.super.fields(), allFields);
     }
 
     @Override
@@ -95,7 +101,7 @@ public final class RuntimeClass implements ScriptedClass, AttributeOwner {
     }
 
     @Override
-    public GeneratedMethodMap getMethods() {
+    public GeneratedMethodMap methods() {
         return methods;
     }
 
@@ -143,7 +149,7 @@ public final class RuntimeClass implements ScriptedClass, AttributeOwner {
     }
 
     @Override
-    public int getModifiers() {
+    public int modifiers() {
         return modifiers;
     }
 

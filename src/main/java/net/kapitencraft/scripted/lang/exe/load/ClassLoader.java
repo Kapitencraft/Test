@@ -7,14 +7,12 @@ import net.kapitencraft.scripted.lang.exe.Disassembler;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.exe.VirtualMachine;
 import net.kapitencraft.scripted.lang.exe.test.VMTestLoader;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.oop.Package;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
-import net.kapitencraft.lang.oop.clazz.generated.RuntimeClass;
-import net.kapitencraft.lang.oop.method.RuntimeCallable;
-import net.kapitencraft.lang.oop.clazz.generated.RuntimeClass;
-import net.kapitencraft.lang.oop.method.RuntimeCallable;
+import net.kapitencraft.scripted.lang.oop.clazz.generated.RuntimeClass;
+import net.kapitencraft.scripted.lang.oop.method.RuntimeCallable;
 import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.GsonHelper;
 
@@ -105,7 +103,7 @@ public class ClassLoader {
                 System.out.println("Name:    " + scriptedClass.name());
                 System.out.println("Package: " + scriptedClass.pck());
                 System.out.println("\n=== Methods ===");
-                Map<String, DataMethodContainer> methods = scriptedClass.getMethods().asMap();
+                Map<String, DataMethodContainer> methods = scriptedClass.methods().asMap();
                 methods.forEach((string, dataMethodContainer) -> {
                     for (ScriptedCallable method : dataMethodContainer.methods()) {
                         String name = string + "(" + VarTypeManager.getArgsSignature(method.argTypes()) + ")" + VarTypeManager.getClassName(method.retType().get());
@@ -131,10 +129,6 @@ public class ClassLoader {
 
     private static void loadHolderReference(Package pck, VMLoaderHolder holder) {
         pck.addClass(holder.name, holder.reference);
-    }
-
-    public static void generateSkeletons(PackageHolder<?> root) {
-        root.useClasses((classes, pck) -> classes.forEach((s, classLoaderHolder) -> classLoaderHolder.applySkeleton()), VarTypeManager.rootPackage());
     }
 
     public static void generateClasses(PackageHolder<VMLoaderHolder> root) {

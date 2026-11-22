@@ -1,9 +1,6 @@
 package net.kapitencraft.scripted.lang.holder;
 
-import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantDoubleInfo;
-import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantFloatInfo;
-import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantIntegerInfo;
-import net.kapitencraft.lang.holder.bytecode.const_pool.ConstantPoolEntry;
+import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.*;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.oop.clazz.ScriptedClass;
 
@@ -22,7 +19,9 @@ public record LiteralHolder(Object value, ScriptedClass type) {
             return new ConstantDoubleInfo((Double) value);
         } else if (type == VarTypeManager.BOOLEAN) {
             return new ConstantIntegerInfo((Boolean) value ? 1 : 0);
-        } else
-            throw new IllegalArgumentException("unknown literal holder type: " + type);
+        } else if (type == VarTypeManager.STRING.get()) {
+            return new ConstantStringInfo(new ConstantUtf8Info((String) value));
+        }
+        throw new IllegalArgumentException("unknown literal holder type: " + type);
     }
 }

@@ -101,7 +101,7 @@ public class PythonExprParser extends AbstractPythonParser {
         }
         Map<String, ScriptedCallable> annotationMethods = new HashMap<>();
 
-        type.getMethods().asMap().forEach((s, dataMethodContainer) ->
+        type.methods().asMap().forEach((s, dataMethodContainer) ->
                 annotationMethods.put(s, dataMethodContainer.methods()[0])
         );
 
@@ -690,7 +690,7 @@ public class PythonExprParser extends AbstractPythonParser {
                 } else {
                     ScriptedClass declaring = fallback.getFieldDeclaring(name);
                     if (declaring != null) {
-                        ScriptedField field = declaring.getFields().get(name);
+                        ScriptedField field = declaring.fields().get(name);
                         Expr.SingleIdentifier identifier = new Expr.SingleIdentifier();
                         identifier.type = fallbackReference;
                         identifier.name = previous;

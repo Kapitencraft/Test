@@ -13,19 +13,18 @@ import net.kapitencraft.scripted.lang.compiler.exe.source.SourceTree;
 import net.kapitencraft.scripted.lang.compiler.java.JavaCompilePipeline;
 import net.kapitencraft.scripted.lang.compiler.python.PythonCompilePipeline;
 import net.kapitencraft.scripted.lang.exe.load.ClassLoader;
+import net.kapitencraft.scripted.lang.holder.bytecode.ClassFile;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.oop.clazz.CacheableClass;
+import net.kapitencraft.scripted.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.scripted.lang.oop.method.CompileCallable;
 import net.kapitencraft.scripted.lang.tool.Util;
 import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -133,7 +132,7 @@ public class Compiler {
 
     public interface ClassBuilder {
 
-        CacheableClass build();
+        CompileClass build();
 
         ClassReference superclass();
 
@@ -147,16 +146,16 @@ public class Compiler {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void cache(File cacheBase, CacheBuilder builder, String path, CacheableClass target, String name) throws IOException {
-        JsonObject object = builder.cacheClass(target);
+    public static void cache(File cacheBase, String path, CompileClass target, String name) throws IOException {
+        byte[] object = ClassFile.write(target);
         File cacheTarget = new File(cacheBase, path + "/" + name + ".scrc");
         if (!cacheTarget.exists()) {
             cacheTarget.getParentFile().mkdirs();
             cacheTarget.createNewFile();
         }
-        FileWriter writer = new FileWriter(cacheTarget);
-        writer.write(GSON.toJson(object));
-        writer.close();
+        FileOutputStream stream = new FileOutputStream(cacheTarget);
+        stream.write(object);
+        stream.close();
     }
 
     public static void error(int lineIndex, int lineStartIndex, String msg, String fileId, String line) {

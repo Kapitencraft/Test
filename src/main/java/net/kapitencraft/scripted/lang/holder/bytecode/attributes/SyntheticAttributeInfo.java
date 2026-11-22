@@ -1,9 +1,14 @@
-package net.kapitencraft.lang.holder.bytecode.attributes;
+package net.kapitencraft.scripted.lang.holder.bytecode.attributes;
 
-import net.kapitencraft.lang.bytecode.compile.BytecodeBuilder;
-import net.kapitencraft.lang.bytecode.compile.CacheBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.BytecodeBuffer;
+import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
 
 public class SyntheticAttributeInfo implements AttributeInfo {
+    public static AttributeInfo read(BytecodeReader reader) {
+        return new SyntheticAttributeInfo();
+    }
+
     @Override
     public String name() {
         return "Synthetic";
@@ -15,7 +20,5 @@ public class SyntheticAttributeInfo implements AttributeInfo {
     }
 
     @Override
-    public void write(CacheBuffer buffer, BytecodeBuilder bytecodeBuilder) {
-
-    }
+    public void write(CacheBuffer buffer, BytecodeBuffer bytecodeBuilder) {}
 }

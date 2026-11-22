@@ -36,7 +36,7 @@ public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token
 
     @Override
     public Token visitBlockLambdaExpr(Expr.BlockLambda expr) {
-        return null;
+        return expr.keyword;
     }
 
     @Override
@@ -86,7 +86,7 @@ public class LocationAnalyser implements Stmt.Visitor<Token>, Expr.Visitor<Token
 
     @Override
     public Token visitExprLambdaExpr(Expr.ExprLambda expr) {
-        return null;
+        return expr.keyword;
     }
 
     @Override

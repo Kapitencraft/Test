@@ -4,14 +4,13 @@ import com.google.common.collect.ImmutableMap;
 import net.kapitencraft.scripted.lang.compiler.Compiler;
 import net.kapitencraft.scripted.lang.compiler.Modifiers;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
-import net.kapitencraft.scripted.lang.exe.ScriptedCallable;
+import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.oop.clazz.AnnotationHolder;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.oop.clazz.generated.CompileClass;
 import net.kapitencraft.scripted.lang.oop.method.CompileCallable;
-import net.kapitencraft.scripted.lang.oop.method.annotation.CompileAnnotationCallable;
 import net.kapitencraft.scripted.lang.oop.method.builder.DataMethodContainer;
 import net.kapitencraft.tool.Pair;
 
@@ -29,7 +28,9 @@ public record BakedAnnotation(
     public CompileClass build() {
 
         ImmutableMap.Builder<String, DataMethodContainer> builder = new ImmutableMap.Builder<>();
-        methodWrappers.forEach((string, wrapper) -> builder.put(string, new DataMethodContainer(new ScriptedCallable[]{new CompileAnnotationCallable(wrapper.retType(), wrapper.val(), wrapper.annotations(), target)})));
+        methodWrappers.forEach((string, wrapper) -> builder.put(string, new DataMethodContainer(new ScriptedCallable[]{
+                wrapper.toCallable(target)
+        })));
 
         return new CompileClass(
                 builder.build(), Map.of(), VarTypeManager.OBJECT,
