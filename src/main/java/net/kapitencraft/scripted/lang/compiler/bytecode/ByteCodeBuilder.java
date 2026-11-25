@@ -9,6 +9,7 @@ import net.kapitencraft.scripted.lang.compiler.bytecode.instruction.constant.Int
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 
+import javax.print.attribute.standard.MediaSize;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,7 +52,13 @@ public class ByteCodeBuilder {
         return i;
     }
 
-    public void patchJump(int jumpIdx) {
+    public void addJumpIfFalse(int target) {
+        JumpInstruction i = new JumpInstruction(Opcode.JUMP_IF_FALSE);
+        i.setTarget(target);
+        instructions.add(i);
+    }
+
+    public void patchJumpToCurrent(int jumpIdx) {
         patchJump(jumpIdx, instructions.size());
     }
 
@@ -63,9 +70,9 @@ public class ByteCodeBuilder {
         int truePatch = addJumpIfFalse();
         ifTrue.run();
         int falsePatch = addJump();
-        patchJump(truePatch);
+        patchJumpToCurrent(truePatch);
         ifFalse.run();
-        patchJump(falsePatch);
+        patchJumpToCurrent(falsePatch);
     }
 
     public void addJumpMultiTargetInstruction(List<Integer> origins) {

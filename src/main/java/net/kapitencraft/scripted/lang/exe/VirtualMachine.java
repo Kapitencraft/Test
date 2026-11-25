@@ -177,7 +177,7 @@ public class VirtualMachine {
                         }
                         if (output) {
                             if (profiling)
-                                System.out.println("\u001B[32mExecution took " + Interpreter.elapsedMillis() + "ms\u001B[0m");
+                                System.out.println("\u001B[32mExecution took " + Interpreter.elapsedNanos() + "ns\u001B[0m");
                             else System.out.println("\u001B[32mExecution finished\u001B[0m");
                         }
                     } finally {

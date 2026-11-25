@@ -13,7 +13,7 @@ public class System {
     }
 
     public static int time() {
-        return (int) Interpreter.elapsedMillis();
+        return (int) (Interpreter.elapsedNanos() / 1_000_000); //divide by nano -> milli ratio
     }
 
     public static int[] range(int min, int max) {

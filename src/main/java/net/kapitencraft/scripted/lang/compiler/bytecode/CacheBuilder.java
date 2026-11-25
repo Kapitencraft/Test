@@ -364,10 +364,10 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         byteCodeBuilder.addSimple(getComparator(token.type(), expr.dataType));
 
         int jump = byteCodeBuilder.addJump();
-        jumps.forEach(byteCodeBuilder::patchJump);
+        jumps.forEach(byteCodeBuilder::patchJumpToCurrent);
         byteCodeBuilder.addSimple(Opcode.POP); //necessary to remove the unused DUPed parameter
         byteCodeBuilder.addSimple(Opcode.FALSE);
-        byteCodeBuilder.patchJump(jump);
+        byteCodeBuilder.patchJumpToCurrent(jump);
         return null;
     }
 
@@ -635,7 +635,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 continueJumpInstructions.add(byteCodeBuilder.addJump());
             }
         }
-        byteCodeBuilder.patchJump(instDefaultPatch);
+        byteCodeBuilder.patchJumpToCurrent(instDefaultPatch);
         if (expr.defaulted != null) {
             cache(expr.defaulted);
         }
@@ -748,23 +748,23 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 cache(expr.right);
                 byteCodeBuilder.addSimple(Opcode.NOT);
                 int jumpRPatch = byteCodeBuilder.addJump();
-                byteCodeBuilder.patchJump(jumpPatch);
+                byteCodeBuilder.patchJumpToCurrent(jumpPatch);
                 cache(expr.right);
-                byteCodeBuilder.patchJump(jumpRPatch);
+                byteCodeBuilder.patchJumpToCurrent(jumpRPatch);
             }
             case OR -> {
                 byteCodeBuilder.addSimple(Opcode.TRUE);
                 int jumpRPatch = byteCodeBuilder.addJump();
-                byteCodeBuilder.patchJump(jumpPatch);
+                byteCodeBuilder.patchJumpToCurrent(jumpPatch);
                 cache(expr.right);
-                byteCodeBuilder.patchJump(jumpRPatch);
+                byteCodeBuilder.patchJumpToCurrent(jumpRPatch);
             }
             case AND -> {
                 cache(expr.right);
                 int jumpRPatch = byteCodeBuilder.addJump();
-                byteCodeBuilder.patchJump(jumpPatch);
+                byteCodeBuilder.patchJumpToCurrent(jumpPatch);
                 byteCodeBuilder.addSimple(Opcode.FALSE);
-                byteCodeBuilder.patchJump(jumpRPatch);
+                byteCodeBuilder.patchJumpToCurrent(jumpRPatch);
             }
         }
         if (!hadRetain) {
@@ -864,7 +864,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             if (!stmt.branchSeenReturn)
                 instBranches.add(byteCodeBuilder.addJump()); //jump over else-ifs & else
             for (int i = 0; i < stmt.elifs.length; i++) {
-                byteCodeBuilder.patchJump(instPatch);
+                byteCodeBuilder.patchJumpToCurrent(instPatch);
                 ElifBranch branch = stmt.elifs[i];
                 cache(branch.condition);
                 instPatch = byteCodeBuilder.addJumpIfFalse();
@@ -875,13 +875,13 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 }
             }
             if (stmt.elseBranch != null) {
-                byteCodeBuilder.patchJump(instPatch);
+                byteCodeBuilder.patchJumpToCurrent(instPatch);
                 retainExprResult = false;
                 cache(stmt.elseBranch);
             }
             byteCodeBuilder.addJumpMultiTargetInstruction(instBranches);
         } else {
-            byteCodeBuilder.patchJump(instPatch);
+            byteCodeBuilder.patchJumpToCurrent(instPatch);
         }
         return null;
     }
@@ -919,17 +919,14 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitWhileStmt(Stmt.While stmt) {
-        int index = byteCodeBuilder.size();
         retainExprResult = true;
         byteCodeBuilder.changeLineIfNecessary(stmt.keyword);
-        cache(stmt.condition);
-        int skip = byteCodeBuilder.addJumpIfFalse();
-        loops.push(new Loop());
-        retainExprResult = false;
-        cache(stmt.body);
-        byteCodeBuilder.addJump(index);
-        loops.pop().patchBoth(index);
-        byteCodeBuilder.patchJump(skip);
+        int[] index = new int[] {0};
+        cacheLoop(() -> {
+            index[0] = byteCodeBuilder.size();
+            cache(stmt.condition);
+        }, () -> cache(stmt.body));
+        loops.pop().patchBoth(index[0]);
         return null;
     }
 
@@ -950,25 +947,17 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitForStmt(Stmt.For stmt) {
         byteCodeBuilder.changeLineIfNecessary(stmt.keyword);
         cache(stmt.init); //synthesize initializer
-        int result = byteCodeBuilder.size();
-        retainExprResult = true;
-        ignoredExprResult = false;
-        cache(stmt.condition); //synthesise loop-condition
-        int jump1 = byteCodeBuilder.addJumpIfFalse();
-        loops.push(new Loop()); //push loop for continue & break entries
-        retainExprResult = false;
-        ignoredExprResult = false;
-        cache(stmt.body); //synthesize loop body
-        retainExprResult = false;
-        ignoredExprResult = false;
-        int increment = byteCodeBuilder.size();
-        cache(stmt.increment); //synthesize increment
-        if (!ignoredExprResult)
-            byteCodeBuilder.addSimple(Opcode.POP); //pop the result of the increment
-        byteCodeBuilder.addJump(result);
-        loops.pop().patchBoth(increment);
-
-        byteCodeBuilder.patchJump(jump1);
+        int[] incrementIdx = new int[] {0};
+        cacheLoop(() -> cache(stmt.condition), () -> {
+            cache(stmt.body); //synthesize loop body
+            retainExprResult = false;
+            ignoredExprResult = false;
+            incrementIdx[0] = byteCodeBuilder.size();
+            cache(stmt.increment); //synthesize increment
+            if (!ignoredExprResult)
+                byteCodeBuilder.addSimple(Opcode.POP); //pop the result of the increment
+        });
+        loops.pop().patchBoth(incrementIdx[0]);
 
         int amount = stmt.popVarCount;
         while (amount >= 2) {
@@ -989,40 +978,52 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         byteCodeBuilder.addSimple(Opcode.I_0);//create iteration variable
         byteCodeBuilder.registerLocal(stmt.baseVar + 1, VarTypeManager.INTEGER.reference(), "$i");
         int baseVarIndex = stmt.baseVar;
+        int[] incrementIdx = new int[] {0};
 
-        int curIndex = byteCodeBuilder.size(); //link to jump back when loop is completed
+        cacheLoop(() -> {
+            //region condition
+            getVar(baseVarIndex + 1); //get iteration var
+            getVar(baseVarIndex); //get array var
+            byteCodeBuilder.addSimple(Opcode.ARRAY_LENGTH); //get length of array
+            byteCodeBuilder.addSimple(Opcode.I_LESSER); //check if iteration var is less than the length of the array
+            //endregion
+        }, () -> {
+            //region load iteration object
+            getVar(baseVarIndex + 1); //load iteration var
+            getVar(baseVarIndex); //load array var
+            byteCodeBuilder.addSimple(getArrayLoad(stmt.type));  //create entry var by loading array element
+            byteCodeBuilder.registerLocal(stmt.baseVar + 2, stmt.type, stmt.name.lexeme());
+            //endregion
 
-        //region condition
-        getVar(baseVarIndex + 1); //get iteration var
-        getVar(baseVarIndex); //get array var
-        byteCodeBuilder.addSimple(Opcode.ARRAY_LENGTH); //get length of array
-        byteCodeBuilder.addSimple(Opcode.I_LESSER); //check if iteration var is less than the length of the array
-        int result = byteCodeBuilder.addJumpIfFalse(); //create jump out of the loop if check fails
-        //endregion
-        loops.push(new Loop());
+            retainExprResult = false;
+            cache(stmt.body); //cache loop body
 
-        //region load iteration object
-        getVar(baseVarIndex + 1); //load iteration var
-        getVar(baseVarIndex); //load array var
-        byteCodeBuilder.addSimple(getArrayLoad(stmt.type));  //create entry var by loading array element
-        byteCodeBuilder.registerLocal(stmt.baseVar + 2, stmt.type, stmt.name.lexeme());
-        //endregion
+            incrementIdx[0] = byteCodeBuilder.size();
+            //region increase iteration var
+            int increase = byteCodeBuilder.size();
+            getVar(baseVarIndex + 1); //get iteration var
+            byteCodeBuilder.addSimple(Opcode.I_1); //load 1
+            byteCodeBuilder.addSimple(Opcode.I_ADD); //add 1 to the iteration var
+            assignVar(baseVarIndex + 1);
+            //endregion
 
-        retainExprResult = false;
-        cache(stmt.body); //cache loop body
-
-        //region increase iteration var
-        int increase = byteCodeBuilder.size();
-        getVar(baseVarIndex + 1); //get iteration var
-        byteCodeBuilder.addSimple(Opcode.I_1); //load 1
-        byteCodeBuilder.addSimple(Opcode.I_ADD); //add 1 to the iteration var
-        assignVar(baseVarIndex + 1);
-        //endregion
-        byteCodeBuilder.addJump(curIndex);
-        loops.pop().patchBoth(increase);
-        byteCodeBuilder.patchJump(result);
+        });
+        loops.pop().patchBoth(incrementIdx[0]);
         byteCodeBuilder.addSimple(Opcode.POP_2); //remove iteration and array variable
         return null;
+    }
+
+    private void cacheLoop(Runnable condition, Runnable body) {
+        int insertJumpIndex  = byteCodeBuilder.addJump();
+        int returnIP = byteCodeBuilder.size();
+        loops.push(new Loop()); //push loop for continue & break entries
+        body.run();
+        byteCodeBuilder.patchJumpToCurrent(insertJumpIndex);
+        retainExprResult = true;
+        ignoredExprResult = false;
+        condition.run();
+        byteCodeBuilder.addSimple(Opcode.NOT);
+        byteCodeBuilder.addJumpIfFalse(returnIP);
     }
 
     @Override

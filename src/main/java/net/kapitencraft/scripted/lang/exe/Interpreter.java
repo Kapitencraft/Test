@@ -10,10 +10,10 @@ public class Interpreter {
 
     public static final Scanner in = new Scanner(System.in);
 
-    public static long millisAtStart;
+    public static long nanosAtStart;
 
     public static void start() {
-        millisAtStart = System.currentTimeMillis();
+        nanosAtStart = System.nanoTime();
     }
 
     public static String stringify(Object object) {
@@ -29,7 +29,7 @@ public class Interpreter {
         };
     }
 
-    public static long elapsedMillis() {
-        return System.currentTimeMillis() - millisAtStart;
+    public static long elapsedNanos() {
+        return System.nanoTime() - nanosAtStart;
     }
 }

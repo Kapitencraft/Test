@@ -86,7 +86,7 @@ public class VMTestLoader {
                 System.out.println("\u001B[31mError running class '" + instance.target + "'\u001B[0m");
             } else {
                 succeeded++;
-                System.out.println("\u001B[32mSuccessfully tested class '" + instance.target + "'. took " + Interpreter.elapsedMillis() + "ms\u001B[0m");
+                System.out.println("\u001B[32mSuccessfully tested class '" + instance.target + "'. took " + Interpreter.elapsedNanos() + "ns\u001B[0m");
             }
         }
 
