@@ -6,28 +6,28 @@ import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
 
 public class ConstantInvokeDynamicInfo implements ConstantPoolEntry {
     private final ConstantNameAndTypeInfo nameAndTypeInfo;
-    private final ConstantMethodHandleInfo methodHandleInfo;
+    private final int methodHandleInfoIdx;
     private final int captureCount;
 
-    public ConstantInvokeDynamicInfo(ConstantNameAndTypeInfo nameAndTypeInfo, ConstantMethodHandleInfo methodHandleInfo, int captureCount) {
+    public ConstantInvokeDynamicInfo(ConstantNameAndTypeInfo nameAndTypeInfo, int methodHandleInfo, int captureCount) {
         this.nameAndTypeInfo = nameAndTypeInfo;
-        this.methodHandleInfo = methodHandleInfo;
+        this.methodHandleInfoIdx = methodHandleInfo;
         this.captureCount = captureCount;
     }
 
     public static void read(BytecodeReader reader, ConstantPoolReader cpReader) {
+        int bootstrapMethodIdx = reader.read2b();
         ConstantNameAndTypeInfo nameAndTypeInfo = cpReader.get(reader.read2b());
-        ConstantMethodHandleInfo constantMethodHandleInfo = cpReader.get(reader.read2b());
-        cpReader.add(new ConstantInvokeDynamicInfo(nameAndTypeInfo, constantMethodHandleInfo, reader.read2b()));
+        cpReader.add(new ConstantInvokeDynamicInfo(nameAndTypeInfo, bootstrapMethodIdx, reader.read2b()));
     }
 
     @Override
     public ConstantPoolEntry.Baked bake(ConstantPoolBuilder builder) {
-        return new Baked(builder.addBootstrapMethodEntry(methodHandleInfo), builder.addEntry(nameAndTypeInfo), captureCount);
+        return new Baked(methodHandleInfoIdx, builder.addEntry(nameAndTypeInfo), captureCount);
     }
 
-    public ConstantMethodHandleInfo getHandle() {
-        return this.methodHandleInfo;
+    public int getHandleIdx() {
+        return this.methodHandleInfoIdx;
     }
 
     public ConstantNameAndTypeInfo getNameAndTypeInfo() {

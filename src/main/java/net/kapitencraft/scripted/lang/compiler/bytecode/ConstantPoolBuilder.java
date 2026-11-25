@@ -36,8 +36,4 @@ public class ConstantPoolBuilder {
     public BootstrapMethodsAttributeInfo buildBootstrapMethods() {
         return bootstrapMethodsBuilder.build();
     }
-
-    public void clearBootstrap() {
-        this.bootstrapMethodsBuilder.clear();
-    }
 }

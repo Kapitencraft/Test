@@ -49,11 +49,11 @@ public class MethodInfo {
         }
     }
 
-    public RuntimeCallable toCallable() {
+    public RuntimeCallable toCallable(ClassReference reference) {
         StringReader reader = new StringReader(this.descriptor);
-        reader.skip();
+        reader.skip(); //skip open bracket
         List<ClassReference> args = new ArrayList<>();
-        while (reader.peek() != ')') {
+        while (reader.canRead() && reader.peek() != ')') {
             args.add(VarTypeManager.parseType(reader));
         }
         Chunk c = null;
@@ -72,7 +72,7 @@ public class MethodInfo {
                 c,
                 accessFlags,
                 new Annotation[0],
-                VarTypeManager.directParseType(this.descriptor),
+                reference,
                 attributes
         );
     }

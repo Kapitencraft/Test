@@ -201,6 +201,10 @@ public record Chunk(byte[] code, ExceptionHandler[] handlers) {
                     this.cp.addEntry(entry)
             );
         }
+
+        public int addBootstrapMethod(ConstantMethodHandleInfo info) {
+            return this.cp.addBootstrapMethodEntry(info);
+        }
     }
 
     /**

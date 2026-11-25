@@ -7,10 +7,7 @@ import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.ast.Expr;
 import net.kapitencraft.scripted.lang.holder.bytecode.FieldInfo;
 import net.kapitencraft.scripted.lang.holder.bytecode.MethodInfo;
-import net.kapitencraft.scripted.lang.holder.bytecode.attributes.AttributeInfo;
-import net.kapitencraft.scripted.lang.holder.bytecode.attributes.CodeAttributeInfo;
-import net.kapitencraft.scripted.lang.holder.bytecode.attributes.ConstantValueAttributeInfo;
-import net.kapitencraft.scripted.lang.holder.bytecode.attributes.SignatureAttributeInfo;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.*;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.oop.clazz.CacheableClass;
@@ -188,21 +185,24 @@ public final class CompileClass implements CacheableClass, ScriptedClass {
         this.allMethods.forEach((s, container) -> {
 
             for (ScriptedCallable method : container.methods()) {
-                ((CompileCallable) method).build(builder);
+                CompileCallable callable = (CompileCallable) method;
+                callable.build(builder);
 
                 //Code, Exceptions, Synthetic, Signature, Deprecated, RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations,
                 //RuntimeVisibleParameterAnnotations, RuntimeInvisibleParameterAnnotations, AnnotationDefault
                 List<AttributeInfo> attributes = new ArrayList<>();
                 if (!method.isAbstract()) {
                     attributes.add(CodeAttributeInfo.create(method.getChunk()));
+                    attributes.add(new LocalVariableTableAttributeInfo(callable.getLVT()));
+                    attributes.add(new LineNumberTableAttributeInfo(callable.getLNT()));
                 }
-                attributes.add(builder.buildBootstrapMethods());
-                attributes.add(SignatureAttributeInfo.create(method.getMethodTypeSignature(this)));
+                //TODO generic?
+                //attributes.add(SignatureAttributeInfo.create(method.getMethodTypeSignature(this)));
 
                 infos[i[0]++] = new MethodInfo(
                         method.modifiers(),
                         s,
-                        VarTypeManager.getClassName(method.retType()),
+                        method.getMethodTypeSignature(this),
                         attributes.toArray(new AttributeInfo[0])
                 );
             }

@@ -10,7 +10,6 @@ import net.kapitencraft.tool.Pair;
 import org.jetbrains.annotations.Contract;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -150,15 +149,16 @@ public class Disassembler {
         int id = read2b(code, offset + 1);
         ConstantObjRefInfo constant = owner.getConstant(id);
         String signature = constant.nameAndType.descriptor().value();
-        System.out.printf("%-16s %4d:  %s#%s\n", opcode, id, constant.clazz.getValue(), signature);
+        System.out.printf("%-16s %4d:  %s%s\n", opcode, id, constant.clazz.getValue(), signature);
         return offset + 3;
     }
 
     private static int invokeDynamic(Opcode opcode, byte[] code, int offset, RuntimeClass owner) {
         int id = read2b(code, offset + 1);
         ConstantInvokeDynamicInfo info = owner.getConstant(id);
-        String type = info.getHandle().getKind() == 5 ? "virtual" : "static";
-        System.out.printf("%-16s %4d '%s', capturing %s variable(s), %s\n", opcode, id, info.getNameAndTypeInfo().descriptor(), info.getCaptureCount(), type);
+        ConstantMethodHandleInfo handle = owner.<BootstrapMethodsAttributeInfo>getSingleAttribute("BootstrapMethods").getHandle(info.getHandleIdx());
+        String type = handle.kind() == 5 ? "virtual" : "static";
+        System.out.printf("%-16s %4d '%s', capturing %s variable(s), %s\n", opcode, id, handle.obj().asMethodSignature(), info.getCaptureCount(), type);
         return offset + 5;
     }
 

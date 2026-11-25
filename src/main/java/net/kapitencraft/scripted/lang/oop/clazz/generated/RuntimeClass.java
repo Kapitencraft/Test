@@ -27,9 +27,6 @@ public final class RuntimeClass implements ScriptedClass, AttributeOwner {
 
     private final GeneratedMethodMap methods;
 
-    @Deprecated //make lookup dynamic
-    private final MethodLookup lookup;
-
     private final Map<String, RuntimeField> allFields;
 
     private final String superclass;
@@ -57,17 +54,11 @@ public final class RuntimeClass implements ScriptedClass, AttributeOwner {
         this.implemented = implemented;
         this.modifiers = modifiers;
         this.attributes = AttributeOwner.createLookup(attributes);
-        this.lookup = MethodLookup.createFromClass(this);
         this.annotations = annotations;
     }
 
     public <T extends ConstantPoolEntry> T getConstant(int idx) {
         return (T) constantPoolEntries[idx - 1];
-    }
-
-    @Override
-    public ScriptedCallable getMethod(String signature) {
-        return lookup.get(signature);
     }
 
     @Override

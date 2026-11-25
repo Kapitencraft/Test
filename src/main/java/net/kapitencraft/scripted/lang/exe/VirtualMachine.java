@@ -7,6 +7,7 @@ import net.kapitencraft.scripted.lang.exe.natives.NativeClassLoader;
 import net.kapitencraft.scripted.lang.func.ScriptedCallable;
 import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
 import net.kapitencraft.scripted.lang.holder.bytecode.LocalVariableTable;
+import net.kapitencraft.scripted.lang.holder.bytecode.attributes.BootstrapMethodsAttributeInfo;
 import net.kapitencraft.scripted.lang.holder.bytecode.attributes.CodeAttributeInfo;
 import net.kapitencraft.scripted.lang.holder.bytecode.attributes.LineNumberTableAttributeInfo;
 import net.kapitencraft.scripted.lang.holder.bytecode.attributes.LocalVariableTableAttributeInfo;
@@ -308,10 +309,12 @@ public class VirtualMachine {
                             }
                             ScriptedCallable callable = handle.exe();
                             RuntimeClass owner = lambdaType;
-                            if (handle.kind() == 1) {
+                            if (handle.kind() == 5) {
                                 ScriptedClass scriptedClass = ((ClassInstance) args[0]).getType();
                                 owner = (RuntimeClass) scriptedClass;
-                                callable = scriptedClass.getMethod(handleSignatureReader.getRemaining());
+                                ScriptedClass objType = owner.getClassDeclaringMethod(handleSignatureReader.getRemaining());
+
+                                callable = objType.getMethod(handleSignatureReader.getRemaining()); //virtual invoke of the method
                             }
                             pushCall(new CallFrame(handle.signature(), owner, (RuntimeCallable) callable, stackTop));
                             break;
@@ -325,12 +328,14 @@ public class VirtualMachine {
                         executeCall(objType, callable, info.nameAndType, length, stackTop);
                     }
                     case INVOKE_DYNAMIC -> {
-                        ConstantObjRefInfo info = owner.getConstant(read2Byte());
+                        ConstantInvokeDynamicInfo dynamicInfo = owner.getConstant(read2Byte());
+                        ConstantMethodHandleInfo handleInfo = owner.<BootstrapMethodsAttributeInfo>getSingleAttribute("BootstrapMethods").getHandle(dynamicInfo.getHandleIdx());
+                        ConstantObjRefInfo info = handleInfo.obj();
                         ScriptedClass type = info.clazz.parse();
                         if (invokeStaticInitIfNecessary(type, 3)) continue;
-                        ScriptedCallable referenceCallable = type.getMethod(info.nameAndType.descriptor().value());
+                        ScriptedCallable referenceCallable = type.getMethod(dynamicInfo.getNameAndTypeInfo().toSignature());
                         //more like: create dynamic
-                        int captureCount = readByte();
+                        int captureCount = dynamicInfo.getCaptureCount();
 
                         Object[] captures = new Object[captureCount];
                         if (captureCount > 0) {
@@ -338,8 +343,9 @@ public class VirtualMachine {
                         }
                         stackIndex -= captureCount; //pop all captured variables
 
-                        ScriptedMethodHandle handle = new ScriptedMethodHandle(referenceCallable, info.asMethodSignature(), readByte());
+                        ScriptedMethodHandle handle = new ScriptedMethodHandle(referenceCallable, info.asMethodSignature(), handleInfo.kind());
 
+                        ip += 2; //skip the 2 0 arguments
                         ScriptedCallSite site = new ScriptedCallSite(handle, (RuntimeClass) type, captures);
                         push(site);
                     }

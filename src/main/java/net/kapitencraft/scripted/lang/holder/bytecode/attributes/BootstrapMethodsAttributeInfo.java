@@ -2,6 +2,7 @@ package net.kapitencraft.scripted.lang.holder.bytecode.attributes;
 
 import net.kapitencraft.scripted.lang.compiler.bytecode.BytecodeBuffer;
 import net.kapitencraft.scripted.lang.compiler.bytecode.CacheBuffer;
+import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
 import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.ConstantMethodHandleInfo;
 import net.kapitencraft.scripted.lang.holder.bytecode.const_pool.LoadableCPEntry;
 
@@ -14,6 +15,23 @@ public class BootstrapMethodsAttributeInfo implements AttributeInfo {
 
     private BootstrapMethodsAttributeInfo(Entry[] entries) {
         this.entries = entries;
+    }
+
+    public static AttributeInfo read(BytecodeReader reader) {
+        Entry[] entries = new Entry[reader.read2b()];
+        for (int i = 0; i < entries.length; i++) {
+            ConstantMethodHandleInfo methodHandleInfo = reader.readCpEntry();
+            LoadableCPEntry[] args = new LoadableCPEntry[reader.read2b()];
+            for (int j = 0; j < args.length; j++) {
+                args[j] = reader.readCpEntry();
+            }
+            entries[i] = new Entry(methodHandleInfo, args);
+        }
+        return new BootstrapMethodsAttributeInfo(entries);
+    }
+
+    public ConstantMethodHandleInfo getHandle(int idx) {
+        return entries[idx].methodHandleInfo;
     }
 
     @Override

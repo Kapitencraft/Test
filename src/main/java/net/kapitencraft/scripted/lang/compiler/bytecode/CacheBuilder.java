@@ -19,7 +19,6 @@ import net.kapitencraft.scripted.lang.holder.ast.Stmt;
 import net.kapitencraft.scripted.lang.holder.ast.SwitchKey;
 import net.kapitencraft.scripted.lang.holder.bytecode.Chunk;
 import net.kapitencraft.scripted.lang.holder.bytecode.annotation.Annotation;
-import net.kapitencraft.scripted.lang.holder.bytecode.attributes.AttributeInfo;
 import net.kapitencraft.scripted.lang.holder.class_ref.ClassReference;
 import net.kapitencraft.scripted.lang.holder.token.Token;
 import net.kapitencraft.scripted.lang.holder.token.TokenType;
@@ -123,12 +122,7 @@ public class CacheBuilder implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     public Chunk.Builder reset() {
         this.byteCodeBuilder.reset();
-        this.constantPoolBuilder.clearBootstrap();
         return new Chunk.Builder(this.constantPoolBuilder);
-    }
-
-    public AttributeInfo buildBootstrapMethods() {
-        return this.constantPoolBuilder.buildBootstrapMethods();
     }
 
     private record AssignOperators(Opcode get, Opcode assign) {

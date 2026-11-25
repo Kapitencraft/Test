@@ -2,7 +2,6 @@ package vm_test;
 
 class LambdaTest {
     static void main(String[] args) {
-
         printValue(LambdaTest::value);
         printValue(() -> 20);
         IntGetterWrapper wrapper = new IntGetterWrapper(100);

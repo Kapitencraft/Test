@@ -27,8 +27,10 @@ public interface AttributeInfo {
             case "LocalVariableTypeTable" -> LocalVariableTypeTableAttributeInfo.read(reader);
             case "Deprecated" -> DeprecatedAttributeInfo.read(reader);
             case "RuntimeVisibleAnnotations" -> RuntimeVisibleAnnotationAttributeInfo.read(reader);
+            case "BootstrapMethods" -> BootstrapMethodsAttributeInfo.read(reader);
             default -> {
                 //unknown attribute. skip and continue with the next
+                System.out.printf("skipping unknown attribute '%s'\n", attributeName.value());
                 reader.skip(length);
                 yield null;
             }

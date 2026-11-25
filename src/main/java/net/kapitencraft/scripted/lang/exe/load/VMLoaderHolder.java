@@ -36,7 +36,7 @@ public class VMLoaderHolder extends ClassLoaderHolder<VMLoaderHolder> {
     public ScriptedClass loadClass() {
         ScriptedClass target;
         try {
-            target = ClassFile.load(data);
+            target = ClassFile.load(data, this.reference);
             this.reference.setTarget(target);
             return target;
         } catch (Exception e) {

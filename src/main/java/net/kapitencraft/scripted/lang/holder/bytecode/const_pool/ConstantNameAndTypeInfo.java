@@ -13,6 +13,17 @@ public record ConstantNameAndTypeInfo(ConstantUtf8Info name, ConstantUtf8Info de
         cpReader.add(info);
     }
 
+    public static ConstantNameAndTypeInfo create(String name, String descriptor) {
+        return new ConstantNameAndTypeInfo(
+                ConstantUtf8Info.create(name),
+                ConstantUtf8Info.create(descriptor)
+        );
+    }
+
+    public String toSignature() {
+        return name.value() + descriptor.value();
+    }
+
     @Override
     public ConstantPoolEntry.Baked bake(ConstantPoolBuilder builder) {
         return new Baked(builder.addEntry(name), builder.addEntry(descriptor));

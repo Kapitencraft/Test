@@ -73,7 +73,7 @@ public class ClassFile {
         //Record, PermittedSubclasses, Signature, Annotations...
         List<AttributeInfo> attributes = new ArrayList<>();
         attributes.add(new SourceFileAttributeInfo(target.name()));
-        //attributes.add();
+        attributes.add(constantPoolBuilder.buildBootstrapMethods());
 
         attributeBuilder.writeShort(attributes.size());
         for (AttributeInfo attribute : attributes) {
@@ -85,7 +85,7 @@ public class ClassFile {
         return mainBuffer.toBytes();
     }
 
-    public static RuntimeClass load(byte[] data) {
+    public static RuntimeClass load(byte[] data, ClassReference reference) {
         BytecodeReader reader = new BytecodeReader(data);
         if (reader.read4b() != MAGIC) {
             throw new IllegalArgumentException("magic number is wrong");
@@ -151,7 +151,7 @@ public class ClassFile {
         for (MethodInfo methodInfo : methodInfos) {
             methods
                     .computeIfAbsent(methodInfo.getName(), s -> new ArrayList<>())
-                    .add(methodInfo.toCallable());
+                    .add(methodInfo.toCallable(reference));
         }
         Map<String, DataMethodContainer> bakedMethods = new HashMap<>();
         methods.forEach((s, runtimeCallables) ->

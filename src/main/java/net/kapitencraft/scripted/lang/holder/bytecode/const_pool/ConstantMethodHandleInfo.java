@@ -5,19 +5,11 @@ import net.kapitencraft.scripted.lang.compiler.bytecode.ConstantPoolBuilder;
 import net.kapitencraft.scripted.lang.exe.lambda.ScriptedMethodHandle;
 import net.kapitencraft.scripted.lang.exe.load.BytecodeReader;
 
-public class ConstantMethodHandleInfo implements LoadableCPEntry {
-    private byte kind;
-    private ConstantObjRefInfo obj;
+public record ConstantMethodHandleInfo(byte kind, ConstantObjRefInfo obj) implements LoadableCPEntry {
 
     public static void read(BytecodeReader reader, ConstantPoolReader cpReader) {
-        ConstantMethodHandleInfo info = new ConstantMethodHandleInfo();
-        info.kind = (byte) reader.read();
-        info.obj = cpReader.get(reader.read2b());
+        ConstantMethodHandleInfo info = new ConstantMethodHandleInfo((byte) reader.read(), cpReader.get(reader.read2b()));
         cpReader.add(info);
-    }
-
-    public byte getKind() {
-        return kind;
     }
 
     @Override
