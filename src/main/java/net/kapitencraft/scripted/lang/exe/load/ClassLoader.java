@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kapitencraft.scripted.lang.PackageHolder;
 import net.kapitencraft.scripted.lang.exe.Disassembler;
+import net.kapitencraft.scripted.lang.exe.Interpreter;
 import net.kapitencraft.scripted.lang.exe.VarTypeManager;
 import net.kapitencraft.scripted.lang.exe.VirtualMachine;
 import net.kapitencraft.scripted.lang.exe.test.VMTestLoader;
@@ -17,6 +18,7 @@ import net.kapitencraft.tool.GsonHelper;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Consumer;
 
 public class ClassLoader {
 
@@ -72,6 +74,32 @@ public class ClassLoader {
                     System.out.println("set debug mode to " + VirtualMachine.DEBUG);
                 } else if (line.startsWith("test")) {
                     VMTestLoader.run();
+                } else if (line.startsWith("speedTest")) {
+                    String data = line.substring(10);
+                    String classRef;
+                    if (data.contains(" ")) classRef = data.substring(0, data.indexOf(' '));
+                    else classRef = data;
+                    ClassReference target = VarTypeManager.getClassForName(classRef);
+                    if (target == null) System.err.println("unable to find class for id '" + classRef + "'");
+                    else {
+                        if (data.contains(" ")) data = data.substring(data.indexOf(' ') + 1);
+                        else data = "";
+                        long[] times = new long[10000];
+                        Consumer<String> out = Interpreter.output;
+                        Interpreter.output = s -> {}; //suspend output
+                        for (int i = 0; i < 10000; i++) {
+                            printProgress(i);
+                            VirtualMachine.runMainMethod(target.get(), data, profiling, false);
+                            times[i] = Interpreter.elapsedNanos();
+                        }
+                        Interpreter.output = out; //reactivate output
+                        printProgress(10000);
+                        long sum = 0;
+                        for (long time : times) {
+                            sum += time;
+                        }
+                        System.out.printf("\nspeedTested program %s: %sns average\n", classRef, sum / 10_000);
+                    }
                 } else if (line.startsWith("help")) {
                     System.out.println("== HELP ==");
                     System.out.println("\texit                        - Ends the Program");
@@ -79,6 +107,7 @@ public class ClassLoader {
                     System.out.println("\trun <ClassPath>             - Executes the 'main(String[])' method of that class");
                     System.out.println("\tdebug                       - toggles debug log for the VM");
                     System.out.println("\ttest                        - Runs the benchmark test");
+                    System.out.println("\tspeedTest <ClassPath>       - Runs 10000 iterations of the class and calculates the average time spend");
                     System.out.println("\tlist                        - Lists all methods of the given class and their content");
                 } else if (line.startsWith("list ")) {
                     String classRef = line.substring(5);
@@ -87,6 +116,20 @@ public class ClassLoader {
             }
             line = scanner.next();
         }
+    }
+
+    static void printProgress(int done) {
+        int width = 40; // bar width
+        int progress = (int) ((done / (double) 10000) * width);
+
+        String bar = "[" +
+                "=".repeat(progress) +
+                " ".repeat(width - progress) +
+                "]";
+
+        int percent = (int) ((done / 10000.) * 100);
+
+        System.out.print("\r" + bar + " " + percent + "%");
     }
 
     private static void list(String classRef) {

@@ -113,7 +113,6 @@ public class CompileTestLoader {
 
         public void runTest(TestInstance instance) {
             this.error = false;
-            Interpreter.start();
             error |= instance.run(this.tree);
             if (error) {
                 System.out.println("\u001B[31mError testing class '" + instance.target + "'\u001B[0m");
